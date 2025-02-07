@@ -5,8 +5,7 @@ const QRCode = require('qrcode');
 
 const parser = new Parser();
 const RSS_FEEDS = [
-    'https://rsshub.bestblogs.dev/woshipm/popular',
-    // 添加更多 RSS 源
+    'https://www.bestblogs.dev/feeds/rss?featured=y',
 ];
 
 async function fetchFeeds() {
