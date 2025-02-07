@@ -1,0 +1,29 @@
+name: Update RSS Feeds
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天凌晨更新
+  workflow_dispatch:        # 允许手动触发
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Fetch RSS feeds
+        run: node scripts/fetchRss.js
+        
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
