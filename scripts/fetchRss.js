@@ -18,9 +18,10 @@ async function fetchFeeds() {
                 const qrCode = await QRCode.toDataURL(item.link);
                 articles.push({
                     title: item.title,
-                    content: `${item.content}\n\n<img src="${qrCode}" alt="QR Code" />`,
+                    content: item.content,
                     link: item.link,
                     pubDate: item.pubDate,
+                    qrCode,
                 });
             }
         } catch (error) {
@@ -36,14 +37,17 @@ async function fetchFeeds() {
 }
 
 function generateHtml(articles) {
+    const bookmarksHtml = articles.map((article, index) => `<li><a href="#article-${index}">${article.title}</a></li>`).join('');
+
     // 根据文章生成 HTML
     const articlesHtml = articles
-        .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-        .map(article => `
-            <article>
+        .map((article, index) => `
+            <article id="article-${index}">
                 <h2>${article.title}</h2>
                 <p>${article.content}</p>
                 <a href="${article.link}">阅读全文</a>
+                <br/>
+                <img src="${article.qrCode}" alt="QR Code" />
             </article>
         `)
         .join('');
@@ -67,10 +71,15 @@ function generateHtml(articles) {
                 border-bottom: 1px solid #ccc;
                 padding-bottom: 20px;
             }
+
+            img {
+                max-width: 100%;
+            }
         </style>
     </head>
     <body>
-        <div id="content">${articlesHtml}</div>
+        <ol>${bookmarksHtml}</ol>
+        ${articlesHtml}
     </body>
     </html>`;
 }
