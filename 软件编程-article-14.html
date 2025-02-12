@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>2024 年数据库年度回顾： 增长、变化与争议</title>
+        <title>无服务器：为无状态队列消费者构建自定义重试机制 | 亚马逊云科技</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>2024 年数据库年度回顾： 增长、变化与争议</h2>
-        <p>2/10/2025, 5:50:51 AM</p>
+        <h2>无服务器：为无状态队列消费者构建自定义重试机制 | 亚马逊云科技</h2>
+        <p>2/11/2025, 9:44:03 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">对 Andrew Pavlo 2024 年数据库领域年度回顾报告的解读,涵盖趋势、争议和关键技术。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了一种使用 Lambda、SQS 和 EventBridge Scheduler 为无状态队列消费者创建自定义重试机制的方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是对 Andrew Pavlo 发布的“2024 年数据库年度回顾”报告的解读。报告涵盖了开源数据库许可证变更 (Redis, Elasticsearch),DuckDB 在 OLAP 领域的崛起,以及 Microsoft Garnet、Valkey 等新型键值存储的发布。Pavlo 还对 MySQL v9 的功能表示失望,并认为亚马逊 QLDB 的退出具有重要意义。报告也引发了关于 Redis 设计和重要性的激烈讨论,突显了数据库领域的争议。展望未来,数据库领域将在开源模式、新型存储和数据分析等方面持续演进。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提出了一种用于无状态队列消费者（如 AWS Lambda）的自定义重试方案。此方案利用 Amazon EventBridge Scheduler 在 Lambda 函数处理消息失败时，将消息重新发送回 SQS 队列，实现可控的重试。相比传统重试机制，此方案具有更高的成本效益和可维护性。文章详细描述了方案架构，包括如何使用 SQS 消息属性进行幂等性控制和跟踪重试次数，以及如何使用死信队列 (Dead-Letter Queue, DLQ) 处理超出重试次数的消息。此外，还讨论了在实践中需要考虑的关键因素，如处理部分失败、控制重试限制、应对 EventBridge Scheduler 的最小时间粒度和潜在延迟，以及处理扩展和安全问题。最后，文章还提出了未来可能的增强方向，包括动态重试间隔、与外部配置服务集成以及构建高级错误分析和报告功能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">开源数据库许可证变更引发社区关注</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Redis 和 Elasticsearch 的许可证变更引发了社区的广泛讨论,反映了开源商业模式的挑战和争议。</span>
+                        <strong style="color: #1e40af">利用 Amazon EventBridge Scheduler 实现精细化的重试控制</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Amazon EventBridge Scheduler 可以灵活地设置重试的时间间隔，支持指数退避等策略，从而避免下游系统过载。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">DuckDB 成为轻量级数据分析的默认选择</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> DuckDB 因其高性能和易用性,在中小规模数据分析场景中迅速普及,并涌现出与 Postgres 集成的多种扩展。</span>
+                        <strong style="color: #1e40af">SQS 消息属性用于幂等性控制和重试跟踪</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 SQS 消息属性可以避免消息重复处理，并记录消息的重试次数，超过限制则将其发送到死信队列 (DLQ)。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">新型键值存储 Garnet 和 Valkey 值得关注</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Microsoft Garnet 和 Valkey 等新型键值存储的出现,为高性能、低延迟的数据存储提供了新的选择,并可能影响未来的数据库架构。</span>
+                        <strong style="color: #1e40af">监控和告警对于保障重试机制的有效性至关重要</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 CloudWatch 监控 Lambda 函数的调用次数、错误率、运行时长和死信队列 (DLQ) 使用情况，可以及时发现并解决潜在问题。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">请注意,与其他采取类似举措的系统相比,Redis 和 Elasticsearch 引起的反响更大。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">正如 Pavlo 所说的那样,这一趋势证明,最近发布的将 OLAP 数据库与 Postgres 相集成的四种不同的扩展是合理的</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果连亚马逊都不知道如何在区块链数据库上赚钱,那就没人能做到了。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为保障消息处理的可靠性，需要有效的重试机制，以应对下游服务的短期中断或限流。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种方法将重试逻辑与处理消息本身的代码分开，提升 Lambda 函数的执行效率。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">此机制不仅限于 Lambda 函数，还可广泛应用于其他无状态队列消费者。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Renato&nbsp;Losio</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">79</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">AWS Architecture Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Kaizad Wadia</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1049</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1407</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">年度回顾</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库许可证</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DuckDB</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">重试机制</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS Lambda</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/3d70e7">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/bb927e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>

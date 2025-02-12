@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>剖析 MongoDB 与关系型数据库的常见误解</title>
+        <title>Netflix 如何构建支撑数十亿用户交互的分布式计数器</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>剖析 MongoDB 与关系型数据库的常见误解</h2>
-        <p>2/10/2025, 2:07:02 PM</p>
+        <h2>Netflix 如何构建支撑数十亿用户交互的分布式计数器</h2>
+        <p>2/11/2025, 4:31:09 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过解析关于 MongoDB 在模式灵活性、ACID 合规性和 JOIN 操作上的三个常见误解，展示了其相对于关系型数据库的现代特性和优势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Netflix 通过混合计数策略和汇总流水线,构建了可高度扩展的分布式计数器系统。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在消除开发者对 MongoDB 的常见误解，特别是那些基于早期版本经验的误解。首先，文章反驳了 MongoDB 没有模式的说法，强调其模式的灵活性，例如嵌入式文档、动态 Schema 等概念，以及通过模式验证和版本控制实现结构化的能力。其次，文章澄清了 MongoDB 的 ACID 合规性，指出它不仅保证单文档操作满足 ACID 特性，而且自 4.0 版本以来支持多文档 ACID 事务。最后，文章讨论了 MongoDB 是否能进行 JOIN 操作的问题，解释了虽然 MongoDB 可以通过 $lookup 命令执行 JOIN 操作，但由于其文档模型的特性，通常不需要 JOIN 操作。文章通过对这些误解的解析，展示了 MongoDB 作为现代数据库的优势，例如在特定场景下的性能或开发效率优势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Netflix 如何构建分布式计数器抽象,以应对其平台上海量用户互动所产生的高并发计数需求。Netflix 的计数需求多样,包括需要快速但不一定精确的计数(如 A/B 测试),以及需要精确且持久的计数(如计费)。为了满足这些需求,Netflix 设计了一种混合方案,结合了尽力型区域计数器和最终一致性全局计数器两种策略。其中,时间序列抽象层负责记录每个计数事件,支持高并发写入。汇总流水线由汇总事件与队列、聚合和缓存三个主要部分组成,实现了事件的聚合和缓存,最终实现了高可用、高吞吐和可扩展的计数系统。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MongoDB 具有灵活的模式，并支持模式验证和版本控制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然 MongoDB 的模式是动态的，但它提供了模式验证功能，允许开发者根据应用需求实现结构化模式，并通过模式版本控制来管理模式的演变。</span>
+                        <strong style="color: #1e40af">Netflix 的分布式计数器抽象通过尽力型和最终一致性两种策略,兼顾了实时性和准确性需求。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过尽力型区域计数器和最终一致性全局计数器两种策略,满足了快速近似计数和精确持久计数的需求。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MongoDB 是 ACID 兼容的，支持单文档和多文档事务。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MongoDB 保证单文档操作满足 ACID 特性，并且自 4.0 版本以来，支持多文档 ACID 事务，这使得它适用于需要数据完整性的应用场景，如金融服务。</span>
+                        <strong style="color: #1e40af">混合方案结合了事件日志、后台聚合和缓存,实现了可扩展和高效的计数。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 时间序列抽象层记录事件,汇总流水线进行聚合,EVCache 进行缓存,从而优化了读取性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MongoDB 的数据模型优化了数据访问，通常避免了 JOIN 操作的需要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 MongoDB 的数据模型将相关数据存储于单个文档中，因此通常不需要像关系型数据库那样执行 JOIN 操作。然而，$lookup 命令提供了在需要时执行 JOIN 操作的能力。</span>
+                        <strong style="color: #1e40af">汇总流水线通过队列和哈希函数实现了高效的聚合。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 汇总事件被路由到内存队列,并通过哈希函数确保相关计数器被路由到同一队列,从而减少重复工作。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">自由和灵活性并不意味着没有模式；它只是意味着遵循最佳实践来创建一个优雅的模式，使你的应用程序能够以最佳方式运行非常重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MongoDB 保证从 MongoDB 集群中的任何位置到任何位置的多文档 ACID 事务。自 2018 年的 4.0 版本以来，它一直支持这一保证。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 MongoDB 中，一起访问的数据存储在一起。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Netflix 以惊人的规模运营,其平台每秒都有数百万用户进行互动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分布式计数器抽象被设计为一个高度可配置且用户友好的系统。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了满足这些需求,Netflix 研发了一种混合方法,融合了前文讨论的多种计数技术的优势。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">MongoDB Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Scott Amerman</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1193</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3153</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MongoDB</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文档数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">关系型数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">NoSQL</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">计数器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Netflix</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/f1258f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/5bc1a0">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
