@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>无服务器：为无状态队列消费者构建自定义重试机制 | 亚马逊云科技</title>
+        <title>淘宝订单列表 Fragment 转场动画卡顿解决方案</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>无服务器：为无状态队列消费者构建自定义重试机制 | 亚马逊云科技</h2>
-        <p>2/11/2025, 9:44:03 AM</p>
+        <h2>淘宝订单列表 Fragment 转场动画卡顿解决方案</h2>
+        <p>2/12/2025, 9:00:13 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了一种使用 Lambda、SQS 和 EventBridge Scheduler 为无状态队列消费者创建自定义重试机制的方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">淘宝订单列表 Fragment 转场动画卡顿问题及 SurfaceView + 快照解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提出了一种用于无状态队列消费者（如 AWS Lambda）的自定义重试方案。此方案利用 Amazon EventBridge Scheduler 在 Lambda 函数处理消息失败时，将消息重新发送回 SQS 队列，实现可控的重试。相比传统重试机制，此方案具有更高的成本效益和可维护性。文章详细描述了方案架构，包括如何使用 SQS 消息属性进行幂等性控制和跟踪重试次数，以及如何使用死信队列 (Dead-Letter Queue, DLQ) 处理超出重试次数的消息。此外，还讨论了在实践中需要考虑的关键因素，如处理部分失败、控制重试限制、应对 EventBridge Scheduler 的最小时间粒度和潜在延迟，以及处理扩展和安全问题。最后，文章还提出了未来可能的增强方向，包括动态重试间隔、与外部配置服务集成以及构建高级错误分析和报告功能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入分析了淘宝订单列表 Fragment 转场动画卡顿的原因,主要是由于 Fragment 动画在主线程执行,容易被 UI 绘制阻塞。文章对比了 Activity 和 Fragment 动画的差异,提出了三种解决方案:动画延后、分帧渲染和异步转场动画框架 (SurfaceView + 快照)。动画延后虽然简单但会增加点击响应耗时;分帧渲染通过 Choreographer.FrameCallback 将渲染任务拆分,但仍无法完全避免丢帧;最终,采用了 SurfaceView + 快照的方案,利用 SurfaceView 的独立渲染能力,通过异步渲染解决了卡顿问题,实现了性能提升和用户体验改善,同时兼顾了点击响应耗时和流畅度。该方案实施中的一个关键技术点是使用 PixelCopy.request() 方法获取快照。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 Amazon EventBridge Scheduler 实现精细化的重试控制</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Amazon EventBridge Scheduler 可以灵活地设置重试的时间间隔，支持指数退避等策略，从而避免下游系统过载。</span>
+                        <strong style="color: #1e40af">Fragment 转场动画卡顿是由于主线程阻塞导致。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Fragment 动画在主线程执行,当主线程被 UI 绘制等耗时任务阻塞时,会导致动画卡顿,影响用户体验。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">SQS 消息属性用于幂等性控制和重试跟踪</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 SQS 消息属性可以避免消息重复处理，并记录消息的重试次数，超过限制则将其发送到死信队列 (DLQ)。</span>
+                        <strong style="color: #1e40af">SurfaceView 具备独立渲染能力,可用于解决动画卡顿问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> SurfaceView 拥有独立的 Surface,可以在单独的线程中进行绘制,避免占用主线程资源,从而提升渲染性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">监控和告警对于保障重试机制的有效性至关重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 CloudWatch 监控 Lambda 函数的调用次数、错误率、运行时长和死信队列 (DLQ) 使用情况，可以及时发现并解决潜在问题。</span>
+                        <strong style="color: #1e40af">SurfaceView + 快照方案通过异步渲染解决了卡顿问题,同时优化了点击响应耗时。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该方案利用 SurfaceView 异步执行动画,Fragment 渲染完成后隐藏 SurfaceView,兼顾了点击响应耗时和动画流畅度。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为保障消息处理的可靠性，需要有效的重试机制，以应对下游服务的短期中断或限流。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种方法将重试逻辑与处理消息本身的代码分开，提升 Lambda 函数的执行效率。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">此机制不仅限于 Lambda 函数，还可广泛应用于其他无状态队列消费者。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Activity 转场动画不会被主线程阻塞,而 Fragment 动画则会被主线程任务阻塞。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">SurfaceView 能够独立参与窗口管理,享有与 DecorView 类似的管理机制,并且它被允许在不干扰 UI 线程的情况下,由专有线程高效地进行图形渲染。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在最大程度缩减点击响应耗时的同时保证转场动画丝滑流畅,并且在动画期间不存在 loading 状态,这对于用户体验来说是巨大的提升。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">79</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">AWS Architecture Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Kaizad Wadia</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">荧烛</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1407</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">21 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5214</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">重试机制</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS Lambda</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Android</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Fragment</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">转场动画</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">UI 性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">异步渲染</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/bb927e">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/af9375">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATZSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GoOuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyB/kpoJyI2aGyC/Sc0bJ1WLTqoWnVQt+mSZmk1AboBMaiYgN2pugDwB5JvUbAKy6aRq0UnVopOqRZ98GZAn1DyhZgKySc0bQL4JyBNqvumkatFJ1aKTqkWf/OPUTECeAHKj5gk1/7KTqkUnVYtOqhZ98pcD8gaQSc03AblR8zc7qVp0UrXopGrRJ1+m5pvUPKFmAjIBmdRMQG6A/CY1/yUnVYtOqhadVC36ZBmQ3wRkUjMBmdTcqJmATGomIJOaCcikZgLyBJD/spOqRSdVi06qFuGP/B8B8iep+ZedVC06qVp0UrXok5eATGomIJOaCcikZgIyqflNaiYgT6j5JiCTmhsgk5pNJ1WLTqoWnVQtwh95AcgTaiYgN2reADKpuQEyqbkB8oSaCcgTam6ATGpugExq3jipWnRSteikatEnL6l5Asik5gbIpGYC8gaQN9RMQCY1N2pugDyhZgLym06qFp1ULTqpWvTJS0AmNROQSc0EZFIzqblRcwPkRs0E5DcBeQPIpGZSMwGZ1Gw6qVp0UrXopGrRJy+pmYC8AeQNNZOaCciNmgnIpGYCcgNkUrNJzQRkUnMDZFLzxknVopOqRSdViz55CcgbajYBuVEzAZmAvKHmm4BMap5QMwHZdFK16KRq0UnVok++TM0TQJ5QM6mZgNyouQFyo2YCMqm5UTMB+SYg33RSteikatFJ1aJPfhmQGzVPAJnUTGpugNyomYBMam6ATGomIJOa36Rm00nVopOqRSdViz5ZpuZGzQTkBsiNmhsgk5obNROQGyA3aiYgN0CeUPMGkEnNGydVi06qFp1ULcIf+SIgb6h5AsikZgLyhpoJyKRmAjKpmYBMaiYgk5obIDdqJiCTmjdOqhadVC06qVr0yUtAJjU3am6ATEA2qbkB8gaQbwIyqZnU3AD5ppOqRSdVi06qFn3ykpoJyA2QJ9RMQCY1N0CeUDMBmYA8oWYC8oaaGyCTmhs1m06qFp1ULTqpWoQ/8gKQSc0EZFIzAdmkZgJyo2YCcqPmBsikZgLyTWr+pJOqRSdVi06qFuGP/MWA3KiZgNyoeQLIpOYGyI2aJ4BMaiYgT6h546Rq0UnVopOqRZ+8BOQ3qZnUTECeUHMDZFLzBJA3gExqboBMaiYg33RSteikatFJ1aJPlqnZBOQNIJOaGyBPqJmATGpugNyo2aRmArLppGrRSdWik6pFn3wZkCfUPAHkRs0TajYBmdTcAHlDzQ2QbzqpWnRSteikatEnfzk1N0AmNROQSc0EZFIzAZnU3AC5UfMEkBsgv+mkatFJ1aKTqkWf/OWA3Ki5UXOj5kbNBGRSM6mZgExAJjUTkBsgk5obIJtOqhadVC06qVr0yZep+SY1m4BMaiYgk5obIE+ouVEzAZnU3ACZ1Gw6qVp0UrXopGrRJ8uA/CYgk5o31NyomYDcqJmAPAHkCSCTmhsgk5o3TqoWnVQtOqlahD9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9D8ckzNRxf0dUQAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
