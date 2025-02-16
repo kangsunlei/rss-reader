@@ -22,10 +22,6 @@ const RSS_FEEDS = [
     {
         title: '商业',
         url: 'https://www.bestblogs.dev/feeds/rss?category=business'
-    },
-    {
-        title: 'Way To AGI',
-        url: 'https://blog.waytoagi.com/rss/feed.xml'
     }
 ];
 
