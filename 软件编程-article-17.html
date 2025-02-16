@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>单卡 RTX 4090 用 unsloth 和医学数据微调 DeepSeek-R1-Distill-Qwen-14B</title>
+        <title>Linux Hung Task 问题根源探究</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>单卡 RTX 4090 用 unsloth 和医学数据微调 DeepSeek-R1-Distill-Qwen-14B</h2>
-        <p>2/14/2025, 6:26:47 AM</p>
+        <h2>Linux Hung Task 问题根源探究</h2>
+        <p>2/14/2025, 2:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了如何使用单卡 RTX 4090 和 Unsloth 高效微调 DeepSeek-R1-Distill-Qwen-14B 模型在医学领域的应用，并提供了详细的实践步骤。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 Linux 内核中 hung task 警告的原理、成因及调试方法，通过具体案例分析，指导读者有效定位和解决系统瓶颈。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了使用单张 RTX 4090 显卡，结合 Unsloth 工具和医学数据集对 DeepSeek-R1-Distill-Qwen-14B 模型进行微调的完整流程。Unsloth 通过量化、梯度检查点等技术，有效降低了硬件门槛，使得在消费级显卡上微调大型语言模型成为可能。文章覆盖了从模型和数据集的下载、训练环境的准备（包括镜像构建和容器启动）、模型加载、微调前推理验证，到 LoRA 参数设置和模型训练的各个环节。同时，展示了关键代码片段和日志输出，为希望在医学领域微调大语言模型的开发者提供了详细的实践指导。如果增加微调后模型在特定医学任务上的性能提升指标，文章会更有参考价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Linux 内核中 hung task 警告的产生机制和调试方法。首先解释了 hung task 警告的含义，即进程长时间处于不可中断状态（D 状态）且未被调度到 CPU 。然后通过三个实际案例，分别展示了 XFS 文件系统压力、 Coredump 生成过程和 RTNL 锁竞争导致的 hung task 问题，并提供了相应的调试思路和解决方案。文章强调了分析栈跟踪、识别潜在的“受害者”和“攻击者”的重要性，并建议结合 BPF 和 drgn 等工具进行深入分析。最后总结了调试 hung task 的一般性原则和方法，旨在帮助读者更好地理解和解决类似问题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Unsloth 工具通过量化、梯度检查点等技术，使得单卡 RTX 4090 也能高效微调 DeepSeek-R1-Distill-Qwen-14B 等大型语言模型。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Unsloth 通过优化内存占用和计算效率，使得在消费级显卡上微调大型语言模型成为可能，降低了硬件门槛。</span>
+                        <strong style="color: #1e40af">Hung task (挂起任务) 警告表明进程长时间处于不可中断状态，可能导致系统资源瓶颈。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 进程处于 D 状态时无法被信号中断，若长时间阻塞可能持有锁，影响其他进程，提示系统资源可能存在问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">针对特定领域的数据集微调可以显著提升模型在该领域的表现。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用医学数据集微调，可以使模型在医学问答和推理方面表现出更强的专业性。</span>
+                        <strong style="color: #1e40af">分析栈跟踪是调试 hung task (挂起任务) 的重要手段，但需注意警告可能指向“受害者”而非“攻击者”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过栈跟踪可定位问题函数，但需识别真正导致阻塞的进程或操作，避免被表面现象误导。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">LoRA 微调是一种高效的模型微调方法，可以在保持模型性能的同时，显著减少计算资源需求。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LoRA 通过仅训练少量参数，即可使模型适应特定任务，降低了计算成本和存储需求。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">详细的步骤和代码示例有助于读者快速复现实验。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章提供了从环境搭建到模型训练的完整流程，方便读者进行实践和学习。</span>
+                        <strong style="color: #1e40af">BPF 和 drgn 等工具可辅助深入分析内核状态，定位锁竞争等复杂问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> BPF 可用于动态追踪内核函数调用和变量值， drgn 可用于交互式调试运行中的内核，帮助定位问题根源。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用 unsloth 优化的 FastLanguageModel 加载预训练模型</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你是一位在临床推理、诊断和治疗计划方面具有专业知识的医学专家。 请回答以下医学问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">可见微调前模型已经具备不错的通用医学能力</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Unsloth Zoo will now patch everything to make training faster!</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">The most important thing about these states is that they still can receive signals， and be terminated by a signal. In contrast， a process in the `TASK_UNINTERRUPTIBLE` state is waiting only for certain special classes of events to wake them up， and can't be interrupted by a signal. (最重要的是，这些状态仍然可以接收信号并被终止。相比之下，处于 `TASK_UNINTERRUPTIBLE` 状态的进程只等待特定类型的事件唤醒，并且不能被信号中断。)</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Each case is unique， and there is no standard approach to debug them. (每个案例都是独特的，没有标准的调试方法。)</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Analyzing the stack trace might be a good starting point for debugging it， even if all the messages look unrelated. (分析堆栈跟踪可能是调试的一个好的起点，即使所有消息看起来都不相关。)</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">HelloJava</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">疑似地上霜</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Oxana Kharitonova</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">33 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8124</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2283</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型微调</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">医学</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepSeek-R1-Distill-Qwen-14B</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Unsloth</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux 内核</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">hung task</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">XFS</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/5231b9">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/1818bf">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
