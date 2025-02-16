@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Vercel：域名连接实现 DNS 自动配置</title>
+        <title>Linux Hung Task 问题根源探究</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Vercel：域名连接实现 DNS 自动配置</h2>
-        <p>2/14/2025, 1:00:00 PM</p>
+        <h2>Linux Hung Task 问题根源探究</h2>
+        <p>2/14/2025, 2:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Vercel 引入域名连接，支持自动化 DNS 配置。一键集成简化域名设置，减少手动错误。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 Linux 内核中 hung task 警告的原理、成因及调试方法，通过具体案例分析，指导读者有效定位和解决系统瓶颈。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Vercel 现在支持域名连接，这是一种自动化 DNS 配置的开放标准。此功能允许用户一键设置域名，无需手动复制 DNS 记录，节省时间和减少潜在错误。目前，支持 Cloudflare 管理的域名，并计划未来支持更多提供商。用户可以通过向 Vercel 项目添加新域名来启动自动设置，Vercel 会自动检测域名是否支持域名连接。此外，Vercel 正在将域名连接作为 DNS 提供商进行实施，进而促进外部服务轻松配置 Vercel 域名。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Linux 内核中 hung task 警告的产生机制和调试方法。首先解释了 hung task 警告的含义，即进程长时间处于不可中断状态（D 状态）且未被调度到 CPU 。然后通过三个实际案例，分别展示了 XFS 文件系统压力、 Coredump 生成过程和 RTNL 锁竞争导致的 hung task 问题，并提供了相应的调试思路和解决方案。文章强调了分析栈跟踪、识别潜在的“受害者”和“攻击者”的重要性，并建议结合 BPF 和 drgn 等工具进行深入分析。最后总结了调试 hung task 的一般性原则和方法，旨在帮助读者更好地理解和解决类似问题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">域名连接简化 Vercel 的 DNS 设置流程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过支持域名连接，Vercel 自动化 DNS 配置，减少用户的手动步骤和潜在错误。</span>
+                        <strong style="color: #1e40af">Hung task (挂起任务) 警告表明进程长时间处于不可中断状态，可能导致系统资源瓶颈。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 进程处于 D 状态时无法被信号中断，若长时间阻塞可能持有锁，影响其他进程，提示系统资源可能存在问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">现在支持 Cloudflare 管理的域名。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Vercel 的域名连接集成最初支持 Cloudflare 域名，并计划扩展到其他提供商。</span>
+                        <strong style="color: #1e40af">分析栈跟踪是调试 hung task (挂起任务) 的重要手段，但需注意警告可能指向“受害者”而非“攻击者”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过栈跟踪可定位问题函数，但需识别真正导致阻塞的进程或操作，避免被表面现象误导。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Vercel 通过域名连接作为 DNS 提供商，简化配置流程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 外部服务可以使用域名连接轻松配置 Vercel 域名，从而简化集成和管理。</span>
+                        <strong style="color: #1e40af">BPF 和 drgn 等工具可辅助深入分析内核状态，定位锁竞争等复杂问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> BPF 可用于动态追踪内核函数调用和变量值， drgn 可用于交互式调试运行中的内核，帮助定位问题根源。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只需一键操作，即可设置域名，无需手动复制 DNS 记录，从而节省时间和减少错误。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现在支持 Cloudflare 管理的域名，更多提供商即将推出。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们还将域名连接实施为 DNS 提供商，使外部服务可以同样轻松地配置 Vercel 域名。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">The most important thing about these states is that they still can receive signals， and be terminated by a signal. In contrast， a process in the `TASK_UNINTERRUPTIBLE` state is waiting only for certain special classes of events to wake them up， and can't be interrupted by a signal. (最重要的是，这些状态仍然可以接收信号并被终止。相比之下，处于 `TASK_UNINTERRUPTIBLE` 状态的进程只等待特定类型的事件唤醒，并且不能被信号中断。)</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Each case is unique， and there is no standard approach to debug them. (每个案例都是独特的，没有标准的调试方法。)</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Analyzing the stack trace might be a good starting point for debugging it， even if all the messages look unrelated. (分析堆栈跟踪可能是调试的一个好的起点，即使所有消息看起来都不相关。)</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Vercel News</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Rhys Sullivan, Meg Bird, Mark Glagola, Dillon Mulroy</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Oxana Kharitonova</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">103</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2283</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DNS 配置</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DNS 自动化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">域名连接</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vercel</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux 内核</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">hung task</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">XFS</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/d39467">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGHDRPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNDZBJzQTkm9RMQG7U3AD5TWreOKladFK16KRq0SfL1GwCcgNkUvOEmhsgTwD5JjWbgGw6qVp0UrXopGrRJ18G5Ak1T6iZgNyoeULNG0C+CcgTar7ppGrRSdWik6pFn/xj1ExAJiA3aiYgN2qeUPMvO6ladFK16KRq0Sd/HJBJzaTmBshvAnKj5i87qVp0UrXopGrRJ1+m5pvU3ACZ1ExqJiBvAPlNav5LTqoWnVQtOqla9MkyIL8JyKTmCSCTmgnIpGYCMqmZgExqJiBPAPkvO6ladFK16KRqEf7IPwTIE2omIJOaCcgbav5lJ1WLTqoWnVQt+uQlIJOaCcikZgIyqZmATGreUHOjZgLyhppvAjKpuQEyqdl0UrXopGrRSdUi/JFFQCY1N0Bu1ExAJjU3QG7UTEBu1ExAnlAzAXlCzQ2QSc0NkEnNGydVi06qFp1ULcIfWQTkCTU3QCY1E5BJzSYgk5obIJOaN4BMap4A8oSaN06qFp1ULTqpWvTJMjVvAJnU3KiZgExqJiBPqPkmIG8AmdRMaiYgk5pNJ1WLTqoWnVQtwh/5IiCTmieATGomIJvUTEAmNROQJ9RMQJ5QcwNkUjMBuVHzxknVopOqRSdViz55CcikZlIzAXlCzQTkRs0NkBsgb6j5JiCTmifUTEA2nVQtOqladFK16JOX1Dyh5gkgbwCZ1ExAJjVPqJmATGpu1ExAvgnIN51ULTqpWnRSteiTLwPyhpoJyA2QGyBPALlRcwNkUjMBmdT8JjWbTqoWnVQtOqla9MlLQCY1T6iZgExAJjUTkEnNBGRSswnIjZoJyA2QJ9S8AWRS88ZJ1aKTqkUnVYvwRxYB2aRmAvKGmk1AJjUTkEnNBGRSMwGZ1NwAuVEzAZnUvHFSteikatFJ1aJPXgIyqXkCyKRmAjKpmYBMap4A8oSaGyDfBGRSM6m5AfJNJ1WLTqoWnVQt+uQlNROQJ9RMQCY1bwC5UfMEkCfUTEDeUHMDZFJzo2bTSdWik6pFJ1WL8EdeADKpmYD8JWomIJOaGyCTmgnIN6n5fzqpWnRSteikatEnL6m5UfNNQCY1E5AngExqboBMat5Q8wSQGyBPqHnjpGrRSdWik6pFn7wE5DepmdQ8oeYGyCYgbwCZ1NwAmdRMQL7ppGrRSdWik6pFnyxTswnIG2omIJvUTEAmNTdAbtT8JSdVi06qFp1ULfrky4A8oeYJIJOaN9RMQCY1TwCZ1NwAeUPN/9NJ1aKTqkUnVYs++ePUTEAmNTdqJiCTmhsgk5obIDdqngByA+Q3nVQtOqladFK16JM/Dsik5kbNjZoJyKRmUjMBmdRMaiYgE5BJzQTkBsik5gbIppOqRSdVi06qFn3yZWq+Sc0NkEnNE2omIJOaGyBPqLlRMwGZ1NwAmdRsOqladFK16KRq0SfLgPwmIDdqboBMaiYgk5oJyI2aCcgTQJ4AMqm5ATKpeeOkatFJ1aKTqkX4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/AznJRjg4p07vAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/1818bf">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
