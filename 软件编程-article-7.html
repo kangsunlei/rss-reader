@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>前端监控 SDK：从基础到实践 （1. 性能监控）</title>
+        <title>从大模型性能优化到 DeepSeek 部署｜得物技术</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>前端监控 SDK：从基础到实践 （1. 性能监控）</h2>
-        <p>2/15/2025, 9:45:13 AM</p>
+        <h2>从大模型性能优化到 DeepSeek 部署｜得物技术</h2>
+        <p>2/17/2025, 8:51:48 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了如何使用 PerformanceObserver API 和重写 fetch、xhr 等技术，构建前端监控 SDK 的性能监控模块，包括资源加载和关键性能指标的统计与上报。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨大模型推理性能优化方法，如 Paged Attention、Radix Attention、Chunked Prefill 等，并分享 Deepseek-R1 高效部署实践。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了如何从零开始构建前端监控 SDK 的性能监控模块，并提供了实践指导。文章首先调研了两种统计页面性能数据的方法，最终选择了 PerformanceObserver API。接着，详细讲解了如何使用 PerformanceObserver API (如 PerformanceResourceTiming) 来捕获资源加载数据，并对数据进行过滤和加工，避免上报 SDK 自身的请求。然后，介绍了如何使用 PerformanceObserver API 来统计 FCP、LCP、FP 等关键性能指标。此外，文章还介绍了通过重写 fetch 和 xhr 来捕获 http 网络请求的方法，并给出了相应的代码实现， 带领大家从 0 到 1 搭建属于自己的监控平台。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了提升大模型推理性能的多种方法，并结合得物技术的实践经验进行评测分析。首先，文章阐述了高性能、易扩展的大模型推理框架的设计要点，强调 CPU 与 GPU 分离的重要性。接着，深入探讨了 Paged Attention 解决显存碎片问题、Radix Attention 缓存计算结果减少重复计算、Chunked Prefill 避免单个请求卡顿等优化策略。此外，文章还介绍了通过缩短输出长度、使用多卡推理以及预测解码等方式提升推理速度。最后，文章分享了使用 SGLang 推理引擎高效部署 Deepseek-R1 模型的具体步骤，展示了 SGLang 在简化部署流程中的作用。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,23 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过 PerformanceObserver API，可以高效且标准化地采集 FP、FCP、LCP 等用户体验相关的核心性能指标。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PerformanceObserver 可以用来监测性能度量事件，获取 FP、FCP、LCP 等关键性能指标，为性能优化提供数据支撑。</span>
+                        <strong style="color: #1e40af">CPU 与 GPU 分离设计是实现高性能推理的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将 CPU 密集型任务与 GPU 计算分离，减少 GIL 锁竞争，显著提升 GPU 利用率和系统吞吐量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过重写 fetch 和 xhr，可以无侵入地监控 HTTP 请求，为分析接口性能提供数据基础。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 重写 fetch 和 xhr 可以方便地获取网络请求的详细信息，包括请求的 URL、方法、状态码、耗时等，从而进行性能分析和问题排查。</span>
+                        <strong style="color: #1e40af">Paged Attention 有效解决显存碎片问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴操作系统内存管理机制，将 KV Cache 划分为固定大小的块，提升 GPU 利用率和推理吞吐量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">前端监控 SDK 需要过滤自身请求，避免循环上报，保证数据的准确性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于数据上报是 SDK 的行为，可能会产生 ajax 请求，因此需要过滤掉这些请求，避免无限循环上报。</span>
+                        <strong style="color: #1e40af">Radix Attention 通过缓存共享前缀减少重复计算</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用基数树管理和重用不同请求之间共享的前缀，减少计算资源浪费，提升推理效率。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Chunked Prefill 避免单个请求占用过多 GPU 资源</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 prompt 按照固定长度分块处理，减轻单个请求对 GPU 资源的占用，避免影响其他 decode 请求。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">缩短输出长度，显著提升性能</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过限制最大输出长度、优化 prompt 或微调大模型等方式，减少 decode 阶段生成的 token 数量，从而显著提高整体响应时间。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">预测解码利用小模型辅助大模型推理加速</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过小模型预测 token，大模型验证，或直接使用 n-gram 匹配 prompt，提升大模型推理速度。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +61,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">前端监控已经成为开发者不可或缺的一项技能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从性能优化到错误跟踪，再到用户行为分析，构建一个完整的前端监控平台不仅能帮助团队快速发现问题，还能为业务决策提供可靠的数据支撑。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在文章中，我会结合 monitor-sdk 的实现细节，和给大家学习搭建的 demo 来逐步拆解前端监控的各个模块，带领大家从 0 到 1 搭建属于自己的监控平台。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Deepseek-r1 模型的爆火标志着本地部署大模型的需求日益增长。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于大模型推理来说，性能优化主要聚焦于两个关键指标：吞吐量与响应时间 (RT)。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Paged Attention 减少了内存浪费，提高了 GPU 的利用率，使模型的推理吞吐量比传统方法提升了数倍。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 vllm 的最新版本中，chunked prefill 已默认开启。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">可见推理中单卡变双卡可以显著提升大模型推理速度与 QPS。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +69,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">四十还是十四</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">menglinggong</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">19 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4574</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">35 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8591</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SDK</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PerformanceObserver</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PerformanceResourceTiming</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推理加速</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Paged Attention</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Radix Attention</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a46123">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATJSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmieATGreAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCfUTEAmNU8AeULNpGaTmk1ANp1ULTqpWnRSteiTLwPyhJongNyouQEyqZmAvAHkCTVPAHlCzTedVC06qVp0UrXok3+MmgnIE0CeUDMBmdRMQCY1/5KTqkUnVYtOqhZ98o8B8oSaN4BMaiYg/09OqhadVC06qVr0yZep+S+puQEyqbkBMqm5UXMDZFLzhJo/yUnVopOqRSdViz5ZBuS/pGYCMql5AsikZgIyqZmATGreAPInO6ladFK16KRq0ScvqfmbqXkCyBNqJiCTmhs1f5OTqkUnVYtOqhbhj7wAZFIzAdmk5k8GZFJzA2RSMwHZpOabTqoWnVQtOqlahD/yi4BMaiYgk5pNQG7UTEAmNROQSc0NkG9S8wSQSc0bJ1WLTqoWnVQtwh/5IiA3am6ATGomIJvU3AB5Qs0NkBs1f5OTqkUnVYtOqhbhjywC8oaaGyBPqPkvAfkmNROQSc0EZFKz6aRq0UnVopOqRZ/8x9RMQG7UPAHkRs0TQCY1E5AbNb8JyKTmm06qFp1ULTqpWoQ/8hcBMql5A8ikZgIyqZmA/CY1E5BJzRNAJjVvnFQtOqladFK16JOXgPwmNROQGzUTkDeAPKHmBsik5gbIpGYCcqNmUrPppGrRSdWik6pFn/wyNROQGzUTkEnNDZBJzQRkAvKEmieAbAIyqbkBMqnZdFK16KRq0UnVok+WqZmATEAmNROQCcik5gk1E5AbNROQSc0NkEnNjZo31ExAbtR800nVopOqRSdViz75ZWomIDdqboBMaiYgk5obIJOaGyBvAJnUTEBugExqJiA3QCY1b5xULTqpWnRSteiTL1Nzo2YCMgG5UTMBmdRMQG7UTEBu1ExAJiCTmhsgk5oJyKTmDTWbTqoWnVQtOqla9MmXAZnUTEAmNTdAbtRMQCY1m4BMaiYgN0AmNROQGyCTmknNBGRSs+mkatFJ1aKTqkWf/DIgk5oJyI2aCcik5gbIpGYCMqmZgNwAmdRMQG6AbAJyA2RS88ZJ1aKTqkUnVYvwR/5iQJ5QcwNkUnMD5Ak1E5BJzRNANql546Rq0UnVopOqRZ+8BOQ3qZnUfBOQGzU3QCYgTwCZ1Lyh5ptOqhadVC06qVr0yTI1m4DcAJnU3AC5UfMnUfOEmhsgN2reOKladFK16KRq0SdfBuQJNW8AmdRMat4A8oaaCcgEZBOQSc03nVQtOqladFK16JN/HJA31ExqJiCb1NwAmdRMQG6A3Kh546Rq0UnVopOqRZ/8Y9R8E5An1NyouQFyA+QNNZtOqhadVC06qVr0yZep+SY1E5BJzRNAJjU3at4AMqmZ1ExAJjUTkEnNBOSbTqoWnVQtOqla9MkyIL8JyKRmAvKEmjeATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXof0VYMT52UM4tAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/17dfe3">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYDSURBVO3BQW4kwRHAQLKg/3+Z3mOeGmjMSC4bGWH/sNYlDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSHD6n8pYonKr+p4onKk4pJ5Y2KN1T+UsUnDmtd5LDWRQ5rXeSHL6v4JpUnKlPFE5Wp4hMqU8Wk8kbFGypTxZOKb1L5psNaFzmsdZHDWhf54ZepvFHxCZU3VKaKSWWqeKNiUpkqJpW/pPJGxW86rHWRw1oXOax1kR/+z1T8JpU3VKaKSWWqmFSmiknl/8lhrYsc1rrIYa2L/PA/ruINlScVn1CZKt5QeaPi/8lhrYsc1rrIYa2L/PDLKv6bVJ5UPKmYVKaKSeWJylTxRGVSeVLxRsVNDmtd5LDWRQ5rXeSHL1P5SypTxZOKSWWqmFSmikllqphUpopJZap4UjGpvKFys8NaFzmsdZHDWhf54UMVN1F5o+INlU+ofEJlqnhS8b/ksNZFDmtd5LDWRX74kMpU8U0qU8WTik+oPKl4ojJVTCrfpPJGxROVNyq+6bDWRQ5rXeSw1kXsH36RyhsVT1TeqJhU3qiYVL6pYlKZKiaVqeITKm9U/KbDWhc5rHWRw1oX+eHLVKaKSeUNld9UMalMKk8qJpWp4onKVDGpTBWTypOKNyomlUllqvimw1oXOax1kcNaF7F/+EMqU8UnVKaKSWWqmFSeVLyh8k0Vk8pUMan8pYpvOqx1kcNaFzmsdZEfvkxlqniiMlVMKlPFJ1SmiknlmyomlaliUnlSMalMFZPKVPEJld90WOsih7UucljrIvYPH1CZKj6hMlW8ofKk4i+pTBXfpDJVTCpTxRsqb1R84rDWRQ5rXeSw1kXsH36RylTxhspvqnii8kbFGypTxSdUnlQ8UZkqJpWp4psOa13ksNZFDmtd5IcPqUwVT1SeVEwVT1SeVEwqk8qTiicqT1Smik+ovFHxROWJylQxqUwVnzisdZHDWhc5rHWRH75M5UnFGypTxVQxqUwqU8UTlScqU8WkMlU8qXiiMlVMKm+oPKn4bzqsdZHDWhc5rHUR+4eLqEwV36TypGJSeaNiUnmjYlL5poonKk8qJpWp4hOHtS5yWOsih7Uu8sOXqXyTypOKJypTxaQyqUwVk8oTlTcqJpU3Kp6oTCpTxU0Oa13ksNZFDmtdxP7hAypvVDxRmSomlTcq3lB5o+INlScVk8qTik+ovFHxmw5rXeSw1kUOa13khy+r+ETFpDJVPFGZVKaKNyo+ofKkYlKZKt5QmSo+UTGpTBXfdFjrIoe1LnJY6yI//DGVNyreqJhUnqg8UZkq3qh4o+KJypOK31Txmw5rXeSw1kUOa13kh/+yiicqU8UbFZPKk4rfpDJVTCpPKp6oTBVvVEwqTyq+6bDWRQ5rXeSw1kV++GMVT1SmijdUnlRMKk9U3qh4Q2Wq+CaVN1TeUJkqPnFY6yKHtS5yWOsiP3yZyjepTBWTylQxqbyhMlV8U8Wk8obKX6qYVKaKbzqsdZHDWhc5rHUR+4f/YSpPKiaVqeKJyicqJpU3KiaVJxVvqEwVk8obFZ84rHWRw1oXOax1kR8+pPKXKqaKJyo3qXhD5RMqU8U3VXzTYa2LHNa6yGGti/zwZRXfpPKGylTxROUTFZPKpDJVPFH5poo3VJ5U/KbDWhc5rHWRw1oX+eGXqbxR8U0qU8UnKiaVqeKJyicqJpVJ5Zsq/tJhrYsc1rrIYa2L/LA+UvFEZar4hMpUMalMFZPKGypTxaQyVXzisNZFDmtd5LDWRX74P1MxqUwqU8WkMlVMKlPFk4pJZap4ojJVTCpTxScqJpVJ5Tcd1rrIYa2LHNa6yA+/rOIvqUwVT1SmikllqnhDZap4o+JJxaQyVXxTxW86rHWRw1oXOax1kR++TOUvqXyiYlJ5ojJVTCrfpPJGxaTypOJJxaQyVXzTYa2LHNa6yGGti9g/rHWJw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaF/kPt2fRfUlEz20AAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
