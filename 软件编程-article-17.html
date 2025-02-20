@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何在 JavaScript 中使用类 — 初学者手册</title>
+        <title>定高虚拟列表</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何在 JavaScript 中使用类 — 初学者手册</h2>
-        <p>2/18/2025, 12:29:27 PM</p>
+        <h2>定高虚拟列表</h2>
+        <p>2/19/2025, 9:00:41 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文面向初学者，深入浅出地介绍 JavaScript 类，并剖析对象、原型和 ES6 类的概念。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了如何在 Vue 中实现**定高**虚拟列表，通过监听滚动事件动态渲染可视区域内的列表项，从而优化**定高**长列表的性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在帮助初学者理解 JavaScript 类，通过示例引导从函数式编程转向面向对象编程，消除常见疑惑。文章阐明了对象、原型和 ES6 类的概念，解释了如何使用类来组织和封装代码，并强调理解对象和原型是掌握 JavaScript OOP 的关键。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细讲解了在 Vue 中实现定高虚拟列表的步骤和原理。首先解释了虚拟列表的概念和解决的问题：在长列表中，只渲染可视区域内的元素，避免一次性渲染大量数据导致页面卡顿。文章逐步介绍了如何实现滚动条、计算可视区域内的元素数量、确定列表的首尾索引，以及如何监听滚动事件并更新索引，从而实现虚拟列表的核心功能。此外，还通过计算偏移量并使用 `transform` 属性进行偏移修正，解决了滑动时可能出现的滚动偏差问题。文章提供了完整的代码示例，方便读者理解和实践。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JavaScript 使用原型进行面向对象编程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> JavaScript 不同于 Java 或 C++，它没有传统类，而是使用原型继承来实现继承和封装。理解原型对于掌握 JavaScript OOP 至关重要。</span>
+                        <strong style="color: #1e40af">通过占位元素实现滚动条，保证滚动范围正确</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用一个高度等于完整列表的 `placeholder` 元素，占据滚动空间，模拟真实滚动条，但不渲染实际列表项。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">ES6 类是原型继承的语法糖。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ES6 引入的类本质上是原型继承的语法糖，为开发者提供了更简洁的语法。</span>
+                        <strong style="color: #1e40af">动态计算可视区域渲染的列表项，避免过度渲染</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 根据可视区域高度和 `item` 高度，计算需要渲染的 `item` 数量，仅渲染可视区域内的列表项，提高性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">对象可以通过原型链访问和使用来自其原型对象的属性和方法。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 原型是对象可以从中查找并使用属性和方法的另一个对象（在其自身不具备这些属性和方法时）。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“函数优先”方法在 JavaScript 中很常见，而 OOP 提供了一种替代方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然 JavaScript 经常使用函数式编程风格，但 OOP 提供了另一种组织代码的方式，对于来自其他语言背景的开发人员来说，这可能更直观。</span>
+                        <strong style="color: #1e40af">通过计算偏移量并使用 `transform` 属性修正滚动偏差，解决滑动时列表渲染不准确的问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 监听滚动事件，实时计算 `start` 值和偏移量，并使用 `transform` 属性修正滚动偏差，保证列表渲染的准确性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从技术上讲，JavaScript 没有像 Java 或 C++ 这样的类。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即使 JavaScript 通过原型（而不是经典类）以自己的方式做事，它仍然完全支持“面向对象编程”（OOP）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对象的原型是另一个对象，对象可以从中查找和使用属性和方法，如果它本身没有这些属性和方法。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有的特殊场景我们不能分页，只能渲染一个长列表。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果全部渲染到页面上用户的设备差点可能就会直接卡死了，这时我们就需要虚拟列表来解决问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在定高的虚拟列表中，我们可以根据可视区域的高度和每个 item 的高度计算得出在可视区域内可以渲染多少个 `item`。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">83</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Spruce Emmanuel</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">79</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">奇舞精选</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">小九九</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">32 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7931</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1488</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">类</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">面向对象编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OOP (面向对象编程)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">对象</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vue</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vue 组件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">虚拟列表</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/59187f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/d21053">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATKSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2RSMwGZ1ExAJjVvAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyCY1TwB5Qs2kZpOaTUA2nVQtOqladFK16JMvA/KEmieATGpugExqJjUTkDeAPKHmCSBPqPmmk6pFJ1WLTqoWffI/o2YC8oaaCcikZgIyqfmbnFQtOqladFK16JO/HJAbNW8AmdRMQP5PTqoWnVQtOqla9MmXqflNQG7UPAHkRs2Nmhsgk5on1PyXnFQtOqladFK16JNlQP5NaiYgN0AmNTdqJiCTmgnIpOYNIP9lJ1WLTqoWnVQtwh/5gwG5UbMJyI2aGyCTmr/JSdWik6pFJ1WL8EdeADKpmYBsUnMD5EbNBGRS8waQSc0NkEnNBGSTmm86qVp0UrXopGoR/sgXAXlCzTcBmdTcAJnUTEAmNTdAvknNE0AmNW+cVC06qVp0UrUIf+QFIDdqJiA3aiYgk5oJyI2aCciNmhsgT6i5AXKj5k9yUrXopGrRSdUi/JEvAvKGmhsgk5oJyKTmNwH5JjUTkEnNBGRSs+mkatFJ1aKTqkWf/DI1TwC5UXOj5gbIpOYGyKRmAnKj5jcBmdR800nVopOqRSdViz75ZUAmNROQSc0E5Akgk5ongExqJiBPAHlDzQRkUvMEkEnNGydVi06qFp1ULcIfWQRkUnMDZFIzAXlCzSYgb6i5ATKpuQEyqZmA3Kj5ppOqRSdVi06qFn3yEpBJzQRkUjOpuVHzTUBu1ExAJjVPANkEZFJzA2RSs+mkatFJ1aKTqkWfvKRmAjKpuQEyqZmATGomIG+ouQEyqbkBMqm5UfOGmgnIjZpvOqladFK16KRq0ScvAZnUbFLzhpoJyARkUvMEkDeATGomIDdAJjUTkBsgk5o3TqoWnVQtOqla9MmXAXkDyBNq3gAyqZmATGomIBOQSc0NkEnNBGRS84aaTSdVi06qFp1ULfrkX6ZmAjKpuQFyA2RSswnIpGYCcgNkUjMBuQEyqZnUTEAmNZtOqhadVC06qVr0yS9T8wSQSc03AXkDyKRmAnIDZBOQGyCTmjdOqhadVC06qVqEP/IHA/KGmgnIpOYGyBNqJiCTmieAbFLzxknVopOqRSdViz55CchvUjOpmYBMajYBmdTcAJmAPAFkUvOGmm86qVp0UrXopGrRJ8vUbAJyA2RS84aaGzW/Sc0Tam6A3Kh546Rq0UnVopOqRZ98GZAn1LwBZFJzA2RScwPkDTUTkAnIJiCTmm86qVp0UrXopGrRJ38ZNROQSc0baiYgm9TcAJnUTEBugNyoeeOkatFJ1aKTqkWf/M+pmYBMaiYgT6i5UXMD5AbIG2o2nVQtOqladFK16JMvU/NNam7UTEAmNZOaJ9S8AWRSM6mZgExqJiCTmgnIN51ULTqpWnRSteiTZUB+E5BJzY2aCcgmIJOaCcikZgIyqbkBcgNkUvNNJ1WLTqoWnVQtwh+pWnJSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQt+gfxFjsuX54xOwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>

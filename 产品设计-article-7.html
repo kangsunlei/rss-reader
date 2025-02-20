@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>避免重复扣款：分布式支付系统的幂等性原理与实践</title>
+        <title>吃软不吃硬？一招教你 B 端硬件设计的那些硬道理（上）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>避免重复扣款：分布式支付系统的幂等性原理与实践</h2>
-        <p>2/18/2025, 11:02:51 AM</p>
+        <h2>吃软不吃硬？一招教你 B 端硬件设计的那些硬道理（上）</h2>
+        <p>2/19/2025, 3:02:06 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了分布式支付系统中幂等性的原理、重要性、实现方案，以及在实践中面临的挑战和解决方案，并提供了选型建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了钉钉 B 端硬件设计的核心原则：普惠、专注、平衡。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细阐述了分布式支付系统中幂等性的重要性，以及在实际应用中面临的挑战和解决方案。首先解释了幂等性的基本概念，强调其在支付系统中的核心作用，即保证交易的准确性和防止重复扣款。接着，文章深入分析了业务幂等、通用幂等组件、通用幂等服务和全局幂等等多种实现方案，并对它们的适用场景、优缺点进行了对比。此外，还讨论了分布式场景下实现幂等性的挑战，如数据一致性和跨库事务一致性，并提出了使用全局唯一交易 ID、构建状态机等应对策略。全局唯一交易 ID 是实现全局幂等性的基础。最后，文章指出了幂等性被击穿的潜在风险及严重后果，强调了幂等性在各类交易类互联网应用中的普适性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了钉钉在 B 端硬件设计中秉持的“普惠、专注、平衡”三大核心原则。普惠强调产品设计的友好性和广泛适用性，通过周正规整的形态、圆润的曲率和对称的细节来实现。专注侧重于提升效率和降低学习成本，通过清晰的功能分区和视觉布局，以及宁静科技的设计理念来实现。平衡则关注美学与功能、目标与成本、产品与环境之间的和谐统一。文章旨在为设计师和创新者提供设计参考与启示，提升 B 端产品的用户体验和市场竞争力。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">幂等性是分布式支付系统确保交易准确性的核心</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 幂等性保证操作无论执行多少次，结果都相同，避免重复扣款，维护用户信任，防止资损。</span>
+                        <strong style="color: #1e40af">普惠原则强调产品对多数用户的友好性和适用性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过周正规整的几何形态、圆润的曲率和对称的细节设计，让用户感受到友善与信任，降低使用门槛。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">业务幂等、通用幂等组件等方案各有优劣和适用场景</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 业务幂等简单直接，通用幂等组件方便运维，全局幂等解决跨机房问题，需根据系统规模选择。</span>
+                        <strong style="color: #1e40af">专注原则旨在降低学习成本并提升操作便捷性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过清晰的功能分区、视觉引导和隐藏非高频功能，使用户专注于核心任务，减少干扰，提升工作效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">分布式场景下数据一致性和事务一致性是主要挑战</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 需采用全局唯一 ID、状态机等策略，保证数据在不同节点和数据库之间的一致性，防止业务错误。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">幂等性可能被击穿，导致资损，需要重视算法故障和数据同步延迟等问题，并采取相应措施</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在分布式系统中，由于同步延迟或算法故障，可能导致幂等性失效，需要采取监控和预防措施。</span>
+                        <strong style="color: #1e40af">平衡原则关注产品在复杂关系和场景下的和谐统一</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 需要在美学与功能、目标与成本、产品与环境之间找到平衡点，实现简约而不简单的设计，并考虑多场景的适用性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当我们说一个接口支持幂等时，无论调用多少次，对系统造成的结果是一致的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">支付系统必须以最高的可靠性和准确性处理交易，这对于用户信任至关重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在面临时经常有同学只回答到"使用 redis 分布式锁来实现幂等"，这是不对的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">幂等一定是依赖数据库的唯一索引解决。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">幂等住了之后，还需要继续查询业务数据，如果查询失败，仍然执行业务操作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">幂等性是分布式支付系统的基本要求，对于确保交易的正确性和避免重复扣费至关重要。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">科技公司品牌及生态产品需要保持一致的品牌语言传递和心智占领，这将带来顶级的设计影响力和客户忠诚度，最终形成将客户转化为品牌大使的正向循环效应。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">钉钉的智能硬件设计目标是"简单高效，底色温暖"。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">设计的核心职责是以用户为中心。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">B 端产品对应着复杂的关系与场景，想要使其变得简单意味着产品需要把握多种关系之间的平衡，产品自身的平衡关系，目标与成本之间的平衡以及产品与环境之间的平衡。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只有从根本上满足用户的真实需求，才能在激烈的市场竞争中脱颖而出，实现产品与市场的深度融合与共赢。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">人人都是产品经理</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">隐墨星辰</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">钉钉用户体验</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">产品设计</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2432</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2676</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">支付系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">幂等性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">支付架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">B 端硬件设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">B 端产品</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">设计方法论</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品设计原则</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户体验</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/63660d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/f80f83">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYUSURBVO3BQW4sy7LgQDKg/W+ZfYY+SiBRJXW8+93M/mGtSxzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIDx9S+UsVb6h8U8UTlScVk8obFW+o/KWKTxzWushhrYsc1rrID19W8U0qT1SmijcqPqEyVUwqb1S8oTJVPKn4JpVvOqx1kcNaFzmsdZEffpnKGxWfUJkqJpVJZaqYVKaKNyomlaliUvlLKm9U/KbDWhc5rHWRw1oX+eH/mIpJ5Q2VN1SmikllqphUpopJ5b/ksNZFDmtd5LDWRX74H1fxRGWqmCq+SWWqeEPljYr/ksNaFzmsdZHDWhf54ZdV3ERlqnhSMalMFZPKE5Wp4onKpPKk4o2KmxzWushhrYsc1rrID1+m8pdUpoonFZPKVDGpTBWTylQxqUwVk8pU8aRiUnlD5WaHtS5yWOsih7Uu8sOHKm6i8kTlEyqfUPmEylTxpOJ/yWGtixzWushhrYv88CGVqeKbVKaKJxWfUHlS8URlqphUvknljYonKm9UfNNhrYsc1rrIYa2L2D/8IpU3Kp6ovFExqbxRMal8U8WkMlVMKlPFJ1TeqPhNh7UucljrIoe1LvLDL6uYVN5QeaPijYpJZVJ5UjGpTBVPVKaKSWWqmFSmikllqnhSMalMKlPFNx3WushhrYsc1rqI/cMXqUwVk8obFU9U3qiYVJ5UvKHyTRWTylTxhso3VXzTYa2LHNa6yGGti/zwxyomlScqU8UbFZPKX6qYVKaKSeVJxaTyRsUnVH7TYa2LHNa6yGGti/zwIZWp4onKVPGGym+q+ETFpDJVPKm4icoTlaniE4e1LnJY6yKHtS5i//CLVJ5UPFGZKp6oPKmYVKaKSeWNijdUpopPqHxTxaQyVXzTYa2LHNa6yGGti/zwIZWp4g2VqWKqeKLypGJSmSomlaniicoTlaniEypvVEwqb6hMFZPKVPGJw1oXOax1kcNaF/nhy1SeVLyh8qRiUplUvkllqphUpoonFU9UpopJ5Zsq/n86rHWRw1oXOax1EfuHD6hMFW+oPKn4JpXfVDGpvFExqXxTxROVJxWTylTxicNaFzmsdZHDWhf54ctU3qiYVCaVJxVPVKaKSWWqeKLyROWNiknljYpJ5YnKVHGTw1oXOax1kcNaF7F/+CKVJxWTypOKSeVJxTepPKl4Q+VJxaTypOITKm9U/KbDWhc5rHWRw1oX+eFDKk8q3qiYVKaKSWVSmSqeqEwVTyreUHlSMalMFW+oTBWTyhsVk8pU8U2HtS5yWOsih7Uu8sPlKiaVqeKbVKaKT1S8UfFE5UnFb6r4TYe1LnJY6yKHtS5i//ABlanim1SmikllqriZylQxqTypmFSeVDxRmSomlScV33RY6yKHtS5yWOsiP/wylScVk8pU8YbKk4pJZaqYVN6oeENlqvgmlTdU3lCZKj5xWOsih7UucljrIvYPH1D5SxWTylQxqXyi4jepTBVvqPymikllqvimw1oXOax1kcNaF7F/+B+m8qRiUpkqJpVvqphU3qiYVJ5UvKEyVUwqb1R84rDWRQ5rXeSw1kV++JDKX6qYKp6ofKJiUvlExRsqn1CZKr6p4psOa13ksNZFDmtd5Icvq/gmlTdUnlRMKlPFpPKkYlKZVKaKJyrfVPGGypOK33RY6yKHtS5yWOsiP/wylTcqPlExqXxTxaQyVTxR+UTFpDKpfFPFXzqsdZHDWhc5rHWRH/5jVKaKJxWTyhsVT1Smik+oTBWTylQxqbyhMlVMKlPFJw5rXeSw1kUOa13kh/+YiknlExWTylTxpGJSmSqeqEwVk8pU8YmKSWVS+U2HtS5yWOsih7Uu8sMvq/hLKlPFpDJVPFGZKt5QmSreqJhUpopJZar4porfdFjrIoe1LnJY6yI/fJnKX1J5o+KJyhOVqWJS+SaVqWJSmSomlScVTyomlanimw5rXeSw1kUOa13E/mGtSxzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrI/wOAFOpq5FC7DwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
