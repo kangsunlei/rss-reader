@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>优化图像生成管道指南</title>
+        <title>从锁机制、负载饱和到 CDN 故障： Canva 宕机事故复盘</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>优化图像生成管道指南</h2>
-        <p>2/22/2025, 12:00:00 AM</p>
+        <h2>从锁机制、负载饱和到 CDN 故障： Canva 宕机事故复盘</h2>
+        <p>2/24/2025, 10:26:02 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文指导使用谷歌云服务的开发者和企业优化图像生成管道，以降低成本并提高效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Canva 宕机是突发流量、锁机制、CDN 故障等多重因素耦合导致，暴露了系统在负载饱和和弹性方面的挑战，以及自动化系统潜在的风险。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了优化图像生成管道的策略，强调在不牺牲图像质量的前提下，最大限度地降低成本和延迟的重要性。文章提出了三种优化策略：使用 GKE 的 GPU 共享策略和 A3 High 虚拟机来最大化资源利用率的硬件优化；利用 PyTorch 的编译方法和 Flash Attention 来提高效率的代码优化；以及采用多线程队列方法并行化不同阶段（如采样器、解码器和嵌入模型）的推理管道优化。通过采用这些方法，可以在提供卓越用户体验的同时，显著降低成本。文章还突出了谷歌云咨询在帮助客户实现这些优化方面的专业能力。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Canva 在 2024 年 11 月遭遇了一次严重的宕机事故，影响了 canva.com 的正常访问。事故的直接原因是 API 网关集群故障，由 Canva 编辑器的一次软件部署、锁机制问题以及 CDN 提供商 Cloudflare 的网络问题共同作用引发。大量客户端同时下载新资源导致 API 网关每秒收到超过 150 万个请求，远超正常峰值负载的三倍，使负载均衡器失效。自动缩放机制未能及时响应，导致 API 网关任务因内存耗尽而崩溃。Canva 团队通过在 CDN 层阻断流量并逐步恢复服务，最终解决了问题。Canva 团队通过制定流量阻断和恢复的操作手册，并增强 API 网关的弹性来改进事故响应流程。本次事故为高流量、高并发系统设计提供了宝贵的经验，强调了系统弹性和自动化风险的重要性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">硬件优化有效地提高了 GPU 利用率并降低了成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 GKE 的 GPU 共享策略（如多实例 GPU 和时间共享）和较小的 A3 High 虚拟机实例可以更有效地利用 GPU 资源。</span>
+                        <strong style="color: #1e40af">CDN 故障引发的突发流量是 Canva 宕机的直接诱因</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CDN 故障导致大量客户端同时请求资源，API 网关接收到远超正常水平的流量，触发系统过载保护机制。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">代码优化显著减少了图像生成管道的执行时间。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 PyTorch 的编译方法和 Flash Attention 可以优化代码并减少延迟，从而缩短图像生成流程的时间。</span>
+                        <strong style="color: #1e40af">不合理的自动化策略可能会放大系统风险</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 自动缩放机制未能及时响应流量变化，导致 API 网关任务因内存耗尽而崩溃，加剧了宕机的影响。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过使用多线程和队列技术优化推理管道，可以提高并行处理能力和资源利用率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用多线程队列方法可以并行执行图像生成管道中的不同阶段，减少 GPU 空闲时间并提高资源利用率。</span>
+                        <strong style="color: #1e40af">提升系统弹性需要在设计和运维两方面同时发力</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 事故响应人员需要能够调整系统行为，改变其运行方式，使系统恢复到正常状态。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">关键挑战在于优化整个管道，以最大限度地降低成本和延迟，同时不影响图像质量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">GPU 时间共享允许多个容器通过快速的上下文切换机制来共享完整的 GPU 算力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">优化图像生成管道是一个多方面的过程，但回报是巨大的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在降低模型大小以削减图像生成成本之前，请优先优化底层基础设施和软件，以确保最佳模型性能。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这是一个引人入胜的故事，涉及数据包丢失、缓存动态变化、流量激增、线程争用和任务余量等问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这就需要事故响应人员调整系统行为，改变其运行方式，使系统恢复到正常状态。（......）这是系统弹性的一个经典案例，即在系统进入非设计运行状态时，采取行动重新配置其行为。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Cloudflare 能力出众且乐于助人的合作伙伴协作下，我们花了一些时间才弄清楚事件全貌。（......）</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -61,25 +61,25 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Google Cloud Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Gopala Dhar, Kartik Chaudhary</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1209</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1765</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">图像生成</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推理优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型部署</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">稳定扩散</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API 网关</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CDN</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CDN 缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">负载均衡</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/073995">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GqSsyaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCcikZgJyo2YCMql5A8gTaiYgv0nNGydVi06qFp1ULfpkmZpNQJ4AcqNmE5An1ExAnlCzCcimk6pFJ1WLTqoWffJlQJ5Q84SaCcgNkEnNDZBJzaTmTwLyhJpvOqladFK16KRq0Sf/OCCTmjfU3ACZ1ExAJjUTkEnNf8lJ1aKTqkUnVYs++cepmYBMar4JyBtAJjX/spOqRSdVi06qFn3yZWp+k5o3gExqJjUTkEnNBOSb1PxNTqoWnVQtOqla9MkyIL8JyKRmAjKpmYBMaiYgk5o31ExAngDyNzupWnRSteikatEnL6n5lwCZ1GwCcgPkCTX/kpOqRSdVi06qFn3yEpBJzQTkRs0E5Ak1E5BJzQ2QGzUTkN8EZFJzA2RSMwG5UfPGSdWik6pFJ1WL8Ef+IUCeUDMBmdRMQG7UTEAmNTdAvknNE0AmNW+cVC06qVp0UrXok2VAJjUTkBs1E5BJzQRkUnOjZgIyqZmAvAFkUvMGkCeA3KjZdFK16KRq0UnVIvyRF4A8oWYCcqPmDSCTmgnIjZoJyI2aJ4BMam6A3Kh5Asik5o2TqkUnVYtOqhbhjywCMqmZgNyomYA8oWYTkBs1E5AbNd8E5EbNN51ULTqpWnRStQh/5AUg36TmCSB/kpobIJOaGyA3am6APKHmjZOqRSdVi06qFuGP/EFAvknNE0AmNU8A+ZPUTECeUPPGSdWik6pFJ1WL8EdeAPKEmhsgk5pNQDapeQLIjZobIDdqboBMajadVC06qVp0UrXok5fUTEAmNTdAJjUTkEnNBOQJNTdAJjUTkCeAPAFkUjOpmYBMQCY1v+mkatFJ1aKTqkWfLFMzAblRMwGZ1NyomYBMaiYgk5pJzQTkCSA3aiYgTwCZ1ExAJiC/6aRq0UnVopOqRZ+8BGRSM6mZgExAJjUTkD9JzQRkk5oJyBtqJiCTmm86qVp0UrXopGrRJy+puQFyo+ZGzQTkRs0E5AkgN2omIDdq3gAyqfmbnVQtOqladFK16JNlQDYBeUPNBGSTmgnIBGRSMwF5Asjf7KRq0UnVopOqRZ8sU7NJzQ2QGyA3QCY1TwDZpOYJIE8AuVHzxknVopOqRSdViz55CchvUvOGmieATGomNROQSc0E5Akgk5on1ExAJjWbTqoWnVQtOqla9MkyNZuAPAFkUvMEkEnNBORGzY2aCciNmm8CMql546Rq0UnVopOqRZ98GZAn1DyhZgIyAXlCzRtAbtTcAHlDzQRkUvNNJ1WLTqoWnVQt+uQfB+RGzRNA3lDzhJoJyKTmBsgEZFJzA2RS88ZJ1aKTqkUnVYs++T8D5A01N0CeUPMEkEnNDZBJzTedVC06qVp0UrXoky9T801qJiATkE1AJjWTmieATGreADKpmYBMajadVC06qVp0UrXok2VAfhOQJ9RMQJ5Q8wSQTWr+ZidVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfofUu8fVoKvlQAAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/65458a">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
