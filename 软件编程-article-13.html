@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>使 Cloudflare 成为构建 AI 智能体的最佳平台</title>
+        <title>10 分钟上手：Cohere + PostgreSQL 语义搜索指南</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>使 Cloudflare 成为构建 AI 智能体的最佳平台</h2>
-        <p>2/25/2025, 2:00:00 PM</p>
+        <h2>10 分钟上手：Cohere + PostgreSQL 语义搜索指南</h2>
+        <p>2/26/2025, 12:17:25 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 发布 agents-sdk 框架和 Workers AI 的更新，旨在简化 AI 智能体的构建流程，并提供结构化输出、工具调用以及更大的上下文窗口。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了如何利用 Cohere 的嵌入模型，结合 pgvector 和 pgai 扩展，在 PostgreSQL 数据库中快速实现语义搜索功能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 致力于成为构建 AI 智能体的首选平台，并为此推出了一系列新工具和服务。`agents-sdk` 是一个新的 JavaScript 框架，用于构建 AI 智能体并直接部署到 Cloudflare Workers，它支持实时通信、状态持久化，并能执行长期运行的任务。Workers AI 增加了结构化输出（JSON 模式）、工具调用和更大的上下文窗口，增强了 AI 智能体的功能。此外，还更新了 AI SDK 的 `workers-ai-provider`。Cloudflare 强调其平台在成本效益、Serverless AI 推理和持久执行方面的优势，特别是通过 Durable Objects 和 Workflows 实现持久执行，使其成为构建 AI 智能体的理想选择。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细阐述了在 PostgreSQL 中实现语义搜索的方法，重点介绍了如何利用 Cohere 的嵌入模型以及 pgvector 和 pgai 这两个 PostgreSQL 扩展。文章首先解释了语义搜索的概念及其优势，然后逐步指导读者完成环境搭建、数据加载、向量化以及索引创建等关键步骤。通过实际的 SQL 查询示例，展示了如何利用语义搜索技术检索相关电影信息。总结强调了该方案的便捷性和高效性，**特别是强调了使用 pgai 扩展在数据库内部实现语义搜索的优势，无需额外工具** 即可在 PostgreSQL 中构建强大的语义搜索功能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">`agents-sdk` 框架简化了 AI 智能体的构建和部署流程，并支持实时通信和状态管理。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该框架允许开发者使用 JavaScript 构建 AI 智能体，并将其直接部署到 Cloudflare Workers，从而简化了开发流程。它还提供了实时通信、状态管理等功能。</span>
+                        <strong style="color: #1e40af">利用向量嵌入实现语义搜索，超越了传统的关键词匹配。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将文本转换为向量，语义搜索能够理解查询的意图和上下文，从而提供更相关的搜索结果。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Workers AI 的更新增强了 AI 智能体的功能，特别是 JSON 模式的引入。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结构化输出、工具调用和更大的上下文窗口使 AI 智能体能够更有效地处理复杂任务，并与外部系统集成。JSON 模式在工具调用中起着重要作用。</span>
+                        <strong style="color: #1e40af">pgvector 和 pgai 扩展简化了在 PostgreSQL 中实现语义搜索的流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些扩展提供了必要的功能，如向量存储、向量化和索引，使得在数据库内部署语义搜索成为可能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Cloudflare 的 Workers 和 Durable Objects 提供了一个经济高效且可扩展的平台来运行 AI 智能体，并保证持久执行。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cloudflare 的 Serverless 架构和按使用量付费的模式，使开发者能够以较低的成本运行 AI 智能体，并根据需求进行扩展。Durable Objects 和 Workflows 确保了异步任务的持久性和可靠性。</span>
+                        <strong style="color: #1e40af">Cohere 的嵌入模型提供了高质量的文本向量化能力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cohere 的模型能够准确地捕捉文本的语义信息，为语义搜索提供坚实的基础。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体是能够自主执行任务的 AI 系统，它们可以决定工具的使用和流程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们坚信 Cloudflare 是构建智能体和 AI 应用的理想平台。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">借助 Workers AI，您只需在调用我们的推理 API 时付费，而无需为空闲的基础设施付费。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当使用工具调用或构建 AI 智能体时，文本生成模型必须返回有效的 JSON 对象，而不是自然语言。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义搜索是一种先进的搜索技术，它超越了传统的关键词匹配，能够捕捉用户查询背后的意图、语境和含义。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义搜索依赖于使用先进的嵌入模型将数据转换为向量嵌入。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义搜索的成功在很大程度上取决于嵌入模型在向量格式中准确捕捉数据特征的能力。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Rita Kozlov</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Timescale Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Team Timescale</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2611</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1691</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">agents-sdk</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Workers AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JSON 模式</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">语义搜索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PostgreSQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">pgvector</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">pgai</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cohere</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/f1428a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/1d2544">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaJ4C8oeYNIE+omYD8JjVvnFQtOqladFK16JNlajYBeUPNE0AmIE+omdRsUrMJyKaTqkUnVYtOqhZ98mVAnlDzBJAbNU+omYC8AeQJNU8AeULNN51ULTqpWnRSteiTf4yaCcgbaiYgk5oJyKRmAjKp+ZecVC06qVp0UrXok38MkEnNDZBJzQRkUjMBmdRMQP6fnFQtOqladFK16JMvU/MnAZnUPKFmAjKpuVFzA2RS84Sav8lJ1aKTqkUnVYs+WQbkT1IzAXkDyKRmAjKpmYBMat4A8jc7qVp0UrXopGoR/sh/GJAbNROQSc0NkCfU3ACZ1PxLTqoWnVQtOqla9MlLQCY1E5BNaiY1N0CeAHKj5gbIpGZSMwGZ1ExANqn5ppOqRSdVi06qFuGPLAIyqbkBMqm5AfKGmgnIpOYJIJOaGyDfpOYJIJOaN06qFp1ULTqpWoQ/sgjIN6mZgDyh5gkgb6i5AXKj5r/kpGrRSdWik6pF+CMvAHlCzZ8EZFLzTUC+Sc0EZFIzAZnUbDqpWnRSteikatEnL6mZgExqJiB/kpoJyKTmBsikZgJyo+Y3AZnUfNNJ1aKTqkUnVYs+eQnIpOYNNZuATEAmNTdAJjUTkCeAvKFmAjKpeQLIpOaNk6pFJ1WLTqoW4Y98EZAn1ExAnlDzTUCeUHMDZFJzA2RSMwG5UfNNJ1WLTqoWnVQt+uQlIJOaSc0E5AbIpOYGyJ+k5gkgm4BMam6ATGo2nVQtOqladFK16JOX1ExAJjVvALlRcwPkRs0Tam6ATGpu1LyhZgJyo+abTqoWnVQtOqla9MlLQL5JzQ2QSc0mIJOaCcgbQCY1E5AbIJOaCcgNkEnNGydVi06qFp1ULfpkmZoJyI2aCcgEZFJzA2RS84aaCcikZgIyAZnU3ACZ1ExAJjVvqNl0UrXopGrRSdWiT75MzQ2QGzUTkEnNDZAbNROQSc0NkEnNBOQGyKRmAnIDZFIzqZmATGo2nVQtOqladFK16JO/HJBJzW8C8gSQSc0E5AbIJiA3QCY1b5xULTqpWnRStQh/5D8MyG9SMwF5Qs0EZFLzBJBNat44qVp0UrXopGrRJy8B+U1qJjUTkBs1N0BugExqboBMQJ4AMql5Q803nVQtOqladFK16JNlajYBuQHyBJAbNX8TNU+oeQLIpOaNk6pFJ1WLTqoWffJlQJ5Q84aaJ4DcANmkZgIyAdkEZFIzqdl0UrXopGrRSdWiT/5xQJ4AMqm5AbJJzQ2QSc0E5AbIjZo3TqoWnVQtOqla9Mk/Bsgbam6APKHmRs0NkBsgb6jZdFK16KRq0UnVok++TM03qZmA3KiZgExAnlDzBpBJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5TUBu1ExAJjUTkDeATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXofzX3GVmMGbquAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
