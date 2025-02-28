@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>对谈 Ropet、LOOI、RingConn、Kickstarter：两万字聊明白 AI 硬件赛道</title>
+        <title>10 分钟上手：Cohere + PostgreSQL 语义搜索指南</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>对谈 Ropet、LOOI、RingConn、Kickstarter：两万字聊明白 AI 硬件赛道</h2>
-        <p>2/24/2025, 1:10:12 PM</p>
+        <h2>10 分钟上手：Cohere + PostgreSQL 语义搜索指南</h2>
+        <p>2/26/2025, 12:17:25 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">通过对谈分析 AI 硬件赛道，聚焦 AI 宠物、可穿戴设备的情感价值和用户需求，并分享 Kickstarter 平台的经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了如何利用 Cohere 的嵌入模型，结合 pgvector 和 pgai 扩展，在 PostgreSQL 数据库中快速实现语义搜索功能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是一篇以对谈形式展开的分析文章，深入探讨了 AI 硬件赛道，邀请了 Ropet、LOOI、RingConn 等 AI 硬件代表产品和 Kickstarter 平台，探讨 2025 年 AI 硬件的新趋势。文章围绕 AI 宠物的情绪陪伴价值、可穿戴设备的用户需求、产品设计理念、技术应用以及市场策略展开讨论。嘉宾们分享了各自独特的行业洞察和实践经验，强调了情感价值在 AI 硬件中的重要性，并对 AI 硬件的未来发展方向提出了独到见解。为 AI 硬件领域的创业者和从业者提供了有价值的参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细阐述了在 PostgreSQL 中实现语义搜索的方法，重点介绍了如何利用 Cohere 的嵌入模型以及 pgvector 和 pgai 这两个 PostgreSQL 扩展。文章首先解释了语义搜索的概念及其优势，然后逐步指导读者完成环境搭建、数据加载、向量化以及索引创建等关键步骤。通过实际的 SQL 查询示例，展示了如何利用语义搜索技术检索相关电影信息。总结强调了该方案的便捷性和高效性，**特别是强调了使用 pgai 扩展在数据库内部实现语义搜索的优势，无需额外工具** 即可在 PostgreSQL 中构建强大的语义搜索功能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">情绪价值传递需有限交互传递无限情感，而非面面俱到</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在产品设计中，应选择合适的交互点来有效地传递情绪价值，不依赖于全面的功能，而是在特定点上打动用户。</span>
+                        <strong style="color: #1e40af">利用向量嵌入实现语义搜索，超越了传统的关键词匹配。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将文本转换为向量，语义搜索能够理解查询的意图和上下文，从而提供更相关的搜索结果。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 硬件产品需精准定义用户角色，深度挖掘特定场景价值</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 明确产品在用户面前的角色定位，是严肃的医生还是友好的伙伴，并深入理解用户在特定场景下的需求，才能提供有针对性的价值。</span>
+                        <strong style="color: #1e40af">pgvector 和 pgai 扩展简化了在 PostgreSQL 中实现语义搜索的流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些扩展提供了必要的功能，如向量存储、向量化和索引，使得在数据库内部署语义搜索成为可能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 宠物核心在于提供情绪陪伴价值，而非功能堆砌</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 宠物应关注用户的情感需求，通过萌态设计和恰当的 AI 技术应用，提供个性化的陪伴体验，避免过度追求功能而忽略用户的情感连接。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 硬件要具备数据收集能力，为未来 OTA 升级提供支持</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 硬件产品应具备完整的数据同步能力和传感器，持续收集数据，为端侧模型提供支持，实现产品的持续进化和价值创造。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 硬件创业需避免 “逐鹿中原”，寻找适合自身发展的 “根据地”</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 硬件创业公司应避免与大厂正面竞争，寻找细分市场或特定场景，建立稳固的 “根据地”，逐步拓展产品价值和市场份额。</span>
+                        <strong style="color: #1e40af">Cohere 的嵌入模型提供了高质量的文本向量化能力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cohere 的模型能够准确地捕捉文本的语义信息，为语义搜索提供坚实的基础。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在东亚文化圈里，萌元素本身在情绪价值方面就有重大的意义。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本质上是他们激发了我们内心深处对一个伙伴角色的需求，所以我们本质上是要创造一个伙伴的角色。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在产品设计上一定要有所留白，尤其是对于女性用户，一定要在她的脑子里留白，甚至包括要不要为产品构建世界观。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一款爆款的 AI 宠物产品一定要具备完整的未来数据同步能力，并且其传感器要能够持续收集数据，不断地为端侧模型提供数据支持。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当我们打造这类产品时，需要思索在我们所处的整体社会文化背景下，作为人类，究竟有哪些共同的叙事能够引发大家的共鸣。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义搜索是一种先进的搜索技术，它超越了传统的关键词匹配，能够捕捉用户查询背后的意图、语境和含义。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义搜索依赖于使用先进的嵌入模型将数据转换为向量嵌入。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义搜索的成功在很大程度上取决于嵌入模型在向量格式中准确捕捉数据特征的能力。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +60,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Founder Park</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">FounderPark</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">83 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">20548</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Timescale Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Team Timescale</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1691</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI硬件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI宠物</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可穿戴设备</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人机交互</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">情绪价值</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">语义搜索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PostgreSQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">pgvector</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">pgai</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cohere</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/0da24f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/1d2544">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaJ4C8oeYNIE+omYD8JjVvnFQtOqladFK16JNlajYBeUPNE0AmIE+omdRsUrMJyKaTqkUnVYtOqhZ98mVAnlDzBJAbNU+omYC8AeQJNU8AeULNN51ULTqpWnRSteiTf4yaCcgbaiYgk5oJyKRmAjKp+ZecVC06qVp0UrXok38MkEnNDZBJzQRkUjMBmdRMQP6fnFQtOqladFK16JMvU/MnAZnUPKFmAjKpuVFzA2RS84Sav8lJ1aKTqkUnVYs+WQbkT1IzAXkDyKRmAjKpmYBMat4A8jc7qVp0UrXopGoR/sh/GJAbNROQSc0NkCfU3ACZ1PxLTqoWnVQtOqla9MlLQCY1E5BNaiY1N0CeAHKj5gbIpGZSMwGZ1ExANqn5ppOqRSdVi06qFuGPLAIyqbkBMqm5AfKGmgnIpOYJIJOaGyDfpOYJIJOaN06qFp1ULTqpWoQ/sgjIN6mZgDyh5gkgb6i5AXKj5r/kpGrRSdWik6pF+CMvAHlCzZ8EZFLzTUC+Sc0EZFIzAZnUbDqpWnRSteikatEnL6mZgExqJiB/kpoJyKTmBsikZgJyo+Y3AZnUfNNJ1aKTqkUnVYs+eQnIpOYNNZuATEAmNTdAJjUTkCeAvKFmAjKpeQLIpOaNk6pFJ1WLTqoW4Y98EZAn1ExAnlDzTUCeUHMDZFJzA2RSMwG5UfNNJ1WLTqoWnVQt+uQlIJOaSc0E5AbIpOYGyJ+k5gkgm4BMam6ATGo2nVQtOqladFK16JOX1ExAJjVvALlRcwPkRs0Tam6ATGpu1LyhZgJyo+abTqoWnVQtOqla9MlLQL5JzQ2QSc0mIJOaCcgbQCY1E5AbIJOaCcgNkEnNGydVi06qFp1ULfpkmZoJyI2aCcgEZFJzA2RS84aaCcikZgIyAZnU3ACZ1ExAJjVvqNl0UrXopGrRSdWiT75MzQ2QGzUTkEnNDZAbNROQSc0NkEnNBOQGyKRmAnIDZFIzqZmATGo2nVQtOqladFK16JO/HJBJzW8C8gSQSc0E5AbIJiA3QCY1b5xULTqpWnRStQh/5D8MyG9SMwF5Qs0EZFLzBJBNat44qVp0UrXopGrRJy8B+U1qJjUTkBs1N0BugExqboBMQJ4AMql5Q803nVQtOqladFK16JNlajYBuQHyBJAbNX8TNU+oeQLIpOaNk6pFJ1WLTqoWffJlQJ5Q84aaJ4DcANmkZgIyAdkEZFIzqdl0UrXopGrRSdWiT/5xQJ4AMqm5AbJJzQ2QSc0E5AbIjZo3TqoWnVQtOqla9Mk/Bsgbam6APKHmRs0NkBsgb6jZdFK16KRq0UnVok++TM03qZmA3KiZgExAnlDzBpBJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5TUBu1ExAJjUTkDeATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXofzX3GVmMGbquAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>

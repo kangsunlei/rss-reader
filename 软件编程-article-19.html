@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>美联邦机构推动 WebAssembly 作为比 eBPF 更安全的选择</title>
+        <title>分布式事务一张图-最全论述</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>美联邦机构推动 WebAssembly 作为比 eBPF 更安全的选择</h2>
-        <p>2/26/2025, 9:40:31 AM</p>
+        <h2>分布式事务一张图-最全论述</h2>
+        <p>2/27/2025, 3:10:40 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">NIST 建议 WebAssembly 作为云原生环境中比 eBPF 更安全的选择。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文以架构图为引，由浅入深地介绍了分布式事务的概念、应用场景、解决方案和优化策略，尤其关注高并发场景下的解决方案，并对比了各种方案的优缺点和适用场景。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">美国国家标准与技术研究所（NIST）发布论文，建议将 WebAssembly 集成到云原生服务网格中以增强安全性，尤其是在数据分类和流量分析方面。文章对比了 WebAssembly 和 eBPF 在数据保护方面的优劣，指出 eBPF 在内核级漏洞防御方面有效，但在处理复杂的应用层数据时存在局限性。WebAssembly 凭借其沙箱环境、可移植性和易于集成现有解析库的特性，在处理 HTTP 等应用层协议时更具优势。然而，WebAssembly 并非完美，在某些特定场景下性能可能不如 eBPF。文章强调，WebAssembly 和 eBPF 应互补使用，而非相互替代，以实现全面的安全和可观测性解决方案。专家指出，WebAssembly 从设计之初就考虑了安全性，使其在安全敏感环境中具有天然优势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文以清晰的架构图开篇，深入浅出地讲解了分布式事务的核心概念、典型应用场景以及多种解决方案。文章介绍了本地事务与分布式事务的区别，并列举了常见的分布式事务场景。接着，文章剖析了分布式事务的难点，如跨服务协调、高并发和一致性与性能的权衡。然后，详细阐述了两阶段提交（2PC）、Seata 分布式事务以及本地消息表等经典解决方案，并分析了各自的优缺点。最后，文章还探讨了高并发场景下 RocketMQ 事务消息的优化策略，并对分布式事务的未来发展趋势进行了展望。整体而言，本文内容全面、结构清晰、语言通俗易懂，适合对分布式事务感兴趣的读者阅读。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,11 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">WebAssembly 在安全性和易用性方面优于 eBPF，尤其是在处理应用层数据时。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> WebAssembly 可以在用户空间和服务器环境中使用，易于集成现有解析库，降低复杂性，提高解析操作的可靠性，并且从设计之初就考虑了安全性。</span>
+                        <strong style="color: #1e40af">分布式事务的本质是保证不同资源服务器的数据一致性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在微服务架构下，完成业务功能可能需要跨多个服务操作多个数据库，分布式事务旨在保证这些操作要么全部成功，要么全部失败。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">WebAssembly 和 eBPF 应互补使用，而非相互替代。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> eBPF 适用于内核级漏洞防御，而 WebAssembly 更适用于处理复杂的应用层数据，二者结合可实现全面的安全和可观测性。</span>
+                        <strong style="color: #1e40af">CAP 理论需要在一致性、可用性和分区容错性之间进行权衡，影响分布式事务方案的选择</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CAP 理论指出，一致性、可用性和分区容错性三者不可兼得，需要在实际业务场景中进行权衡和取舍，从而影响分布式事务方案的选择。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">本地消息表方案通过异步对账实现最终一致性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该方案将事务操作和消息发送解耦，通过轮询消息表并异步执行相关操作，最终保证数据的一致性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">RocketMQ 事务消息在高并发场景下需要精细化优化</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过生产端分区、消费端批量处理、幂等校验和延迟消息等手段，可以提升 RocketMQ 事务消息在高并发场景下的性能和可靠性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">最终一致性和 BASE 模型适用于对一致性要求不高的场景</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> BASE 模型通过牺牲强一致性来换取更高的可用性和性能，适用于秒杀、电商支付等场景。</span>
                     </li>
             </ol>
         </div>
@@ -49,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">很多人都有 eBPF 锤子思想，对他们来说，一切看起来都像钉子，但事实并非如此，eBPF 的目的只有一个。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Wasm 提供了一个安全的沙箱环境，适用于跨多个平台高效执行代码和解析应用层协议。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从安全性的角度来看，当功能可以在 Wasm 这样的用户空间中完成时，将功能推送到内核空间（eBPF 所在的地方）本身也是一种糟糕的做法。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Wasm 中实现复杂的可观测性逻辑，并在 eBPF 中保留所需的最小功能，这更有意义。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分布式事务的难点，就在于"协调难、压力大、两难选择"</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CAP 定理告诉你------强一致性、高可用、分区容错性，三者你最多选两个</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">简化业务逻辑，分布式事务才能不让你"被分裂"</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -58,25 +67,25 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">掘金本周最热</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">后端程序员Aska</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2216</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">38 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9386</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">WebAssembly</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">eBPF</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">服务网格</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式事务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Seata</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RocketMQ</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CAP 理论</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/145380">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATOSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBpBJzQRkUvMGkCfUTEB+k5o3TqoWnVQtOqla9MkyNZuAvAFkUjMBuQHyhJpJzSY1m4BsOqladFK16KRq0SdfBuQJNU8AeQLIjZoJyBtAnlDzBJAn1HzTSdWik6pFJ1WLPvnLqHkCyI2aCcikZgIyqZmATGr+JidVi06qFp1ULfrkLwNkUnOj5gbIpGYCMqmZgPyfnFQtOqladFK16JMvU/MnUzMBmdTcqLkBMql5Qs1/yUnVopOqRSdViz5ZBuTfpGYCMqmZgExqJiCTmgnIpGYCMql5A8h/2UnVopOqRSdViz55Sc2fBMik5kbNBOQJNROQSc2Nmj/JSdWik6pFJ1WL8EdeADKpmYBsUnMD5Ak1m4BMam6ATGomIJvUfNNJ1aKTqkUnVYs+WQZkUjMBmdS8AeRGzQTkBsiNmgnIpOYGyA2QN9Q8AWRS88ZJ1aKTqkUnVYvwR14AMqmZgPwmNROQSc0EZFJzA+QJNTdAbtT8SU6qFp1ULTqpWoQ/8kVAJjUTkBs1m4A8oeYNIN+kZgIyqZmATGo2nVQtOqladFK16JOXgNyomYA8AWRSMwGZ1ExAJjUTkEnNDZBJzQTkRs1vAjKp+aaTqkUnVYtOqhZ98pKab1IzAZnUTEA2AZnUTECeAPKGmgnIpOYJIJOaN06qFp1ULTqpWvTJS0AmNTdqJiCTmgnIG2reUDMBeULNDZBJzQ2QSc0E5EbNpGbTSdWik6pFJ1WLPnlJzQRkk5oJyATkBsgbQG7UPAFkE5BJzQ2QSc2mk6pFJ1WLTqoWffJlaiYgk5obIJOaN4C8oeYGyKTmRs0baiYgN2q+6aRq0UnVopOqRZ+8BOQNIDdqboBMap5QMwF5AsgbQCY1E5AbIJOaCcgNkEnNGydVi06qFp1ULcIfeQHIpOYGyKRmAnKjZhOQN9RMQG7U3ACZ1ExAJjU3QCY133RSteikatFJ1aJPvgzIDZAbNZuATGpugNwAmdRMQG6ATGomIDdAJjWTmgnIpGbTSdWik6pFJ1WLPvllaiYgN0Bu1ExAbtQ8oWYCcgNkUjMBuQGyCcgNkEnNGydVi06qFp1ULcIf+YMB2aTmCSBPqJmATGqeALJJzRsnVYtOqhadVC365CUgv0nNpOYGyCYgk5obIBOQJ4BMat5Q800nVYtOqhadVC36ZJmaTUBugPwmNb9JzRNq/k0nVYtOqhadVC365MuAPKHmDTU3QCY1TwB5Q80EZAKyCcik5ptOqhadVC06qVr0yV8GyKTmBsiNmknNBGSTmhsgk5oJyA2QGzVvnFQtOqladFK16JO/jJon1ExAboA8oeZGzQ2QGyBvqNl0UrXopGrRSdWiT75MzTepuQHyTWreADKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/CciNmhsgN0CeADKpmYBMaiYgk5obIDdAJjXfdFK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVon8A8GIhZuvrPnwAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/7426a3">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
