@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>腾讯频道 Feed 流系统架构设计</title>
+        <title>一文搞定消息队列选型，再多款式和要求都不怕！</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>腾讯频道 Feed 流系统架构设计</h2>
-        <p>2/26/2025, 12:07:24 AM</p>
+        <h2>一文搞定消息队列选型，再多款式和要求都不怕！</h2>
+        <p>2/26/2025, 10:42:02 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入解析了腾讯频道 Feed 流系统，针对千万级关系链的挑战，提出了读写扩散混合方案和扩散量剪枝优化策略，并分享了实际应用中的考量。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细对比了 Kafka、Pulsar、RocketMQ、RabbitMQ 和 NSQ 五种消息队列，深入分析了各自的架构、特性和选型要点，为消息队列选型提供全面的对比和指导。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了腾讯频道 Feed 流系统的架构设计，该系统面临千万级关系链和实时推送的挑战。首先对比了频道（一个基于爱好和话题的社区）与其他社区及 Feed 流产品的差异，突显了其复杂性。然后，文章阐述了整体架构设计，包括三层架构（逻辑层、存储代理层和存储层）、轻重分离以及读写分离原则。重点介绍了 Feed 流的设计方案，包括子频道帖子列表、帖子广场和个人动态的实现，以及针对空拉问题和扩散量优化提出的解决方案，如读写结合、各子频道最新发表时间存储和透传 Cookie 等。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章对主流消息队列 Kafka、Pulsar、RocketMQ、RabbitMQ 和 NSQ 进行了全面的对比分析，旨在为消息队列的架构选型提供指导。首先概述了消息队列在分布式系统中的作用，然后详细介绍了每种消息队列的架构、基本术语和关键特性。接着从消息顺序、伸缩性、消息留存、容错性、可靠性、时序和吞吐量等方面阐述了消息队列的选型要点。最后深入剖析了消费模式、延迟队列、死信队列、优先级队列等高级功能，并分析了各自的优缺点。文章旨在帮助读者根据实际业务需求选择合适的消息队列。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">三层架构和轻重读写分离是构建复杂 Feed 流系统的关键，能提高系统的可维护性和可扩展性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过分层架构可以解耦各模块，轻重分离可以避免核心接口受影响，读写分离可以优化资源利用率和降低维护成本。</span>
+                        <strong style="color: #1e40af">不同消息队列在功能特性上各有侧重，需要根据实际场景选择。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Kafka 在高吞吐量场景下表现优秀，Pulsar 具有多租户和消息查询优势，RocketMQ 在金融领域应用广泛，RabbitMQ 功能全面，NSQ 轻量级易于部署。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">读写结合的方式提升用户体验，避免内容审核导致列表为空</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合读扩散和写扩散的优点，既保证了 Feed 流的实时性，又避免了因内容审核导致的空拉问题，提升了用户体验。</span>
+                        <strong style="color: #1e40af">消费模式的选择会影响消息的顺序性和消费速度。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 独占模式保证消息顺序性，共享模式提高消费速度，需要根据业务对顺序性和性能的要求进行权衡。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">扩散量剪枝是优化读扩散性能的有效手段</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过存储各子频道最新发表时间和透传 Cookie，可以显著减少读扩散的查询量，降低系统负载，提高响应速度。</span>
+                        <strong style="color: #1e40af">消息可靠性是消息队列选型的重要考量因素。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 不同的消息队列通过不同的机制来保证消息的可靠性，例如 Kafka 的多副本机制、Pulsar 的 Ack Quorum Size 和 RabbitMQ 的镜像队列。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">消息队列的负载均衡能力影响系统的整体性能和可扩展性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Kafka 通过分区和消费者组实现负载均衡，RabbitMQ 需要借助 HAProxy 或 LVS 等技术实现负载均衡，不同的负载均衡策略会影响系统的性能和可扩展性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所有功能的底层逻辑都是相通的，只要我们遵从后台的设计理念分而治之，再多的功能都能轻松厘清。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">好的架构离不开良好的设计理念，但也是在不断发展的业务中生长而成，希望每位同学都能构建出健壮的 IT 架构！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">频道是一个超大关系链社区，单频道人数可超千万，这样的超大关系链，写扩散的时效性，一致性，成本都是问题，反而我们更像微博大 V 的场景，所以我们选择了微博大 V 一样的读扩散的设计。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">消息队列是重要的分布式系统组件，在高性能、高可用、低耦合等系统架构中扮演着重要作用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">pull 类型的消息队列更适合高吞吐量的场景，允许消费者自己进行流量控制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">消息丢失是使用消息中间件时所不得不面对的一个同点，其背后消息可靠性也是衡量消息中间件好坏的一个关键因素。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -62,25 +65,25 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">崔明哲</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">梁元铮</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">15 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3588</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">77 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">19040</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Feed流</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">读扩散</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">写扩散</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">消息队列</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">消息中间件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kafka</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Pulsar</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RocketMQ</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/bc8215">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATBSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJweSNszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2STmjeAPKFmAvKb1LxxUrXopGrRSdWiT5ap2QTkCTUTkDeAPKFmUrNJzSYgm06qFp1ULTqpWvTJlwF5Qs0TQDapmYC8AeQJNU8AeULNN51ULTqpWnRSteiTf4yaGyCTmgnIE2omIJOaCcik5l9yUrXopGrRSdWiT/4xQG7UTEAmNU8AmdRMQP5PTqoWnVQtOqla9MmXqflNaiYgTwCZ1ExAJjU3am6ATGqeUPMnOaladFK16KRq0SfLgPzN1ExAJjUTkEnNBGRS8waQP9lJ1aKTqkUnVYs+eUnNnwTIpOYNNROQJ9RMQCY1N2r+JidVi06qFp1ULcIfeQHIpGYCsknNE0AmNTdAbtTcAJnU3ACZ1ExANqn5ppOqRSdVi06qFuGPLAJyo2YTkDfUvAFkUnMD5JvUPAFkUvPGSdWik6pFJ1WL8EdeAPKGmgnIN6m5ATKpmYA8oeYGyI2av8lJ1aKTqkUnVYs+WabmBsgTap4A8gSQSc0EZFLzBJA3gNyomYBMaiYgk5pNJ1WLTqoWnVQtwh/5RUBu1ExA3lCzCcikZgJyo+abgNyo+aaTqkUnVYtOqhbhjywCcqNmAjKpeQPIG2omIJOaCchvUjMBmdQ8AWRS88ZJ1aKTqkUnVYvwR14A8pvUTECeUDMBmdTcAHlCzQ2QSc0NkEnNBORGzTedVC06qVp0UrXoky9TMwF5Qs0baiYgk5o31DwBZBOQSc0NkEnNppOqRSdVi06qFn3yZUAmNU8AuVFzA2RS84aaGyCTmhs1b6iZgNyo+aaTqkUnVYtOqhZ9skzNDZBJzY2aGyDfBGRSMwF5A8ikZgJyA2RSMwG5ATKpeeOkatFJ1aKTqkWf/GGA3Ki5UTMBeQLIpGYCMqmZgExAJjU3QCY1E5BJzRtqNp1ULTqpWnRStQh/5AUgk5oJyKRmAjKpeQPIG2omIE+omYBMaiYgk5oJyBNqboBMajadVC06qVp0UrXok18GZFIzAblR84aaCcgEZFIzAbkBMqmZgNwA2QTkBsik5o2TqkUnVYtOqhbhj/zFgExqboDcqJmATGomIE+omYBMap4AsknNGydVi06qFp1ULfrkJSC/Sc2k5gbIpOYNIJOaGyATkCeATGreUPNNJ1WLTqoWnVQt+mSZmk1AboDcqLkBMqm5UfOb1Dyh5gkgk5o3TqoWnVQtOqla9MmXAXlCzSYgk5o3gLyhZgIyAdkEZFIzqdl0UrXopGrRSdWiT/4xaiYgE5AbIDdqJiCb1NwAmdRMQG6A3Kh546Rq0UnVopOqRZ/8z6iZgNyomYA8oeZGzQ2QGyBvqNl0UrXopGrRSdWiT75MzTepeQLIpGYC8oSaN4BMaiY1E5BJzQRkUjMB+aaTqkUnVYtOqhZ9sgzIbwJyo+Y3AZnUTEAmNROQSc0NkBsgk5pvOqladFK16KRqEf5I1ZKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0X9lWzAzSPqZwQAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/6cf0f6">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
