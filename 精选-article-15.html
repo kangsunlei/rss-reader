@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>DeepSearch 与 DeepResearch 的设计和实现</title>
+        <title>Deepseek V3/R1 技术内核 及 RAG 技术前沿进展</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>DeepSearch 与 DeepResearch 的设计和实现</h2>
-        <p>2/26/2025, 8:41:23 AM</p>
+        <h2>Deepseek V3/R1 技术内核 及 RAG 技术前沿进展</h2>
+        <p>2/26/2025, 9:40:31 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨 DeepSearch 和 DeepResearch 的设计与实现，强调关键技术要素，并分享 Jina AI 在构建相关系统中的深度实践与经验总结。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入解读了 DeepSeek V3/R1 在推理能力上的技术创新，包括纯强化学习、MoE 架构、模型蒸馏等，并探讨了 RAG 技术的前沿进展及 DeepSeek 在 RAG 领域的贡献。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了 DeepSearch 和 DeepResearch 的概念、设计原则与实现细节。DeepSearch 通过持续的搜索、阅读和推理循环来寻找最优答案，而 DeepResearch 则是在 DeepSearch 基础上构建的用于生成长篇研究报告的框架。文章强调了长上下文 LLM、查询扩展、网页搜索和阅读能力的重要性，并分享了 Jina AI 在实际项目中所遇到的挑战，如报告质量、搜索结果可靠性等，以及如何通过 g.jina.ai 端点、查询扩展等方式解决这些问题。文章还深入探讨了系统提示词设计、知识空白问题处理、查询重写、网页内容爬取、内存管理、答案评估和预算控制等关键技术点，分享了 Jina AI 在项目实践中对向量模型、Reranker 模型以及 Agent 框架的取舍思考与选择，为读者提供了有价值的参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细分析了 DeepSeek V3 和 R1 的技术内核及其在 RAG 技术上的前沿进展。首先，文章介绍了 DeepSeek 团队的长期主义和开源理念，以及其在混合专家模型（MoE）架构（包括细粒度专家分割和共享专家隔离）、推理能力强化和软硬件协同设计方面所做的创新。其次，文章深入探讨了 DeepSeek R1 如何通过纯强化学习和“左脚踩右脚”的迭代优化方式，在推理能力上取得突破，并利用模型蒸馏技术将知识迁移到其他开源模型中。此外，文章还讨论了 RAG 的基本概念、前沿进展以及 DeepSeek 对 RAG 技术的贡献，强调了 DeepSeek 在降低 RAG 开发门槛、简化部署过程和提升模型性能方面的重要作用，并列举了 RAG 在企业知识库、客户支持等实际应用场景。最后，文章还提到了 DeepSeek R1 中出现的 “Aha Moment” 现象，展望了 AI 技术的未来发展趋势，并肯定了 DeepSeek 在中国 AI 领域所取得的成就。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">DeepSearch 的核心在于搜索、阅读和推理的持续循环</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过多次迭代，系统能更深入地探索信息，评估结果，并优化搜索策略，从而找到更精准、更深入的答案。</span>
+                        <strong style="color: #1e40af">DeepSeek 通过纯强化学习提升模型推理能力</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> DeepSeek R1 放弃 SFT 阶段，直接使用纯强化学习训练模型，降低了成本和资源消耗，同时显著提升了模型的推理能力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">长上下文 LLM 是 DeepSearch 和 DeepResearch 的基础</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 长上下文窗口使得系统能够记住之前的搜索尝试和网页内容，从而更好地规划后续操作，提高推理的准确性和连贯性。</span>
+                        <strong style="color: #1e40af">“左脚踩右脚”迭代优化是 DeepSeek R1 成功的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 V3 和 R1 Zero 之间的相互训练和优化，DeepSeek 团队逐步提升模型性能，实现了推理能力的不断提升。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">查询扩展是决定搜索结果质量的关键因素之一</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 优秀的查询重写器能将自然语言转化为更适合搜索引擎处理的关键词形式，并扩展查询范围，覆盖更多潜在答案。</span>
+                        <strong style="color: #1e40af">模型蒸馏技术助力 DeepSeek 知识迁移</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> DeepSeek 利用 R1 模型生成的高质量推理数据集，对其他开源模型进行蒸馏训练，显著提升了它们的性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">向量模型在去重任务中表现高效</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Embedding 模型计算语义文本相似度，可以轻松实现跨语言去重，避免非英语查询被误判过滤。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">简化 Agent 框架，拥抱 LLM 原生能力</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 避免过度依赖框架，贴近 LLM 的原生能力可能更有效，减少开发负担。</span>
+                        <strong style="color: #1e40af">DeepSeek 注重软硬件协同设计，实现高性价比</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> DeepSeek 在资源有限的情况下，探索了高性价比的软硬件协同设计，通过算法优化和硬件适配，实现了高效运行和快速迭代。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DeepSearch 的核心理念是通过在搜索、阅读和推理三个环节中不断循环往复，直到找到最优答案。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DeepSearch 可以被视作一个配备了各类网络工具（比如搜索引擎和网页阅读器）的 LLM Agent。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">查询重写的重要性远超预期，甚至可以说是决定搜索结果质量的最关键因素之一。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们还发现，答案生成和评估放在不同的提示词中完成效果更好。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent 框架最终被证明是不必要的。在系统设计上，我们更倾向于贴近 LLM 的原生能力，避免引入不必要的抽象层。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不要教，而是激励</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DeepSeek 显著降低了 RAG 的开发门槛，使得 RAG 流程中的每一个子任务都能更精细地执行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 研究者的工作是教机器如何思考，但一种不幸且常见的方法是，我们在用自己认为的思考方式去教机器，而忽略了机器在底层架构（如 Transformer）中的真实思考方式。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +63,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Jina AI</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Jina&nbsp;AI</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">黄佳</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">32 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7898</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">54 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">13253</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepSearch</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepResearch</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">长上下文</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepSeek</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">纯强化学习</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MoE</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/538948">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpongNyomYBMat4A8oSaCcivpOaNk6pFJ1WLTqoWfbJMzSYgTwCZ1ExAngDyhJpJzSY1m4BsOqladFK16KRq0SdfBuQJNU8AmdRMQJ5QMwF5A8gTap4A8oSabzqpWnRSteikatEn/zNqJiCTmknNBGRSMwGZ1ExAJjX/kpOqRSdVi06qFn3yjwEyqXkDyKRmAjKpmYD8n5xULTqpWnRSteiTL1PzJ1Nzo2YCMqm5UXMDZFLzhJo/yUnVopOqRSdViz5ZBuR3UjMBmdRMQCY1E5BJzQRkUjMBmdS8AeRPdlK16KRq0UnVok9eUvM3ATKpuVEzAXlCzQRkUnOj5m9yUrXopGrRSdUi/JEXgExqJiCb1NwAeUPNG0AmNTdAJjUTkE1qvumkatFJ1aKTqkX4I78RkEnNE0Bu1DwB5EbNBGRScwPkm9Q8AWRS88ZJ1aKTqkUnVYvwR14AMqmZgNyouQEyqXkCyKRmAnKjZgLyhJobIDdq/iYnVYtOqhadVC36ZBmQSc0E5AbIpOYGyCY1N2qeAPIGkBs1E5BJzQRkUrPppGrRSdWik6pFn7ykZgLyBJBJzQTkRs0E5Ak1TwCZ1ExAbtT8SkAmNd90UrXopGrRSdWiT14C8oaaCcik5gbIE0DeUDMBeQLIG2omIJOaJ4BMat44qVp0UrXopGrRJ8vUTEAmNU8AmdRMaiYgm9RMQJ5QcwNkUnMDZFIzAblRM6nZdFK16KRq0UnVok9eUvMEkBs1TwCZ1NwAmdRMQJ5Q8wSQTUAmNTdAJjWbTqoWnVQtOqla9MlLQCY1k5obIDdAngByo2YCcgNkUnMDZFJzo+YNNROQGzXfdFK16KRq0UnVok+WAblRM6m5UTMBuVFzA+QJNTdA3gAyqZmA3ACZ1ExAboBMat44qVp0UrXopGrRJ8vUTECeAHKj5gbIpOYJNROQGzUTkAnIpOYGyKRmAjKpeUPNppOqRSdVi06qFn3yZWreUPMGkBs1bwCZ1ExAboBMaiYgN0AmNZOaCcikZtNJ1aKTqkUnVYvwR14AMqmZgNyomYDcqHkDyI2aGyBPqJmAfJOaCcgTat44qVp0UrXopGoR/shfDMgTajYBeULNBGRS8wSQTWreOKladFK16KRq0ScvAfmV1ExqJiCTmhsgk5obIJOaGyATkCeATGreUPNNJ1WLTqoWnVQt+mSZmk1AboA8AeQNNb+SmifU/E4nVYtOqhadVC365MuAPKHmDTUTkBs1TwB5Q80EZAKyCcik5ptOqhadVC06qVr0yT8GyKRmAjIBmdTcqJmAbFJzA2RSMwG5AXKj5o2TqkUnVYtOqhZ98o9RMwF5A8gbam7U3AC5AfKGmk0nVYtOqhadVC365MvUfJOaGzVvqJmATGreADKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/EpBJzRNAJjUTkCeATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXoP+9oRTzsvtS7AAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/34d7d7">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html">返回目录</a>
     </body>
     <script>
