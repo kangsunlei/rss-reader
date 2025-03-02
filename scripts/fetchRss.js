@@ -5,7 +5,7 @@ const QRCode = require('qrcode');
 const { JSDOM } = require('jsdom');
 
 
-const maxLen = 20;
+const maxLen = 15;
 const RSS_FEEDS = [
     {
         title: '精选',
@@ -38,7 +38,9 @@ async function clearDirectory(directory) {
 }
 
 // 生成单篇文章的HTML
-function generateArticleHtml(article) {
+function generateArticleHtml(article, category) {
+    const categoryUrl = `?category=${category}`;
+
     return `
     <!DOCTYPE html>
     <html>
@@ -61,7 +63,7 @@ function generateArticleHtml(article) {
         <p>${article.content}</p>
         <a href="${article.link}">阅读原文</a>
         <img width="400px" style="margin-left: -40px; display: block" src="${article.qrCode}" alt="QR Code" />
-        <a href="index.html">返回目录</a>
+        <a href="index.html#${categoryUrl}">返回目录</a>
     </body>
     <script>
         document.body.style.fontSize = Math.max(window.document.body.clientWidth / 30, 14) + 'px';
@@ -131,7 +133,7 @@ async function main() {
             bookmark.articles.push({ title: article.title, fileName });
             await fs.writeFile(
                 path.join(outputDir, fileName),
-                generateArticleHtml(article)
+                generateArticleHtml(article, i)
             );
         }
 
@@ -181,17 +183,32 @@ async function main() {
     </head>
     <body>
         <ul>
-        ${bookmarks.map((bookmark, index) => `<li class="${index === 0 ? 'active' : ''}" onclick="titleClicked(${index})">${bookmark.title}</li>`).join('')}
+        ${bookmarks.map((bookmark, index) => `<li onclick="titleClicked(${index})">${bookmark.title}</li>`).join('')}
         </ul>
         ${bookmarks.map((bookmark, index) => `
-            <ol class="${index === 0 ? 'show' : ''}">
+            <ol>
                 ${bookmark.articles.map((article) =>
         `<li><a href="${article.fileName}">${article.title}</a></li>`).join('')}
             </ol>
         `).join('')}
     </body>
     <script>
-        var lastShowIndex = 0;
+        var categoryQueryKey = 'category';
+        var hashQuery = location.hash.split('?')[1];
+        var params = hashQuery ? hashQuery.split('&').map(function (param) {
+            return param.split('=');
+        }) : [];
+
+        var category = 0;
+        var queryIndex = undefined;
+        for (var index = 0; index < params.length; index++) {
+            if (params[index][0] === categoryQueryKey) {
+                category = parseInt(params[index][1]);
+                queryIndex = index;
+                break;
+            }
+        }
+        var lastShowIndex = category;
         var titles = document.querySelectorAll('ul li');
         var olList = document.querySelectorAll('ol');
 
@@ -202,8 +219,19 @@ async function main() {
             titles[lastShowIndex].classList.remove('active');
             titles[index].classList.add('active');
             lastShowIndex = index;
+
+            if (queryIndex !== undefined) {
+                params[queryIndex][1] = index;
+            } else {
+                params.push([categoryQueryKey, index]);
+            }
+            location.hash = '#?' + params.map(function (param) {
+                return param.join('=');
+            }).join('&');
         }
-        
+
+        titleClicked(lastShowIndex);
+
         document.body.style.fontSize = Math.max(window.document.body.clientWidth / 30, 14) + 'px';
     </script>
     </html>`;
