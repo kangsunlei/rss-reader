@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>一文搞定消息队列选型，再多款式和要求都不怕！</title>
+        <title>10 分钟上手：Cohere + PostgreSQL 语义搜索指南</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>一文搞定消息队列选型，再多款式和要求都不怕！</h2>
-        <p>2/26/2025, 10:42:02 AM</p>
+        <h2>10 分钟上手：Cohere + PostgreSQL 语义搜索指南</h2>
+        <p>2/26/2025, 12:17:25 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细对比了 Kafka、Pulsar、RocketMQ、RabbitMQ 和 NSQ 五种消息队列，深入分析了各自的架构、特性和选型要点，为消息队列选型提供全面的对比和指导。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了如何利用 Cohere 的嵌入模型，结合 pgvector 和 pgai 扩展，在 PostgreSQL 数据库中快速实现语义搜索功能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章对主流消息队列 Kafka、Pulsar、RocketMQ、RabbitMQ 和 NSQ 进行了全面的对比分析，旨在为消息队列的架构选型提供指导。首先概述了消息队列在分布式系统中的作用，然后详细介绍了每种消息队列的架构、基本术语和关键特性。接着从消息顺序、伸缩性、消息留存、容错性、可靠性、时序和吞吐量等方面阐述了消息队列的选型要点。最后深入剖析了消费模式、延迟队列、死信队列、优先级队列等高级功能，并分析了各自的优缺点。文章旨在帮助读者根据实际业务需求选择合适的消息队列。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细阐述了在 PostgreSQL 中实现语义搜索的方法，重点介绍了如何利用 Cohere 的嵌入模型以及 pgvector 和 pgai 这两个 PostgreSQL 扩展。文章首先解释了语义搜索的概念及其优势，然后逐步指导读者完成环境搭建、数据加载、向量化以及索引创建等关键步骤。通过实际的 SQL 查询示例，展示了如何利用语义搜索技术检索相关电影信息。总结强调了该方案的便捷性和高效性，**特别是强调了使用 pgai 扩展在数据库内部实现语义搜索的优势，无需额外工具** 即可在 PostgreSQL 中构建强大的语义搜索功能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">不同消息队列在功能特性上各有侧重，需要根据实际场景选择。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Kafka 在高吞吐量场景下表现优秀，Pulsar 具有多租户和消息查询优势，RocketMQ 在金融领域应用广泛，RabbitMQ 功能全面，NSQ 轻量级易于部署。</span>
+                        <strong style="color: #1e40af">利用向量嵌入实现语义搜索，超越了传统的关键词匹配。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将文本转换为向量，语义搜索能够理解查询的意图和上下文，从而提供更相关的搜索结果。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">消费模式的选择会影响消息的顺序性和消费速度。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 独占模式保证消息顺序性，共享模式提高消费速度，需要根据业务对顺序性和性能的要求进行权衡。</span>
+                        <strong style="color: #1e40af">pgvector 和 pgai 扩展简化了在 PostgreSQL 中实现语义搜索的流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些扩展提供了必要的功能，如向量存储、向量化和索引，使得在数据库内部署语义搜索成为可能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">消息可靠性是消息队列选型的重要考量因素。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 不同的消息队列通过不同的机制来保证消息的可靠性，例如 Kafka 的多副本机制、Pulsar 的 Ack Quorum Size 和 RabbitMQ 的镜像队列。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">消息队列的负载均衡能力影响系统的整体性能和可扩展性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Kafka 通过分区和消费者组实现负载均衡，RabbitMQ 需要借助 HAProxy 或 LVS 等技术实现负载均衡，不同的负载均衡策略会影响系统的性能和可扩展性。</span>
+                        <strong style="color: #1e40af">Cohere 的嵌入模型提供了高质量的文本向量化能力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cohere 的模型能够准确地捕捉文本的语义信息，为语义搜索提供坚实的基础。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">消息队列是重要的分布式系统组件，在高性能、高可用、低耦合等系统架构中扮演着重要作用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">pull 类型的消息队列更适合高吞吐量的场景，允许消费者自己进行流量控制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">消息丢失是使用消息中间件时所不得不面对的一个同点，其背后消息可靠性也是衡量消息中间件好坏的一个关键因素。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义搜索是一种先进的搜索技术，它超越了传统的关键词匹配，能够捕捉用户查询背后的意图、语境和含义。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义搜索依赖于使用先进的嵌入模型将数据转换为向量嵌入。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义搜索的成功在很大程度上取决于嵌入模型在向量格式中准确捕捉数据特征的能力。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,28 +60,28 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">梁元铮</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Timescale Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Team Timescale</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">77 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">19040</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1691</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">消息队列</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">消息中间件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kafka</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Pulsar</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RocketMQ</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">语义搜索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PostgreSQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">pgvector</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">pgai</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cohere</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/6cf0f6">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
-        <a href="index.html">返回目录</a>
+        <a href="https://www.bestblogs.dev/zh/article/1d2544">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaJ4C8oeYNIE+omYD8JjVvnFQtOqladFK16JNlajYBeUPNE0AmIE+omdRsUrMJyKaTqkUnVYtOqhZ98mVAnlDzBJAbNU+omYC8AeQJNU8AeULNN51ULTqpWnRSteiTf4yaCcgbaiYgk5oJyKRmAjKp+ZecVC06qVp0UrXok38MkEnNDZBJzQRkUjMBmdRMQP6fnFQtOqladFK16JMvU/MnAZnUPKFmAjKpuVFzA2RS84Sav8lJ1aKTqkUnVYs+WQbkT1IzAXkDyKRmAjKpmYBMat4A8jc7qVp0UrXopGoR/sh/GJAbNROQSc0NkCfU3ACZ1PxLTqoWnVQtOqla9MlLQCY1E5BNaiY1N0CeAHKj5gbIpGZSMwGZ1ExANqn5ppOqRSdVi06qFuGPLAIyqbkBMqm5AfKGmgnIpOYJIJOaGyDfpOYJIJOaN06qFp1ULTqpWoQ/sgjIN6mZgDyh5gkgb6i5AXKj5r/kpGrRSdWik6pF+CMvAHlCzZ8EZFLzTUC+Sc0EZFIzAZnUbDqpWnRSteikatEnL6mZgExqJiB/kpoJyKTmBsikZgJyo+Y3AZnUfNNJ1aKTqkUnVYs+eQnIpOYNNZuATEAmNTdAJjUTkCeAvKFmAjKpeQLIpOaNk6pFJ1WLTqoW4Y98EZAn1ExAnlDzTUCeUHMDZFJzA2RSMwG5UfNNJ1WLTqoWnVQt+uQlIJOaSc0E5AbIpOYGyJ+k5gkgm4BMam6ATGo2nVQtOqladFK16JOX1ExAJjVvALlRcwPkRs0Tam6ATGpu1LyhZgJyo+abTqoWnVQtOqla9MlLQL5JzQ2QSc0mIJOaCcgbQCY1E5AbIJOaCcgNkEnNGydVi06qFp1ULfpkmZoJyI2aCcgEZFJzA2RS84aaCcikZgIyAZnU3ACZ1ExAJjVvqNl0UrXopGrRSdWiT75MzQ2QGzUTkEnNDZAbNROQSc0NkEnNBOQGyKRmAnIDZFIzqZmATGo2nVQtOqladFK16JO/HJBJzW8C8gSQSc0E5AbIJiA3QCY1b5xULTqpWnRStQh/5D8MyG9SMwF5Qs0EZFLzBJBNat44qVp0UrXopGrRJy8B+U1qJjUTkBs1N0BugExqboBMQJ4AMql5Q803nVQtOqladFK16JNlajYBuQHyBJAbNX8TNU+oeQLIpOaNk6pFJ1WLTqoWffJlQJ5Q84aaJ4DcANmkZgIyAdkEZFIzqdl0UrXopGrRSdWiT/5xQJ4AMqm5AbJJzQ2QSc0E5AbIjZo3TqoWnVQtOqla9Mk/Bsgbam6APKHmRs0NkBsgb6jZdFK16KRq0UnVok++TM03qZmA3KiZgExAnlDzBpBJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5TUBu1ExAJjUTkDeATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXofzX3GVmMGbquAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="index.html#?category=14">返回目录</a>
     </body>
     <script>
         document.body.style.fontSize = Math.max(window.document.body.clientWidth / 30, 14) + 'px';
