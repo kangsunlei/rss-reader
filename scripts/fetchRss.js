@@ -133,7 +133,7 @@ async function main() {
             bookmark.articles.push({ title: article.title, fileName });
             await fs.writeFile(
                 path.join(outputDir, fileName),
-                generateArticleHtml(article, i)
+                generateArticleHtml(article, RSS_FEEDS.indexOf(feed))
             );
         }
 
@@ -224,6 +224,7 @@ async function main() {
                 params[queryIndex][1] = index;
             } else {
                 params.push([categoryQueryKey, index]);
+                queryIndex = params.length - 1;
             }
             location.hash = '#?' + params.map(function (param) {
                 return param.join('=');
