@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>不需要 AI 和数学知识背景，这篇文章带你学会大模型应用开发</title>
+        <title>DeepSeek 3FS 架构分析和思考</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>不需要 AI 和数学知识背景，这篇文章带你学会大模型应用开发</h2>
-        <p>3/10/2025, 9:30:51 AM</p>
+        <h2>DeepSeek 3FS 架构分析和思考</h2>
+        <p>3/11/2025, 12:26:18 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文为非 AI 背景开发者提供大模型应用开发入门指南，讲解开发流程、Prompt 工程、Function Calling 和 RAG 技术，助力开发者快速上手。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细解读了 DeepSeek 开源的并行文件系统 3FS 的架构设计，包括集群管理、客户端、存储服务和元数据服务等关键组件。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在帮助非 AI 背景的开发者快速上手大模型应用开发。文章首先强调，参与大模型应用开发无需深厚的 AI 和数学知识。接着，详细介绍了基于 LLM 的应用开发流程，包括 Prompt 工程和 Function Calling。随后，文章深入讲解了如何将大模型与具体业务知识结合，实现 RAG（检索增强生成），解决知识问答场景中的问题。最后，文章还探索 AI Agent 的应用方向，为开发者指明了在大模型浪潮中的发力点。通过本文，读者可以了解大模型应用开发的核心技术和流程，从而更好地拥抱技术变革。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入分析了 DeepSeek 开源的并行文件系统 3FS 的架构。3FS 由 Cluster Manager、Client、Meta Service 和 Storage Service 四个部分组成，各组件通过 RDMA 网络高速互联。文章详细介绍了 3FS 的集群管理机制，包括节点管理和选主机制。针对客户端，分析了 FUSE 客户端和原生客户端 USRBIO 的特点和适用场景。文章还深入剖析了存储服务的设计，包括 CRAQ 链式复制、数据打散策略以及数据恢复流程。此外，文章还对元数据服务进行了详细解读，包括其整体架构、数据模型以及语义实现。**该系统支撑了 DeepSeek V3 &amp; R1 模型训练、推理的全流程，在数据预处理、数据集加载等场景发挥重要作用。** 文章总结了 3FS 设计的优点，并提出后续将与业界其他文件系统进行对比分析。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">大模型应用开发不依赖深厚的 AI 知识，侧重业务结合</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者无需精通 AI 底层原理，只需关注如何利用大模型的语义理解和推理能力解决实际业务问题，例如知识问答和编程助手。</span>
+                        <strong style="color: #1e40af">3FS 采用存算分离的元数据服务架构，简化了整体设计。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将可靠性、扩展性等通用能力下沉到 FoundationDB，Meta Service 节点仅作为 Proxy 负责语义解析，降低了复杂度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Prompt 工程是关键，需要明确指示大模型执行任务和交互</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过设计清晰、明确的 Prompt，可以引导大模型按预期格式返回结果，完成复杂任务，并实现应用与大模型之间的多轮交互。</span>
+                        <strong style="color: #1e40af">USRBIO 原生客户端通过共享内存 RingBuffer 机制实现高性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> USRBIO 采用用户态、异步、零拷贝 API，消除了内核态切换和数据拷贝开销，显著提升了读写性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Function Calling 简化复杂应用开发，实现依赖反转</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Function Calling，开发者只需定义工具接口，无需设计复杂的交互流程，让大模型自主调用工具解决问题，实现依赖反转。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">优化 RAG 质量是核心竞争力，需关注召回数据的相关性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 应用开发团队应重点关注提高检索召回内容的质量，而非过度依赖基座大模型的能力，这是构建高质量问答系统的关键。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">RAG 技术解决大模型上下文限制，提高知识问答准确性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过检索与用户提问相关的知识片段，嵌入到 Prompt 中，增强大模型生成答案的质量，避免一次性喂入过多知识。</span>
+                        <strong style="color: #1e40af">CRAQ 链式复制和数据打散策略保证了数据可靠性和高吞吐。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CRAQ 提供了 write-all-read-any 语义，数据打散避免了单点故障导致的读瓶颈，提高了系统整体性能。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与其担忧，我们不如主动拥抱这种技术变革。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">基于大模型做业务开发，并不依赖我们对 AI 领域有深入的前置了解。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">替代你的不是 AI，而是会用 AI 的人。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">RAG (Retrieval-Augmented Generation)，检索增强生成技术。名如其意，通过检索出和问题相关的内容，来辅助增强生成答案的准确性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 真正的长处是它的理解、推理和对于问题的泛化能力，如果能把它运用到具体业务中，让它学习业务知识，则能发挥巨大的价值。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">3FS 面向高吞吐能力而设计，系统吞吐能力跟随 SSD 和网络带宽线性扩展，即使发生个别 SSD 介质故障，也能依然提供很高的吞吐能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">3FS 专门设计了 FFRecord （Fire Flyer Record）文件格式来充分发挥系统的大 IO 读写能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">3FS 的写采用全链路 RDMA，链的后继节点采用单边 RDMA 从前序节点读取数据，相比前序节点通过 RDMA 发送数据，少了数据切包等操作，性能更高。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">3FS 的很多设计都经过了深思熟虑，不可否认这是一个设计优秀的作品。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">87 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">21719</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">29 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7179</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大模型应用</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">应用开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Function Calling</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文件系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并行文件系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepSeek</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/b93fb1">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/b3cd6b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
