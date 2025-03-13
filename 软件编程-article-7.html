@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>12 人小团队如何成就英伟达万亿市值？CUDA 架构师首次亲述真正的算力“壁垒”形成过程</title>
+        <title>得物 Android Crash 治理实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>12 人小团队如何成就英伟达万亿市值？CUDA 架构师首次亲述真正的算力“壁垒”形成过程</h2>
-        <p>3/11/2025, 12:26:18 PM</p>
+        <h2>得物 Android Crash 治理实践</h2>
+        <p>3/12/2025, 10:02:28 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">英伟达 CUDA 架构师讲述 CUDA 从最初受质疑到支撑公司万亿市值的关键作用，以及其在并行计算和 AI 领域的深度应用和未来挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">得物 Android 团队分享了解决 Android 平台上多个复杂崩溃问题的实践，涵盖 DNS 解析、MediaCodec、多线程环境及 Android 15 等，展示了深入的问题分析和创新性的解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文整理自 InfoQ 对英伟达 CUDA 架构师 Stephen 等人的内部对话，回顾了 CUDA 的早期发展历程，以及如何从最初因占用 GPU 资源而被图形团队质疑，发展成为推动图形和计算领域创新的关键技术。Stephen 详细解释了 CUDA 在并行计算中的作用，以及英伟达在并行计算方面的前瞻性。Carter 分享了 CUDA 如何帮助物理学家突破计算极限，尤其是在天气预报和计算生物学等领域。文章还强调了英伟达现在是一家以软件为核心的公司，CUDA 作为一套完整的技术栈，在 PyTorch 等 AI 框架中发挥着重要作用。此外，文章也指出了 CUDA 需要应对冯 · 诺依曼架构和神经计算融合的异构计算挑战。未来，CUDA 将致力于提供统一的平台，支持更多类型的计算，并简化开发流程。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文总结了得物 Android 团队在 Crash 治理方面的实践经验。文章概述了通过修复历史遗留的 Crash 漏报问题，得物 Android 端的 Crash 监控体系得到显著增强，崩溃率从最高的万分之二降至目前的万分之 1.1 到万分之 1.5。接着，详细介绍了四个典型的系统 Crash 治理过程：DNS 解析崩溃（采用 inline-hook 和信号处理机制）、MediaCodec 状态异常崩溃（利用 C++ 异常处理机制）、bio 多线程环境崩溃（实施 JNI hook 和读写锁）以及小米 Android 15 焦点处理空指针崩溃。针对每个问题，文章都深入分析了崩溃原因，并提供了相应的解决方案。这些实践经验对于其他 Android 开发者在进行 Crash 治理时具有重要的参考价值，展示了得物团队在解决复杂问题上的独特思路。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">CUDA 的并行化能力是其核心竞争力，支持数十万线程</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CUDA 通过支持数据并行和任务并行，充分利用 GPU 的数万个线程，解决了传统 CPU 单核性能瓶颈问题，为 AI 和科学计算提供了强大支持。</span>
+                        <strong style="color: #1e40af">通过 inline-hook 代理 android_getaddrinfofornet 函数，并结合信号处理机制，将 Native Crash 转化为 Java 异常，解决了 DNS 解析崩溃问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 捕获调用原函数过程中出现的段错误信号，并将其转换为 JAVA 异常，最终走进 parseNumericAddressNoThrow 方法的容错逻辑。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">CUDA 不仅仅是 C++ 语言，而是一套完整的技术栈</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CUDA 包含编译器、库、SDK 等，为开发者提供了便捷的开发工具，使得开发者能够更好地发挥 GPU 的性能，加速 AI 应用的开发和部署。</span>
+                        <strong style="color: #1e40af">通过 hook Android 11 并使用 C++ 的 try-catch 异常处理机制，对齐 MediaCodec 在 Android 11 和 12 上的逻辑，解决了状态异常崩溃，避免了栈溢出问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 C++ 的 try catch 机制来做跨函数域的跳转，解决了栈溢出保护导致错误转移的问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 算法与 CUDA 结合，能够突破传统计算的限制</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 算法可以用于填充传统计算的空白，例如在天气预报和计算生物学中，提高计算精度和效率，实现原本难以实现的任务。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">CUDA 面临的挑战在于如何让程序员能同时控制多种计算类型</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作为异构系统，GPU 中包含多种不同用途的不同硬件，而 CUDA 需要将它们统一起来，提供一套能够与之交互的通用平台，这给开发者带来了新的挑战。</span>
+                        <strong style="color: #1e40af">通过 JNI hook 代理关键函数，并在 Native 层实现与 Android 12 相同的读写锁逻辑，解决了 bio 多线程环境下的野指针崩溃问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Native 层实现与 Android 12 相同的读写锁逻辑，避免了多个线程同时 close 连接时出现的野指针问题。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">英伟达不再是一家硬件公司，而是一家软件公司</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">PyTorch 下面的这一切都是 CUDA</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当前的 GPU 大约可提供 25 万个线程，这在过去简直无法想象</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CUDA 的一大原则，就是尽可能贴近硬件以实现最佳性能</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">并行化是软件领域的必要能力，GPU 就完全是在执行并行计算</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Android11 及以下版本在 DNS 解析过程中的有几率产生野指针问题导致的 Native Crash，其中 Android 9 占比最高。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">解决问题的关键在于深入理解系统源码，并找到合适的 hook 点和异常处理机制，实现逻辑对齐和错误兜底。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Android 11 Socket close 过程中在多线程场景下有几率产生野指针问题导致 Native Crash。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">亚鹏</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">34 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8294</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">24 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5926</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CUDA</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">英伟达</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并行计算</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">异构计算</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并行编程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Android</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Crash 治理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Native Crash</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Hook 技术</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DNS 解析</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/773923">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATJSURBVO3BQY4kRxIEQdNA/f/Lyr6tnwJIpFdzZmki+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepmYBMaiYgk5oJyI2aN4A8oWYC8pvUvHFSteikatFJ1aJPlqnZBGQTkEnNBOQJIE+omYA8oWYTkE0nVYtOqhadVC365MuAPKHmCTUTkEnNBGQCcgNkUjOp+TcBeULNN51ULTqpWnRSteiTvxyQSc0E5EbNE0AmNROQSc0EZFLz/+SkatFJ1aKTqkWf/OXUTEAmNROQTUDeADKp+ZudVC06qVp0UrXoky9T85vUTEBugNyomdRMQCY1E5BvUvMnOaladFK16KRq0SfLgPwmIJOaGzUTkEnNBGRS84aaCcgTQP5kJ1WLTqoWnVQt+uQlNfU/QG6APKHmb3JSteikatFJ1aJPXgIyqZmA3KiZgDyhZgIyqXkCyKRmAvKbgExqboBMaiYgN2reOKladFK16KRqEf7IIiCTmieATGpugLyhZgJyo2YCMqm5AfJNap4AMql546Rq0UnVopOqRZ+8BOQGyKRmAnIDZFLzhpoJyDcBmdS8AeQJIDdqNp1ULTqpWnRSteiTZWomIE+ouQEyqXkCyBtAnlBzA2RSs0nNDZBJzRsnVYtOqhadVC3CH1kE5Ak1N0Bu1ExAJjWbgExqJiA3ar4JyI2abzqpWnRSteikahH+yCIgN2q+CcgTam6APKHmBsik5gbIjZobIE+oeeOkatFJ1aKTqkWfvATkRs0E5EbNBOQJNTdAboDcqLkB8gSQN4BMav5NJ1WLTqoWnVQtwh/5IiCTmgnIjZobIDdqJiCTmgnIE2qeAHKj5gbIjZobIJOaTSdVi06qFp1ULcIfWQTkDTUTkCfUPAHkRs0EZFJzA+QNNTdAbtRMQCY1m06qFp1ULTqpWvTJl6mZgDyhZhOQSc0E5A0gN2omIE8AmdRMQCYgv+mkatFJ1aKTqkWfvARkUnOjZgIyAXlCzQ2QGyA3QL5JzQTkDTUTkEnNN51ULTqpWnRSteiTl9Q8AWRSMwGZ1NwAeUPNBORGzQTkRs0bQCY1f7KTqkUnVYtOqhZ9sgzIpOYGyKRmAnKjZgIyqZmAbFIzAZmATGomIE8A+ZOdVC06qVp0UrUIf+QvBuQNNW8AeULNBGRS8wSQTWreOKladFK16KRq0ScvAflNam7U3AB5AsikZlIzAZnUTECeADKpeULNBGRSs+mkatFJ1aKTqkWfLFOzCcg3AblRMwG5UXOjZgJyo+abgExq3jipWnRSteikatEnXwbkCTVPqJmAPKFmE5AbNTdA3lAzAZnUfNNJ1aKTqkUnVYs++csBuVFzA2STmifUTEAmNTdAJiCTmhsgk5o3TqoWnVQtOqla9Ml/nJoJyKTmCSBPqHkCyKTmBsik5ptOqhadVC06qVr0yZep+SY1E5AbIDdqboBMaiY1TwCZ1LwBZFIzAZnUbDqpWnRSteikatEny4D8JiCTmgnIpGYCMgG5UfMEkE1q/mQnVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36ByUeFm5eK1fQAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/dc76a5">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
