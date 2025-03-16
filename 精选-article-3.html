@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>【第 3473 期】这就是如何利用大型语言模型来帮助我编写代码的方法</title>
+        <title>有效的思考：模型思考效率评测</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>【第 3473 期】这就是如何利用大型语言模型来帮助我编写代码的方法</h2>
-        <p>3/13/2025, 11:32:49 PM</p>
+        <h2>有效的思考：模型思考效率评测</h2>
+        <p>3/14/2025, 11:37:20 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文作者分享了利用大型语言模型辅助编写代码的实践技巧，强调了合理使用 LLM 的关键和优势，并提供了丰富的实战经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了基于 MATH-500 数据集，使用 EvalScope 框架及其 EvalThink 组件，对多个主流推理模型的推理效率进行评测，分析了模型思考能力与性能表现的关系，并探讨了 Reasoning 效率评测的指标定义和实现。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文作者分享了使用大型语言模型（LLM）辅助编写代码的实践经验和技巧。文章首先强调了使用 LLM 编写代码的难点，以及需要投入大量精力才能掌握其优缺点。接着，文章从设定合理的期望、注意模型的训练截止日期、上下文至关重要、让 LLM 提供可选方案、明确告诉 LLM 该做什么、必须测试 LLM 生成的代码、把 LLM 作为对话伙伴、使用支持运行代码的工具、Vibe-Coding 是一种很棒的学习方式、使用 Claude Code 的详细示例等十个方面，详细阐述了如何有效利用 LLM。文章强调上下文管理和人工测试的重要性。此外，文章还强调 LLM 的最大优势是开发速度，并能放大现有专业知识。最后，文章还介绍了使用 LLM 回答关于代码的问题的用例。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了大语言模型在推理过程中存在的“思考不足 (Underthinking)”和“过度思考 (Overthinking)”问题，并介绍了 EvalScope 框架及其 EvalThink 组件，用于评估不同模型的思考效率。文章以 MATH-500 数据集为例，对包括 DeepSeek-R1-Distill-Qwen-7B 在内的多个推理模型进行了评测，从模型推理 token 数、首次正确 token 数、token 效率、子思维链数量和准确率六个维度评估了模型的表现。通过对比不同模型的表现，文章得出了一些有趣的结论，例如问题难度与模型表现之间的关系，以及 O1/R1 类推理模型和非推理模型的差异。文章重点提出了 token 效率指标，并展望了未来基于评测结果优化模型训练的研究方向。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">LLM 是高级自动补全工具，用于增强能力，需设定合理的期望。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LLM 的核心能力是预测 token，能按正确顺序拼接 token，但会犯错。应将其视为结对编程助手，快速查找信息和执行任务。</span>
+                        <strong style="color: #1e40af">问题难度与模型性能表现密切相关</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着问题难度的增加，大多数模型的正确率呈现下降趋势，但 QwQ-32B 和 DeepSeek-R1 表现出色，表明模型的深入思考能力与性能表现密切相关。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">管理上下文是使用 LLM 的关键，需注意模型的训练截止日期。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 上下文包括提示词和对话记录，要了解模型所熟悉的库的版本，并手动提供最新示例，以保证 LLM 能给出有效的回答。</span>
+                        <strong style="color: #1e40af">推理模型在复杂问题上 token 消耗更有效率</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> O1/R1 推理模型在问题难度提升时，token 效率也有所提高，表明推理模型在更复杂的问题上 token 消耗更有效率，但在简单问题上可能存在不必要的 token 浪费。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">明确告诉 LLM 该做什么，并进行测试，将 LLM 作为对话伙伴。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在编写代码时，要像对待数字实习生一样，给出详细指令。同时，必须手动测试 LLM 生成的代码，并不断修改，直到满意为止。</span>
+                        <strong style="color: #1e40af">非推理模型存在明显的天花板效应</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 非推理模型 Qwen2.5-Math-7B-Instruct 在处理高难度数学问题时准确率显著下降，表明缺乏深入的思考过程会导致模型性能下降，存在明显的天花板效应。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 Vibe-Coding 学习 LLM，并使用支持运行代码的工具。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过不断尝试和疯狂 Vibe-Coding，快速建立直觉，了解 LLM 的优缺点。同时，选择支持安全运行代码和自动优化的工具。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 LLM 解决实际代码问题，并加速学习新技术。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LLM 能加速实现想法，交付更多项目，并学习新事物。此外，LLM 擅长回答代码问题，可用于探索新代码库。</span>
+                        <strong style="color: #1e40af">模型 Reasoning 效率评测对模型训练有重要参考意义</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型 Reasoning 效率的评测，对 GRPO 和 SFT 训练过程有非常重要的参考意义，有助于开发出“更高效”且能根据问题难度“自适应推理”的模型。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 本质上仍然只是一个 '高级自动补全' 工具。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">用它们来增强你的能力。我目前最喜欢的思维模型是把它们想象成一个过度自信的结对编程助手，它查找信息的速度快如闪电，能即刻给出相关示例，还能毫无怨言地执行枯燥的任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">想要用好 LLM，最核心的技巧就是管理上下文 ------ 也就是当前对话中提供给模型的文本信息。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLMs 无法替代人类的直觉和经验。我花了很多时间与 GitHub Actions 打交道，我知道该寻找什么样的东西，在这种情况下，我更快地介入完成项目，而不是继续用提示来尝试达到目标。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这就是我如此重视 LLMs 给我带来的生产力提升的原因：这并非只是关于更快地完成工作，而是关于能够交付那些我原本根本无法证明投入时间是值得的项目。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">准备好接手：LLMs 无法替代人类的直觉和经验。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型 Reasoning 效率的评测，对 GRPO 和 SFT 训练过程有非常重要的参考意义，有助于开发出“更高效”且能根据问题难度“自适应推理”的模型</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Underthinking（思考不足）现象指的是模型在推理过程中频繁地进行思路跳转，反复使用 'alternatively'、'but wait'、'let me reconsider' 等词。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Overthinking（过度思考）现象则表现为模型在不必要的情况下生成过长的思维链，浪费了大量的计算资源。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +63,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Simon&nbsp;Willison</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">魔搭ModelScope社区</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">魔搭开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">35 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8532</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">21 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5212</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">辅助编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码生成</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发效率</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示词工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推理效率</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">思考效率</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型评测</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MATH-500</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/5ee4cf">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/349932">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATuSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4A8oeYNIE+omYD8JjVvnFQtOqladFK16JNlajYB2aTmBsgE5Ak1k5pNajYB2XRSteikatFJ1aJPvgzIE2qeAHKjZgIyqZnUTEDeAPKEmieAPKHmm06qFp1ULTqpWvTJPw7IpOYJNROQSc0EZFIzAZnU/EtOqhadVC06qVr0yT9GzQRkAjKpuQEyqZmATGomIP9PTqoWnVQtOqla9MmXqflNQJ4AMqmZ1ExAJjU3am6ATGqeUPMnOaladFK16KRq0SfLgPyX1ExAJjUTkBsgk5oJyKRmAjKpeQPIn+ykatFJ1aKTqkX4I38xIDdqJiA3am6A3Ki5ATKp+ZecVC06qVp0UrUIf+QFIJOaCcgmNTdAJjU3QCY1bwCZ1NwAmdRMQDap+aaTqkUnVYtOqhZ9sgzIpGYCMqmZgExqJiCTmhsgk5obIDdqJiCTmhsgN0DeUPMEkEnNGydVi06qFp1ULcIf+YMBmdQ8AeQJNTdAnlBzA+RGzd/kpGrRSdWik6pFn3wZkEnNBORGzQRkUjMBeULNDZBJzRNA3gByo2YCMqmZgExqNp1ULTqpWnRStQh/5AUgk5oJyCY1E5BJzQTkCTUTkBs1E5AbNd8E5EbNN51ULTqpWnRStQh/5AUgN2pugNyoeQPIpGYC8oSaCchvUjMBmdQ8AWRS88ZJ1aKTqkUnVYs+WaZmAnKj5gbIN6m5ATIBeULNDZBJzQ2QSc0E5EbNpGbTSdWik6pFJ1WLPvkyNTdAbtRMQG7UTECeAPKEmieAbAIyqbkBMqnZdFK16KRq0UnVok9eUvNNQN5QMwF5Q80NkEnNjZo31ExAbtR800nVopOqRSdViz55Ccik5gbIpGYCMqmZgExq3lAzAZnU3AB5A8ikZgJyA2RSMwG5ATKpeeOkatFJ1aKTqkWf/MeATGomIDdAJjVPAJnU3ACZ1ExAJiCTmhsgk5oJyKTmDTWbTqoWnVQtOqla9MmXAZnUTEBu1ExAJjU3QG7U3AC5ATKpmYDcAJnUTEBugExqJjUTkEnNppOqRSdVi06qFuGPvABkUnMDZFJzA2RScwNkUjMBuVFzA+QJNROQb1IzAXlCzRsnVYtOqhadVC3CH/mLAblRMwG5UfMEkCfUTEAmNU8A2aTmjZOqRSdVi06qFn3yEpDfpGZS84aaJ4BMam6ATECeADKpeUPNN51ULTqpWnRSteiTZWo2AbkBMqmZgGxS85vUPKHmv3RSteikatFJ1aJPvgzIE2reAPIEkEnNDZA31ExAJiCbgExqvumkatFJ1aKTqkWf/GPU3AB5Q80EZJOaGyCTmgnIDZAbNW+cVC06qVp0UrXok38ckEnNBOQJIE+ouVFzA+QGyBtqNp1ULTqpWnRSteiTL1PzTWomIDdAJjUTkEnNjZo3gExqJjUTkEnNBGRSMwH5ppOqRSdVi06qFn2yDMhvAjKpmYBMaiYgk5o3gExqJiCTmgnIpOYGyA2QSc03nVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16H8jiUdPeFbYvwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
