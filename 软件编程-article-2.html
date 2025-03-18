@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>加速智能体性能的技巧[译]</title>
+        <title>嵌入式系统缓冲区溢出：调试与预防指南</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>加速智能体性能的技巧[译]</h2>
-        <p>3/16/2025, 12:00:00 AM</p>
+        <h2>嵌入式系统缓冲区溢出：调试与预防指南</h2>
+        <p>3/17/2025, 4:34:42 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了优化 LLM 智能体性能的五种关键策略，包括定位延迟来源、改善用户体验、减少 LLM 调用、加速 LLM 调用和并行执行，旨在提升智能体的速度和效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨嵌入式系统缓冲区溢出的调试与预防，提供原理、工具和实践指导，提升系统安全性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了加速 LLM 智能体性能的多种实用技巧，主要包括以下五种策略：定位延迟来源、改善用户体验、减少 LLM 调用、加速 LLM 调用和并行执行。首先强调了识别性能瓶颈的重要性，利用 LangSmith 等工具监控智能体的交互环节。其次，提出了通过优化用户体验来减少“感知”延迟的策略，如流式输出结果和后台运行智能体。接着，讨论了减少 LLM 调用次数的方法，提倡结合代码与 LLM 调用，并介绍了 LangGraph 在精确指定智能体通信方面的作用。此外，还探讨了加速 LLM 调用的途径，包括选择更快的模型和减少上下文。最后，提出了利用 LangGraph 提供的并行处理能力，并行执行 LLM 调用以提升效率。文章强调，加速 AI 智能体需要在性能、成本和能力之间进行权衡，并根据具体用例选择合适的优化技术。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了嵌入式系统中缓冲区溢出的概念、成因、后果及调试预防。首先解释了缓冲区和缓冲区溢出的基本概念，然后深入探讨了缓冲区溢出的常见原因，例如数据超限写入、中断驱动溢出、系统状态改变。接着，文章阐述了缓冲区溢出可能导致的严重后果，包括数据变量损坏和函数指针损坏。最后，重点介绍 GDB、LLDB 等工具的调试应用，并提供了输入验证、安全内存处理和防御性编程等预防措施。通过本文，读者可以全面了解缓冲区溢出，并掌握调试预防实战技能，从而提高嵌入式系统的安全性和可靠性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">定位延迟来源是优化 LLM 智能体性能的关键</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 LangSmith 等工具监控智能体的交互环节，识别性能瓶颈，从而有针对性地进行优化。</span>
+                        <strong style="color: #1e40af">缓冲区溢出是嵌入式系统中的严重问题，可能导致系统崩溃或数据损坏。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于嵌入式系统通常缺乏内存保护机制，缓冲区溢出可能覆盖关键数据或函数指针，导致程序运行异常。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">优化用户体验可以有效减少用户对延迟的感知</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过流式输出结果和后台运行智能体等方式，改善用户体验，降低用户对智能体运行时间的敏感度。</span>
+                        <strong style="color: #1e40af">输入验证和安全内存处理是预防缓冲区溢出的有效方法。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过检查输入数据的大小和范围，并使用安全的内存操作函数，可以避免缓冲区溢出。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">减少 LLM 调用次数能显著提升智能体的速度和效率</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合代码与 LLM 调用，并利用 LangGraph 精确指定智能体通信方式，从而减少不必要的 LLM 调用。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">加速 LLM 调用是提升智能体性能的有效手段</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过选择更快的模型和减少上下文等方式，缩短 LLM 调用的时间，从而提升智能体的整体性能。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">并行执行 LLM 调用可以显著提高智能体的处理效率</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 LangGraph 提供的并行处理能力，同时执行多个 LLM 调用任务，从而加快智能体的响应速度。</span>
+                        <strong style="color: #1e40af">中断驱动溢出是实时系统中常见的缓冲区溢出原因。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 中断服务例程（ISR）写入数据的速度超过主任务处理速度时，可能导致缓冲区被覆盖或溢出。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">加速你的 AI 智能体最终是在性能、成本和能力之间做出战略性权衡。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">并非所有任务都必须通过调用大型语言模型来完成。如果能够采用其他方法，则更优！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LangGraph 是底层工具，允许你精确地指定这些智能体应该如何相互通信（或者何时仅仅是进行一次大语言模型调用）。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">{"original":"Buffer overflows are one of the most serious software bugs， especially in embedded systems， where hardware limitations and real-time execution make them hard to detect and fix."，"translated":"缓冲区溢出是最严重的软件错误之一，尤其是在嵌入式系统中，由于硬件限制和实时执行，它们很难被检测和修复。"}</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">{"original":"A buffer overflow happens when a program writes more data into a buffer than it was allocated， leading to memory corruption， crashes， or even security vulnerabilities."，"translated":"当程序向缓冲区写入超出其分配空间的数据时，就会发生缓冲区溢出，从而导致内存损坏、崩溃甚至安全漏洞。"}</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">{"original":"In safety-critical systems like cars， medical devices， and spacecraft， buffer overflows can cause life-threatening failures."，"translated":"在汽车、医疗设备和航天器等安全关键系统中，缓冲区溢出可能导致危及生命的故障。"}</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Gino Notes</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Gino</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Soham Banerjee</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1865</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">18 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4262</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LangSmith</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LangGraph</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">嵌入式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓冲区溢出</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">C语言</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GDB</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/37384c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/05c5a3">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
