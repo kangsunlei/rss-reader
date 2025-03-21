@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Netflix 如何存储每日 1.4 亿小时观影数据：存储架构深度解析</title>
+        <title>Manus 的技术实现原理浅析与简单复刻</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Netflix 如何存储每日 1.4 亿小时观影数据：存储架构深度解析</h2>
-        <p>3/18/2025, 3:31:15 PM</p>
+        <h2>Manus 的技术实现原理浅析与简单复刻</h2>
+        <p>3/19/2025, 7:25:04 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Netflix 通过数据分类和分片改进存储架构，优化存储策略，高效处理每日 1.4 亿小时的观看数据。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章分析了 Manus AI Agent 的技术实现原理，并通过 OpenManus 项目进行了简单复刻和推测。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文讨论了 Netflix 如何应对海量观看数据的存储挑战。最初，Netflix 使用 Apache Cassandra 存储所有观看历史数据，但随着用户和数据量的增长，系统面临性能瓶颈。为了解决这些问题，Netflix 重新设计了其存储架构，将数据分为全片播放、视频预览和语言偏好，并按数据类型和时间进行数据分片存储。此外，它还采用了数据过滤、去重和 TTL 过期等优化策略，并实施了自动数据迁移，从而提高了存储效率和数据检索速度，显著降低数据访问延迟，并改善了用户体验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入分析了 Monica 公司推出的通用 Agent 产品 Manus 的技术实现原理，并基于现有信息进行了合理推测。首先介绍了 Manus 的产品定位和功能，然后详细阐述了其任务规划、执行和反思的显性自主执行过程。接着，结合 OpenManus 这个开源项目的代码和网传的 Manus Prompt 设计，推测了 Manus 背后隐含的设计思路，包括 Agent 执行过程流程图和 Prompt 设计。文章还探讨了虚拟沙箱环境中的基础动作，如命令执行、文件读写、搜索和浏览器操作。最后，分析了 Manus 的 Prompt 设计，并提供了 Prompting 的最佳实践。整体而言，文章对 Manus 的技术实现原理进行了较为全面的分析和解读。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">分类数据存储显著提高了存储效率和查询性能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过按观看类型（全片播放、视频预览和语言偏好）对观看历史数据进行分类存储，并分配单独的存储集群，优化了存储和访问策略，从而可以针对不同的数据类型进行独立优化。</span>
+                        <strong style="color: #1e40af">Manus 通过任务规划、执行和反思实现自主执行</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Manus 将任务分解为粗粒度步骤，增量式规划子步骤，并在执行过程中进行反思和调整，确保任务的顺利完成。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">数据分片对于处理海量数据至关重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过按数据类型和时间对数据进行数据分片，Netflix 可以更有效地管理和检索数据，从而减少延迟并提高系统可扩展性。</span>
+                        <strong style="color: #1e40af">虚拟沙箱环境是 Manus 实现自主执行的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Manus 在虚拟机沙箱中执行命令、读写文件、搜索信息和浏览网页，实现与环境的交互和信息的存储。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">数据生命周期管理和自动数据迁移至关重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 TTL 过期策略和自动数据迁移流程，系统会自动清理过期数据并将数据移动到适当的存储层，从而保持最佳性能。</span>
+                        <strong style="color: #1e40af">有效的 Prompt 设计是 Manus 实现强大能力的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 清晰明确的 Prompt 能够指导 Manus 完成各种任务，包括信息处理、内容创作和问题解决。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Manus 通过自主规划和执行任务，实现了从提供信息到解决问题的转变</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与传统的 AI Bot 相比，Manus 不仅提供信息，更能自主思考并采取行动，直接交付完整成果。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每次用户观看节目或电影时，都会将新记录添加到他们的观看历史中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Apache Cassandra® 允许灵活的结构，其中每行可以存储越来越多的观看记录，而不会出现性能问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了解决这个问题，Netflix 通过将观看历史记录拆分为两个类别来重新设计其存储模型：实时观看历史 (LiveVH) 和压缩观看历史 (CompressedVH)。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Netflix 没有将所有内容存储在一个大文件中，而是存储跟踪数据版本和块数的元数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Netflix 基于数据类型和数据年龄跨多个集群对数据进行数据分片（拆分），从而提高了存储效率和查询性能。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Manus 定位于一位性能强大的通用型助手，对于用户不仅仅是提供想法，而是能将想法付诸实践，真正解决问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Manus 在 GAIA 基准测试中取得了 SOTA（State-of-the-Art）的成绩，显示其性能超越 OpenAI 的同层次大模型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">"Manus" 在拉丁文中意为"手"，象征着知识不仅存在于思维中，还应能通过行动得以实现。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,27 +63,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">飞樰</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2814</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">32 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7927</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Netflix</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Apache Cassandra</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">通用Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Manus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenManus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">任务规划</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/d96b34">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/3e1f01">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
