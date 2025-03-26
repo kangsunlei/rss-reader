@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AIBrix 深度解读：字节跳动大模型推理的云原生实践</title>
+        <title>在 Cloudflare 上构建和部署远程模型上下文协议 (MCP) 服务器</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>AIBrix 深度解读：字节跳动大模型推理的云原生实践</h2>
-        <p>3/24/2025, 3:15:12 AM</p>
+        <h2>在 Cloudflare 上构建和部署远程模型上下文协议 (MCP) 服务器</h2>
+        <p>3/25/2025, 1:59:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">AIBrix 是字节跳动开源的云原生推理系统，旨在解决大模型推理中资源调度、弹性伸缩等难题，提供高效低成本的部署方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 通过 OAuth、Agents SDK 和远程连接适配器，简化远程模型上下文协议 (MCP) 服务器的构建和部署，从而提升 AI 代理的易用性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入解析了字节跳动开源的企业级大模型推理系统 AIBrix。AIBrix 旨在解决大模型推理在生产环境中面临的诸多挑战，如 GPU 弹性伸缩的非线性问题、长尾模型流量过低、多机推理的角色编排以及 GPU 卡型的异构管理等。AIBrix 通过与 vLLM 等推理引擎深度协同，通过定制化的 Envoy gateway 与 extension server，实现高性能流量管理和缓存感知调度，优化资源调度、自适应扩缩容、缓存感知路由以及异构计算管理等多项能力，为企业级大模型的大规模部署提供高效、低成本、可扩展的解决方案。文章详细介绍了 AIBrix 的项目背景、设计理念、系统架构，以及 v0.1.0 和 v0.2.0 两个版本的关键特性和优化，其中 v0.1.0 侧重冷启动优化和高密度部署，v0.2.0 侧重分布式推理和 KV Cache 管理。在火山引擎容器服务 VKE 上，AIBrix 实现了弹性伸缩性能提升 10%，LoRA 应用成本降低 4.7 倍，模型加载提速 50%。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Cloudflare 用于构建和部署远程模型上下文协议 (MCP) 服务器的解决方案，解决了仅限本地 MCP 设置的局限性。文章重点介绍了四个关键组件：用于简化 OAuth 实现的 workers-oauth-provider、Cloudflare Agents SDK 中用于远程传输处理的 McpAgent、用于调整本地 MCP 客户端以与远程服务器协同工作的 mcp-remote，以及用于测试远程 MCP 连接的 AI 游乐场。迁移到远程 MCP 服务器可以更广泛地访问 AI 代理，允许它们通过适当的认证和授权与互联网上的外部服务进行交互。Cloudflare 的方法简化了开发过程，使开发人员能够创建具有持久存储和访问 Cloudflare 开发者平台的有状态、代理化的 MCP 服务器。Cloudflare 的解决方案还支持构建有状态的 MCP 服务器，从而实现更高级的应用程序。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AIBrix 通过云原生架构和引擎层与系统层协同，实现轻量化方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将通用引擎功能卸载到系统层面管理，封装模型推理常用能力，对外提供统一引擎接口层，兼顾性能、成本和易用性。</span>
+                        <strong style="color: #1e40af">Cloudflare 通过 OAuth 和传输处理简化了远程 MCP 服务器的设置。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cloudflare 通过 workers-oauth-provider 和 McpAgent 等工具简化认证和远程传输，降低开发复杂度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AIBrix v0.1.0 结合 Serverless 关键技术优化大模型部署。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴 Serverless 的冷启动、快速伸缩与高密度部署思路，针对大模型部署环节进行优化，提升弹性伸缩性能。</span>
+                        <strong style="color: #1e40af">远程 MCP 服务器扩大了 AI 代理的可访问性和潜在用例。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 远程 MCP 允许 AI 代理通过互联网访问和认证，与更广泛的服务和用户互动。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AIBrix v0.2.0 通过分布式编排和 KV Cache 管理，提升多机推理效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用 Ray 编排分布式推理任务，利用 KubeRay 实现 Kubernetes 与 Ray 的高效整合，提升容错与鲁棒性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AIBrix On VKE 实现了性能提升和成本降低。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在火山引擎容器服务 VKE 上，AIBrix 实现了弹性伸缩性能提升 10%，LoRA 应用成本降低 4.7 倍，模型加载提速 50%。</span>
+                        <strong style="color: #1e40af">Cloudflare 的 MCP 服务器解决方案支持构建更高级的应用程序。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Durable Objects 的支持下，MCP 服务器可以管理持久状态并与 Cloudflare 开发者平台集成，从而实现有状态的应用程序。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们需要从推理引擎到底层基础设施进行全栈系统设计，才能真正让大模型在生产环境中长期稳定且高效地运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AIBrix 的核心理念在于通过“引擎层”与“系统层”的紧密协同，搭建一个轻量化、云原生的方案。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AIBrix 的目标是将大模型推理的“系统侧”能力与“引擎侧”创新完美结合，提供从资源调度、网络流量控制到分布式推理的端到端解决方案。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">远程 MCP 支持就像从桌面软件到 Web 应用的演进。用户希望在不同设备上无缝工作，登录即用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过发布自己的令牌，MCP 服务器可以限制访问并实施比上游提供商更精细的控制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Cloudflare 上构建 MCP 服务器，它不仅仅是 REST API 的简单封装。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">字节跳动技术团队</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">AIBrix&nbsp;团队</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Brendan Irvine-Broque</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">25 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6123</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2692</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AIBrix</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Serverless</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">远程服务器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OAuth</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agents SDK</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a6e0b2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c890f1">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
