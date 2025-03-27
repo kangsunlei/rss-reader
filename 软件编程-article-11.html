@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Bluesky：拥有 3000 万用户的去中心化社交媒体应用</title>
+        <title>分布式数据一致性场景与方案处理分析｜得物技术</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Bluesky：拥有 3000 万用户的去中心化社交媒体应用</h2>
-        <p>3/25/2025, 3:31:24 PM</p>
+        <h2>分布式数据一致性场景与方案处理分析｜得物技术</h2>
+        <p>3/26/2025, 9:26:36 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Bluesky 是一个构建于 AT 协议之上的去中心化社交媒体应用，旨在为用户提供更大的控制权。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入分析了分布式系统中数据一致性失效的常见场景，并针对性地提出了包括重试机制、事务消息、本地消息表等几种解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Bluesky，一个构建在 AT 协议之上的去中心化社交媒体平台。与传统社交网络不同，Bluesky 旨在打破对用户数据和内容审核的集中控制，解决用户在数据控制权和内容审查方面的问题。文章详细介绍了 AT 协议的关键组成部分，包括个人数据服务器 (PDS)、内容聚合器 Relays 和应用视图 App Views，以及它们如何协同工作以实现去中心化。此外，文章还探讨了 Bluesky 如何通过去中心化身份标识 (DIDs) 实现用户身份和帐户的可移植性，以及内容发现、自定义 feeds 和内容管理机制。通过技术创新，Bluesky 致力于为用户打造更可控、透明且可互操作的社交媒体体验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章首先阐述了 CAP 理论和 BASE 理论，强调在分布式系统中一致性、可用性和分区容错性之间的权衡。接着，文章以商品仓库上架流程为例，详细分析了在跨服务、跨数据库的事务中可能出现的数据不一致问题，如调用写 RPC 失败、消息发送失败等。针对这些问题，文章提出了多种解决方案，包括 RPC 调用重试、 RocketMQ 事务消息、 Spring 事务事件和本地消息表等，并对比了重试机制、事务消息、本地消息表等方案的优缺点，以及在高并发、低并发等场景下的适用性。文章还结合得物技术团队的实践经验，分享了在实际场景中对各种方案的选择和偏好，例如在高并发场景下倾向于使用本地消息表。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AT 协议通过 PDS、Relays 和 App Views 实现去中心化</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PDS 存储用户数据，Relays 内容聚合内容，App Views 生成 feeds，共同构建了一个无需中心化控制的社交网络。</span>
+                        <strong style="color: #1e40af">CAP 理论指导分布式系统设计，通常选择保证可用性，通过最终一致性来解决数据一致性问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 CAP 理论中，分区容错性是必须保证的，因此需要在一致性和可用性之间做出权衡，通常选择保证可用性，通过最终一致性来解决数据一致性问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">DIDs 为用户提供身份控制和帐户可移植性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用户即使更换服务提供商，也能保留其身份和社交关系，解决了传统社交网络的锁定问题。</span>
+                        <strong style="color: #1e40af">针对写 RPC 调用失败，重试机制配合下游服务的幂等性是简单有效的解决方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过对写 RPC 进行重试，可以解决由于网络抖动等原因导致的调用失败问题，但需要下游服务支持幂等性，以避免重复操作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过分层审核机制，在言论自由和内容管理之间取得平衡</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用户可以自由发布内容，但内容的可见性和传播由审核服务和 App Views 决定，从而平衡了自由表达和内容管理。</span>
+                        <strong style="color: #1e40af">本地消息表适用于需要异步处理的跨服务事务，但存在高并发场景下的数据积压和事务占用问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将需要分布式处理的事件存储在本地消息表中，然后异步执行，可以实现最终一致性，但需要考虑高并发场景下的数据积压问题。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Bluesky is the relatively new social media platform in town. It is a decentralized social media platform designed to offer users greater control， interoperability， and transparency compared to traditional， centralized social networks.</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">The primary goal of Bluesky is to break the control of a single corporation over user data， moderation policies， and content discovery algorithms.</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Users can also host their PDS if they prefer self-sovereignty over third-party hosting.</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在经典的 CAP 理论中一致性是指分布式或多副本系统中数据在任一时刻均保持逻辑与物理状态的统一，这是确保业务逻辑正确性和系统可靠性的核心要素。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">BASE 理论主张在无法保证强一致性的场景下，系统可基于业务特性灵活调整架构设计，通过基本可用性保障、允许短暂中间状态等机制，确保数据最终达成一致性状态。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">没有不存在缺陷的软件，只是尚未发现缺陷。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">勇者</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2350</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">15 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3621</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">去中心化社交媒体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Bluesky</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AT 协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">去中心化身份</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DIDs</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据一致性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">最终一致性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CAP理论</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">BASE理论</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/63fa5d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/995da5">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
