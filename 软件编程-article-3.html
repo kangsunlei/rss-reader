@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>MongoDB 8.0：性能飞跃与衰退防范</title>
+        <title>REST API 设计精要：幂等性、分页与安全性</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>MongoDB 8.0：性能飞跃与衰退防范</h2>
-        <p>4/2/2025, 3:54:41 PM</p>
+        <h2>REST API 设计精要：幂等性、分页与安全性</h2>
+        <p>4/3/2025, 3:31:10 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">MongoDB 8.0 通过创新优化显著提升性能，并引入新方法检测性能衰退。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">探讨 REST API 设计的关键原则和技术，包括幂等性、分页和安全性，强调良好 API 设计对系统可靠性、可用性和安全的重要性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">MongoDB 8.0 在性能方面实现了显著改进。通过成立专门的性能团队，并重视基准测试结果，MongoDB 8.0 在读取工作负载和混合读写工作负载上分别实现了 36% 和 32% 的性能提升。其中，ExpressPlan 通过优化简单查询，避免通用查询规划器的开销，直接使用索引进行查找，加速简单查询；复制流程优化通过在写入操作提交至集合前确认，减少主节点的等待时间，提高整体写入吞吐量。此外，MongoDB 8.0 还使用统计指令数来检测细微的性能衰退，并通过团队合作和勇于实验的精神推动了性能提升。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨 REST API 设计的核心原则和技术，旨在指导开发人员构建可靠、可用且安全的 API。文章强调了精心设计的 API 的重要性，并指出不良设计可能导致团队效率降低、数据泄露、服务中断和集成失败。文章概述了良好 API 设计的特征，例如充当合约而非仅是访问点、可扩展性、降低意外发生的可能性以及确保可靠性。文章还探讨了 API 系统演进中可能存在的挑战，例如在不破坏旧客户端的情况下添加新字段，在避免状态重复的前提下处理重试，以及在不丢失事件的情况下跨系统同步数据。本文重点介绍了幂等性、分页和安全性等关键概念，为 API 设计提供了实用的技巧和最佳实践。虽然主要关注 REST API，但也涉及与 gRPC API 相关的概念，以提供更全面的视角，概述它们的作用以及与 REST API 的比较。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MongoDB 8.0 通过 ExpressPlan 优化了简单查询</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过避免通用查询规划器的开销，直接使用索引进行查找，从而加速简单查询，显著提升性能。</span>
+                        <strong style="color: #1e40af">良好的 API 设计对于系统的可靠性和可维护性至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 精心设计的 API 可以作为清晰的合约，支持系统扩展，减少开发人员的疑虑，并确保内部和外部的可靠性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">优化复制流程减少了 MongoDB 8.0 的延迟</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在写入操作提交至集合前确认，减少了主节点的等待时间，从而提高了整体写入吞吐量，优化了复制流程。</span>
+                        <strong style="color: #1e40af">API 设计应该是防御性的，并预测增长、误用和失败。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 良好的 API 设计会考虑集成点的长期性，并认识到每个决策都会影响未来。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MongoDB 8.0 使用统计指令数来检测细微性能衰退</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 能够有效检测细微性能衰退，避免不必要的干扰。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">团队合作和实验精神是 MongoDB 8.0 性能提升的关键因素</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MongoDB 8.0 的性能提升得益于团队成员的积极合作、创新思维和勇于尝试的精神。</span>
+                        <strong style="color: #1e40af">幂等性、分页和安全性是 API 设计的核心要素。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 理解并正确实施这些概念对于构建健壮、高效和安全的 API 至关重要。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MongoDB 8.0 is the most secure， durable， available and performant version of MongoDB yet: it's 36% faster in read workloads and 32% faster in mixed read and write workloads than MongoDB 7.0</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">We decided we could not ship MongoDB 7.0 unless it at least matched MongoDB 6.0's performance on the most important benchmarks.</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Performance improvements take a village.</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">API 是大多数系统的前门。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">另一方面，精心设计的 API 可以创造杠杆作用，并帮助团队完成更多工作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">良好的 API 设计是防御性的，并预测增长、误用和失败的可能性。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">MongoDB Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Mark Benvenuto</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">80</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1880</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">268</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MongoDB 8.0</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">基准测试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能回归</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">REST API</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">gRPC API</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">幂等性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分页</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/557c7d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/9ce9ed">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
