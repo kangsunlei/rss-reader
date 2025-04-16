@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>DolphinGemma：谷歌 AI 助力海豚交流解码研究</title>
+        <title>AWS Lambda、OpenTelemetry 和 Grafana Cloud：无服务器可观测性实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>DolphinGemma：谷歌 AI 助力海豚交流解码研究</h2>
-        <p>4/14/2025, 1:06:16 PM</p>
+        <h2>AWS Lambda、OpenTelemetry 和 Grafana Cloud：无服务器可观测性实践</h2>
+        <p>4/15/2025, 11:57:12 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">谷歌 AI 发布 DolphinGemma 模型，助力海豚声音交流的理解与生成。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文比较 AWS Lambda 中无服务器可观测性的 OpenTelemetry 部署方案，并通过实际操作案例给出最佳实践。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">谷歌 AI 与佐治亚理工学院和 WDP (野生海豚项目) 合作，推出了 DolphinGemma。这是一个基础 AI 模型 (AI model)，旨在学习海豚声音的结构并生成新的类海豚声音序列。该模型基于 WDP 数十年的海豚研究数据，利用谷歌的音频技术 SoundStream 分词器处理海豚声音，并通过一个约 400M 参数的模型架构进行复杂序列分析。DolphinGemma 能够识别海豚声音中的模式和结构，并预测序列中可能的后续声音，类似于人类语言模型预测下一个词。WDP 计划在实地研究中使用 DolphinGemma，以帮助研究人员发现海豚自然交流中隐藏的结构。这有助于揭示其潜在含义。此外，他们还开发了 CHAT 系统，旨在通过将合成声音与海豚喜欢的物品相关联，探索与海豚的双向互动。谷歌计划在今年夏天以开放模型形式分享 DolphinGemma，以促进全球研究人员对其他鲸类物种的研究，具有潜在的科研价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入解析如何使用 OpenTelemetry 和 Grafana Cloud 在 AWS Lambda 函数中实现可观测性，全面应对缺少传统服务器、分布式组件和短暂性等挑战。文章比较了 AWS Distro for OpenTelemetry (ADOT) Lambda 层和自定义 OpenTelemetry Instrumentation，并根据应用程序复杂性和可观测性需求提供建议。本文探讨了 OpenTelemetry Collector 的多种部署选项，包括直接集成、代理部署和网关部署，并通过一个实际的“每日最佳车手”应用程序来说明这些概念。通过本文，读者可以学习如何在 AWS Lambda 中选择合适的 OpenTelemetry 部署解决方案，并构建可观测的无服务器应用程序。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">DolphinGemma 模型能够学习海豚声音的结构并生成新的类海豚声音序列。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该模型利用谷歌的音频技术和 WDP 的大量数据，可以识别海豚声音中的模式和结构，并预测序列中可能的后续声音。</span>
+                        <strong style="color: #1e40af">无服务器架构提出了独特的可观测性挑战，需要专门的工具和方法。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统的监控方法不足以应对 Lambda 函数，因为它们具有短暂性和分布式特性，因此需要像 OpenTelemetry 这样的工具来快速捕获和导出遥测数据。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Pixel 手机在海豚研究中发挥关键作用，降低成本并提高效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Pixel 手机用于高保真分析海豚声音，并运行深度学习模型 (deep learning model) 和模板匹配算法 (template matching algorithm)，降低了对定制硬件的需求，提高了系统维护性。</span>
+                        <strong style="color: #1e40af">根据应用程序复杂性和可观测性需求，在 ADOT Lambda 层和自定义 OpenTelemetry Instrumentation 之间进行选择；前者适用于快速启动和标准需求，而后者适用于复杂应用程序和自定义需求。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ADOT 简化了标准可观测性的设置，而自定义 Instrumentation 为需要高级遥测数据处理的复杂、大规模应用程序提供了灵活性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">CHAT 系统旨在通过合成声音与海豚进行双向互动。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CHAT 系统将合成声音与海豚喜欢的物品相关联，希望海豚能够模仿这些声音来请求物品，从而建立一种简化的共享词汇。</span>
+                        <strong style="color: #1e40af">了解 Lambda 执行生命周期对于确保遥测数据完整性至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 遥测数据必须在 Lambda 函数关闭之前刷新，以防止数据丢失。像 ADOT 这样的工具可以自动执行此操作，但自定义 Instrumentation 需要手动处理。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">在选择 OpenTelemetry Collector 部署选项时，要平衡灵活性、可扩展性和运营成本；网关部署适用于大型应用程序，代理部署适用于中型应用程序，直接集成适用于简单应用程序。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 网关部署提供可扩展性和灵活性，但需要额外的基础设施。代理部署增加了复杂性，而直接集成限制了灵活性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种跨物种交流方法拓展了 AI 的边界，并加深了我们与海洋世界的潜在联系。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这项观察性工作的最终目标是理解这些自然声音序列中的结构和潜在含义 --- 寻找可能表明语言的模式和规则。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过提供 DolphinGemma 这样的工具，我们希望为世界各地的研究人员提供挖掘他们自己的声学数据集的工具，加速寻找模式，并共同加深我们对这些智能海洋哺乳动物的理解。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在我们日益无服务器的世界中，可观测性不仅仅是可有可无，而是必不可少的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果您的 OpenTelemetry SDK 正在缓冲 span 或指标，您必须在关闭 *之前* 刷新它们。否则，数据将丢失。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过网关部署，集中式 OpenTelemetry Collector 在负载均衡器后面运行，为遥测数据管理提供可扩展、高可用且易于升级的解决方案。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +63,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Keyword (blog.google) </span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Dr. Denise Herzing</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Kamel Djoudi</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1142</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2937</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">跨物种交流</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">生物声学</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">音频模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DolphinGemma</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">海豚交流</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器可观测性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS Lambda</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenTelemetry</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/07afce">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/d970cd">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
