@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>A2A（Agent2Agent） 简介</title>
+        <title>Linux 五种 IO 模型和三种多路复用技术大详解</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>A2A（Agent2Agent） 简介</h2>
-        <p>4/18/2025, 12:30:00 AM</p>
+        <h2>Linux 五种 IO 模型和三种多路复用技术大详解</h2>
+        <p>4/18/2025, 9:32:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">介绍了 Google 发布的 Agent2Agent 协议（A2A），该协议旨在促进不同智能体之间的高效沟通与协作，推动 Agent 生态系统的完善与发展。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入讲解了 Linux 五种 IO 模型，重点对比分析了 select、poll、epoll 三种多路复用技术的原理、区别和 epoll 的性能优势。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Google 在 2025 年发布的 Agent2Agent（A2A）协议，旨在为不同类型的智能体之间搭建高效沟通与协作的桥梁。A2A 协议定义了智能体之间交互的核心要素（用户 User、客户端 Agent Client Agent、远程 Agent Remote Agent）和核心概念（AgentCard，描述 Agent 能力；Task，Agent 间的任务；Artifact，任务结果；Message，Agent 间消息；Part，消息组成部分），并描述了智能体如何通过 AgentCard 托管、发起 Task、设置任务状态监听、执行 Task 返回结果以及获取 Artifact 等步骤进行协作。文章对比了 A2A 与 MCP（Model Context Protocol），认为 A2A 是 MCP 的补充，更强调 Agent 之间的对等互操作。最后，文章展望了 Agent 相互发现、了解和交互的发展趋势，以及企业内部和对外 Agent 服务提供商所面临的问题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了 Linux 系统中的五种 I/O 模型，包括阻塞 I/O、非阻塞 I/O、信号驱动 I/O、异步 I/O 以及 I/O 多路复用。重点对比分析了 select、poll 和 epoll 三种 I/O 多路复用技术的原理和区别。select 通过轮询 fd 集合判断就绪状态，存在拷贝开销大和监听端口数量限制（最大 1024 个文件描述符）等问题；poll 使用 pollfd 结构解决了 select 的连接数限制，但仍存在整体复制开销和遍历开销；epoll 使用红黑树和事件回调机制，避免了轮询和频繁拷贝，在高并发场景下性能更优。文章还介绍了 epoll 的边缘触发和水平触发模式，并提供了 epoll 的使用示例代码。总结指出，虽然 select、poll 和 epoll 都是同步 I/O，但 epoll 通过事件驱动和避免数据拷贝等优化，显著提升了 I/O 多路复用的性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">A2A 协议通过开放的标准，促进不同智能体之间的互操作和协作。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过定义核心要素和概念，以及详细的交互流程，A2A 协议使得不同 Agent 可以相互理解、发现彼此的能力，并协同完成任务。</span>
+                        <strong style="color: #1e40af">select、poll 本质是同步 I/O，读写过程阻塞</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> select 和 poll 需要在事件就绪后，由进程 / 线程负责实际的读写操作，且读写过程是阻塞的，与异步 I/O 有本质区别。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AgentCard 是 Server Agent 的关键名片，用于描述其能力和认证机制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Client Agent 通过 AgentCard 了解 Server Agent 的能力，从而决定调用哪个 Server Agent 来执行特定任务，是实现 Agent 之间互操作性的重要基础。</span>
+                        <strong style="color: #1e40af">epoll 通过事件驱动和就绪队列提升性能</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> epoll 使用红黑树管理文件描述符，通过事件回调机制将就绪的文件描述符加入就绪队列，避免了轮询和频繁的数据拷贝，从而在高并发场景下性能更优。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">A2A 协议是 MCP 协议的补充，更强调 Agent 之间的对等互操作。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与 MCP 侧重于 LLMs/Agent 为主体不同，A2A 强调 Agent 之间的相互操作，协议双端是对等的，更符合 Agent 生态的发展趋势。</span>
+                        <strong style="color: #1e40af">边缘触发模式需保证一次性读写完所有数据</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 边缘触发模式仅在文件描述符状态发生变化时通知，因此需要一次性读取或写入所有数据，否则可能导致数据丢失或无法及时处理。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">I/O 多路复用技术通过减少系统开销提高并发处理能力</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> I/O 多路复用技术避免了为每个连接创建单独的进程/线程，从而大大减小了系统的开销，提高了并发处理能力。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">A2A 为 Agent 生态 提供了一套标准协议标准，补充了 Agent 生态 基础设施中至关重要的一块拼图，将有力推动 Agent 生态系统 的完善与发展。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">A2A 是一个用于链接不同封闭 Agent，并实现其相互操作的开放协议。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我个人的看法是：MCP 还是传统的工程思维，A2A 则是站在人的思维来看待世界。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent 相互之间的发现、了解和交互调用，是一个发展趋势。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">I/O 多路复用技术的最大优势是系统开销小，系统不必创建进程 / 线程，也不必维护这些进程 / 线程，从而大大减小了系统的开销。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但 select，poll，epoll 本质上都是同步 I/O，因为他们都需要在读写事件就绪后自己负责进行读写，也就是说这个读写过程是阻塞的，而异步 I/O 则无需自己负责进行读写，异步 I/O 的实现会负责把数据从内核拷贝到用户空间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">epoll 使用红黑树管理文件描述符，红黑树插入和删除的都是时间复杂度 O(logN)，不会随着文件描述符数量增加而改变。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,27 +63,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">筝瑜</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯程序员</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3172</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">42 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">10460</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent2Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">A2A 协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent 通信协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent 互操作性</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IO模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多路复用</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IO多路复用原理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">select</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">poll</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/66124f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAX7SURBVO3BQW4ky5LAQDKg+1+Z00tfJZCokn68gZvZP6x1icNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhf54UMqf6liUvlLFU9UnlRMKm9UvKHylyo+cVjrIoe1LnJY6yI/fFnFN6l8omJSmSomlTdUpopJZVKZKj6hMlU8qfgmlW86rHWRw1oXOax1kR9+mcobFd+k8kTlExVPKt5QmSomlW9SeaPiNx3WushhrYsc1rrID/9xFZPKVPFEZaqYVCaVJxWTylQxqUwVk8pUMan8f3JY6yKHtS5yWOsiP/zHqUwVk8pUMVU8qZhU3qh4UjGpPFGZKv4/Oax1kcNaFzmsdZEfflnFb6p4UvFEZar4TSpTxVTxhspU8UbFTQ5rXeSw1kUOa13khy9T+UsqU8WkMlW8oTJVTCpPVKaKSWWqmFSmik+o3Oyw1kUOa13ksNZFfvhQxf9SxaTyCZWpYlL5poo3VKaKJxX/JYe1LnJY6yKHtS5i//ABlaniicpvqphUnlQ8UZkqJpUnFU9UpoonKm9UPFGZKiaVNyo+cVjrIoe1LnJY6yL2D79I5Y2KJypPKp6ovFExqXxTxaQyVUwqU8UnVN6o+E2HtS5yWOsih7Uu8sOHVD5RMam8UTGpTBVTxROVNyq+qWJSeaLyRsUnVJ5UfOKw1kUOa13ksNZF7B/+kMqTijdUnlRMKm9UPFGZKiaVb6p4Q+VJxROVJxXfdFjrIoe1LnJY6yI/fEjlScUnVKaKN1SeVEwqb1RMKlPFpDJVTCpTxROVNyreqJhUftNhrYsc1rrIYa2L2D98QOUTFd+k8psq3lB5o+INlanim1Smit90WOsih7UucljrIj98qGJSeUNlqphUnlQ8qZhUpopJ5YnKVPGkYlJ5Q2WqeEPlScWkMlX8pcNaFzmsdZHDWhexf/iAylTxROVJxRsqTyqeqDypeKIyVUwqU8WkMlU8UZkqJpWpYlL5RMWkMlV84rDWRQ5rXeSw1kXsHz6g8kbFE5XfVPFE5Y2KT6hMFZPK/1LFXzqsdZHDWhc5rHWRHz5U8U0V36TyROWbVL6p4onKGxWTylQxqUwVk8pU8YnDWhc5rHWRw1oX+eHLVN6omFTeqHhS8ZtUPlExqbxRMak8UZkqJpX/pcNaFzmsdZHDWhexf/iAylTxhsqTik+oTBWfUJkqfpPKk4onKlPFpPJNFZ84rHWRw1oXOax1EfuHL1KZKp6o/KaKJypPKp6oTBWTylTxROVJxaTypOINlaniLx3WushhrYsc1rrIDx9SmSo+UfFEZar4RMWk8kbFk4o3Kp6oTBWTyhsqNzmsdZHDWhc5rHWRH36ZypOKSeVJxaQyVbyhMlVMKlPFE5WpYlL5JpUnKlPFGypvVHzisNZFDmtd5LDWRX74ZRWTyqQyVXxCZaqYVKaKN1Smim+qmFSeVEwqT1Smiicqf+mw1kUOa13ksNZF7B8+oPKkYlL5TRWTyicqfpPKVPFE5S9VTCpTxTcd1rrIYa2LHNa6iP3Df5jKVPFEZap4Q+WNijdUpopJ5UnFGypTxaQyVfymw1oXOax1kcNaF/nhQyp/qeKJyl+qmFSeqEwVU8U3qUwVNzusdZHDWhc5rHWRH76s4ptU3qh4Q+VJxSdUpoonKt9U8YbK/9JhrYsc1rrIYa2L/PDLVN6o+E0qb6hMFZPKk4pJZar4JpVPVLyhMlV84rDWRQ5rXeSw1kV++H9G5UnFE5Wp4hMqU8WTikllqniiMlVMKlPFE5Wp4jcd1rrIYa2LHNa6yA//cRVPVL5JZap4Q2Wq+ITKVPGGylTxROU3Hda6yGGtixzWusgPv6ziL6lMFZPKJyreUHmiMlVMFZPKVDGp/Jcd1rrIYa2LHNa6yA9fpvKXVJ6oTBVvqPymijcqJpXfVPGXDmtd5LDWRQ5rXcT+Ya1LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWusj/AZJB11l77SBNAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/2c8eed">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
