@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>深入微服务核心：从架构设计到规模化</title>
+        <title>Discord 如何索引千亿级消息</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>深入微服务核心：从架构设计到规模化</h2>
-        <p>4/23/2025, 12:21:52 AM</p>
+        <h2>Discord 如何索引千亿级消息</h2>
+        <p>4/24/2025, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于《Building Microservices》一书，深入浅出地阐述了微服务架构的设计原则、实施策略与挑战，为开发者提供了构建稳健微服务体系的指导框架。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Discord 阐述了其消息搜索系统从 Redis/Elasticsearch 架构迁移至 Kubernetes/PubSub 多集群方案，以支持千亿级消息索引的过程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于 《Building Microservices》 一书，系统地阐述了微服务架构的设计原则、实施策略与挑战，从微服务的核心概念出发，延伸到架构设计、服务拆分、集成技术及规模化实践，为单体应用向微服务架构迁移提供了指导。文章首先介绍了微服务的核心概念和优势，包括技术异构性、弹性、扩展性、简化部署、与组织结构匹配、可组合性和对可替代性的优化。接着，探讨了演化式架构师的角色和职责，强调了架构师在技术愿景、同理心、合作、适应性、自治性和治理方面的重要性。然后，深入讨论了如何建模服务，包括松耦合、高内聚和限界上下文等关键概念。随后，介绍了微服务集成的常用技术，如同步 / 异步通信、编排 / 协同、RPC 和 REST。此外，还讨论了如何分解单块系统，以及规模化微服务所面临的挑战，并提出了相应的解决方案。文章总结了微服务的原则，强调演化式架构的重要性，建议开发者持续进行温和的系统修改和演进。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Discord 分享了其消息搜索系统架构的演进历程。最初的系统基于 Redis 消息队列和 Elasticsearch 索引，但随着 Discord 的增长，该架构在消息丢失、批量索引失败、集群规模膨胀和软件升级等方面面临挑战。为了解决这些问题，Discord 迁移到在 Kubernetes 上部署 Elasticsearch，采用多集群“单元”架构以运行更小规模的 Elasticsearch 集群，使用 PubSub 消息队列来保证消息传递，并优化批量索引策略。此外，它还支持新的搜索用例，例如跨私信搜索和用于大型服务器 (BFGs) 的专用 Elasticsearch 集群。新架构显著提升了 2 倍的索引吞吐量，并将中位查询延迟从 500 毫秒降至 100 毫秒以下，P99 延迟从 1 秒降至 500 毫秒以下，并实现了自动化集群升级和滚动重启。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">微服务架构需满足小而自治，关注业务边界</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将大型单体系统按业务边界拆分为独立服务，实现技术异构和独立部署，提升系统弹性和可扩展性。</span>
+                        <strong style="color: #1e40af">迁移至 Kubernetes 和 ECK 简化了 Elasticsearch 运维。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Elasticsearch Operator 简化了集群拓扑定义、配置部署及滚动重启/升级流程，降低了运维复杂度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">演化式架构师需具备愿景、同理心和适应性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 架构师应与团队紧密合作，制定技术愿景，理解决策对客户的影响，并根据需求变化调整技术方案。</span>
+                        <strong style="color: #1e40af">多集群“单元”架构提高了可扩展性和性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将大型 Elasticsearch 集群分解为较小的集群，降低了集群状态的协调开销，从而提高了索引和查询性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">微服务集成需避免紧耦合，推荐异步协同</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 避免微服务间的紧耦合，推荐采用异步协同的方式进行集成，减少服务间的依赖性。</span>
+                        <strong style="color: #1e40af">使用 PubSub 确保了可靠的消息传递。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用 PubSub 替代 Redis 作为消息队列，即使 Elasticsearch 发生故障，也能保证消息不丢失，确保最终完成索引。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">分解单块系统时，从效益最大部分入手</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 考虑改变速度、团队结构、安全和技术等因素，逐步分离数据库结构和服务，实现平滑迁移。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">规模化微服务需应对故障，保证核心功能，并践行演化式架构</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用超时、断路器、舱壁等机制隔离故障，保证服务幂等性，并利用缓存和自动伸缩提高系统性能。同时，应以演化的思想持续改进系统。</span>
+                        <strong style="color: #1e40af">针对不同的用例采用了不同的索引策略。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对跨私信搜索，消息按用户 ID 进行分片；对于大型服务器，则采用多分片索引，从而优化不同场景下的搜索性能。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">微服务就是一些协同工作的小而自治的服务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">架构师要多关注服务间的交互，而忽略服务内的细节。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个限界上下文包含两个部份，一部分需要和外部通信，一部分则不需要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们不应该进行爆炸式的重写，应该随着时间的推移，温和地对我们的系统进行修改，持续地进行改变！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当你不了解它的时候，不应该使用微服务，因为这时候出错的概率会很大。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Elasticsearch 集群状态不具备可扩展性 --- 随着集群节点和索引数量的增长，集群主节点的开销也会随之增加。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们将索引消息队列从 Redis 迁移至 PubSub，从而保证消息传递的可靠性，并容忍大量消息积压。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">索引中增加分片*可能*会提升搜索查询速度，但前提是协调成本低于查询索引的成本。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +63,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">张印</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Discord Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Vicki Niu</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7276</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2678</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">演化式架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">康威定律</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Elasticsearch</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PubSub</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/cdbd91">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/e4d518">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
