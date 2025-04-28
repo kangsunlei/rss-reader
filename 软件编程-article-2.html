@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Django 模型创建指南：从入门到精通</title>
+        <title>千万级数据的订单表，给订单状态加索引有用吗？在线等！</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Django 模型创建指南：从入门到精通</h2>
-        <p>4/25/2025, 7:47:47 PM</p>
+        <h2>千万级数据的订单表，给订单状态加索引有用吗？在线等！</h2>
+        <p>4/27/2025, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供 Django 项目中创建和使用模型的详细指南，涵盖初学者的核心功能和实践案例。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析了千万级数据订单表中 status 字段索引的有效性，并探讨了多种影响因素和优化策略。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文为初学者提供 Django 模型创建和使用的详细指南。它解释了模型的概念及其如何定义数据结构，包括 Django 项目的设置，以及如何定义包含 CharField、DateField 和 ForeignKey 等字段的模型。此外，本文还阐述了如何使用迁移来创建数据库表，并在 Django shell 中与模型进行交互。文章还深入探讨了诸如默认值、自动时间戳和模型元选项等高级特性，以及如何在 Django Admin 界面中使用模型。最后，本文解答了常见问题，并提供进一步学习的资源，非常适合 Django 新手。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章针对千万级数据订单表中 `status` 字段加索引是否有效的问题进行了全面分析，强调**不能一概而论，需要具体问题具体分析**。首先，解释了加索引后的基本查询流程，包括 B+ 树查找和回表。其次，讨论了索引失效的极端场景，如 `status` 区分度低或查询返回大量数据时，优化器可能选择全表扫描。接着，强调了 `status` 字段区分度和选择性的重要性，并介绍了通过 `Cardinality` 值判断索引有效性的方法。然后，探讨了查询数据量对索引使用的影响，并提出了覆盖索引和标签记录法等实用优化策略。此外，还讨论了结合其他字段创建联合索引以及使用分区表来提升查询效率的方法。最后，建议使用 `EXPLAIN` 分析查询计划，以验证索引是否生效。总体而言，文章对该问题进行了多维度、深入的分析，并提供了实用的优化建议。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">模型定义了 Django 中数据的结构和行为。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Django 模型是映射到数据库表的 Python 类，它允许开发者使用 Python 代码而非原始 SQL 来操作数据。</span>
+                        <strong style="color: #1e40af">索引有效性与 `status` 字段的区分度密切相关</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `status` 字段区分度越高，索引效果越好；反之，大量重复值会导致索引失效，优化器可能选择全表扫描。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">迁移用于创建和更新数据库模式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Django 的迁移系统允许您在模型变更时，逐步演化数据库模式。</span>
+                        <strong style="color: #1e40af">查询返回的数据量影响索引的选择</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当查询返回大量数据时，即使有索引，数据库也可能选择全表扫描，此时可考虑使用覆盖索引或分页优化。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Django Admin 界面提供了一种便捷的方式来管理模型。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Django Admin 注册模型，您可以通过 Web 界面创建、更新和删除对象。</span>
+                        <strong style="color: #1e40af">联合索引和分区表是优化查询的有效手段</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合其他常用查询字段创建联合索引，或根据 `status` 字段进行分区，能显著提升特定场景下的查询效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">ForeignKey 定义模型之间的关系。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ForeignKey 用于在不同模型之间建立关系，使您可以链接相关数据，例如作者和他们的书籍。</span>
+                        <strong style="color: #1e40af">`EXPLAIN` 是验证索引是否生效的重要工具</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 `EXPLAIN` 分析查询计划，可以判断查询是否使用了索引，以及索引的使用情况，从而进行有针对性的优化。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型是任何 Django 应用的核心。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Django 中，模型就是一个 Python 类，它告诉 Django 你希望如何呈现你的数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Django 负责处理与数据库交互的复杂部分，因此您可以专注于用简洁的 Python 代码描述您的数据。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果 orderStatus 字段的值分布很广，那么索引会更有效。如果大多数行都有相同的状态值，索引效果可能不佳</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">选择性（Cardinality）是指列中不同值的数量与总记录数的比例。简单来说，选择性越高（即字段的不同值越多、重复率越低），索引的效果就越好。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即将查询的字段都包含在索引中，避免回表。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分区表可以将数据按指定规则分布到多个物理存储区域中，查询时只需要扫描部分分区，提高查询效率。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过 EXPLAIN 查看查询计划，判断是否使用了索引，以及该索引是否在查询中实际被用到。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果是结合其他场景，那加联合索引，效果就会比较明显啦.</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,25 +64,25 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Udemezue John</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">捡田螺的小男孩</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">952</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2506</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Django</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ORM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Python</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">索引优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">索引设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MySQL</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/c1a23a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/f35145">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATISURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ0fSIszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEBu1ExAJjVvAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBNAJjUTkE1AnlAzAXlCzSYgm06qFp1ULTqpWvTJlwF5Qs0Tam6A3AC5ATKpmdT8SUCeUPNNJ1WLTqoWnVQt+uQfB2RSc6NmAvIEkEnNBGRSMwGZ1PyfnFQtOqladFK16JN/nJoJyKTmRs0NkBsgbwCZ1PzLTqoWnVQtOqla9MmXqflNaiYgk5o31ExAJjUTkG9S8zc5qVp0UrXopGrRJ8uA/CYgk5ongExqvknNBOQJIH+zk6pFJ1WLTqoWffKSmr8JkBsg3wTkBsgTav4lJ1WLTqoWnVQt+uQlIJOaCciNmgnIE2omIJOaGyATkEnNBOQ3AZnU3ACZ1ExAbtS8cVK16KRq0UnVIvyRLwLyhJobIJOaJ4BMam6ATGomIJOaGyDfpOYJIJOaN06qFp1ULTqpWvTJL1PzBJBJzRNAboBMajYBmdS8AeQJIDdqNp1ULTqpWnRSteiTl4BMajapmYBMaiYgN2omIBOQSc0E5Ak1N0AmNZvU3ACZ1LxxUrXopGrRSdWiT34ZkEnNBGSTmgnIpOYNNROQGzWTmifU3AC5UTOp2XRSteikatFJ1SL8kReATGqeADKpeQPIG2pugNyouQEyqbkBcqPmBsgTat44qVp0UrXopGrRJ8uAPKFmAnKj5kbNDZBJzQTkRs0NkCeAvAFkUvMnnVQtOqladFK1CH/kBSCTmhsgN2pugExqJiBvqJmA3Kh5AsiNmhsgN2pugExqNp1ULTqpWnRSteiTl9RMQCY1k5oJyA2QSc0E5JvUTECeAPIEkEnNpGYCMgGZ1Pymk6pFJ1WLTqoWfbJMzRtAJjU3ar4JyBNAbtRMQJ4AMqmZgExAftNJ1aKTqkUnVYs+eQnIpGYTkDfU3AD5k9RMQN5QMwGZ1HzTSdWik6pFJ1WLPnlJzQ2QGzVvAJnUTEBu1LwB5EbNG0AmNX+zk6pFJ1WLTqoW4Y8sAvKEmhsgT6i5AfKGmhsgN2omIL9JzTedVC06qVp0UrUIf+QfBuRGzQ2QJ9RMQJ5QMwGZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5o3gGxSMwGZ1ExAngAyqXlCzQRkUrPppGrRSdWik6pFnyxTswnIE2pu1NwAmdRMQG7U3KiZgNyo2aTmm06qFp1ULTqpWvTJlwF5Qs0TaiYgN2omIJOaN4DcqLkB8oaaCcik5ptOqhadVC06qVr0yT8OyBNAJjUTkDfUPKFmAjKpuQEyAZnU3ACZ1LxxUrXopGrRSdWiT/5n1ExAboBMaiYgk5obIE+oeQLIpOYGyKTmm06qFp1ULTqpWvTJl6n5JjUTkEnNDZAbNROQSc2k5gkgk5o3gExqJiCTmk0nVYtOqhadVC36ZBmQ3wTkDTU3QCY1TwDZpOZvdlK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8AsSckTkIWzZcAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
