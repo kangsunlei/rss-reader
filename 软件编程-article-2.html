@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>千万级数据的订单表，给订单状态加索引有用吗？在线等！</title>
+        <title>运维必须刻进 DNA 里的 20 条故障保命法则</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>千万级数据的订单表，给订单状态加索引有用吗？在线等！</h2>
-        <p>4/27/2025, 12:00:00 AM</p>
+        <h2>运维必须刻进 DNA 里的 20 条故障保命法则</h2>
+        <p>4/29/2025, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析了千万级数据订单表中 status 字段索引的有效性，并探讨了多种影响因素和优化策略。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文总结了运维工作中常见的 20 个故障，并提供了相应的排查步骤和修复方法，为运维人员提供了实用参考。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章针对千万级数据订单表中 `status` 字段加索引是否有效的问题进行了全面分析，强调**不能一概而论，需要具体问题具体分析**。首先，解释了加索引后的基本查询流程，包括 B+ 树查找和回表。其次，讨论了索引失效的极端场景，如 `status` 区分度低或查询返回大量数据时，优化器可能选择全表扫描。接着，强调了 `status` 字段区分度和选择性的重要性，并介绍了通过 `Cardinality` 值判断索引有效性的方法。然后，探讨了查询数据量对索引使用的影响，并提出了覆盖索引和标签记录法等实用优化策略。此外，还讨论了结合其他字段创建联合索引以及使用分区表来提升查询效率的方法。最后，建议使用 `EXPLAIN` 分析查询计划，以验证索引是否生效。总体而言，文章对该问题进行了多维度、深入的分析，并提供了实用的优化建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文梳理了运维工作中经常遇到的 20 个高频故障，包括服务器无法访问、数据库连接失败/性能下降、磁盘空间不足、CPU 使用率过高、网络延迟高/DNS 解析失败等常见问题。针对每个故障，文章都详细列出了故障现象、排查步骤和修复方法，旨在帮助运维人员快速定位和解决问题，确保业务的正常运行。内容覆盖 Linux 系统管理、网络配置、数据库服务、应用服务等多个方面，具有较强的实用性和参考价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,8 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">索引有效性与 `status` 字段的区分度密切相关</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `status` 字段区分度越高，索引效果越好；反之，大量重复值会导致索引失效，优化器可能选择全表扫描。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">查询返回的数据量影响索引的选择</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当查询返回大量数据时，即使有索引，数据库也可能选择全表扫描，此时可考虑使用覆盖索引或分页优化。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">联合索引和分区表是优化查询的有效手段</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合其他常用查询字段创建联合索引，或根据 `status` 字段进行分区，能显著提升特定场景下的查询效率。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">`EXPLAIN` 是验证索引是否生效的重要工具</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 `EXPLAIN` 分析查询计划，可以判断查询是否使用了索引，以及索引的使用情况，从而进行有针对性的优化。</span>
+                        <strong style="color: #1e40af">运维工作中常见故障的排查和解决需要系统性的方法和工具。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章针对服务器、数据库、网络等多个方面，提供了详细的故障现象、排查步骤和修复方法，为运维人员提供了一套系统性的问题解决框架。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +46,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果 orderStatus 字段的值分布很广，那么索引会更有效。如果大多数行都有相同的状态值，索引效果可能不佳</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">选择性（Cardinality）是指列中不同值的数量与总记录数的比例。简单来说，选择性越高（即字段的不同值越多、重复率越低），索引的效果就越好。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即将查询的字段都包含在索引中，避免回表。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分区表可以将数据按指定规则分布到多个物理存储区域中，查询时只需要扫描部分分区，提高查询效率。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过 EXPLAIN 查看查询计划，判断是否使用了索引，以及该索引是否在查询中实际被用到。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果是结合其他场景，那加联合索引，效果就会比较明显啦.</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在企业的日常运维工作中，经常会遇到各种各样的故障。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">掌握常见故障的排查和修复方法，对于运维人员来说至关重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">定期审查和更新防火墙规则，以适应业务变化和安全需求。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +54,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">捡田螺的小男孩</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">北京二锅头</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2506</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2994</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">索引优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">索引设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MySQL</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">运维</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排查</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">服务器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/f35145">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATISURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ0fSIszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEBu1ExAJjVvAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBNAJjUTkE1AnlAzAXlCzSYgm06qFp1ULTqpWvTJlwF5Qs0Tam6A3AC5ATKpmdT8SUCeUPNNJ1WLTqoWnVQt+uQfB2RSc6NmAvIEkEnNBGRSMwGZ1PyfnFQtOqladFK16JN/nJoJyKTmRs0NkBsgbwCZ1PzLTqoWnVQtOqla9MmXqflNaiYgk5o31ExAJjUTkG9S8zc5qVp0UrXopGrRJ8uA/CYgk5ongExqvknNBOQJIH+zk6pFJ1WLTqoWffKSmr8JkBsg3wTkBsgTav4lJ1WLTqoWnVQt+uQlIJOaCciNmgnIE2omIJOaGyATkEnNBOQ3AZnU3ACZ1ExAbtS8cVK16KRq0UnVIvyRLwLyhJobIJOaJ4BMam6ATGomIJOaGyDfpOYJIJOaN06qFp1ULTqpWvTJL1PzBJBJzRNAboBMajYBmdS8AeQJIDdqNp1ULTqpWnRSteiTl4BMajapmYBMaiYgN2omIBOQSc0E5Ak1N0AmNZvU3ACZ1LxxUrXopGrRSdWiT34ZkEnNBGSTmgnIpOYNNROQGzWTmifU3AC5UTOp2XRSteikatFJ1SL8kReATGqeADKpeQPIG2pugNyouQEyqbkBcqPmBsgTat44qVp0UrXopGrRJ8uAPKFmAnKj5kbNDZBJzQTkRs0NkCeAvAFkUvMnnVQtOqladFK1CH/kBSCTmhsgN2pugExqJiBvqJmA3Kh5AsiNmhsgN2pugExqNp1ULTqpWnRSteiTl9RMQCY1k5oJyA2QSc0E5JvUTECeAPIEkEnNpGYCMgGZ1Pymk6pFJ1WLTqoWfbJMzRtAJjU3ar4JyBNAbtRMQJ4AMqmZgExAftNJ1aKTqkUnVYs+eQnIpGYTkDfU3AD5k9RMQN5QMwGZ1HzTSdWik6pFJ1WLPnlJzQ2QGzVvAJnUTEBu1LwB5EbNG0AmNX+zk6pFJ1WLTqoW4Y8sAvKEmhsgT6i5AfKGmhsgN2omIL9JzTedVC06qVp0UrUIf+QfBuRGzQ2QJ9RMQJ5QMwGZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5o3gGxSMwGZ1ExAngAyqXlCzQRkUrPppGrRSdWik6pFnyxTswnIE2pu1NwAmdRMQG7U3KiZgNyo2aTmm06qFp1ULTqpWvTJlwF5Qs0TaiYgN2omIJOaN4DcqLkB8oaaCcik5ptOqhadVC06qVr0yT8OyBNAJjUTkDfUPKFmAjKpuQEyAZnU3ACZ1LxxUrXopGrRSdWiT/5n1ExAboBMaiYgk5obIE+oeQLIpOYGyKTmm06qFp1ULTqpWvTJl6n5JjUTkEnNDZAbNROQSc2k5gkgk5o3gExqJiCTmk0nVYtOqhadVC36ZBmQ3wTkDTU3QCY1TwDZpOZvdlK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8AsSckTkIWzZcAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c8ae4d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
