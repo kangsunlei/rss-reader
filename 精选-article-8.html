@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>WhatsApp 如何应对每日 400 亿消息的挑战</title>
+        <title>生产环境向量搜索部署指南</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>WhatsApp 如何应对每日 400 亿消息的挑战</h2>
-        <p>4/28/2025, 3:30:56 PM</p>
+        <h2>生产环境向量搜索部署指南</h2>
+        <p>4/30/2025, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">WhatsApp 利用 Erlang 语言和架构设计实现高并发消息处理和高可靠性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">关于在生产环境中部署和优化向量搜索系统的全面指南，重点涵盖 HNSW 参数调优、量化策略及系统扩展方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 WhatsApp 为实现高并发和可靠性而采用的技术架构和设计原则。文章详细介绍了 WhatsApp 如何利用 Erlang 语言的特性，如轻量级并发、故障隔离和分布式消息传递，构建其核心系统。此外，文章还分析了 WhatsApp 在系统设计上的关键决策，包括选择简单性而非复杂性、异步通信、功能隔离以及无缝升级。文章还深入探讨了 WhatsApp 的服务器架构、数据库设计和优化策略，例如使用键值存储、内存数据库、ETS 表进行内存数据存储、数据分片、异步脏写模式进行数据写入和异步写入等技术，以应对高负载和保证数据一致性。最后，文章还探讨了 WhatsApp 在扩展过程中面临的挑战及应对策略，为构建高可用性和可扩展性的消息平台提供了宝贵的经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了在生产环境部署向量搜索系统的详细指南，着重介绍了 HNSW 参数优化和量化策略等性能调优技术。内容涵盖通过数据压缩实现的内存管理、大规模数据导入时的高效索引构建、以及针对过滤查询的元数据索引方案。本指南还涉及系统扩展考量、多租户架构设计及灾难恢复策略，并通过实际案例展示如何规避常见问题，确保向量搜索部署的可靠性与高性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,23 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Erlang 语言是 WhatsApp 后端架构的核心</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Erlang 的轻量级进程、故障隔离和分布式特性，助力 WhatsApp 轻松处理高并发连接并实现快速故障恢复。</span>
+                        <strong style="color: #1e40af">优化 HNSW 参数平衡查询速度与精度</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 如实际案例所示，调优 HNSW 参数（如`ef`搜索扩展因子）能显著提升查询性能，这对处理大型数据集尤为有效，同时保持结果准确性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">简单性优于复杂性是 WhatsApp 架构设计的关键原则</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过采用小型、专注的组件和异步消息传递，WhatsApp 降低了系统的复杂性，提高了可维护性和可靠性。</span>
+                        <strong style="color: #1e40af">实施量化策略优化内存使用效率</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用 8-bit 或二进制量化可大幅降低内存占用，在保持可接受精度的前提下，实现更大规模数据集的高效处理。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">数据分片减少锁竞争</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 数据分片最大程度减少了锁竞争，从而提高并发处理能力。</span>
+                        <strong style="color: #1e40af">批量操作期间的索引管理策略</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 批量上传时禁用 HNSW 索引并在完成后重建，能有效避免数据导入期间的性能下降，指南同时提供了批处理与线程优化的具体建议。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">异步写入提高吞吐量</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过异步地将数据写入磁盘，WhatsApp 提高了吞吐量，并保证了数据持久性。</span>
+                        <strong style="color: #1e40af">构建完善的元数据索引体系</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为过滤字段建立恰当的元数据索引可避免全表扫描，关键在于保持一致的 schema 设计并选择合适的索引类型。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">多租户架构的优化设计方案</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用带租户标签的单集合方案比独立集合更具资源效率，可通过 API 密钥或 JWT 令牌保障安全性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">生产环境资源分配的平衡方案</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 指南根据工作负载特征给出硬件配置建议，包括采用磁盘映射存储(on_disk)等策略来管理低频访问向量的内存占用。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +61,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统故障并非出乎意料，而是不可避免。因此，该系统的设计旨在即使出现问题也能继续运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">WhatsApp 架构的核心是一个非常基本的原则：使其足够简单，以便在压力下进行推理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个后端都划分为可以独立失败的“孤岛”。复制是单向的，因此如果一个节点掉线，它的对等节点会接管。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">"这类问题充分证明，默认配置在生产级负载下可能出现灾难性故障。"</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">"通过精确调整`ef`参数，团队找到了既能实现亚秒级响应又能保持高准确性的最优参数区间。"</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">"批量上传期间禁用 HNSW 索引可有效防止数据导入时的性能劣化。"</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">"无论通过严格类型检查还是明确定义的数据契约，确保元数据 schema 被一致执行，才是预防字段不匹配的最佳实践。"</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">"在条件允许时，应当优先采用单集合+租户标签的方案来整合多租户数据。"</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">"若工作负载可容忍适度的向量嵌入精度损失，数据压缩技术能显著缩减向量体积并大幅降低内存消耗。"</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,25 +71,25 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Qdrant</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">David Myriel</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2671</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">18 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4426</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">WhatsApp</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Erlang</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Erlang BEAM (Erlang 虚拟机)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量搜索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">生产部署</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Qdrant</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">HNSW（分层可导航小世界图）</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/0d477a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/a0d58c">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYXSURBVO3BQQ4jRxLAQLKg/3+Z62OeGmhIM1s2MsL+wVqXOKx1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZEPX1L5myreUPmliicqTyomlTcq3lD5myq+cVjrIoe1LnJY6yIffqzil1SeqEwVU8WkMlV8Q2WqmFTeqHhDZap4UvFLKr90WOsih7UucljrIh/+MJU3Kr6h8obKVDGpTBVvVEwqU8Wk8jepvFHxJx3WushhrYsc1rrIh/+4il9SeUNlqphUpopJZaqYVP5LDmtd5LDWRQ5rXeTDv1zFE5WpYlKZKr6hMlW8ofJGxX/JYa2LHNa6yGGti3z4wypuojJVPKmYVKaKSeWJylTxRGVSeVLxRsVNDmtd5LDWRQ5rXeTDj6n8TSpTxZOKSWWqmFSmikllqphUpopJZap4UjGpvKFys8NaFzmsdZHDWhf58KWKm6i8UfGGyjdUvqEyVTyp+Dc5rHWRw1oXOax1kQ9fUpkqfkllqnhS8URlqphUnlQ8UZkqJpVfUnmj4onKGxW/dFjrIoe1LnJY6yIf/jCVNyqmiknll1SeVEwqb6g8qZhUpopJZar4hsobFX/SYa2LHNa6yGGti3z4wyomlaliUvmbKiaVSeVJxaQyVTxRmSomlaliUpkqvlExqUwqU8UvHda6yGGtixzWuoj9gy+oPKmYVN6oeKLypOKJypOKN1R+qWJSmSreUPmlil86rHWRw1oXOax1kQ8/VvGk4g2VqeINlScVk8ovVUwqU8Wk8qRiUpkqJpWp4hsqf9JhrYsc1rrIYa2LfPgxlTcqnlQ8qZhUnlRMKlPFNyomlaniScVNVJ6oTBXfOKx1kcNaFzmsdZEPX6p4ovINlV9SeUPljYqp4onKVPFGxaTyDZWpYlKZKn7psNZFDmtd5LDWRT58SWWqmCqeqEwVU8WkMlVMKlPFGypTxROVJypTxTdU3qh4ovJEZaqYVKaKbxzWushhrYsc1rrIhx9TmSqeVDxR+YbKk4o3VKaKSWWqeFLxRGWqmFTeUHlS8f90WOsih7UucljrIvYPLqIyVbyhMlVMKn9SxaTyRsWk8ksVT1SeVEwqU8U3Dmtd5LDWRQ5rXeTDj6m8UfFE5UnFVDGpTBWTypOKSeWJyhsVk8obFU9UJpWp4iaHtS5yWOsih7Uu8uEvq3ijYlKZVKaKNyomlUnlScUbKpPKVDGpfKPiico3Kn7psNZFDmtd5LDWRewffEHlScWkMlVMKk8q/k1UnlRMKlPFE5Wp4onKGxWTylTxS4e1LnJY6yKHtS5i/+ALKn9SxTdUfqni/0llqphUpopJ5Y2Kv+mw1kUOa13ksNZFPvxYxROVqeKJypOKJxWTypOKP0llqphUnlRMKm9UTCpTxaTypOKXDmtd5LDWRQ5rXeTDX1bxRGWqeEPlScWk8kTljYo3VKaKX1J5Q+UNlaniG4e1LnJY6yKHtS7y4cdUfknljYpJ5Q2VqeKXKiaVm1VMKlPFLx3WushhrYsc1rqI/YN/MZUnFZPKVDGp/FLFpPJGxaTypOINlaliUnmj4huHtS5yWOsih7Uu8uFLKn9TxVTxSxVPVL5R8YbKN1Smil+q+KXDWhc5rHWRw1oX+fBjFb+k8obKVDFVTCpTxRsVk8qkMlU8UfmlijdUnlT8SYe1LnJY6yKHtS7y4Q9TeaPiGxWTylTxROVJxaQyVTxR+UbFpDKp/FLF33RY6yKHtS5yWOsiH/5jVKaKSeWNiicVT1Smim+oTBWTylQxqbyhMlVMKlPFNw5rXeSw1kUOa13kw39MxaQyVTxReaIyVTypmFSmiicqU8WkMlV8o2JSmVT+pMNaFzmsdZHDWhf58IdV/E0qU8WkMlVMFZPKVPGGylTxRsWkMlVMKlPFL1X8SYe1LnJY6yKHtS7y4cdU/iaVNyqeqDxRmSomlV9SmSomlW9UPKmYVKaKXzqsdZHDWhc5rHUR+wdrXeKw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZF/gdIFu1tUzTPNAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
