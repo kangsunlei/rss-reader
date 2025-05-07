@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Next.js ISR：原理、实践与优化</title>
+        <title>Canva 如何每天收集 250 亿个事件</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Next.js ISR：原理、实践与优化</h2>
-        <p>5/1/2025, 4:13:41 PM</p>
+        <h2>Canva 如何每天收集 250 亿个事件</h2>
+        <p>5/5/2025, 3:30:52 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入浅出地介绍了 Next.js 中的 ISR 技术，涵盖原理、用例与实践，并包含代码示例，助你掌握 ISR 的应用与优化。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Canva 通过严格的 Schema 定义、解耦服务、批量处理、优雅降级和架构设计等策略，实现了每天 250 亿事件的高可靠、低成本收集和分发。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Next.js 中的 ISR (增量静态再生)。首先解释了 ISR 的概念，它融合了静态页面的速度优势与动态内容更新的实时性。然后深入研究 ISR 的工作原理，包括页面构建时机、缓存提供方式以及后台重新生成机制。本文还列出了 ISR 的常见用例，例如博客、电子商务和仪表板，并提供关于 `revalidate` 参数设置、错误处理以及 SEO 优化的实践建议。此外，它还讨论了潜在的陷阱，例如数据过期和部署错误，并提供了避免这些问题的方法。最后，它介绍了按需 ISR 的高级用法，允许开发人员手动触发页面重建。总的来说，本文为 Next.js 开发人员提供了关于 ISR 的全面而实用的指南，强调 ISR 如何在后台静默刷新页面，实现静态速度与动态更新的完美结合。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入分析了 Canva 如何构建其大规模事件收集和分发系统，该系统每天处理 250 亿个事件。文章强调了三个核心阶段：结构化（通过 Datumgen 工具定义严格的 Protobuf Schema 以保证数据质量和兼容性）、收集（通过统一的客户端和异步的 Kinesis 管道摄取和丰富事件）和分发（将事件路由到 Snowflake、Kinesis 和 SQS 等多个目的地）。此外，还讨论了 Canva 如何通过压缩、从 SQS + SNS 迁移到 Kinesis Data Streams 以及使用 SQS 作为 Kinesis 的备用方案来优化基础设施成本。文章总结了 Canva 的成功经验，强调了可靠性、成本效益和长期清晰性的重要性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">ISR：兼顾静态速度与动态更新</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过设置 `revalidate` 参数，页面将在后台定时重新生成，确保用户始终访问快速静态页面的同时，获得最新的内容。</span>
+                        <strong style="color: #1e40af">严格的 Schema 定义是保障数据质量的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Canva 通过 Protobuf Schema 强制数据结构，确保数据的一致性和可维护性，避免了因数据质量问题导致的数据分析偏差。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">`revalidate`：平衡时效与负载的关键</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 根据内容更新频率合理设置 `revalidate` 值，以平衡内容时效性与服务器负载，避免资源浪费。</span>
+                        <strong style="color: #1e40af">解耦的架构提高了系统的可靠性和可扩展性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将事件收集、丰富和分发过程解耦，Canva 避免了单点故障，并允许每个组件独立扩展，从而提高了整体系统的稳定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">按需 ISR：实时更新的利器</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 API 路由及密钥验证，无需等待 `revalidate` 时间，即可在内容更新后按需立即重建页面，适用于对实时性要求较高的场景。</span>
+                        <strong style="color: #1e40af">批量处理和压缩显著降低了成本</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过批量收集事件并使用 ZSTD 压缩算法，Canva 显著降低了 Kinesis 的使用成本，同时对延迟的影响很小。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">基础设施成本优化是关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Canva 通过从 SQS + SNS 迁移到 Kinesis Data Streams，并使用 SQS 作为 Kinesis 的后备方案，显著降低了基础设施成本。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ISR 让你鱼与熊掌兼得：既有静态页面的速度，又有动态内容的新鲜感。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">页面只会在超过设定时间后 *且有需要时 *才在请求时构建。否则，用户将直接获取已构建的页面。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你的页面更新频率不高，但又追求极速访问和内容鲜度，那就用 ISR 吧。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个被查看的设计、被点击的按钮或被加载的页面都会被转化为一个事件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Canva 从一开始就严格控制其分析模式 (Schema)，从而避免了类似问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这里的关键在于解耦：数据采集端点不会因数据丰富或下游交付而受阻。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于大规模系统而言，过度交付（至少一次交付）比因瞬时故障导致永久性数据丢失的风险更可控，成本更低。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实际系统往往因过度设计边缘情况或因规模不足而崩溃。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -62,25 +65,25 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Joan Ayebola</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1958</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1781</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Next.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ISR (增量静态再生)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ISR</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">静态站点生成 (SSG)</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据收集</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">事件处理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大数据</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据管道</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">实时分析</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/edadb3">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAX6SURBVO3BQW4dSxLAQLKg+1+Z42WuGmg8SS7/yQj7g7UucVjrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yJffEjlN1VMKr+p4onKk4pJ5Y2KN1R+U8UnDmtd5LDWRQ5rXeSLb1bxnVR+UsWk8obKVDGpTCpTxSdUpoonFd9J5Tsd1rrIYa2LHNa6yBc/TOWNit+k8omKJxVvqEwVk8p3Unmj4icd1rrIYa2LHNa6yBf/uIpJ5UnFGyqTypOKSWWqmFSmikllqphU/ksOa13ksNZFDmtd5It/nMpU8YbKVDFVTCpvVDypmFSeqEwV/yWHtS5yWOsih7Uu8sUPq/hJFZ+o+E0qU8VU8YbKVPFGxU0Oa13ksNZFDmtd5ItvpvKbVKaKSWWqmFSmikllqphUnqhMFZPKVDGpTBWfULnZYa2LHNa6yGGti9gf/IeofKeKSeVJxaQyVbyh8qTiv+Sw1kUOa13ksNZF7A8+oDJVPFH5SRWTylTxhspUMak8qXiiMlU8UXmj4onKVDGpvFHxicNaFzmsdZHDWhf54kMVT1SeVLyh8kbFpPJGxaTyhsqTikllqnhS8Z1UnlT8pMNaFzmsdZHDWhf54kMqP0nlScUbFU9U3qj4ThWTyhOVNyo+ofKk4hOHtS5yWOsih7UuYn/wjVSmiknljYonKj+p4onKVDGpfKeKT6hMFU9UnlR8p8NaFzmsdZHDWhf54kMqP0llqpgqnqj8pIpJZaqYVKaKSWWqeKIyVUwqn6iYVH7SYa2LHNa6yGGti3zxzSomlaniicpU8YbKk4onKpPKVPGkYlJ5ojJVfEJlqphU3lCZKn7SYa2LHNa6yGGti3zxoYpJZaqYVJ5UTCpTxRsV30llqnhSMam8oTJVTBVPVKaKSeVJxW86rHWRw1oXOax1kS8+pDJVTCqfqJhUpoo3VN6oeKIyVUwqU8Wk8qRiUnmjYlJ5Q2WqmFSmik8c1rrIYa2LHNa6iP3BB1TeqHii8qRiUvlExaTyRsUnVKaKSeVvqvhNh7UucljrIoe1LvLFN6v4RMUbFZPKk4pJZaqYVN5Q+U4VT1TeqJhUpopJZaqYVKaKTxzWushhrYsc1rrIFx+qeKLypGJSeaNiqvhNKp+omFTeqJhUnqhMFZPK33RY6yKHtS5yWOsi9gd/kcqTik+oTBVPVKaKSWWq+EkqTyqeqEwVk8p3qvjEYa2LHNa6yGGti3zxl1U8UflExXeqmFSmikllqnii8qTijYpJZaqYVKaK33RY6yKHtS5yWOsi9gcfUJkqJpVPVEwqU8UTlScVk8qTir9J5UnFE5U3Kn7TYa2LHNa6yGGti3zxl1VMKpPKJyqeqEwVk8obKlPFpPKTVJ5UTCpPVN6o+MRhrYsc1rrIYa2LfPHDKiaVSWWqeKIyqTypmFQ+oTJVfKeKSWWqmFTeUJkqnqj8psNaFzmsdZHDWhexP/iAyk0qJpVPVPwklaniicpvqphUporvdFjrIoe1LnJY6yJffKjib1KZVKaKSWWqmFSeqLxR8aRiUpkq3qh4Q2WqmFSmip90WOsih7UucljrIl98SOU3VdykYlJ5ojJVTBXfSWWquNlhrYsc1rrIYa2LfPHNKr6TyhsVk8pUMalMFd9JZap4ovKdKt5Q+ZsOa13ksNZFDmtd5IsfpvJGxSdUpopJZaqYVJ5UTCpPKiaVqeI7qXyi4g2VqeITh7UucljrIoe1LvLF/5mKNyo+oTJVPKmYVKaKJypTxaQyVTxRmSp+0mGtixzWushhrYt88Y+reKLypOINlaniDZWp4hMqU8UbKlPFE5WfdFjrIoe1LnJY6yJf/LCK36QyVUwqn6h4Q+WJylQxVTypeKLyLzmsdZHDWhc5rHWRL76Zym9SeaIyVTypmFR+UsUbKm9UTCpvVPymw1oXOax1kcNaF7E/WOsSh7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LvI/5xXaXPmL6DoAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/aa03ff">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
