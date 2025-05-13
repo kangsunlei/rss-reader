@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>百万级群聊的设计实践</title>
+        <title>SRE 监控四大黄金指标，任何一个有异常都会是灾难……</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>百万级群聊的设计实践</h2>
-        <p>5/9/2025, 2:51:00 AM</p>
+        <h2>SRE 监控四大黄金指标，任何一个有异常都会是灾难……</h2>
+        <p>5/11/2025, 12:02:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">详细介绍了基于 H5 实现的百万级群聊系统的架构设计与关键技术实现</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文指导读者通过 SRE 四大黄金指标和 Prometheus 配置构建可观测的监控体系</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章系统性地介绍了基于 H5 实现的百万级群聊系统的架构设计与关键技术实现。首先分析了读扩散和写扩散两种消息存储模式的优缺点，选择了适合百万级群聊的读扩散方案。然后详细阐述了整体架构设计，包括连接服务、群组服务、消息队列等核心组件及其交互流程，并配有清晰的架构图和流程图。针对消息顺序、消息可靠性、未读数统计等关键问题提供了具体解决方案，特别是推拉结合的消息顺序一致性机制。最后讨论了超大群场景下的消息风暴、消息压缩(使用 protobuf 节省 43%带宽)和块消息等优化策略。整体方案在实际项目中验证了可行性，为构建高性能、高可靠性的群聊系统提供了有价值的参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细阐述了 SRE 监控中至关重要的四大黄金指标：延迟、流量、错误和饱和度。它不仅解释了每个指标的定义和衡量标准，还提供了可直接使用的 Prometheus 配置和代码示例，方便读者快速实践。文章还对比了四大黄金指标与 RED、USE 等其他监控框架的异同，强调了结合业务指标进行全面监控的重要性。最后，文章给出了基于这些指标设置报警策略的建议，旨在帮助读者构建更可靠和高性能的服务。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">读扩散模式更适合百万级群聊场景</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比写扩散，读扩散在百万级群聊场景下具有更低的存储成本和更高的写入效率，虽然读取逻辑相对复杂但整体优势明显，特别是对于 H5 实现的应用</span>
+                        <strong style="color: #1e40af">四大黄金指标提供服务健康状况的全面视图</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 延迟和错误反映用户体验，流量提供系统负载背景，饱和度预示系统瓶颈，四者结合能有效监控系统健康</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">推拉结合保证消息顺序一致性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过服务端推送消息 ID 和客户端拉取消息详情的推拉结合机制，结合消息 ID 排序和线程隔离策略，确保所有用户看到的消息顺序一致，解决了分布式环境下的消息乱序问题</span>
+                        <strong style="color: #1e40af">Prometheus 是实现四大黄金信号的优秀工具</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Prometheus 基于拉取的架构、强大的查询语言和广泛的生态系统，使其成为云原生环境中监控的首选</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">多级缓存优化未读数统计性能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用 Redis 有界 ZSET 结构结合 MySQL 游标记录，优化了百万级群聊的未读数统计性能，同时通过产品设计妥协(99+)进一步降低复杂度，这对 H5 实现尤为重要</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">IO 线程与业务线程隔离提升性能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将连接服务里的 IO 线程与业务线程隔离，实现故障隔离和并行处理，充分利用多核 CPU 能力，显著提升系统整体性能</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">消息压缩与块消息机制应对消息风暴</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 protobuf 数据格式节省 43%带宽，以及消息合并推送的块消息机制，减少 IO 系统调用，降低传输量，同时改善用户体验，有效应对百万级群聊的消息风暴问题</span>
+                        <strong style="color: #1e40af">监控体系应综合考虑服务性能、资源利用率和业务指标</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合四大黄金指标、RED、USE，并添加自定义业务指标，可构建强大的可观测性平台，维护服务可靠性</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用 protobuf 数据交换格式，平均每一个消息可以节省 43%的字节大小，可以大大节省机房出口带宽</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过推拉结合的方式可以保证所有用户收到的消息展示顺序一致</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将连接服务里的 IO 线程与业务线程隔离，提升整体性能</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">读扩散就是所有群成员共用一个群信箱，当一个群产生一条消息时，只需要写入这个群的信箱即可，所有群成员从这一个信箱里读取群消息</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">以群为维度，累计一段时间内的消息，如果达到阈值，就立刻合并推送，否则就以匀速的时间间隔将在这个时间段内新增的消息进行推送</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">四个黄金指标代表了一种以服务为中心的监控方法，能够直接让您了解用户体验和系统健康状况。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在衡量延迟时，区分成功的请求和失败的请求至关重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">满载指标表示您的服务 "满载" 到何种程度。它们衡量系统当前使用的资源比例，并帮助预测系统何时可能开始经历性能降级。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +60,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">高可用架构</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">互联网服务器团队</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">32 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7758</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3131</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">即时通讯</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高并发架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Websocket</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">消息队列</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SRE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">四大黄金指标</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prometheus</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/eccb6b">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/9fb231">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYqSURBVO3BQY4cSRLAQDLQ//8yV0c/JZCoak2s4Gb2B2td4rDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kV++JDK31TxhspU8U0qU8Wk8qRiUpkqJpWp4onK31TxicNaFzmsdZHDWhf54csqvknlm1SmijdUPlExqbxRMalMFU8qvknlmw5rXeSw1kUOa13kh1+m8kbFGypTxVQxqUwqU8WkMlVMKk8qJpWpYlKZVH6TyhsVv+mw1kUOa13ksNZFfvjHqDypeKPiScUTlanijYonKv+Sw1oXOax1kcNaF/nhH1PxTSqfqHii8kRlqpgq/iWHtS5yWOsih7Uu8sMvq/gvqTypeFLxhsoTlaliUnmi8qTijYqbHNa6yGGtixzWusgPX6Zys4pJZaqYVKaKSWWqmFSmikllqphUpopJ5Q2Vmx3WushhrYsc1rrIDx+quFnFTVSeqDxRmSqeVPw/Oax1kcNaFzmsdRH7gw+oTBWTyjdVPFF5o2JSeVLxRGWqmFSeVEwqb1RMKt9U8ZsOa13ksNZFDmtd5If/WMVvqvgvqfymik9UTCpvqEwVnzisdZHDWhc5rHWRH75M5UnFE5UnFW+oTBWTyhsqU8WTiicqb1RMKk8qnqhMFZPKpDJVfNNhrYsc1rrIYa2L/PChijdUpoqp4onKVPGJikllqphU3lD5RMWkMlU8UZkqnqj8lw5rXeSw1kUOa13kh7+s4g2VT1RMKk8qJpWpYlKZKt5QmVTeUHlSMam8UfFEZar4xGGtixzWushhrYvYH3xA5UnFpPJGxW9SmSqeqEwVT1SmiicqU8UTlaliUpkq3lB5o+ITh7UucljrIoe1LmJ/8EUqU8UbKk8qJpUnFZPKVDGpfKLiDZWp4hMqTyqeqEwVk8pU8U2HtS5yWOsih7Uu8sOHVKaKSeUTFZPKVDGpvKHypGJSmSqeqEwVU8Wk8kbFGypvqEwVv+mw1kUOa13ksNZFfvhQxaTypOKJyqTyRsWkMlX8JpWp4o2KSWWqmFSeVEwqTyreUJkqPnFY6yKHtS5yWOsi9ge/SOUTFZPKJyreUJkqJpWpYlK5WcWk8qRiUpkqPnFY6yKHtS5yWOsiP3xIZap4UvGGyicqnqhMFVPFpDJVvFExqTyp+CaVSWWqmFQmlanimw5rXeSw1kUOa13E/uADKp+oeEPlScUbKm9UfELlmyqeqHxTxW86rHWRw1oXOax1EfuDL1KZKiaVqeKJypOKm6k8qZhUpoonKlPFGypPKiaVqeKbDmtd5LDWRQ5rXcT+4AMqU8VNVKaKJyqfqHhD5RMVk8pUMalMFZPKVPFEZar4xGGtixzWushhrYv88MtUpoonKm9UvKHypOI3qUwVk8obKm9UTCpTxaTypOKbDmtd5LDWRQ5rXeSHv0xlqnhSMal8U8WkMlU8UZkq3lB5UvGGyqQyVTxReVLxmw5rXeSw1kUOa13kh8tUTCq/SeWJylTxRGWqeFLxROWbVJ5UvKEyVXzisNZFDmtd5LDWRX74UMWTik9UPFGZKp5UPFGZKn6TylQxVUwqTyreUHmi8jcd1rrIYa2LHNa6yA8fUvmbKqaKSeUNlaliUvmmijdUPqEyVXxTxTcd1rrIYa2LHNa6yA9fVvFNKk9UpopJZVJ5o+KJyhOVqWJSmSqmiknljYo3VJ5UTCpTxScOa13ksNZFDmtd5IdfpvJGxSdU3qj4poonKk9UnlRMKpPKN1U8qfimw1oXOax1kcNaF/nhH1MxqTxR+UTFE5Wp4onKVDGpTBWTylTxROWJylQxqUwVnzisdZHDWhc5rHWRH/5xFZPKGxWTyqTypOKJylTxhsoTlScVk8obFd90WOsih7UucljrIj/8sorfVPFE5Y2KSeVJxROVqWKqmFSmiqliUpkq3lCZKiaVv+mw1kUOa13ksNZFfvgylb9JZap4UjGpPKmYVJ6ofKJiUpkqPqEyVTypmFSmim86rHWRw1oXOax1EfuDtS5xWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIv8DfIABcc0rUK4AAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
