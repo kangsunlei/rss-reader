@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>JEP 505 通过引入结构化并发的第五个预览版，改进了 Java 并行任务管理，并对关键 API 进行了优化</title>
+        <title>面对 MCP"工具投毒"，我们该如何应对</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>JEP 505 通过引入结构化并发的第五个预览版，改进了 Java 并行任务管理，并对关键 API 进行了优化</h2>
-        <p>5/12/2025, 12:00:00 AM</p>
+        <h2>面对 MCP"工具投毒"，我们该如何应对</h2>
+        <p>5/13/2025, 12:43:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">JEP 505 通过引入结构化并发的第五个预览版，改进了 Java 并行任务管理，并利用虚拟线程提供了更安全、高效的并发编程模型。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了 MCP 工具投毒攻击的安全风险，并通过复刻攻击过程，探讨了利用 eBPF 和大模型智能评估构建 MCP 安全可观测的实践方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">JEP 505 为 Java 引入了结构化并发的第五个预览版，旨在简化并行编程并提供更安全的框架，尤其是在使用虚拟线程时，解决资源泄漏和调试困难等问题。最显著的变化是 `StructuredTaskScope` 不再通过公共构造函数实例化，而是通过静态工厂方法（如 `StructuredTaskScope.open()`）打开作用域。这简化了默认设置，并为更丰富的完成策略铺平了道路。该 API 围绕 `java.util.concurrent.StructuredTaskScope` 类展开，用于管理一组并发子任务。开发者在作用域内派生子任务，然后将它们连接在一起，作用域自动管理它们的执行边界。`Joiner` 接口支持自定义完成策略，允许开发者灵活控制任务完成行为。此外，此 JEP 还扩展了为虚拟线程添加的 JSON 线程转储格式，以显示 `StructuredTaskScopes` 如何将线程分组到层次结构中，从而提高代码可维护性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细分析了 MCP (Model Context Protocol) 工具投毒攻击的安全风险与应对措施。首先介绍了 MCP 框架及其在 AI 智能体应用中的作用，随后深入剖析了工具投毒攻击的原理，通过复刻攻击过程，展示了攻击者如何利用工具描述中的恶意指令窃取敏感信息。文章还从客户端和服务端两个维度，分析了 MCP 系统可能面临的影子攻击、地毯式骗局、命令行注入、恶意代码执行和远程访问控制等多种安全风险。最后，提出了利用阿里云大模型可观测 APP 和基于 LoongCollector 采集的安全监控方案，**强调其内置的 20+ 评估模板和对大模型基础设施安全的覆盖，**构建 MCP 安全可观测的实践方法，以应对潜在的安全威胁。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">`StructuredTaskScope` 使用静态工厂方法，简化了 API 并提高了可读性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用 `StructuredTaskScope.open()` 代替构造函数，API 变得更加清晰，并且库维护者可以更灵活地进行未来的演变，而不会破坏兼容性。</span>
+                        <strong style="color: #1e40af">MCP 工具投毒攻击利用工具描述嵌入恶意指令</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 攻击者在工具描述中插入对 AI 模型可见但对用户不可见的指令，诱导模型执行非授权操作，如访问敏感文件。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">`Joiner` 接口支持自定义完成策略，允许开发者灵活控制任务完成行为。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者可以通过实现 `Joiner` 接口来定义自己的完成策略，例如在任何子任务成功完成时取消其余任务，或者等待所有子任务完成。</span>
+                        <strong style="color: #1e40af">客户端和服务端均面临多种 MCP 安全风险</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 客户端存在影子攻击和地毯式骗局风险，服务端面临命令行注入、恶意代码执行和远程访问控制等威胁。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">结构化并发通过限定子任务生命周期，显著提升资源管理的可靠性和代码可维护性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 `StructuredTaskScope`，可以确保子任务在执行离开代码块时完成或取消，从而防止资源泄漏。这提高了代码的可维护性。</span>
+                        <strong style="color: #1e40af">阿里云大模型可观测 APP 可用于智能评估 MCP 工具链安全</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过采集模型交互数据，利用内置评估模板检测 MCP 工具中的恶意指令，实现安全可观测。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">The API， which has evolved through five preview iterations， aims to simplify and provide developers with clearer， safer frameworks for managing parallel tasks， particularly when working with virtual threads.</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Developers now open a scope through static factory methods， such as `StructuredTaskScope.open()`， a change that clarifies defaults and paves the way for richer completion policies.</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Each fork launches a subtask， by default on a virtual thread， returning a `Subtask` handle whose `get()` is safe only after `join()` completes.</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP (Model Context Protocol)，旨在建立 AI 系统与外部工具间的标准化交互框架 (可以将 MCP 想象成 AI 应用的 USB-C 接口)。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">工具投毒攻击是一种通过模型上下文协议 (MCP) 实施的隐蔽攻击手段，其核心特征是在工具描述中嵌入对用户不可见但对 AI 模型可见的恶意指令。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">任何安全问题都可能引发 AI Agent 被劫持与数据泄露等连锁风险，MCP 的安全性直接关乎 AI Agent 的安全边界。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,27 +60,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">A N M Bazlur Rahman</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">孙玉梅</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">831</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6919</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">结构化并发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">虚拟线程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具投毒</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全风险</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">漏洞分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/74ae5a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/95fd04">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAZFSURBVO3BQW4ER5IAQfcE//9lXx3jVNhCN6kcIczsH6x1icNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhf54UMqf6nim1SmijdUpopJ5UnFpDJVTCpTxROVv1TxicNaFzmsdZHDWhf54csqvknlDZWpYlKZKt5Q+UTFpPJGxaQyVTyp+CaVbzqsdZHDWhc5rHWRH36ZyhsVb6g8UXmiMlVMKlPFpPKkYlKZKiaVSeU3qbxR8ZsOa13ksNZFDmtd5If/mIpJZaqYVJ5UPKl4ojJVvFHxROW/5LDWRQ5rXeSw1kV++I+rmFSmiicqn6h4ovJEZaqYKv5LDmtd5LDWRQ5rXeSHX1bxl1S+qeINlScqU8Wk8kTlScUbFTc5rHWRw1oXOax1kR++TOXfVDGpTBWTylQxqUwVk8pUMalMFZPKVDGpTBWTyhsqNzusdZHDWhc5rHWRHz5Usf7/VJ6oPFGZKp5U/C85rHWRw1oXOax1EfsHH1CZKiaVb6r4TSpPKp6oTBWTypOKSeWNiknlmyp+02GtixzWushhrYv88MsqnqhMFU9UpopJ5SYqv6niExWTyhsqU8UnDmtd5LDWRQ5rXeSHL1OZKiaVqWJSeUNlqphUnlRMKk9UpoonFU9U3qiYVJ5UPFGZKiaVSWWq+KbDWhc5rHWRw1oX+eFDFW9UvFHxRGVSeVIxqTypmFTeUPlExaQyVUwqn1D5Nx3WushhrYsc1rrID1+m8omKSeVJxaQyVTypeKIyVUwqU8UbKpPKGyq/qeKJylTxicNaFzmsdZHDWhf54UMqn6iYVKaKSeVJxaTyRsVUMalMFU9UpoqpYlKZKp6oTBWTypOKJyp/6bDWRQ5rXeSw1kXsH/whlaniicpUMal8U8Wk8kbFGypTxRsqb1Q8UZkqJpWp4psOa13ksNZFDmtdxP7BB1Smit+kMlU8UXlSMam8UfFEZap4ovKk4onKb6r4TYe1LnJY6yKHtS7yw5epTBWfUJkqnqg8qXijYlJ5ojJVvFExqTxReVIxqTypeENlqvjEYa2LHNa6yGGti/zwoYo3VN6o+ETFpPKGylQxqUwVk8o3qbyh8qRiUnlS8ZsOa13ksNZFDmtd5IcvU5kq3qiYVKaKSeUvqUwVb1RMKk8q3lCZKiaVSWWqmFQmlanimw5rXeSw1kUOa13E/sEHVKaKSeWNiicqTyq+SWWq+ITKN1U8Ufmmit90WOsih7UucljrIj98qOJJxSdUpoonKlPFE5XfpPKkYlKZKt5QmSqeqDypmFSmim86rHWRw1oXOax1kR8+pDJVfEJlqnii8pdUnlRMFU9Unqi8UTGpPKmYVJ5UTCpTxScOa13ksNZFDmtd5IdfpjJVPKmYVKaKJxVPVJ5U/CaVqWJSeVIxqUwqU8UTlaliUnlS8U2HtS5yWOsih7Uu8sMvq3hDZaqYVN5QmSomlScqU8WkMlW8ofKk4hMqU8UTlTdUpopPHNa6yGGtixzWusgPf0xlqpgqJpUnFU8q/pLKVPGk4onKVPEJlScVb6h802GtixzWushhrYv88KGKNyreqHiiMlU8UZkq/k0qU8VUMak8qXhD5YnKXzqsdZHDWhc5rHWRHz6k8pcqpopJZap4Q2WqmFQ+UfGGyidUpopvqvimw1oXOax1kcNaF/nhyyq+SeWJyhsVk8pUMalMFZPKE5WpYlKZKqaKSeWNijdUnlRMKlPFJw5rXeSw1kUOa13kh1+m8kbFN6lMFU9Upoo3Kp6oPFF5UjGpTCrfVPGk4psOa13ksNZFDmtd5If/mIpJ5ZtUpoonKlPFE5WpYlKZKiaVqeKJyhOVqWJSmSo+cVjrIoe1LnJY6yI//MdVTCpPKiaVJypPKp6oTBVvqDxReVIxqbxR8U2HtS5yWOsih7Uu8sMvq/hNFW9UfFPFE5WpYqqYVKaKJxWTylTxRGWqmFT+0mGtixzWushhrYv88GUqf0nlScWkMlVMKp9Q+UTFpDJVTCpTxROVqeJJxaQyVXzTYa2LHNa6yGGti9g/WOsSh7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LvJ/11sEmGF/tnAAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
