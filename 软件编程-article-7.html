@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>编程助手对软件供应链的威胁</title>
+        <title>不规范的 Elasticsearch 索引设计，简直把我逼疯了……</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>编程助手对软件供应链的威胁</h2>
-        <p>5/13/2025, 1:11:00 PM</p>
+        <h2>不规范的 Elasticsearch 索引设计，简直把我逼疯了……</h2>
+        <p>5/13/2025, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">分析 AI 编程助手如何为软件供应链引入新的安全风险层面，并提供缓解策略。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Elasticsearch 索引设计、分片策略和优化建议，旨在提升 ES 集群的稳定性和性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Martin Fowler 的文章探讨了自主代理型编程助手（如 GitHub Copilot、Cursor）如何通过其交互能力扩大攻击面，从而在软件开发中引入新的安全特性。文章对比了传统风险与 ReAct（推理-行动）循环引入的新漏洞，包括通过 Model Context Protocol(MCP)服务器/规则文件进行的上下文污染和权限提升。作者详细说明了特定威胁，如'直觉式编码'（过度依赖 AI 输出）和工具调用风险，同时概述了实用的安全措施，如沙箱隔离、供应链审查和威胁建模。分析强调在 AI 辅助开发中，人为监督对应对审查疲劳的持续重要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入分析了 Elasticsearch 索引设计中常见的不规范问题，如索引创建不规范、参考不合理的创建脚本等，并详细阐述了索引结构、字段类型以及分片与副本配置等关键要素。文章针对 Text、Keyword 和 Numeric 等常用字段类型，给出了在不同查询场景下的选择建议。同时，结合实际业务场景（读、写、日志存储、小数据量），提出了具体的分片数规划建议，并强调了分片过多可能导致内存占用激增、文件句柄耗尽等问题。此外，文章还重点介绍了得物技术团队在 ES 内核中增加的动态扩分片能力。最后，文章总结了索引设计对 ES 集群稳定性的影响，并鼓励读者在实践中不断探索和优化。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 编程助手在供应链中引入新的安全特性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 其交互特性（ReAct 循环、工具使用）引入了超越传统代码生成的新型漏洞，可能导致上下文污染和权限提升。</span>
+                        <strong style="color: #1e40af">针对查询场景选择合适的字段类型（keyword / text / numeric），避免不必要的分词和存储开销</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 根据业务使用场景，选择合适的字段类型，例如，如果不需要进行模糊搜索，设置为 keyword 类型，来避免分词带来的存储开销，增加系统压力。在不确定业务查询有哪些需求的情况下，设置多字段类型 keyword。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">人为监督可应对审查疲劳和'直觉式编码'</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 过度依赖 AI 输出会增加漏洞风险，需要保持警惕的验证实践以维护安全规范。</span>
+                        <strong style="color: #1e40af">对 keyword 字段类型进行模糊查询会性能较差，使用多字段类型 wildcard 来模糊查询性能更高</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> keyword 字段类型不适用于模糊 wildcard 查询，建议使用 wildcard 字段类型，以获得更高的查询性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MCP 服务器和规则文件成为新的薄弱环节</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些组件缺乏内置安全性，允许恶意输入通过受损指令或依赖项在会话中传播。</span>
+                        <strong style="color: #1e40af">分片数量规划需要结合实际业务场景</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 根据实际业务场景提前规划预算索引数据量，做好分片数量规划。分片数量推荐公式：主分片数 ≈ 总数据量 / 单分片容量上限。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">工具调用带来权限提升风险</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 助手以开发者权限执行系统命令/修改文件时，可能将攻击转向生产系统。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">传统安全实践需适配 AI 风险</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 沙箱隔离、最小权限原则、供应链审核和威胁建模在应用于 AI 特定工作流时仍然有效。</span>
+                        <strong style="color: #1e40af">控制分片数量，避免资源浪费和性能下降</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 分片数不是越多越好，过多分片，也会造成 ES 集群元数据管理的压力，降低系统的性能损耗。设置 total_shards_per_node，将索引压力分摊至多个节点。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">被入侵的助手...可以直接通过助手的执行流执行欺骗性或有害命令。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种复杂、迭代的环境为微妙而强大的攻击创造了理想条件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 默认缺乏内置安全功能，如身份验证、上下文加密或工具完整性验证。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 快速生成代码可能导致审查疲劳，开发者会不假思索地信任 AI 输出而不进行理解或验证。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">培养警惕性、良好的编码习惯和代码监护文化在专业软件团队中仍然至关重要。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">索引是 Elasticsearch 中存储数据的基本单位，是一个逻辑命名空间，用于存储具有相似特性的数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在映射中，文档的字段类型一旦设定后就不能更改。因为字段类型在定义后，elasticsearch 已经针对定义的类型建立了特定的索引结构，这种结构不能更改。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">创建一个索引需要结合业务使用场景考量字段类型选择和是否需要索引分词，按照数据规模和业务增长速度来确定分片和副本的数量的大小。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">主分片数量在索引创建时通过 number_of_shards 参数设定，创建后无法修改（需重建索引）。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,26 +63,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Martin Fowler</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Martin Fowler</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阳光</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">873</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">32 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7918</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自主代理型 AI 编程助手</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">供应链攻击</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">权限提升</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP 服务器</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Elasticsearch</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">索引设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分片策略</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据存储</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/46db59">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/a4f571">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
