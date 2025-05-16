@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>你还不知道的大文件上传</title>
+        <title>加一个 JVM 参数，让系统可用率从 95%提高到 99.995%</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>你还不知道的大文件上传</h2>
-        <p>5/14/2025, 12:31:00 AM</p>
+        <h2>加一个 JVM 参数，让系统可用率从 95%提高到 99.995%</h2>
+        <p>5/15/2025, 12:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了前端大文件上传的关键技术和 enlarge-file-upload 库的使用，提供了多种前端框架的使用示例，帮助开发者快速实现大文件上传功能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">通过深度分析 JVM GC 问题，利用调参和发布策略优化，将高并发系统可用率从 95% 提升到 99.995%。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章首先从大文件上传的需求和优势入手，阐述了大文件上传的定义和解决的问题，包括网络不稳定、服务器资源限制、用户体验和文件完整性验证。然后详细讲解了前端实现大文件上传的关键技术，如文件分片、分片上传、断点续传等，并推荐了一个名为 enlarge-file-upload 的开源库，该库具有高度可配置性，并提供了详细的示例，方便开发者快速集成到现有项目中。最后，提供了在 jQuery、Vue 2、Vue 3 和 React 等不同前端环境下的详细使用示例，旨在帮助开发者理解和应用大文件上传技术，提升用户体验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细记录了解决一个高并发、低延迟系统因大内存索引切换导致 GC 暂停时间长、服务不稳定的排查与优化过程。作者首先定位问题根源在于 YGC 时索引对象复制耗时过高。随后，围绕让索引对象尽早晋升到老年代（通过调整 MaxTenuringThreshold=0 等参数，将复制次数从 2 次减少到 1 次）、尝试直接分配到老年代、加速复制过程及升级 GC（ZGC）等思路进行了探索。尽管部分尝试效果有限或引入新问题（如 ZGC 下的 Allocation Stall），但通过 JVM 参数优化已将成功率提升到 99.5%。最终，结合发布策略（灰度断流）和创新的“Eden 区预热”方案，强制索引在断流期间完成 GC 复制，彻底消除了索引切换对业务的影响，系统可用率最终稳定在 99.995%。文章提供了详细的分析过程、GC 日志解读和多种优化尝试的对比，具有极高的实践参考价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">enlarge-file-upload 库提供了开箱即用的大文件上传解决方案</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该库封装了文件分片、断点续传、进度监控等核心功能，并支持多种前端框架，降低了开发难度。</span>
+                        <strong style="color: #1e40af">大规模对象复制是高并发系统因 GC 导致不稳定的关键原因</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在高流量、低延迟场景下，加载大型内存对象（如索引）触发的长时间 GC STW（特别是 Object Copy）会直接导致请求超时，严重影响系统可用性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">大文件上传通过分片技术解决传统上传的局限性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将大文件分割成小片上传，有效应对网络不稳定、服务器资源限制等问题，提升上传效率和用户体验。</span>
+                        <strong style="color: #1e40af">通过调整 MaxTenuringThreshold 等参数可减少对象在年轻代的复制次数</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将对象晋升年龄阈值设置为 0 或 1，可以强制对象尽早从 Eden 或 Survivor 区晋升到老年代，减少年轻代内部的反复复制耗时。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">断点续传是提升大文件上传用户体验的关键</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 允许用户在上传中断后从上次上传位置继续，避免重复上传，节省时间和带宽。</span>
+                        <strong style="color: #1e40af">ZGC 通过读屏障和着色指针实现并发转移，显著降低 STW 时间</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比 G1，ZGC 在对象复制/转移阶段能与业务线程并发执行，极大减少了因 GC 移动对象导致的暂停，提升了高活跃度堆下的性能稳定性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">结合断流和“Eden 预热”能彻底解决特定场景下的 GC 抖动</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在流量低谷或断流期间，通过构造临时对象填充 Eden 区，强制触发 YGC 将关键大对象晋升到老年代，确保重新接流后 YGC 快速完成，实现无感切换。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">自己从头写一个大文件上传库，难度可不小，要实现这么多功能，短时间内根本搞不定。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大文件上传一般得靠分片上传、断点续传、并行上传这些技术，才能顺顺利利完成。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有了上传进度展示、断点续传这些功能，用户能随时知道上传到啥程度了，就算上传中断，也不用从头再来，体验感直接拉满。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分片上传后，服务器每次处理的文件片段小，内存占用就少，服务器性能也能提升。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">要控制好同时上传的分片数量，不然太多请求会占满带宽，服务器也扛不住。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">搞懂原理和实现方法，再用好工具，就能给用户更好的上传体验。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">因此服务抖动的根本原因已锁定：系统 A 加载的索引非常大，导致 YGC 时索引在堆内存的复制过程耗时久，复制期间业务线程被长时间暂停，导致上游请求大量超时报错。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于本例中索引对象复制开销太大，因此可考虑让索引尽早晋升到老年代，避免在年轻代反复腾挪影响系统稳定性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ZGC 中业务线程访问对象将触发"读屏障"，如果发现对象被复制移动了（通过"着色指针"实现），则"读屏障"会把读出来的指针更新到对象的新地址上，让业务线程始终访问到对象更新后、移动后的正确地址。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分批断流发布 + Eden 区"预热"的方式，预期能彻底消除索引复制时 YGC 长暂停导致的负面影响。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">至此，未来无论系统 QPS 涨到多高、索引体积膨胀到多大、索引切换多么频繁，系统都能无感切换索引，稳定性不再受到任何影响。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,27 +63,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">吉多</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5282</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">31 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7643</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文件上传</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分片上传</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">断点续传</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GC</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高并发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">稳定性</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/81e6ee">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/6aeb21">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

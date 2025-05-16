@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>🎉 Visual Studio 2022 v17.14 现已全面上市！</title>
+        <title>加一个 JVM 参数，让系统可用率从 95%提高到 99.995%</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>🎉 Visual Studio 2022 v17.14 现已全面上市！</h2>
-        <p>5/13/2025, 5:24:25 PM</p>
+        <h2>加一个 JVM 参数，让系统可用率从 95%提高到 99.995%</h2>
+        <p>5/15/2025, 12:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Visual Studio 2022 v17.14 正式发布，带来 AI 辅助开发（含 AI 代理模式）、调试功能改进、C++23 支持、Git 工具增强，并转为月度更新机制。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">通过深度分析 JVM GC 问题，利用调参和发布策略优化，将高并发系统可用率从 95% 提升到 99.995%。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">微软宣布 Visual Studio 2022 17.14 版本全面上市，该版本通过 GitHub Copilot 的 AI 代理模式提供强大的 AI 辅助开发能力。更新包括调试与诊断功能改进（如设计阶段实时预览）、支持 C++23 特性并引入性能无损的动态调试功能，以及 Git 工具增强。最显著的变化是转为每月发布更新，以加速功能交付。文章还预告了将举办线上发布会来演示这些新功能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细记录了解决一个高并发、低延迟系统因大内存索引切换导致 GC 暂停时间长、服务不稳定的排查与优化过程。作者首先定位问题根源在于 YGC 时索引对象复制耗时过高。随后，围绕让索引对象尽早晋升到老年代（通过调整 MaxTenuringThreshold=0 等参数，将复制次数从 2 次减少到 1 次）、尝试直接分配到老年代、加速复制过程及升级 GC（ZGC）等思路进行了探索。尽管部分尝试效果有限或引入新问题（如 ZGC 下的 Allocation Stall），但通过 JVM 参数优化已将成功率提升到 99.5%。最终，结合发布策略（灰度断流）和创新的“Eden 区预热”方案，强制索引在断流期间完成 GC 复制，彻底消除了索引切换对业务的影响，系统可用率最终稳定在 99.995%。文章提供了详细的分析过程、GC 日志解读和多种优化尝试的对比，具有极高的实践参考价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">基于 GitHub Copilot AI 代理模式和 MCP 的 AI 辅助开发</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新增 AI 代理模式支持自然语言交互和模型上下文协议（MCP），实现复杂编码任务自动化及结构化 AI 工具集成。</span>
+                        <strong style="color: #1e40af">大规模对象复制是高并发系统因 GC 导致不稳定的关键原因</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在高流量、低延迟场景下，加载大型内存对象（如索引）触发的长时间 GC STW（特别是 Object Copy）会直接导致请求超时，严重影响系统可用性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">调试与诊断功能改进</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 设计阶段实时预览、增强的 LINQ 表达式调试和零长度数组分配分析等新功能，大幅提升调试效率。</span>
+                        <strong style="color: #1e40af">通过调整 MaxTenuringThreshold 等参数可减少对象在年轻代的复制次数</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将对象晋升年龄阈值设置为 0 或 1，可以强制对象尽早从 Eden 或 Survivor 区晋升到老年代，减少年轻代内部的反复复制耗时。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">C++23 支持与性能无损调试</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新增 C++23 特性支持，并引入性能无损的动态调试功能，可在保持性能的同时调试优化后的 C++ 代码。</span>
+                        <strong style="color: #1e40af">ZGC 通过读屏障和着色指针实现并发转移，显著降低 STW 时间</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比 G1，ZGC 在对象复制/转移阶段能与业务线程并发执行，极大减少了因 GC 移动对象导致的暂停，提升了高活跃度堆下的性能稳定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Git 工具与工作流增强</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 推送/拉取提交筛选功能和默认分支名称自定义等新特性，优化 Git 工作流程。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">转为月度更新机制</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Visual Studio 转为月度更新机制，重点快速交付 AI 赋能的新功能并整合开发者反馈。</span>
+                        <strong style="color: #1e40af">结合断流和“Eden 预热”能彻底解决特定场景下的 GC 抖动</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在流量低谷或断流期间，通过构造临时对象填充 Eden 区，强制触发 YGC 将关键大对象晋升到老年代，确保重新接流后 YGC 快速完成，实现无感切换。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过 AI 代理模式，您只需用自然语言与 Visual Studio 对话，就能让它帮您完成多步骤复杂编码任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 支持让 Copilot 代理能结构化访问工具、数据和资源——如同 AI 应用的通用适配器。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">C++ 动态调试功能让您能在不损失性能的前提下完整调试优化后的 C++ 代码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即日起，Visual Studio 2022 将采用月度更新节奏，专注于 AI 赋能的 Copilot 增强、深度集成以及基于用户反馈的快速迭代。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">因此服务抖动的根本原因已锁定：系统 A 加载的索引非常大，导致 YGC 时索引在堆内存的复制过程耗时久，复制期间业务线程被长时间暂停，导致上游请求大量超时报错。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于本例中索引对象复制开销太大，因此可考虑让索引尽早晋升到老年代，避免在年轻代反复腾挪影响系统稳定性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ZGC 中业务线程访问对象将触发"读屏障"，如果发现对象被复制移动了（通过"着色指针"实现），则"读屏障"会把读出来的指针更新到对象的新地址上，让业务线程始终访问到对象更新后、移动后的正确地址。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分批断流发布 + Eden 区"预热"的方式，预期能彻底消除索引复制时 YGC 长暂停导致的负面影响。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">至此，未来无论系统 QPS 涨到多高、索引体积膨胀到多大、索引切换多么频繁，系统都能无感切换索引，稳定性不再受到任何影响。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,26 +63,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Visual Studio Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Mads Kristensen</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">吉多</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">859</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">31 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7643</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Visual Studio</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">集成开发环境</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Copilot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 辅助开发</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GC</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高并发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">稳定性</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/d98bd6">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/6aeb21">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
