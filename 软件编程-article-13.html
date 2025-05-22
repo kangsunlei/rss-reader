@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>软件团队的实用威胁建模指南</title>
+        <title>Electron 以慢著称，腾讯文档却能实现内存优化 60%降幅？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>软件团队的实用威胁建模指南</h2>
-        <p>5/20/2025, 1:20:00 PM</p>
+        <h2>Electron 以慢著称，腾讯文档却能实现内存优化 60%降幅？</h2>
+        <p>5/21/2025, 12:45:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本指南旨在为软件团队提供实用、渐进的威胁建模方法，利用数据流和 STRIDE 框架保障安全。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">腾讯文档通过引入墓碑机制和修改 Electron 源码，实现了桌面端内存占用大幅优化，降低约 60%。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在为软件团队提供指南，通过采用实用、渐进式和以团队为导向的方法进行威胁建模，从而集成安全性。它强调从关注 '系统如何工作' 转变为关注 '可能出现什么问题'，即从简单地追踪数据流以识别特定威胁入手。STRIDE 框架（欺骗、篡改、抵赖、信息泄露、拒绝服务、提权）被引入作为识别漏洞的结构化辅助工具。该指南提倡“少量多次”的方法，鼓励在迭代计划、站立会议等团队活动中融入简短的威胁建模环节，而不是依赖于详尽的研讨会。它强调威胁建模是一项“团队运动”，需要来自开发人员、产品负责人和安全专家的不同视角来构建共同理解。提供了实际步骤和示例，包括订单管理系统的白板会话演练，以说明该过程并鼓励动手实践。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了腾讯文档桌面端针对 Electron 内存占用高的问题所做的优化工作。分析了传统优化方法的局限性，并探索了容器合并和单进程模式等替代方案的挑战。文章重点阐述了两个核心优化策略：一是效仿 iOS 的墓碑机制，在内存紧张时清理后台长时间未使用的文档 Tab；二是利用 Windows API (EmptyWorkingSet) 进行内存清理，并通过修改 Electron 源码，对外暴露并调用 SetPageFrozen 方法实现页面冻结。通过这些措施，腾讯文档桌面端在打开多个文档的场景下，内存占用从 2.5 G 显著下降到 900 M 左右，降幅约 60 %，有效改善了用户体验。文章最后展望了进一步减少进程数量、优化主进程内存以及品类容器化等后续优化方向。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">追踪数据流以简化识别潜在安全威胁。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 了解数据流有助于将模糊的安全问题转化为具体、可执行的漏洞分析。</span>
+                        <strong style="color: #1e40af">采用墓碑机制管理后台文档 Tab，按需回收内存。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当后台 Tab 长时间未使用且内存占用超阈值时，杀死对应渲染进程，再次激活时重新加载，兼顾内存节省与用户体验。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">威胁建模的核心是在每次系统交互中询问“可能出现什么问题？”。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从关注功能到关注故障模式的转变，对于发现潜在风险和逐步构建安全系统至关重要。</span>
+                        <strong style="color: #1e40af">结合 EmptyWorkingSet 和 SetPageFrozen 深度清理进程内存。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Windows API 清空工作集，并通过修改 Electron 源码调用 Chromium 方法冻结页面，暂停后台进程活动并进行内存回收。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">STRIDE 框架提供了一种结构化的方式来系统地分类和集思广益地思考威胁。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> STRIDE 框架作为一个检查清单，可以系统地考量常见安全属性以及在威胁识别期间的潜在违规行为。</span>
+                        <strong style="color: #1e40af">系列优化措施使内存占用降低约 60 %。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基准测试显示，打开相同数量文档场景下，内存占用从 2.5 G 降至约 900 M，大幅提升应用性能和用户体感。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将威胁建模集成到定期的、简短的团队会议中，而不是不频繁的大型研讨会。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> “少量多次”的方法可以降低威胁建模的难度，使团队可以专注于眼前的关注点，并将安全思维融入到日常工作流程中。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">让不同的团队成员参与进来，以全面了解潜在威胁。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 汇集不同的观点（开发、产品、安全、测试）丰富了威胁识别过程，并培养了共同的安全文化。</span>
+                        <strong style="color: #1e40af">探索自定义 Electron 实现核心优化能力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为实现页面冻结等高级优化，团队不惜修改和重新编译 Electron 源码，体现了深入技术底层解决问题的决心和能力。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">要简化威胁建模的复杂性，关键在于追踪数据在技术栈中的流动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">识别威胁的关键可能变得非常简单：沿着每个数据流并询问“可能出现什么问题？”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有效的威胁建模应以小规模、增量式进行，并与团队当前工作紧密结合。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有效的威胁建模从不同的角度汲取力量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">目标不仅仅是发现威胁，而是建立共同的理解。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每打开一篇文档就会增加一个渲染进程，占用几百 MB 的内存，再加上基础公共的进程，内存占用数量偏高...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们效仿 iOS 的墓碑系统（Tombstone System）的设计来对已打开的文档进行内存管理以达到内存峰值的控制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过验证发现，EmptyWorkingSet 的 API 可显著降低进程的内存占用（以任务管理器统计为准），普通用户正常使用过程中几乎感受不到对性能的影响...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们重新修改编译了 Electron 的源码，对外暴露了 SetPageFrozen 方法...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">内存占用下降了约 60 %</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,26 +63,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Martin Fowler</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Martin Fowler</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">94</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">杨飞</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5428</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3195</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">威胁建模</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全实践</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">敏捷</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">流程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Electron</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">桌面应用</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术实践</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a14973">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATUSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyA3aiYgN2reAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkDfUTECeAPKEmknNJjWbgGw6qVp0UrXopGrRJ18G5Ak1TwB5Q80NkDeAPKHmCSBPqPmmk6pFJ1WLTqoWffKPA3ID5A01E5BJzQRkUvMvOaladFK16KRq0Sf/GDU3QG7UPAFkUjMB+S85qVp0UrXopGrRJ1+m5jcBmdRsAjKpuVFzA2RS84SaP8lJ1aKTqkUnVYs+WQbk/0nNBGRSMwG5ATKpmYBMaiYgk5o3gPzJTqoWnVQtOqla9MlLav4mQCY1TwB5Qs0EZFJzo+ZvclK16KRq0UnVIvyRF4BMaiYgm9TcAJnU/CYgk5obIJOaCcgmNd90UrXopGrRSdWiT36ZmgnIjZoJyBNAJjVPAJnUTEAmNTdAboC8oeYJIJOaN06qFp1ULTqpWoQ/8gKQGzUTkEnNDZBJzQ2QSc0EZFLzBJAn1NwAuVHzNzmpWnRSteikatEnv0zNDZBJzQ2QGyCb1DwB5A0gN2omIJOaCcikZtNJ1aKTqkUnVYvwR74IyKTmBsiNmieAPKHmBsikZgJyo+abgNyo+aaTqkUnVYtOqhZ98hKQSc2k5gbIjZobIJOaJ9TcAJnUTECeAPKGmgnIpOYJIJOaN06qFp1ULTqpWvTJLwPyBJBJzQ2QSc0mIE+ouQEyqbkBMqmZgNyomdRsOqladFK16KRq0SfLgLyh5gk1E5AJyKRmAnKjZgIyqXkCyCYgk5obIJOaTSdVi06qFp1ULfrkJTU3QG7UTEBu1ExAbtQ8oeZGzQ2QSc2NmjfUTEBu1HzTSdWik6pFJ1WLPnkJyKRmUvOEmk1A3gAyqZmAvAFkUjMBuQEyqZmA3ACZ1LxxUrXopGrRSdWiT/4wQG7UTGomIJOaTUAmNROQCcik5gbIpGYCMql5Q82mk6pFJ1WLTqoWffJlQCY1E5AbNU+omYB8E5BJzQTkBsikZgJyA2RSM6mZgExqNp1ULTqpWnRSteiTXwbkRs0EZFIzAZnUvKHmBsgNkEnNBOQGyCYgN0AmNW+cVC06qVp0UrUIf+QvBuRGzRtAJjUTkCfUTEAmNU8A2aTmjZOqRSdVi06qFn3yEpDfpGZScwNkUjMBuVEzAZnU3ACZgDwBZFLzhppvOqladFK16KRq0SfL1GwCcgNkUjOpuVHzhJrfpOYJNTdAbtS8cVK16KRq0UnVok++DMgTar4JyI2aGyBvqJmATEA2AZnUfNNJ1aKTqkUnVYs++ccAuVHzhpoJyCY1N0AmNROQGyA3at44qVp0UrXopGrRJ/8YNZuAvKHmRs0NkBsgb6jZdFK16KRq0UnVok++TM03qbkBcqNmAjKpmYBMat4AMqmZ1ExAJjUTkEnNBOSbTqoWnVQtOqla9MkyIL8JyI2aGyCTmgnIE0AmNROQSc0EZFJzA+QGyKTmm06qFp1ULTqpWoQ/UrXkpGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWvQ/RfEvUtSqBY0AAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/6d6ceb">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
