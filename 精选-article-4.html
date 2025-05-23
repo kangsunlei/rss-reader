@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>大规模 Python 工具链：LlamaIndex 的单代码仓库优化 — LlamaIndex - 基于您的企业数据构建知识助手</title>
+        <title>JavaScript 代码检查规则的工作原理（以及为什么抽象语法树至关重要）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>大规模 Python 工具链：LlamaIndex 的单代码仓库优化 — LlamaIndex - 基于您的企业数据构建知识助手</h2>
-        <p>5/21/2025, 12:00:00 AM</p>
+        <h2>JavaScript 代码检查规则的工作原理（以及为什么抽象语法树至关重要）</h2>
+        <p>5/21/2025, 3:21:33 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">LlamaIndex 分享了他们使用 uv 和自定义工具优化 Python 单代码仓库工具链的经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">解释了 JavaScript 代码检查工具（如 ESLint）如何通过分析抽象语法树 (AST) 而非代码文本来工作。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 LlamaIndex 在管理具有 650 多个软件包的大型 Python 单代码仓库时面临的技术挑战。他们最初使用 Poetry 进行软件包管理，使用 Pants 进行构建流程管理，但面临着大规模的重大问题，包括 Poetry 的依赖解析器速度慢，且缺乏跨软件包的依赖感知，这导致了构建效率低下。此外，Pants 存在复杂的缓存服务器维护、冗余日志记录以及难以在本地重现 CI 失败等问题。在评估 `uv` 并发现它与他们现有的设置不兼容后，他们采用了 `uv`，因为它在本地开发中速度很快，并构建了一个自定义工具 `LlamaDev`，以管理单代码仓库的依赖图，启用定向测试并简化 CI 工作流。新的 uv+LlamaDev 设置显著加快了测试运行速度，解决了日志冗余的问题，提高了本地可重现性，并消除了对外部基础设施缓存的依赖。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 JavaScript 代码检查工具的内部工作原理，重点介绍了它们如何利用抽象语法树 (AST)。它将代码检查工具定义为用于自动化代码分析，以捕获错误和强制执行代码风格的工具。提出的核心概念是代码检查工具将代码解析为结构化的树状表示 (AST)，而不是将其作为原始文本处理。这种基于 ESTree 等规范的 AST 结构允许代码检查规则一致地识别特定的代码模式，忽略表层语法差异，专注于代码的语义。文章解释了 ESLint 如何遍历 AST，触发订阅特定节点类型的规则。它说明了一个简单的代码检查规则的结构，并重点介绍了有用的工具，如 AST Explorer，用于可视化 AST 并理解代码结构。最终，理解 AST 使开发者能够更有效地自定义、贡献或调试代码检查工具，提供更强大、更灵活的代码静态检查能力。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">扩展 Python 单代码仓库工具链对现有工具提出了重大挑战。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 Poetry 和 Pants 等工具管理 650 多个软件包的依赖项和构建会导致性能下降、维护开销和开发体验不佳。</span>
+                        <strong style="color: #1e40af">代码检查工具使用规则自动分析代码中的错误和样式问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 代码检查工具充当自动化代码审查员，使用预定义的规则在开发过程的早期识别潜在问题并保证代码风格一致性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">自定义工具能更好地解决单代码仓库扩展问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 构建 LlamaDev 可以进行定制的依赖分析、定向测试和简化的 CI/CD 工作流，从而克服通用构建系统的局限性。</span>
+                        <strong style="color: #1e40af">抽象语法树 (AST) 是代码的结构化表示。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 代码检查工具不直接处理原始文本，而是将代码转换为节点树。每个节点代表代码的结构和语义的特定组成部分。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用 `uv` 可以显著提高 Python 依赖项管理速度。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与 Poetry 和 pip 等传统工具相比，迁移到 `uv` 进行本地开发可显著加快依赖项安装和管理。</span>
+                        <strong style="color: #1e40af">代码检查规则分析 AST，而不是原始文本，以实现强大的模式匹配。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 分析 AST 允许规则根据结构和语义识别代码模式，使它们在同一逻辑的不同语法样式中有效。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">ESLint 遍历 AST 并根据节点类型触发规则。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ESLint 使用标准化的 AST 格式 (ESTree) 并遍历树，当遇到规则感兴趣的节点类型时，执行特定的规则函数。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">理解 AST 是自定义和贡献代码检查工具的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 了解 AST 使开发者能够编写自定义代码检查规则、调试意外的代码检查工具行为，并为现有的代码检查工具和插件做出贡献。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">小问题在系统规模扩大后会被放大。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Poetry 不支持 uv，并且在可预见的将来也不会支持。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">uv 不仅仅是 `pip` 的替代品，它实际上是一个非常强大的 Python 项目管理器。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果需要进行一些调试，贡献者可以在本地运行 `llama-dev` 并准确地重现 CI 系统中所做的工作。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">代码检查工具无处不在 —— 跨语言、框架和工作流程。它们有助于捕获错误、强制执行一致的格式并推广最佳实践。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">要了解代码检查规则在底层如何工作，我们需要讨论抽象语法树 (AST) —— 每个代码检查工具的核心数据结构。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">代码检查规则并非通过解析代码文本的方式工作。它们通过匹配 AST 中的特定节点模式来工作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ESLint 依赖于一种称为 ESTree (ECMAScript Tree) 的标准化格式，将 JavaScript 代码表示为抽象语法树 (AST)。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">了解 AST 的工作原理可以让您在自定义和贡献代码检查工具方面拥有超能力。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -62,25 +68,25 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">LlamaIndex Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">LlamaIndex</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Tilda Udufo</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2211</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2017</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">单代码仓库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Python 工具链</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">构建系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CI/CD</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者体验</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码检查</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">抽象语法树 (AST)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ESLint</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码分析</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/b48ba0">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/567326">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATNSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBORGzQRkUjMBmdS8AeQJNROQ36TmjZOqRSdVi06qFn2yTM0mIN8E5A0gT6iZgDyhZhOQTSdVi06qFp1ULfrky4A8oeYJNROQGzUTkBsgk5pJzf8TkCfUfNNJ1aKTqkUnVYs++eOA3AB5Qs0NkEnNBGRSMwGZ1PyXnFQtOqladFK16JM/Ts0NkEnNJiBvAJnU/GUnVYtOqhadVC365MvU/CYgTwC5UTOpmYBMaiYg36TmX3JSteikatFJ1aJPlgH5TUAmNROQJ9RMQCY1b6iZgDwB5F92UrXopGrRSdWiT15S8y8BMqmZgHwTkBsgT6j5S06qFp1ULTqpWvTJS0AmNROQGzUTkCfUTEAmIE8AmdRMQH4TkEnNDZBJzQTkRs0bJ1WLTqoWnVQtwh9ZBGRS8wSQSc0bQG7UTEBu1ExAJjU3QL5JzRNAJjVvnFQtOqladFK16JOXgNwAeQPIG2omIBOQbwIyqXkDyBNAbtRsOqladFK16KRq0ScvqbkB8oaaGyCTmhs1N0AmNROQJ9TcAJnUbFJzA2RS88ZJ1aKTqkUnVYvwR14A8oSaGyA3am6ATGomIE+omYBMaiYgN2q+CciNmm86qVp0UrXopGoR/sgiIJOaJ4BMam6ATGq+CciNmhsgk5obIDdqboA8oeaNk6pFJ1WLTqoWfbJMzQ2QJ4BMap4AMqmZgExqJiCTmhsgTwB5A8ik5v/ppGrRSdWik6pFn3wZkEnNBGRS84Sa3wRkUjOpuQFyo+YGyBNqJiCTmk0nVYtOqhadVC36ZBmQSc2NmhsgN2omIJOaN9RMQJ4A8gSQSc2kZgIyAZnU/KaTqkUnVYtOqhZ9skzNE0AmNZOaGyBPALkB8gaQGzUTkCeATGomIBOQ33RSteikatFJ1aJPXgIyqZmAPAFkE5An1NwA2aRmAvKGmgnIpOabTqoWnVQtOqla9MlLap5QMwGZ1DwBZFIzAZnUTEAmIJOaSc0E5EbNG0AmNf+yk6pFJ1WLTqoW4Y8sAjKpmYBMam6ATGqeAPKGmieA3KiZgPwmNd90UrXopGrRSdUi/JE/DMik5gbIjZongDyhZgIyqXkCyCY1b5xULTqpWnRSteiTl4D8JjU3QG7UTEBugExqJjUTkEnNBOQJIJOaJ9RMQCY1m06qFp1ULTqpWvTJMjWbgDyhZgIyAbkBMqmZgNyouVEzAblR801AJjVvnFQtOqladFK16JMvA/KEmifUTEAmNTdAJjVvALlRcwPkDTUTkEnNN51ULTqpWnRSteiTPw7IJiBvqHlCzQRkUnMDZAIyqbkBMql546Rq0UnVopOqRZ/8x6h5Qs0mIE+oeQLIpOYGyKTmm06qFp1ULTqpWvTJl6n5JjVPALlRcwNkUjOpeQLIpOYNIJOaCcikZtNJ1aKTqkUnVYs+WQbkNwG5UTOpeUPNE0A2qfmXnVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16H+WMxtpHdXSpgAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
