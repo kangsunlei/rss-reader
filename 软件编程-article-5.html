@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>为什么“凭感觉编程”不会颠覆软件工程</title>
+        <title>CVE-2025-0072：MTE 绕过分析</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>为什么“凭感觉编程”不会颠覆软件工程</h2>
-        <p>5/22/2025, 7:43:04 PM</p>
+        <h2>CVE-2025-0072：MTE 绕过分析</h2>
+        <p>5/23/2025, 10:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">人工智能代码助手提升熟练工程师的生产力，是能力增强而非对基础工程技能的取代，同时也暴露了知识短板。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">分析 CVE-2025-0072，这是 Arm Mali GPU 驱动中的一个释放后使用漏洞。该漏洞可绕过 MTE，实现内核代码执行。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析了 GitHub Copilot 和 ChatGPT 等人工智能编码工具对软件工程的影响，探讨了“凭感觉编程”现象，即用户在没有深入技术知识的情况下，通过人工智能辅助反复试验来构建软件。作者认为，人工智能工具是“能力倍增器”，通过处理样板代码和重复性任务，显著提高了经验丰富的工程师的生产力。然而，这些工具缺乏对复杂系统架构、可扩展性、安全性和长期维护的理解，而这些领域仍需人类的判断和专业知识。文章提供了人工智能优势（如代码翻译）和劣势（复杂系统设计）的例子，强调在人工智能时代，工程师的成功需要关注系统性思维、基础设施、部署、API 设计以及做出战略性权衡，而不仅仅是代码生成本身。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 CVE-2025-0072，该漏洞存在于 Arm Mali GPU 驱动中，影响启用了内存标签扩展（MTE）的 Pixel 7、8 和 9 系列等设备。此漏洞存在于命令流前端 (CSF) 队列的处理过程中，特别是在队列绑定和解绑定期间如何管理内存页。通过终止一个队列组，然后重新绑定和重新映射一个队列，攻击者可以实现页面释放后使用的情况。通过利用 kbase_mem_pool 的内存管理机制，该页面可被重新分配为页全局目录（PGD）。通过用户态经由 GPU 访问和修改 PGD，可重写内核代码，进而实现任意内核代码执行、root 提权和 SELinux 绕过，从而绕过 MTE 保护机制。文章解释了该机制并指出了一个漏洞利用。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“凭感觉编程”依赖于人工智能进行代码生成，而缺乏深入的技术理解。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种实践是使用人工智能工具进行反复试验编码，虽然能实现快速开发，但也因缺乏基础知识而存在风险。</span>
+                        <strong style="color: #1e40af">Mali GPU 驱动程序的 CSF 队列绑定过程中存在释放后使用漏洞。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过终止和重新绑定 `kbase_queue` 所属的队列组，可以控制 `kbase_queue` 的绑定状态。这使得在释放 `queue-&gt;phys` 中的新页面时，能够取消映射旧的内存区域，从而导致释放后使用漏洞（UAF）。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">人工智能编码工具充当能力倍增器，提高了熟练工程师的生产力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 经验丰富的开发人员利用人工智能来自动化日常任务，从而腾出时间进行更高价值的活动，如设计和问题解决。</span>
+                        <strong style="color: #1e40af">释放的页面可以被重用为 GPU 页全局目录 (PGD)。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过仔细的内存池安排，Mali 驱动程序可以重新分配 UAF 页面，以用作 GPU 上下文的关键 PGD 结构。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">人工智能生成的代码通常缺乏架构洞察力、安全性和可维护性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然人工智能擅长语法和简单的功能，但它不理解系统层面的问题，如果不经过专家审查，可能会产生技术债和漏洞。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">人类工程师对于复杂系统设计、权衡以及预测故障是不可或缺的。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 规划可扩展的系统、设计健壮的架构以及做出关键的技术和业务决策等核心工程任务需要人类的专业知识和经验。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在人工智能时代，成功需要掌握系统性思维和基础设施。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着人工智能处理更多的编码工作，价值转移到理解组件如何交互、确保可靠的部署、监控和保护整个系统。</span>
+                        <strong style="color: #1e40af">通过用户态访问 PGD 绕过 MTE。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该漏洞允许通过仍然有效的用户空间映射访问释放的页面（现在是 PGD），绕过 MTE 检查并实现任意内核内存访问和代码执行。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现代人工智能助手，如 GitHub Copilot 和 ChatGPT，可以根据简单的描述生成完整的功能、修复错误和创建组件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从我的角度来看，这些人工智能工具更多地是作为技能倍增器，而不是替代品。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">人工智能辅助显著提高了代码输出——但在软件工程中，数量并不等于价值。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与我合作的价值最高的工程师花费更多的时间思考而不是打字。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">随着基本代码生成变得广泛可用，你的价值来自于理解系统交互。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与前一个漏洞类似，它使恶意的 Android 应用程序能够绕过 MTE 并获得任意内核代码执行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这意味着用户应用程序仍然能够访问在上述步骤 6 中释放的页面。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过使用我之前使用过的技术，我可以将这些释放的页面重用为 Mali GPU 的页表全局目录 (PGD)。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一旦释放的页面被重用为 GPU 上下文的 PGD，就可以使用用户空间映射从 GPU 重写 PGD。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但是，与我报告的先前漏洞（通过 GPU 访问释放的内存页面）不同，此错误通过用户空间映射访问释放的内存页面。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Ben</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The GitHub Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Man Yue Mo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2542</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2440</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人工智能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编码工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">生产力</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技能</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内核安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MTE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPU 驱动</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ARM Mali</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/f1bda3">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/5bf408">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
