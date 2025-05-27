@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何让 Agent 规划调用工具</title>
+        <title>一文带你 "看见" MCP 的过程，彻底理解 MCP 的概念</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何让 Agent 规划调用工具</h2>
-        <p>5/23/2025, 12:30:00 AM</p>
+        <h2>一文带你 "看见" MCP 的过程，彻底理解 MCP 的概念</h2>
+        <p>5/23/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">探讨如何通过规划提高多工具 Agent 性能，重点分享使用“思考和规划”工具的实践经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">深度解析 AI 上下文协议（MCP），对比 RAG 与 Function Calling，并通过实践演示理解其工作流程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入分析了提升多工具 Agent 智能体性能的关键——规划。引用 OpenAI 和 Anthropic 的研究成果，指出在调用工具前进行显式规划的益处。作者团队基于 Anthropic 的“思考”工具思路，在内部平台实现了“思考和规划”工具，并详细阐述了选择该方案的原因（如提升开源模型遵循能力、结构化输出）。文章进一步介绍了具体的实现细节，包括模型选型（DeepSeek V3）、工具配置（“思考和规划”工具定义、并行调用考量）以及系统、业务、工具描述等多层次的 Prompt 配置策略。最后讨论了使用专用思考工具与直接依赖推理模型差异的可能原因，并提供了参考链接。整体内容实用性强，为 Agent 开发者提供了具体的实现指导。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了模型上下文协议（MCP），一个旨在标准化 AI 助手与外部系统连接的开放标准。作者首先回顾了 RAG 和 Function Calling 等相关概念，阐述了它们与 MCP 的联系和区别。接着，文章深入讲解了 MCP 的核心组件（主机、客户端、服务器）及客户端-服务器架构，并对比分析了 MCP 相较于传统 API 在动态适应性方面的优势。随后，文章通过 ModelScope 的 MCP 市场和 Cherry Studio 客户端，一步步演示了 MCP 的实际配置和调用过程，通过开发者模式让读者“看见”并理解模型选择工具并请求服务器的数据交互流程。最后，文章总结了 RAG、Function Calling 和 MCP 在借助外部工具增强大模型能力上的共同本质。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">显式规划能显著提升多工具 Agent 的任务完成效果。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> OpenAI 和 Anthropic 的研究均表明，模型在调用工具前进行规划和反思，有助于更系统地解决复杂问题，避免盲目试错。</span>
+                        <strong style="color: #1e40af">MCP 是连接 AI 助手与外部数据/工具的开放标准</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型上下文协议（MCP）由 Anthropic 开源，旨在为 AI 模型访问内容、工具提供标准化的“USB-C”式接口，提升 AI 应用的互操作性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将规划能力封装为独立工具，可增强模型的指令遵循与输出结构化。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尤其对于开源模型，通过调用具名工具而非模糊指令，模型能以更规范的方式输出思考和计划，提高复杂场景下的可靠性。</span>
+                        <strong style="color: #1e40af">MCP 采用客户端-服务器架构，组件包括主机、客户端、服务器</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 主机提供 AI 交互环境，客户端运行于主机内与 MCP 服务器通信，服务器暴露工具、资源、提示等功能，实现结构化互动。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">高质量的工具描述（Agent-计算机接口，ACI）是 Agent 有效使用工具的关键，其重要性不亚于人机交互（HCI）设计。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 如同为人编写完美文档，清晰定义工具接口，包含示例、边界和区分界限，能大幅降低模型误用工具的概率，是 Agent 开发中容易被忽视但至关重要的环节。</span>
+                        <strong style="color: #1e40af">MCP 通过动态能力描述克服传统 API 硬编码问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 客户端能查询服务器当前功能并动态适应，无需硬编码参数变更，提高了 AI 应用与外部系统集成的灵活性和稳定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用独立的思考工具相比纯粹依赖推理模型，可能更能提升模型在复杂多工具场景下的指令遵循和思考过程可控性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章探讨了通过具名工具而非模糊指令进行思考规划，可能更适用于开源模型，并能将思考过程保留在上下文，为后续复杂任务提供支撑，这在机制上可能优于纯粹依赖推理模型的自由探索。</span>
+                        <strong style="color: #1e40af">RAG、Function Calling、MCP 本质都是增强大模型外部能力</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这几种技术殊途同归，都是为了让大模型能够获取外部信息或使用外部工具，以完成更复杂、更准确的任务。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">通过开发者工具可“看见”MCP 调用的实际过程</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章通过工具演示，展示了 AI 应用选择 MCP 工具、发送请求、接收结果，并最终由大模型生成回复的完整流程，增强体感理解。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于多工具的 Agent 智能体，让模型在调用工具前规划都能有效提升效果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你在每次调用函数之前必须进行充分的规划，并且在每次函数调用之后必须对结果进行充分的反思。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">而我们使用开源模型，没有经过微调的话，指令遵循的效果肯定会打折，而以工具的形式能够提升遵循能力</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">「调用 xx 工具」是一个可明确执行和评判的指令，而「做一个规划」是一个模糊的指令，相对来说以工具的形式指令遵循效果更好</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">优秀的工具定义通常包含使用示例、边界情况、输入格式要求，并明确与其他工具的区分界限。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型上下文协议（Model Context Protocol，简称 MCP）是一个由 Anthropic 在 2024 年 11 月 25 日开源的新标准。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 可以看作是 AI 应用程序的 "USB-C 端口"。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 引入了与传统 API 截然不同的动态灵活方法。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">其实 RAG 、Function Call 和 MCP 本质上都是一样，都是为了借助外部工具帮助大模型完成更复杂的事情。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,25 +68,25 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">峙岳</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">悟鸣</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4900</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">50 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">12472</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具调用</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">规划</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具调用</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Function Calling</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/53c3e2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/fea766">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
