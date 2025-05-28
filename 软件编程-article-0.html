@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>JetBrains 市场交易者身份验证要求 | JetBrains 平台博客</title>
+        <title>使用 Databricks SQL 实现维度数据仓库（三）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>JetBrains 市场交易者身份验证要求 | JetBrains 平台博客</h2>
-        <p>5/26/2025, 3:27:08 PM</p>
+        <h2>使用 Databricks SQL 实现维度数据仓库（三）</h2>
+        <p>5/27/2025, 7:03:23 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">JetBrains 市场要求供应商进行交易者身份验证，以符合欧盟消费者保护法要求。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">在 Databricks SQL 上，使用增量加载实现维度数据仓库的事实表 ETL</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">JetBrains 市场根据欧盟一揽子指令和数字服务法 (DSA) 的要求，强制插件供应商申报并验证交易者 (trader) 身份。此举旨在为消费者提供关于供应商交易者身份和适用法律保护的清晰信息。被归类为交易者的供应商需提交额外数据，包括联系方式、身份证明及银行信息。未能完成此验证将导致从平台暂停服务。文章阐明了交易者（为商业目的行事）和非交易者（个人消费者）之间的区别，并概述了判断标准，例如是否以利润为目的以及是否具备商业法律地位等。文章还明确了哪些交易者信息将公开展示给用户。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是关于使用 Databricks SQL 构建维度数据仓库系列文章的第三部分，重点介绍为事实表实现抽取、转换、加载 (ETL) 逻辑。在之前讨论了模式设计和维度表的基础上，本部分解决了有效处理大型事实表的挑战。特别是当原生变更数据捕获 (CDC) 不可用时，文章介绍了依赖最后修改时间 (`LastModifiedDateTime`) 字段进行增量抽取的策略。同时，文章着重介绍了 Databricks 的 Lakeflow Connect 这一新兴的 CDC 选项。核心目标是通过增量记录抽取实现高效处理。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JetBrains 市场根据欧盟指令要求供应商进行交易者身份验证。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 遵守欧盟消费者保护法要求平台供应商正式声明并验证他们是否作为交易者 (trader) 运营。</span>
+                        <strong style="color: #1e40af">由于事实表数据量巨大，采用增量 ETL 策略是必要的。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与维度表不同，事实表包含大量记录，因此完全重新加载是不切实际的。有效的 ETL 只需要处理新的或已更改的数据（增量抽取）。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">交易者需提供详细的身份证明和财务信息。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新的验证步骤要求被识别为交易者的供应商提交详细的个人/商业、联系方式、身份证明和银行信息。</span>
+                        <strong style="color: #1e40af">时间戳字段是增量抽取的常用方法。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当原生 CDC 不可用时，使用来自源系统的时间戳（如最后修改时间 (`LastModifiedDateTime`)）是识别用于增量加载的记录的常用后备方法。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">不合规的供应商将面临市场服务暂停。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 未能完成强制性交易者验证流程将导致供应商的帐户被暂停以及无法访问 JetBrains 市场。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">声明为交易者会影响插件用户可见的个人信息。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 如果供应商声明为交易者，特定的商业或个人联系方式和身份证明详细信息将显示给他们的插件的最终用户。</span>
+                        <strong style="color: #1e40af">Databricks 正在通过 Lakeflow Connect 增强 CDC 功能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Databricks 正在开发像 Lakeflow Connect 这样的新功能，为关系数据库提供更强大、原生的 CDC 机制，从而提供比基于时间戳的方法更好的替代方案。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JetBrains 市场要求插件供应商声明其是否为交易者 (trader)。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尚未完成此验证过程的供应商将被暂停 JetBrains 市场服务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">交易者是指为与其贸易、商业、工艺或专业相关的目的行事的任何自然人或法人... (Trader is any natural or legal person acting for purposes related to their trade， business， craft， or profession...)</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最终用户将根据您声明的身份被告知消费者保护法是否适用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">请注意：声明其正确的交易者或非交易者身份是供应商的责任。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">事实表包含数百万甚至数十亿条记录，这些记录往往来自高容量的运营活动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们不会尝试在每个 ETL 周期中使用完整抽取来重新加载表，而是将精力限制在新记录和已更改的记录上。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该方法[使用时间戳]对于变更检测来说并非万无一失，但正如任何经验丰富的 ETL 开发人员都会证明的那样，这往往是我们所能得到的最好的方法。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">79</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Elena Kerpeleva</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">81</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">448</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">452</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">市场政策</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">供应商验证</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">欧盟指令</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">法律合规</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JetBrains 市场</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据仓库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ETL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">维度建模</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Databricks SQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Delta Lake</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/b21e7b">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/0c7860">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIjZoJyKRmAvKEmieA/CY1b5xULTqpWnRSteiTZWo2AbkBMql5Qs0E5A0136RmE5BNJ1WLTqoWnVQt+uTLgDyh5g0gb6iZgExAngDyhJongDyh5ptOqhadVC06qVr0yT9GzQ2QCcgTaiYgE5BJzQTkX3ZSteikatFJ1aJP/nJqboBMaiYgk5oJyBNqJiA3av4lJ1WLTqoWnVQt+uTL1PwmIJOaCcik5kbNjZobNTdAJjVPqPmTnFQtOqladFK16JNlQH4TkEnNBGRSMwGZ1ExAJjUTkEnNBGRS8waQP9lJ1aKTqkUnVYvwR/5iQDapeQLIpOYGyKTmX3JSteikatFJ1SL8kReATGo2AZnUTEBu1NwAeULNDZBJzQ2QJ9TcAHlCzaaTqkUnVYtOqhbhj3wRkCfU3AC5UfMEkEnNBORGzRNAJjVPALlRMwG5UbPppGrRSdWik6pF+CNfBGRScwPkDTU3QJ5QMwF5Qs0NkBs1f5OTqkUnVYtOqhZ98hKQSc2k5g01E5BJzQTkDTUTkBs1N0CeUDMBuVEzAZnU/KaTqkUnVYtOqhZ98pKaCciNmieATGomIDdqngDyBJBJzf+TmieATGreOKladFK16KRq0ScvAZnU3AB5Qs0bQJ5QMwF5Asg3qZmATGpugHzTSdWik6pFJ1WLPnlJzQRkUnOjZgIyAZnU3KiZgNyouVEzAXlCzQ2QGzUTkEnNBORGzTedVC06qVp0UrXok5eA3ACZ1Dyh5gkgk5o3gExqJiCTmhsgk5oJyBNAJjUTkBsgk5o3TqoWnVQtOqlahD/yRUC+Sc0TQG7UvAFkUjMBmdQ8AWRSMwG5UfNNJ1WLTqoWnVQtwh95Acik5gbIE2omIG+oeQLIG2omIN+kZgLyhJo3TqoWnVQtOqla9MkyIJOaGzUTkAnIpGYCMqmZgNwAmdS8oWYCsknNDZBJzQ2QTSdVi06qFp1ULfpkmZoJyA2QSc0NkEnNE0AmNU+omYA8oWYC8gSQGzVPqNl0UrXopGrRSdWiT/4wQJ4AMql5AsikZlIzAbkBMqmZgPwmIE+oeeOkatFJ1aKTqkX4I38xIE+oeQPIpGYCcqNmAjKpeQLIjZrfdFK16KRq0UnVok9eAvKb1ExqJiA3QJ5Q84SaCcgE5Akgk5ongExqvumkatFJ1aKTqkWfLFOzCcgTav4lap5QcwPkRs0bJ1WLTqoWnVQt+uTLgDyh5g0gN2pugPw/AXkDyKRmUjMB2XRSteikatFJ1aJP/mOA3Ki5ATIBeULNBORGzQRkUjMBmYBMar7ppGrRSdWik6pFn/zHqLkBsknNjZobIDdAngAyqdl0UrXopGrRSdWiT75MzZ8EyKRmUvMEkEnNG0CeUDMBuVEzAZnUvHFSteikatFJ1aJPlgH5TUAmNTdA3gAyqZmATGomIJOaGzUTkAnIG2o2nVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16H+oIy9J7yeG4gAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
