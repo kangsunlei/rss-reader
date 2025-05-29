@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>使用 Databricks SQL 实现维度数据仓库（三）</title>
+        <title>使用 `CanonicalName` 增强扩展命令的稳定性</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>使用 Databricks SQL 实现维度数据仓库（三）</h2>
-        <p>5/27/2025, 7:03:23 PM</p>
+        <h2>使用 `CanonicalName` 增强扩展命令的稳定性</h2>
+        <p>5/28/2025, 3:53:58 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">在 Databricks SQL 上，使用增量加载实现维度数据仓库的事实表 ETL</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">通过 `CanonicalName` 为 Visual Studio 扩展命令提供稳定标识。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是关于使用 Databricks SQL 构建维度数据仓库系列文章的第三部分，重点介绍为事实表实现抽取、转换、加载 (ETL) 逻辑。在之前讨论了模式设计和维度表的基础上，本部分解决了有效处理大型事实表的挑战。特别是当原生变更数据捕获 (CDC) 不可用时，文章介绍了依赖最后修改时间 (`LastModifiedDateTime`) 字段进行增量抽取的策略。同时，文章着重介绍了 Databricks 的 Lakeflow Connect 这一新兴的 CDC 选项。核心目标是通过增量记录抽取实现高效处理。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文指导 Visual Studio 扩展的作者，通过在 `.vsct` 文件中添加 `CanonicalName` 属性，提高命令的可访问性，并确保在不同区域设置中的一致性。虽然本地化能提升用户体验，但如果命令名称依赖于区域设置，可能会导致自动化脚本和第三方集成失效。`CanonicalName` 提供了一个稳定、唯一的标识符，使命令更具可预测性，并增强集成能力。本文提供了关于定位 `.vsct` 文件并在 `<strings>` 元素中添加该属性的逐步指南，强调了唯一性的必要性。文章还概述了命名的最佳实践，例如使用 PascalCase、保持名称具有描述性、避免本地化、以句点开头以及以扩展名称开头。最后，文章提到 VSCT schema file 已更新，为缺失 `CanonicalName` 的情况提供警告，鼓励采用这种做法，以创建更稳定、更易用的扩展。</strings></p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">由于事实表数据量巨大，采用增量 ETL 策略是必要的。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与维度表不同，事实表包含大量记录，因此完全重新加载是不切实际的。有效的 ETL 只需要处理新的或已更改的数据（增量抽取）。</span>
+                        <strong style="color: #1e40af">依赖于区域设置的命令名称可能导致 VS 扩展出现兼容性问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然本地化改善了用户体验，但不同区域设置中不同的命令名称可能会破坏自动化脚本和以编程方式引用命令的外部集成。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">时间戳字段是增量抽取的常用方法。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当原生 CDC 不可用时，使用来自源系统的时间戳（如最后修改时间 (`LastModifiedDateTime`)）是识别用于增量加载的记录的常用后备方法。</span>
+                        <strong style="color: #1e40af">`CanonicalName` 属性提供了一个稳定、与区域设置无关的命令标识符。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 `.vsct` 文件中为命令添加 `CanonicalName` 可以确保引用名称的固定性和可预测性。 这对于可靠的编程访问和集成至关重要。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Databricks 正在通过 Lakeflow Connect 增强 CDC 功能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Databricks 正在开发像 Lakeflow Connect 这样的新功能，为关系数据库提供更强大、原生的 CDC 机制，从而提供比基于时间戳的方法更好的替代方案。</span>
+                        <strong style="color: #1e40af">遵循 `CanonicalName` 的最佳实践可提高可管理性和可发现性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 遵循 PascalCase 命名法、使用描述性名称、添加前导句点以及包含扩展名称等约定，能使 `CanonicalName` 更清晰，方便开发者和用户使用。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">事实表包含数百万甚至数十亿条记录，这些记录往往来自高容量的运营活动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们不会尝试在每个 ETL 周期中使用完整抽取来重新加载表，而是将精力限制在新记录和已更改的记录上。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该方法[使用时间戳]对于变更检测来说并非万无一失，但正如任何经验丰富的 ETL 开发人员都会证明的那样，这往往是我们所能得到的最好的方法。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这项任务的关键在于确保您的扩展命令在所有 Visual Studio 区域设置中都能访问且保持一致。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">`CanonicalName` 属性通过为您的命令提供一个稳定、与区域设置无关的标识符来解决此问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">您分配给 `CanonicalName` 的值**必须**在扩展的所有命令中保持唯一。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 `.vsct` 文件中将 `CanonicalName` 属性添加到命令是一个虽小但影响深远的改动，它能增强 Visual Studio 扩展的稳定性和易用性。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">81</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Visual Studio Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Mads Kristensen</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">452</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">644</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据仓库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ETL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">维度建模</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Databricks SQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Delta Lake</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Visual Studio</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">扩展开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">VSSDK</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">命令</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">本地化</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/0c7860">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIjZoJyKRmAvKEmieA/CY1b5xULTqpWnRSteiTZWo2AbkBMql5Qs0E5A0136RmE5BNJ1WLTqoWnVQt+uTLgDyh5g0gb6iZgExAngDyhJongDyh5ptOqhadVC06qVr0yT9GzQ2QCcgTaiYgE5BJzQTkX3ZSteikatFJ1aJP/nJqboBMaiYgk5oJyBNqJiA3av4lJ1WLTqoWnVQt+uTL1PwmIJOaCcik5kbNjZobNTdAJjVPqPmTnFQtOqladFK16JNlQH4TkEnNBGRSMwGZ1ExAJjUTkEnNBGRS8waQP9lJ1aKTqkUnVYvwR/5iQDapeQLIpOYGyKTmX3JSteikatFJ1SL8kReATGo2AZnUTEBu1NwAeULNDZBJzQ2QJ9TcAHlCzaaTqkUnVYtOqhbhj3wRkCfU3AC5UfMEkEnNBORGzRNAJjVPALlRMwG5UbPppGrRSdWik6pF+CNfBGRScwPkDTU3QJ5QMwF5Qs0NkBs1f5OTqkUnVYtOqhZ98hKQSc2k5g01E5BJzQTkDTUTkBs1N0CeUDMBuVEzAZnU/KaTqkUnVYtOqhZ98pKaCciNmieATGomIDdqngDyBJBJzf+TmieATGreOKladFK16KRq0ScvAZnU3AB5Qs0bQJ5QMwF5Asg3qZmATGpugHzTSdWik6pFJ1WLPnlJzQRkUnOjZgIyAZnU3KiZgNyouVEzAXlCzQ2QGzUTkEnNBORGzTedVC06qVp0UrXok5eA3ACZ1Dyh5gkgk5o3gExqJiCTmhsgk5oJyBNAJjUTkBsgk5o3TqoWnVQtOqlahD/yRUC+Sc0TQG7UvAFkUjMBmdQ8AWRSMwG5UfNNJ1WLTqoWnVQtwh95Acik5gbIE2omIG+oeQLIG2omIN+kZgLyhJo3TqoWnVQtOqla9MkyIJOaGzUTkAnIpGYCMqmZgNwAmdS8oWYCsknNDZBJzQ2QTSdVi06qFp1ULfpkmZoJyA2QSc0NkEnNE0AmNU+omYA8oWYC8gSQGzVPqNl0UrXopGrRSdWiT/4wQJ4AMql5AsikZlIzAbkBMqmZgPwmIE+oeeOkatFJ1aKTqkX4I38xIE+oeQPIpGYCcqNmAjKpeQLIjZrfdFK16KRq0UnVok9eAvKb1ExqJiA3QJ5Q84SaCcgE5Akgk5ongExqvumkatFJ1aKTqkWfLFOzCcgTav4lap5QcwPkRs0bJ1WLTqoWnVQt+uTLgDyh5g0gN2pugPw/AXkDyKRmUjMB2XRSteikatFJ1aJP/mOA3Ki5ATIBeULNBORGzQRkUjMBmYBMar7ppGrRSdWik6pFn/zHqLkBsknNjZobIDdAngAyqdl0UrXopGrRSdWiT75MzZ8EyKRmUvMEkEnNG0CeUDMBuVEzAZnUvHFSteikatFJ1aJPlgH5TUAmNTdA3gAyqZmATGomIJOaGzUTkAnIG2o2nVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16H+oIy9J7yeG4gAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/0a6643">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATYSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaJ4BMaiYgN2reAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCeATGreAPKEmknNJjWbgGw6qVp0UrXopGrRJ18G5Ak1TwCZ1ExAnlAzAXkDyBNqngDyhJpvOqladFK16KRq0Sf/MWomIBOQSc0EZFIzAZnUTEAmNf+Sk6pFJ1WLTqoWffKPUzMBmdTcAJnUTEAmNROQ/5KTqkUnVYtOqhZ98mVq/iRqJiCTmknNBGRSc6PmBsik5gk1f5KTqkUnVYtOqhZ9sgzInwTIpOYJIJOaCcikZgIyqXkDyJ/spGrRSdWik6pF+CN/MSBPqHkDyI2aGyCTmn/JSdWik6pFJ1WL8EdeADKpmYBsUnMDZFJzA+QJNTdAJjU3QCY1E5BNar7ppGrRSdWik6pFn7ykZgJyo+b/Ccik5g0gk5obIDdA3lDzBJBJzRsnVYtOqhadVC3CH3kByBNqJiCTmgnIpOYJIDdqngDyhJobIDdq/iYnVYtOqhadVC36ZJmaGyBPqLkB8oSaJ4BMap4A8gaQGzUTkEnNBGRSs+mkatFJ1aKTqkWfLAPyhJobIJOaTUAmNZOaCcikZgJyo+Y3AZnUfNNJ1aKTqkUnVYs++TI1E5AJyI2aN9TcqLkBMqmZgDwB5A01E5BJzRNAJjVvnFQtOqladFK1CH9kEZA/iZpNQJ5QcwNkUnMDZFIzAblR800nVYtOqhadVC365CUgT6i5ATKpuQEyqZmA3Kh5Q80TQDYBmdTcAJnUbDqpWnRSteikatEnL6mZgDwBZFIzAblR84SaN9TcAJnU3Kh5Q80E5EbNN51ULTqpWnRSteiTl4DcqLlRMwGZ1DwB5Akgk5oJyKRmAvIGkEnNBOQGyKRmAnIDZFLzxknVopOqRSdViz5ZpuYGyI2aCcgbaiYgk5oJyKRmAjKpmYBMQCY1N0AmNROQSc0bajadVC06qVp0UrXok1+m5gk1TwCZgExqJiBvAJnUTEBugExqJiA3QCY1k5oJyKRm00nVopOqRSdViz75MiCTmieA3Ki5UfOEmjeATGomIDdANgG5ATKpeeOkatFJ1aKTqkX4I38xIJOaCcik5gbIjZoJyBNqJiCTmieAbFLzxknVopOqRSdViz55CchvUjOpeQLIjZobIJOaGyATkCeATGreUPNNJ1WLTqoWnVQt+mSZmk1AboD8JjW/Sc0Tap4AMql546Rq0UnVopOqRZ98GZAn1Lyh5gbIDZBJzQTkDTUTkAnIJiCTmknNppOqRSdVi06qFn3yH6NmAjKpmYBMaiYgm9TcAJnUTEBugNyoeeOkatFJ1aKTqkWf/GOAfBOQJ9TcqLkBcgPkDTWbTqoWnVQtOqla9MmXqfkmNROQSc0EZFLzhpo3gExqJjUTkEnNBGRSMwH5ppOqRSdVi06qFn2yDMhvAvKEmgnIjZoJyA2QSc0EZFIzAZnU3AC5ATKp+aaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9Dyd+OUWa/foDAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
