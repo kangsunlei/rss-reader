@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>6 行代码节省超千万成本——记一次字段治理的“巧渡金沙江”</title>
+        <title>在 CLion 调试器中引入实时监视 | The CLion Blog（CLion 博客）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>6 行代码节省超千万成本——记一次字段治理的“巧渡金沙江”</h2>
-        <p>5/28/2025, 11:30:00 AM</p>
+        <h2>在 CLion 调试器中引入实时监视 | The CLion Blog（CLion 博客）</h2>
+        <p>5/29/2025, 2:30:51 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">快手通过优化短视频 Photo 对象存储，用 6 行代码实现超千万成本节约和缓存命中率提升。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">CLion 2025.2 EAP 引入实时监视功能，用于嵌入式调试中的实时变量监控。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文记述了快手如何通过优化核心数据结构 Photo 对象的存储，解决海量历史数据带来的高昂存储成本和缓存效率低下问题。面对千亿级数据导致的数据库存储压力及缓存命中率下降，团队通过细致分析发现 JSON 扩展字段中大量冗余的默认值属性。受“过早优化是万恶之源”启发，他们采用简单但有效的方法：在 Java 对象字段添加`@JsonInclude(Include.NON_DEFAULT)`注解，阻止默认值序列化。这一改动虽小，但在海量数据规模下聚沙成塔，将单个 Photo 对象体积缩小约 25%。随后，通过审慎的异步清洗流程处理存量数据，累计节省数百 TB 存储，日新增存储减少数百 GB。最终，Photo 缓存命中率从 95%提升至 97%，在亿级 QPS 下带来百万级别年化成本节约。文章还从“道法器术”四个维度探讨了应对海量历史数据、提升缓存效率等大型平台面临的挑战与思考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">最新的 CLion 2025.2 早期访问计划构建版本新增了实时监视功能，这是一项备受嵌入式开发人员高度期待的功能。它允许实时监控全局变量，无需暂停程序执行，对于蓝牙等时间敏感型应用至关重要。本文解释了如何启用和使用实时监视，并指出了当前存在的限制，例如对复杂数据类型和历史记录缺乏支持。此外，还简要提及了该构建版本中的其他更新，包括在“步入”时跳过非用户代码以及捆绑的 CMake 4.0.0。此功能通过 EAP 构建版本提供，JetBrains 期待用户提供反馈，以进一步改进该功能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">简单代码优化在超大规模下可产生巨大收益</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在 JSON 字段添加注解避免默认值存储，这一微小改动在千亿级 Photo 对象上累积实现超千万成本节约。</span>
+                        <strong style="color: #1e40af">实时监视可实时监控全局变量。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 此功能允许开发人员观察变量值的变化，而无需停止或暂停程序执行，这对于调试时间敏感型嵌入式应用至关重要。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">冗余字段是大型系统潜在的“熵增”源</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 无管控的扩展字段会随业务发展膨胀，导致数据冗余和效率下降，需通过治理对抗系统的自然退化。</span>
+                        <strong style="color: #1e40af">该功能需要在 CLion 设置中启用调试服务器。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 要使用实时监视，用户必须在 IDE 设置中配置和启用调试服务器，确保与目标硬件的正确通信。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">缓存命中率对巨流量系统至关重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 亿级 QPS 下，缓存命中率每提升一个百分点，都能显著减少回源请求，大幅节约 DB 和回源服务资源成本。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">存量数据清洗需审慎评估风险并精细化实施</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 处理海量历史数据挑战大且有稳定性风险，需要严格验证和分阶段放量，确保过程安全可靠。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">应对技术挑战可借鉴“道法器术”框架</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从商业模式(道)、技术架构(法)、工具选择(器)、具体技术(术)等多维度思考问题，有助于找到更全面的解决方案。</span>
+                        <strong style="color: #1e40af">当前仅支持基本数据类型，对复杂数据结构和外设寄存器的支持将在后续版本中提供。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实时监视的初始实现不支持复杂数据结构、外设寄存器或数据格式化/历史记录选项，这些都计划在未来的更新中实现。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Premature optimization is the root of all evil (or at least most of it) in programming. ------ Donald Knuth</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在极高的请求量背景下，缓存命中率的每一个百分点下降都会转化为回源服务对 DB 请求量的显著增加。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于 Photo 这种承载巨量 QPS 和数据规模的缓存系统而言，命中率每提升 1 个百分点，就能为上下游系统带来年化百万元级别的成本节约收益。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">无数个 Photo 对象叠加起来，这部分冗余存储成本累积到了惊人的地步。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本文的巧妙之处在于以极低的人力成本取得了堪比架构迭代的收益。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最新的 CLion 2025.2 EAP 构建版本... 包含嵌入式开发中最受欢迎的功能之一：实时监视。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">它允许您实时监控全局变量，而无需停止调试器或程序的执行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实时监视目前仅适用于 SEGGER J-Link 和 ST-LINK 调试服务器，或连接至 SEGGER J-Link 和 ST-LINK 调试探针的通用调试服务器。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">您的反馈对于帮助我们改进新功能非常重要，尤其是在早期访问计划期间。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,24 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">快手技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">快手技术</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Oleg Zinovyev</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">511</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术实践</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">成本节约</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">嵌入式开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CLion</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JetBrains</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IDE</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/8b1e93">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAX0SURBVO3BQY4cSRLAQDLQ//8yV0c/JZCoailm4Wb2B2td4rDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kV++JDK31QxqfxNFU9UnlRMKm9UvKHyN1V84rDWRQ5rXeSw1kV++LKKb1L5TRWTyhsqU8WkMqlMFZ9QmSqeVHyTyjcd1rrIYa2LHNa6yA+/TOWNir9J5RMVTyreUJkqJpVvUnmj4jcd1rrIYa2LHNa6yA//cRWTylTxCZVJ5UnFpDJVTCpTxaQyVUwq/08Oa13ksNZFDmtd5If/OJWp4onKVPGkYlJ5o+JJxaTyRGWq+H9yWOsih7UucljrIj/8sorfVPFGxb+kMlVMFW+oTBVvVNzksNZFDmtd5LDWRX74MpW/SWWqmFSmikllqphUpopJ5YnKVDGpTBWTylTxCZWbHda6yGGtixzWusgPH6r4lyomlTcqJpWpYlL5poo3VKaKJxX/JYe1LnJY6yKHtS5if/ABlaniicpvqphUpoo3VKaKSeVJxROVqeKJyhsVT1SmiknljYpPHNa6yGGtixzWusgPv0zlScUbKm9UTCpvVEwqb6g8qZhUpoonFd+k8qTiNx3WushhrYsc1rrIDx+qmFQ+ofJGxaTypOKJyhsV31QxqTxRmSomlaniEypPKj5xWOsih7UucljrIj/8sopJ5UnFGypTxaQyqXyiYlKZKiaVb6r4hMpU8UTlScU3Hda6yGGtixzWuoj9wV+k8qRiUpkqPqHyRsUbKlPFpDJVTCpTxROVT1S8oTJVfNNhrYsc1rrIYa2L2B98QGWq+JdU3qiYVJ5UvKHyRsUbKlPFE5Wp4onKVPGbDmtd5LDWRQ5rXcT+4ItUPlExqUwVk8qTiicqn6h4Q+VJxaQyVbyh8omKv+mw1kUOa13ksNZFfviQylQxqXyi4ptU3qh4ojJVTCpTxaTypGJSeaPiDZVJZaqYVKaKTxzWushhrYsc1rqI/cEHVJ5UvKHyN1VMKm9UfEJlqphU/qWKv+mw1kUOa13ksNZFfviyijdUpopPqDypmFSmiknlDZVvqnii8kbFpDJVTCpTxaQyVXzisNZFDmtd5LDWRX74MpVvUnlSMVVMKr9J5RMVk8obFZPKE5WpYlL5lw5rXeSw1kUOa13E/uAiKlPFGypTxRsqU8WkMlX8JpUnFU9UpopJ5ZsqPnFY6yKHtS5yWOsi9gcfUJkq3lCZKiaVNyreUHlS8URlqphUpoonKk8qfpPKVPE3Hda6yGGtixzWusgPv0zlDZWpYlL5hMo3VTypeKPiicqTijdUbnJY6yKHtS5yWOsiP/yyijdUJpWp4hMVb6hMFU9UpopJ5ZsqJpUnFW+ovFHxicNaFzmsdZHDWhf54S9TeVLxCZWp4ptUpopvqphUnqi8oTJVPFH5mw5rXeSw1kUOa13E/uADKk8qJpXfVDGpTBWTypOK36QyVbyh8psqJpWp4psOa13ksNZFDmtdxP7gP0zlScWkMlVMKlPFpPJGxRsqU8Wk8qTiDZWpYlKZKn7TYa2LHNa6yGGti/zwIZW/qeINlTcqJpUnFZPKE5WpYqr4JpWp4maHtS5yWOsih7Uu8sOXVXyTyhsVb6g8qZhU3lCZKp6ofFPFGyr/0mGtixzWushhrYv88MtU3qj4TSpTxaTypGJSeVIxqUwV36TyiYo3VKaKTxzWushhrYsc1rrID/9nVKaKqWJSeaIyVbyhMlU8qZhUpoonKlPFpDJVPFGZKn7TYa2LHNa6yGGti/zwH1fxROVJxaQyVUwqU8UbKlPFJ1SmijdUpoonKr/psNZFDmtd5LDWRX74ZRV/k8pU8UTljYo3VJ6oTBVTxaQyVTxR+S85rHWRw1oXOax1EfuDD6j8TRWTyhsVb6j8popPqEwVT1SeVPxLh7UucljrIoe1LmJ/sNYlDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeR/B3bRX9ld4GUAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/5cad5e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
