@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>【第 3519 期】使用一条 Git 命令推送整个分支栈</title>
+        <title>MySQL 优化利器 SHOW PROFILE 的实现原理</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>【第 3519 期】使用一条 Git 命令推送整个分支栈</h2>
-        <p>5/29/2025, 12:04:00 AM</p>
+        <h2>MySQL 优化利器 SHOW PROFILE 的实现原理</h2>
+        <p>5/30/2025, 1:59:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">使用一条 Git 别名命令高效推送整个堆叠分支栈，提升大型功能开发效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">深入分析 MySQL SHOW PROFILE 实现原理，揭示其阶段耗时计算方式及在导入表空间等场景下的潜在误导性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章探讨了在 Git 中使用堆叠分支提升代码审查效率的工作流，并解决了手动推送多个依赖分支的痛点。作者详细介绍了如何通过创建一系列 Git 别名（包括计算默认分支、查找合并基点、列出分支栈）来自动化这一过程。最终，这些别名被整合为一个名为`git push-stack`的命令，使得开发者能够用一条命令推送整个分支栈，大幅简化了堆叠分支的管理和同步，提高了工作效率。文章深入分析了每个别名的实现原理及使用的 Git 命令，提供了实用的技术实践指南。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 MySQL 性能分析工具 SHOW PROFILE 的实现原理与用法。首先通过一个表空间导入耗时案例引出问题，即 SHOW PROFILE 和 SHOW PROCESSLIST 可能显示误导性的 System lock 状态。接着详细介绍了 SHOW PROFILE 的基本用法，包括开启 Profiling、执行 SQL、查看 Query_ID 以及查看各阶段耗时和详细统计信息。核心部分从源码角度分析了 SHOW PROFILE 如何通过在代码关键路径“埋点”THD_STAGE_INFO 宏来采集系统当前时间及进程资源使用情况，并解释了通过计算相邻阶段的时间差作为 Duration 的机制。文章指出，这种计算方式并非实际阶段执行时长，存在一定的误导性。最后，结合源码分析回溯表空间导入案例，揭示 System lock 状态实际掩盖了大部分文件操作时间（如页面检查和更新），该状态显示并不完全准确。文章强调了理解 SHOW PROFILE 实现原理对于准确分析性能问题和避免误导的重要性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">堆叠分支是提升代码审查效率的有效工作流</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将大型功能拆分成多个相互依赖的小分支和 PR，使审阅者能逐步理解代码变更，提高审查质量和速度。</span>
+                        <strong style="color: #1e40af">SHOW PROFILE 阶段耗时由相邻阶段时间差得出</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章通过源码分析揭示，每个阶段记录的是系统时间，Duration 是下一个阶段时间减去当前阶段时间，非该阶段实际执行时长，存在误导性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">手动推送堆叠分支效率低下</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 修改堆栈中多个分支时，需要逐个执行推送命令，过程繁琐且容易出错，成为痛点。</span>
+                        <strong style="color: #1e40af">阶段数据采集通过 THD_STAGE_INFO 实现</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MySQL 通过在代码关键路径埋点 THD_STAGE_INFO 宏，记录系统当前时间及进程资源使用情况，为 Profiling 提供原始数据。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用 Git 别名实现一键推送分支栈</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过组合 Git 命令 (`merge-base`， `log`， `xargs`) 和一系列 Git 别名，自动化识别并推送堆栈中的所有分支，极大简化操作。</span>
+                        <strong style="color: #1e40af">System lock 状态可能掩盖真实耗时操作</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在表空间导入等场景下，SHOW PROFILE 显示 System lock 长时间耗时，实际是后续文件操作耗时，该状态具有误导性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为每个功能单元创建独立的分支和 PR，可以让审阅者更容易理解和跟进你的提交 "故事"。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我坚信，对于中大型功能开发来说，如果你希望优化代码审阅体验，并避免开发受阻，使用堆叠分支是一种非常高效的工作方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">git push-stack 命令包含以下四个步骤：1、计算默认分支；2、计算堆栈的 "合并基点"；3、找出从合并基点到堆栈顶部之间的所有分支；4、将上一步中列出的所有分支推送到远程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只需一条命令就能轻松推送整个 Git 分支栈。如果您像我一样多年来一直手动处理这个问题，那么希望这能帮到您！</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个状态其实有很大的误导性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 SHOW PROFILE 中显示的每个阶段的耗时，实际上是由下一个阶段的采集时间减去当前阶段的采集时间得出的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种实现方式在判断操作当前状态（通过 SHOW PROCESSLIST）和分析各个阶段耗时（通过 SHOW PROFILE ）时存在一定的误导性，主要是因为预定义的阶段数量是有限的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在开头的 case 中，虽然 System lock 阶段显示的耗时是 788.966338 秒，但实际上 open_and_lock_tables 这个函数只消耗了 0.000179 秒，真正的耗时是来自 table_list-&gt;table-&gt;file-&gt;ha_discard_or_import_tablespace，其执行时间长达 788.965481 秒。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -61,25 +61,25 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Andrew&nbsp;Lock</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">23 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5560</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">18 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4402</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Git</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术实践</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">命令行工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Git别名</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">堆叠分支</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MySQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SHOW PROFILE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库内核</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/db6fae">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/d0f97c">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
