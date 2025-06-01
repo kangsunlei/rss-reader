@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>MySQL 优化利器 SHOW PROFILE 的实现原理</title>
+        <title>微前端如何工作：从 iFrame (内联框架) 到模块联邦</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>MySQL 优化利器 SHOW PROFILE 的实现原理</h2>
-        <p>5/30/2025, 1:59:00 AM</p>
+        <h2>微前端如何工作：从 iFrame (内联框架) 到模块联邦</h2>
+        <p>5/30/2025, 2:46:01 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">深入分析 MySQL SHOW PROFILE 实现原理，揭示其阶段耗时计算方式及在导入表空间等场景下的潜在误导性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">探索微前端模式，从传统方法到通过模块联邦实现的现代运行时集成。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 MySQL 性能分析工具 SHOW PROFILE 的实现原理与用法。首先通过一个表空间导入耗时案例引出问题，即 SHOW PROFILE 和 SHOW PROCESSLIST 可能显示误导性的 System lock 状态。接着详细介绍了 SHOW PROFILE 的基本用法，包括开启 Profiling、执行 SQL、查看 Query_ID 以及查看各阶段耗时和详细统计信息。核心部分从源码角度分析了 SHOW PROFILE 如何通过在代码关键路径“埋点”THD_STAGE_INFO 宏来采集系统当前时间及进程资源使用情况，并解释了通过计算相邻阶段的时间差作为 Duration 的机制。文章指出，这种计算方式并非实际阶段执行时长，存在一定的误导性。最后，结合源码分析回溯表空间导入案例，揭示 System lock 状态实际掩盖了大部分文件操作时间（如页面检查和更新），该状态显示并不完全准确。文章强调了理解 SHOW PROFILE 实现原理对于准确分析性能问题和避免误导的重要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文全面概述了微前端架构模式，强调了它们在实现团队自治和扩展前端开发中的作用。首先将微前端定义为集成来自不同来源的界面组件。讨论了传统的服务器端组合（基于路径的路由）、iFrame (内联框架)（嵌入内容）和构建时集成（发布包）等方法，并指出了它们在性能和大规模维护等方面的局限性。然后，重点转移到现代模式，主要是模块联邦（Webpack 5+ 的一项功能，现在是 Module Federation 2.0），它允许远程界面组件的运行时集成，并通过依赖共享来提高性能。通过示例解释了模块联邦的关键概念（远程 Remote，远程入口 Remote Entry，主机 Host，共享 Shared）。Single SPA 被认为是另一种现代选择，特别适合多框架集成，并将其与模块联邦专注于运行时代码加载进行了对比。一个详细的比较表总结了各种模式在独立部署、性能、可伸缩性和设置工作量方面的权衡。文章最后讨论了与模块联邦实施相关的挑战。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">SHOW PROFILE 阶段耗时由相邻阶段时间差得出</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章通过源码分析揭示，每个阶段记录的是系统时间，Duration 是下一个阶段时间减去当前阶段时间，非该阶段实际执行时长，存在误导性。</span>
+                        <strong style="color: #1e40af">微前端支持前端应用程序的独立团队开发和部署。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与微服务类似，微前端允许团队拥有自己的界面技术栈和部署周期，同时提供统一的用户界面。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">阶段数据采集通过 THD_STAGE_INFO 实现</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MySQL 通过在代码关键路径埋点 THD_STAGE_INFO 宏，记录系统当前时间及进程资源使用情况，为 Profiling 提供原始数据。</span>
+                        <strong style="color: #1e40af">传统的微前端模式（如 iFrame (内联框架) 和构建时包）具有很大的局限性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于重复的依赖项、集成复杂性和耦合的部署，旧方法通常性能较差。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">System lock 状态可能掩盖真实耗时操作</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在表空间导入等场景下，SHOW PROFILE 显示 System lock 长时间耗时，实际是后续文件操作耗时，该状态具有误导性。</span>
+                        <strong style="color: #1e40af">模块联邦提供运行时集成和高效的依赖共享。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种现代的 Webpack / 打包器功能允许动态加载远程界面代码并共享通用库，以提高性能和可伸缩性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Single SPA 主要用于集成使用不同 JavaScript 框架构建的应用程序。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它充当多框架应用程序的路由器，而模块联邦更普遍地用于在相同或不同的框架中进行运行时组件加载。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个状态其实有很大的误导性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 SHOW PROFILE 中显示的每个阶段的耗时，实际上是由下一个阶段的采集时间减去当前阶段的采集时间得出的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种实现方式在判断操作当前状态（通过 SHOW PROCESSLIST）和分析各个阶段耗时（通过 SHOW PROFILE ）时存在一定的误导性，主要是因为预定义的阶段数量是有限的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在开头的 case 中，虽然 System lock 阶段显示的耗时是 788.966338 秒，但实际上 open_and_lock_tables 这个函数只消耗了 0.000179 秒，真正的耗时是来自 table_list-&gt;table-&gt;file-&gt;ha_discard_or_import_tablespace，其执行时间长达 788.965481 秒。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将一个界面组件集成到另一个界面组件中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模块联邦使您能够在运行时将远程界面组件集成到主机应用程序中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">拥有正确的共享配置可确保客户端在从远程位置获取界面组件时，不会下载主机上已有的库或代码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果您的应用程序使用相同的框架（例如所有 React），则可以完全跳过 Single SPA，而直接使用模块联邦。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +63,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Rahul gupta</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">18 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4402</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2850</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MySQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SHOW PROFILE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库内核</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微前端</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模块联邦</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Webpack</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/d0f97c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/fd4832">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATZSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2STmjeAPKFmAvKb1LxxUrXopGrRSdWiT5ap2QTkDTU3QG6APKFmUrNJzSYgm06qFp1ULTqpWvTJlwF5Qs0TQG6A3Ki5AfIGkCfUPAHkCTXfdFK16KRq0UnVok/+MmomIJOaGyBPqJmATGomIJOav8lJ1aKTqkUnVYs++cupuQEyqXkCyKRmAvJ/clK16KRq0UnVok++TM1vAjKpmYDcAHlCzY2aGyCTmifU/ElOqhadVC06qVr0yTIg/yY1E5BJzQRkUjMBmdRMQCY1E5BJzRtA/mQnVYtOqhadVC365CU1fzI1b6iZgDyhZgIyqblR819yUrXopGrRSdUi/JEXgExqJiCb1LwB5A01N0AmNTdAJjUTkE1qvumkatFJ1aKTqkX4I/8iIDdqboDcqLkBMql5Asik5gbIN6l5Asik5o2TqkUnVYtOqhbhjywCMqm5ATKpmYC8oeYNIG+ouQFyo+a/5KRq0UnVopOqRfgjLwC5UfMEkEnNE0Bu1PwmIN+kZgIyqZmATGo2nVQtOqladFK1CH/ki4A8oWYC8k1qngAyqZmA3Kj5JiA3ar7ppGrRSdWik6pFn7wEZFLzBpBJzQTkCTU3QCY1E5BJzQTkCSBvqJmATGqeADKpeeOkatFJ1aKTqkX4I4uATGqeAPKGmgnIE2pugDyh5gbIpOYGyKRmAnKj5ptOqhadVC06qVr0yZcBmdRMQCY1TwB5Q80bap4AsgnIpOYGyKRm00nVopOqRSdViz55CcgmIDdqboDcqJmATGpu1NwAmdTcqHlDzQTkRs03nVQtOqladFK16JNfBuRGzRNqJiA3QCY1N0AmNROQN4BMaiYgN0AmNROQGyCTmjdOqhadVC06qVr0yTI1E5AbNROQGzU3ap4AMqmZ1ExAJjUTkAnIpOYGyKRmAjKpeUPNppOqRSdVi06qFn3yZWpugExqboA8oWYCMqmZgDwBZFIzAbkBMqmZgNwAmdRMaiYgk5pNJ1WLTqoWnVQt+uSXAZnU3ACZ1ExAJjUTkEnNNwGZ1ExAboBsAnIDZFLzxknVopOqRSdViz55Sc0Tap5Q801AJjVPALkBMqmZgExqngAyAfk3nVQtOqladFK16JOXgPwmNZOaCcik5kbNBGRSMwGZ1NwAmYA8AWRS84aabzqpWnRSteikatEny9RsAnID5AkgN2omIJOa36TmCTVPAJnUvHFSteikatFJ1aJPvgzIE2reUDMBeQLIpGYC8oaaCcgEZBOQSc2kZtNJ1aKTqkUnVYs++csAuVHzhpoJyCY1N0AmNROQGyA3at44qVp0UrXopGrRJ/8zQG7U3AB5Qs2NmhsgN0DeULPppGrRSdWik6pFn3yZmm9SMwGZ1NwAeUPNG0AmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwGZ1ExAbtRMQN4AMqmZgExqJiCTmhsgN0AmNd90UrXopGrRSdUi/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWifwCz0jdHLzHuNgAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

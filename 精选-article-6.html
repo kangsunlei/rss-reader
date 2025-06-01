@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>重新理解 Agent 的边界与潜力｜AI 转型访谈录</title>
+        <title>RAG 挑战赛冠军方案解析：从数据解析到多路由器检索的工程实践，推荐阅读！</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>重新理解 Agent 的边界与潜力｜AI 转型访谈录</h2>
-        <p>5/29/2025, 9:36:00 AM</p>
+        <h2>RAG 挑战赛冠军方案解析：从数据解析到多路由器检索的工程实践，推荐阅读！</h2>
+        <p>5/29/2025, 2:36:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">特赞范凌访谈，重新定义 AI Agent 为模拟真实用户的智能体，探讨其在商业研究、组织变革及人机协作中的创新应用与深层价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">基于 RAG 挑战赛冠军方案，深度解析 PDF 报告问答系统的关键工程实践，包括解析、多阶段检索和智能提示词工程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是腾讯研究院对特赞创始人范凌博士关于 AI Agent 的访谈记录。范凌提出了与市场主流认知不同的 Agent 定义，认为除了作为效率工具，Agent 更重要的潜力在于模拟真实用户和主观世界。特赞的产品 Atypica.ai 通过大语言模型构建典型用户画像，并利用多智能体协同进行大规模、低成本的用户访谈，相较传统市场调研更高效便捷。文章还深入探讨了“幻觉”在商业研究中非共识、艺术性部分的价值，提出“发散优先模型”的概念，以捕捉更多元的视角。访谈前瞻了 AI 对组织结构和工作方式带来的变革，强调复合技能和去中心化协作的重要性，并探讨了 AI Agent 作为观察人类社会“镜像”的价值以及未来人与虚拟 Agent 可能的关系。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细解析了 RAG 挑战赛中构建基于公司年报的智能问答系统的冠军方案。方案涵盖了从 PDF 报告解析、数据摄取到检索和生成的全流程。重点介绍了如何克服 PDF 解析的复杂性（如表格序列化），以及在检索阶段采用的 LLM 重排序和父页面检索策略。在生成阶段，方案通过查询路由（按公司、按问题类型）和结合思维链（CoT）与结构化输出（SO）的提示词工程，确保了答案的准确性和格式规范。文章强调了深入理解任务细节和持续迭代优化的重要性，并开源了代码供参考。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI Agent 的核心潜力在于模拟真实用户和主观世界</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Atypica.ai 通过大语言模型构建典型用户画像，用多智能体协同进行用户访谈，为主观世界建模，解决传统调研成本高效率低的问题，并能发现人的思维盲区。</span>
+                        <strong style="color: #1e40af">PDF 解析是 RAG 系统的基础和挑战，需定制化处理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 大型复杂 PDF（如年报）的准确解析（尤其是表格）对下游准确性至关重要，需要结合工具定制和硬件加速来克服困难。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">商业研究中“幻觉”和“发散优先模型”具有独特价值</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在解决具有艺术性和非共识的商业问题时，允许 AI 生成非共识观点（幻觉），通过发散优先模型拓宽思维边界，捕捉更多元的视角和可能性，由人最终决策。</span>
+                        <strong style="color: #1e40af">提升检索质量是 RAG 成功的关键，LLM 重排序和父页面检索是有效策略。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 仅依赖向量检索的 top-k 块不足，通过 LLM 对结果进行二次排序并返回完整页面能提供更丰富、准确的上下文，显著提高相关性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 重塑组织结构，推向复合技能与去中心化协作</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 使传统专业化分工不再必要，未来公司将需要拥有复合技能的全能型人才，工作流程更快，项目由小型团队端到端负责，每个人更能发挥独角兽般的潜力。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 作为观察人类社会“镜像”，提供新的洞察视角</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过观察 AI 智能体的交互和模拟行为，可以反观人类自身的决策、判断或观察盲区，这种镜像作用提供启发，而不只是作为任务工具。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 时代的转型应侧重工作流程重塑，而非工具叠加</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 简单将 AI 能力叠加到现有产品或流程中成本高且效果不佳；更有效的方式是利用 AI 能力重新设计工作流程或产品形态，实现“新瓶装新酒”或“新瓶装旧酒”。</span>
+                        <strong style="color: #1e40af">智能查询路由与精细化提示词工程是确保答案准确性和格式的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 根据查询类型路由到不同处理逻辑，并利用 CoT 思考和 SO 约束输出格式，能显著提高模型遵循指令的能力，尤其在边界情况下。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们想用大语言模型来研究典型用户会是什么样子，从而帮助解决各种商业问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为主观世界建模。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">某种程度上，Hallucination（幻觉）反而是件好事，因为它能让思维更开放。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我认为，AI 时代更像是在回归文艺复兴时期，每个人都可以成为多才多艺的全能型人才。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不是 AI 替代人，而是像我们这样有 300 人的公司，每个人都能发挥出独角兽般的潜力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 不仅是工具，更是观察人类社会的'镜像'，可能重塑工作与生活形态。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们肯定地说，目前没有任何解析器可以处理所有细微之处，并在不丢失部分重要信息的情况下，将 PDF 内容完全还原为文本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这是 RAG 系统中尤其关键的部分：如果 LLM 在查询上下文中没有接收到必要信息，它就无法提供正确答案------无论我们如何精心微调解析或回答提示词。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过 GPT-4o-mini 进行重排序的成本对我们来说每个问题不到一美分！这种方法在质量、速度和成本之间取得了出色的平衡------这正是我们选择它的原因。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">手动分析问题突出了问题和报告中不明显的细节和歧义。这让我们能与 Rinat 核实回答要求，并将这些规则明确地反映在提示词中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这场比赛的主要启示很简单：RAG 的魔力在于细节。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -68,25 +62,25 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯研究院</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">范凌</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Datawhale</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ChallengeHub</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">45 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">11198</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">54 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">13263</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户研究</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">消费者研究</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">问答系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量检索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示词工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM重排序</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a1a14d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/ce7e4f">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
