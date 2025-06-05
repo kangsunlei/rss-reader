@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cursor 入门：MCP 开发调用和项目实战</title>
+        <title>协程中使用 synchronized？volatile 用的对么？从 kotlin 和 java 角度 尝试系统性看看锁</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Cursor 入门：MCP 开发调用和项目实战</h2>
-        <p>6/3/2025, 12:31:00 AM</p>
+        <h2>协程中使用 synchronized？volatile 用的对么？从 kotlin 和 java 角度 尝试系统性看看锁</h2>
+        <p>6/4/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">深度探讨了 AI 编程工具 Cursor 结合 MCP 协议进行项目开发的能力与技巧，并分享了实战经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">系统性探讨 Java 和 Kotlin 锁机制（synchronized， ReentrantLock， Mutex），分析原理、区别及协程适用性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了 Model Context Protocol (MCP) 协议作为连接 AI 模型与数据源/工具的标准化方式，阐述了其架构、组件及通信机制。接着，文章聚焦于 AI 编程工具 Cursor，介绍了其 Docs 和 Rules 等核心功能。文章主体通过两个实战案例展示了 Cursor 在开发中的应用：首先，利用 Cursor 快速构建一个简单的天气查询 MCP Server；其次，尝试开发一个更复杂的黄金价格预测项目。通过实战，作者分析了 Cursor 在项目开发中的显著优点，如强大的上下文感知和命令执行能力，同时也指出了长会话处理和复杂代码 debug 方面的不足。最后，作者基于实战经验，提炼出一系列提高 Cursor 使用效率的技巧，强调了清晰需求、技术方案先行、工具 활용以及版本控制的重要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章系统性地探讨了 Java 和 Kotlin 环境下的并发控制与锁机制。首先，从 Java 角度详细分类并阐述了 `synchronized` 和 `ReentrantLock` 的实现原理，包括 JVM 内对象头、Monitor、AQS 及 CAS 操作，并进行了对比。接着，介绍了 Kotlin 协程提供的 `Mutex`，突出其挂起协程而非阻塞线程的优势，并简要提及 `Channel` 和 `Actor`。文章明确指出，Java 的 `synchronized` 和 `ReentrantLock` 虽然能保证协程中的线程安全，但不适合协程环境，因为它们会阻塞线程，影响协程的并发性能。最后，补充了临界区、内存屏障（及其在 `volatile` 和 `synchronized` 中的应用）、CAS 原理及线程状态等基础概念，为读者提供了理解锁底层机制的全面视角。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MCP 协议标准化了 AI 模型访问数据和工具的方式</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MCP 提供开放标准，使 AI 应用能安全便捷地连接并操作本地及远程数据，为 AI 工具提供了"连接万物"的基础接口。</span>
+                        <strong style="color: #1e40af">深入分析 Java 锁（synchronized/ReentrantLock）原理与区别</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 阐述了 synchronized 基于 JVM 对象头/Monitor，ReentrantLock 基于 AQS/CAS，各有优劣，ReentrantLock 提供更多控制。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Cursor 结合 Docs 和 Rules 等功能，提升 AI 辅助开发效率</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cursor 作为 AI-native IDE，通过索引文档、定义规则等方式增强 AI 理解项目上下文的能力，进而提高代码生成和问题解决的效率。</span>
+                        <strong style="color: #1e40af">强调 Kotlin Mutex 适用于协程，Java 锁不适合</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Mutex 通过挂起协程实现非阻塞同步，而 Java 锁阻塞线程，在协程中会导致性能瓶颈。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 编程工具需要使用者具备基础开发能力</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然 Cursor 功能强大，但在处理复杂项目、联调或调试时，用户仍需理解代码和系统，辅助 AI 定位和解决问题。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">有效使用 AI 开发工具需掌握核心技巧</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 包括清晰描述需求、优先设计技术方案、充分利用文档和规则、添加日志以及使用 Git 进行版本管理，以引导 AI 并控制开发过程。</span>
+                        <strong style="color: #1e40af">讲解内存屏障和 CAS 等底层机制</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 解释了 volatile 和 synchronized 如何利用内存屏障保证可见性和有序性，以及 CAS 作为无锁原子操作的基础。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">之前对 AI Coding 的认知还停留在 tab 补全、自动生成单元测试上，没想到现在已经发展到直接能开发项目了，某种意义上做到了"有嘴就行"。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP provides a standardized way to connect AI models to different data sources and tools。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Cursor 相对于常规 IDE 的 Chat 面板，可以直接阅读整个项目文件、浏览网页、读取图片、运行命令，这几个功能十分好用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一些极小的代码 bug 不容易发现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">简单几天 cursor 体验下来，感觉网传的零基础小白上手开发 app 上线或许多少有点夸大其词，稍微复杂点的项目...还是需要使用者具备一定的开发基础的（常用的 node、python、linux、git 命令）。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">synchronized 和 ReentrantLock 在协程中可以保证数据安全。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">synchronized 和 ReentrantLock，不适合协程，它会阻塞线程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这些组合就像是在**「两个内存访问操作之间加了一堵墙」** ，确保不会被 CPU 或编译器优化重排。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JMM（Java 内存模型）本身不直接暴露内存屏障指令，但 JVM 会根据 Java 语义编译时**「插入对应的屏障指令」** ，尤其在使用 volatile、synchronized 等关键字时。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CAS 操作并不会锁住共享变量，也就是一种**「非阻塞」** 的同步机制，CAS 就是乐观锁的实现。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +60,24 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">鬼怪</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">25 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6199</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI辅助开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cursor</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Model Context Protocol</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IDE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Coding</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">锁机制</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kotlin</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">协程</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/6a8be2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/f4aba2">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
