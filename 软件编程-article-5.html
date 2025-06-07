@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Spring 团队谈 AOT 缓存处理、空值安全性和支持政策</title>
+        <title>深度剖析将 Kafka 构建在 S3 上的技术挑战与最佳实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Spring 团队谈 AOT 缓存处理、空值安全性和支持政策</h2>
-        <p>6/5/2025, 7:27:00 AM</p>
+        <h2>深度剖析将 Kafka 构建在 S3 上的技术挑战与最佳实践</h2>
+        <p>6/6/2025, 7:54:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Spring 团队访谈，涵盖 Java AOT 缓存处理、空值安全性 JSpecify 应用及最新支持政策。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">深度剖析 AutoMQ 如何基于 S3 重构 Kafka 存储层，解决对象存储带来的技术挑战，实现低成本、高弹性云原生 Kafka。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章通过对 Spring 核心成员的访谈，讨论了 Spring 生态系统的几个重要议题。针对 Project Leyden 和 JEP 483 相关的 AOT 缓存，探讨了其最佳实践、分发方式（如容器镜像层）以及与平台（如 Tanzu）的集成。在空值安全性方面，介绍了 JSpecify 标准注解在 Spring 和第三方库中的采用情况、多样的空值类型以及逐步引入空值安全性的方法。最后，详细解读了 Spring 新的统一 LTS 支持政策，包括其与 Spring Boot 版本对齐以及为长期支持版本（如 3.5）提供的更长企业支持期限，旨在简化流程并满足社区对更长支持周期的需求。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度剖析了将 Apache Kafka 构建在对象存储（如 S3）上的技术可行性与挑战。指出传统 Kafka 的计算存储耦合、数据复制和跨可用区流量等问题在高弹性云环境中带来的成本及运维困境。在此背景下，以开源项目 AutoMQ 为例，详细阐述了如何应对对象存储带来的高延迟、高 IOPS 成本、缓存管理、元数据管理、Kafka 协议兼容性、Shared Nothing 与 Shared Disk 融合、吞吐量以及跨 AZ 流量成本等关键挑战。AutoMQ 通过引入 WAL+S3 分层存储、数据批处理与 Compaction、分层缓存系统（Log Cache/Block Cache）、基于 Kraft 的元数据管理以及重写存储层并引入 Stream 抽象等一系列创新技术，在保障 Kafka 兼容性的同时，有效降低了成本并提升了弹性。文章分析严谨，技术细节丰富，对理解 Kafka 云原生演进和基于对象存储构建分布式系统有重要参考价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AOT 缓存可灵活分发，未来平台集成是方向。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Spring Boot 支持通过解包 JAR 或 Buildpacks 分发 AOT 缓存，分析数据应来自生产负载，平台级自动化集成是重要趋势。</span>
+                        <strong style="color: #1e40af">AutoMQ 采用 WAL+S3 架构和分层缓存优化读写性能</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 WAL 降低写入延迟，异步上传 S3；Log/Block Cache 分层缓存热温数据，提升读取命中率，平衡性能与成本。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JSpecify 定义标准空值注解，可逐步应用于库代码。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> JSpecify 提供可空、非空、未指定三种类型，库可在包、类、方法级别逐步采用注解，与现有代码良好兼容。</span>
+                        <strong style="color: #1e40af">数据批处理和 Compaction 降低对象存储请求成本并优化读取</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 写入前批量生成 SSO/SO 对象，后台 Compaction 合并小对象，减少 GET 次数，提高同一 Partition 数据的物理集中度和顺序读效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Spring 采用统一 LTS 政策，提供超 7 年总支持。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新的支持政策与 Spring Boot 版本对齐，最后一个次要版本享受额外企业支持，大幅延长了 LTS 版本的总支持周期。</span>
+                        <strong style="color: #1e40af">AutoMQ 重写存储层并在 Kafka 协议栈上引入 Stream 抽象实现兼容性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 保留 Kafka 核心逻辑，通过 Meta/Data/Txn streams 在对象存储上实现 Partition 语义及元数据管理，适配对象存储特性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">通过多层级限流和 S3 WAL 机制解决吞吐量和跨 AZ 成本</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 区分流量优先级进行限流保障服务质量；Producer 写入同 AZ Broker，数据先入 S3 WAL 再由 Leader 读取，最小化跨 AZ 流量。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AOT 缓存不一定需要包含在容器镜像中，这种集成很可能会发生在平台级别。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JSPECIFY 计划为 Java 静态分析提供了标准注解。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JSPECIFY 定义了三种空值类型：可空（@Nullable 注解）、非空（@NonNull 注解）和未指定（Java 默认行为）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们制定了一个统一的 LTS 政策，而不是像以往那样每个项目各自为政：每个主要版本的最后一个次要版本（如 3.5）在 13 个月的开源支持和一年常规企业支持的基础上，额外获得五年的企业支持。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过提供更多的支持和简化流程，我们以最可持续的方式满足了社区的需求。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为什么要把数据转移到 S3 上？... 为了降低成本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AutoMQ 通过 WAL+S3 的架构实现低延迟。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">构建在对象存储上的系统需要比 Kafka 更多的元数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Kafka 替代方案还必须具备一个关键能力：让用户可以毫无障碍地从 Kafka 切换到新方案。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">确保 Producer 总是与同一 AZ 中的 Broker 通信。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +63,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2034</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6907</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spring Boot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spring Framework</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AOT</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JSpecify</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">空值安全</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kafka</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">对象存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">S3</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/8ef715">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/f2e1b2">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
