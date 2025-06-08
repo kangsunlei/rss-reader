@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>深度剖析将 Kafka 构建在 S3 上的技术挑战与最佳实践</title>
+        <title>自建私有组网：开源自控 Tailscale 服务 | 开源日报 No.629</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>深度剖析将 Kafka 构建在 S3 上的技术挑战与最佳实践</h2>
-        <p>6/6/2025, 7:54:00 AM</p>
+        <h2>自建私有组网：开源自控 Tailscale 服务 | 开源日报 No.629</h2>
+        <p>6/7/2025, 1:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">深度剖析 AutoMQ 如何基于 S3 重构 Kafka 存储层，解决对象存储带来的技术挑战，实现低成本、高弹性云原生 Kafka。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章介绍了五个近期热门开源项目，涵盖自托管组网、生成式 AI 应用、AI 视频生成、内容管理 API 及网络爬虫等领域。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度剖析了将 Apache Kafka 构建在对象存储（如 S3）上的技术可行性与挑战。指出传统 Kafka 的计算存储耦合、数据复制和跨可用区流量等问题在高弹性云环境中带来的成本及运维困境。在此背景下，以开源项目 AutoMQ 为例，详细阐述了如何应对对象存储带来的高延迟、高 IOPS 成本、缓存管理、元数据管理、Kafka 协议兼容性、Shared Nothing 与 Shared Disk 融合、吞吐量以及跨 AZ 流量成本等关键挑战。AutoMQ 通过引入 WAL+S3 分层存储、数据批处理与 Compaction、分层缓存系统（Log Cache/Block Cache）、基于 Kraft 的元数据管理以及重写存储层并引入 Stream 抽象等一系列创新技术，在保障 Kafka 兼容性的同时，有效降低了成本并提升了弹性。文章分析严谨，技术细节丰富，对理解 Kafka 云原生演进和基于对象存储构建分布式系统有重要参考价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是《开源日报》的一期，精选并简要介绍了五个不同的开源项目。其中包括：基于 Wireguard 实现自托管 Tailscale 控制服务器的 Headscale，为用户提供私有组网方案；汇集大量优秀生成式 AI 应用的 AI Collection，方便用户探索最新 AI 工具；针对 ComfyUI 优化 AI 视频生成、支持消费级 GPU 的 ComfyUI-LTXVideo；用于 Node.js 和浏览器环境访问 Contentful 内容交付 API 的 JavaScript 库 contentful.js；以及使用现代技术栈构建的自动化价格跟踪网络爬虫 Price-Tracking-Web-Scraper。文章以列表形式呈现，突出各项目的核心功能和技术栈，旨在为技术从业者提供快速了解和尝试这些开源工具的入口。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AutoMQ 采用 WAL+S3 架构和分层缓存优化读写性能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 WAL 降低写入延迟，异步上传 S3；Log/Block Cache 分层缓存热温数据，提升读取命中率，平衡性能与成本。</span>
+                        <strong style="color: #1e40af">Headscale 提供开源自托管 Tailscale 控制服务器</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用户能够搭建自己的私有 Wireguard 网络，替代商业服务，实现对网络组建和管理的完全控制权。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">数据批处理和 Compaction 降低对象存储请求成本并优化读取</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 写入前批量生成 SSO/SO 对象，后台 Compaction 合并小对象，减少 GET 次数，提高同一 Partition 数据的物理集中度和顺序读效率。</span>
+                        <strong style="color: #1e40af">AI Collection 集合了丰富的生成式 AI 应用</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为开发者和爱好者提供了一个便捷的资源库，快速发现、比较和访问不同类别的创新 AI 工具。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AutoMQ 重写存储层并在 Kafka 协议栈上引入 Stream 抽象实现兼容性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 保留 Kafka 核心逻辑，通过 Meta/Data/Txn streams 在对象存储上实现 Partition 语义及元数据管理，适配对象存储特性。</span>
+                        <strong style="color: #1e40af">ComfyUI-LTXVideo 增强 ComfyUI 的 AI 视频生成能力</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作为 ComfyUI 的自定义节点集，它优化了视频生成流程，支持高质量输出并降低了对高端消费级硬件的要求。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过多层级限流和 S3 WAL 机制解决吞吐量和跨 AZ 成本</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 区分流量优先级进行限流保障服务质量；Producer 写入同 AZ Broker，数据先入 S3 WAL 再由 Leader 读取，最小化跨 AZ 流量。</span>
+                        <strong style="color: #1e40af">contentful.js 提供 Contentful 内容交付 API 的 JavaScript 客户端库</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 方便开发者在 Node.js 和浏览器环境中轻松访问、检索和管理 Contentful CMS 中的内容，支持同步和本地化。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Price-Tracking-Web-Scraper 是一个自动化的价格跟踪工具</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用现代网络技术构建（React/Flask/Playwright），可配置抓取电商网站（如 amazon.ca）的价格数据，支持定期调度和用户界面互动。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为什么要把数据转移到 S3 上？... 为了降低成本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AutoMQ 通过 WAL+S3 的架构实现低延迟。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">构建在对象存储上的系统需要比 Kafka 更多的元数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Kafka 替代方案还必须具备一个关键能力：让用户可以毫无障碍地从 Kafka 切换到新方案。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">确保 Producer 总是与同一 AZ 中的 Broker 通信。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">headscale 是一个开源的自托管 Tailscale 控制服务器实现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ai-collection 是一个汇集了众多优秀生成式人工智能应用的项目。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">提供高质量、快速的电影级视频输出，并兼容消费级 GPU（如 NVIDIA 4090、5090）。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +66,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">开源服务指南</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">陆拾柒</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6907</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">678</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kafka</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">对象存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">S3</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">生成式AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自建私有组网</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI视频生成</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络爬虫</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/f2e1b2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/383585">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaTUBu1LwB5Ak1E5DfpOaNk6pFJ1WLTqoWfbJMzSYgfxKQJ9RMajap2QRk00nVopOqRSdViz75MiBPqHkCyBtqboC8AeQJNU8AeULNN51ULTqpWnRSteiTf5yaCcgEZFIzqZmATGomIJOaCcik5l9yUrXopGrRSdWiT/4xap5QcwNkUjMBmdRMQP6fnFQtOqladFK16JMvU/M3UfOEmgnIpOZGzQ2QSc0Tav4mJ1WLTqoWnVQt+mQZkL8JkEnNBGRSMwGZ1ExAJjUTkEnNG0D+ZidVi06qFp1ULcIf+Q8D8oaaJ4DcqLkBMqn5l5xULTqpWnRStQh/5AUgk5oJyCY1N0AmNROQSc0mIJOaGyCTmgnIJjXfdFK16KRq0UnVIvyRfxiQGzUTkBs1E5BJzQ2Qb1LzBJBJzRsnVYtOqhadVC3CH3kByBNqboD8SWpugDyh5gbIjZr/kpOqRSdVi06qFuGPfBGQJ9Q8AeQJNU8AmdQ8AeSb1ExAJjUTkEnNppOqRSdVi06qFuGPvABkUnMDZFJzA2RScwNkUvMEkCfUTEBu1HwTkBs133RSteikatFJ1SL8kT8IyKTmBsik5g0gT6iZgPwmNROQSc0TQCY1b5xULTqpWnRSteiTl4BMajYBeQLIpGYC8gaQJ9TcAJnU3ACZ1ExAbtRMajadVC06qVp0UrXok2VAbtTcAJnU3AB5Q80E5Ak1TwDZBGRScwNkUrPppGrRSdWik6pFn7ykZgLyhJoJyARkUjOpmYC8oeYNIJOaGzVvqJmA3Kj5ppOqRSdVi06qFn3yEpBvUjMBuVHzBJBJzQRkUjMBeQPIpGYCcgNkUjMBuQEyqXnjpGrRSdWik6pFnyxTMwGZgNyomYBMam6A3KiZgExAJjUTkEnNBGQCMqm5ATKpmYBMat5Qs+mkatFJ1aKTqkWf/DI1N0AmNU+oeULNG0AmNROQGyCTmgnIDZBJzaRmAjKp2XRSteikatFJ1aJPfhmQGzUTkCfUTECeUDMBeQLIpGYCcgNkE5AbIJOaN06qFp1ULTqpWoQ/8h8GZFLzm4A8oWYCMql5AsgmNW+cVC06qVp0UrXok5eA/CY1k5oJyBtqboBMam6ATECeADKpeUPNN51ULTqpWnRSteiTZWo2AbkB8oSaN9T8JjVPqPmTTqoWnVQtOqla9MmXAXlCzRtqngAyqbkB8oaaCcgEZBOQSc03nVQtOqladFK16JN/DJAbNZOaCcikZlIzAdmk5gbIpGYCcgPkRs0bJ1WLTqoWnVQt+uQfo2YCMgF5Asgbam7U3AC5AfKGmk0nVYtOqhadVC365MvUfJOaGzVvALlR8waQSc2kZgIyqZmATGomIN90UrXopGrRSdWiT5YB+U1AJjVPAJnUTGomIDdAJjUTkEnNBGRScwPkBsik5ptOqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0P1BeKja0vKmUAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
