@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Pub/Sub 单消息转换</title>
+        <title>Ruby 调试器剖析：TracePoint、指令序列和 CRuby API | The RubyMine Blog</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Pub/Sub 单消息转换</h2>
-        <p>6/9/2025, 12:00:00 AM</p>
+        <h2>Ruby 调试器剖析：TracePoint、指令序列和 CRuby API | The RubyMine Blog</h2>
+        <p>6/10/2025, 7:34:53 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">新的 Pub/Sub 单消息转换功能可以直接在服务内部进行轻量级数据修改。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">探索 Ruby 调试器背后的核心技术：TracePoint、指令序列和 CRuby C 级别 API。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Google Cloud 推出了 Pub/Sub 的单消息转换 (SMTs)，通过允许直接在服务内部修改消息来简化流式数据管道。首个 SMT 功能，即 JavaScript 用户定义函数 (UDFs)，现已正式发布。UDFs 实现了灵活、轻量级的转换，例如格式转换、基于数据的增强过滤以及 PII 数据遮盖和编辑，无需为了这些简单任务而使用 Dataflow 或 Cloud Run 等外部服务。这种方法减少了延迟和运维开销，提升了流式架构的性能和简洁性。SMTs 可以在主题或订阅级别应用，并通过 Google Cloud 控制台或 gcloud CLI 进行配置。计划中的其他 SMTs 功能包括模式验证和 AI 推理。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入研究驱动 Ruby 调试器的基本机制，重点介绍 TracePoint、指令序列和 Ruby 的 C 级别 API。文章解释了 TracePoint 如何拦截运行时事件，并通过一个简单的调试器示例，演示其暂停执行和检查程序状态的能力。指令序列被介绍为 Ruby 的字节码，展示了调试器如何利用其标记来检测代码，并启用诸如单步调试和断点等功能。最后，文章讨论了 CRuby C API，强调它们在实现高级调试器功能（如智能单步调试和调用栈导航）中的作用，同时也指出了它们在平台锁定和版本不稳定性方面存在的权衡。本文是 RubyMine 团队负责人演讲系列文章之一。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Pub/Sub SMTs 允许直接在服务内部进行消息转换</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这套新功能通过直接在 Pub/Sub 内部执行过滤或数据遮盖和编辑等轻量级修改，简化了流式数据管道，避免使用外部处理服务。</span>
+                        <strong style="color: #1e40af">TracePoint 使调试器能够拦截运行时事件以暂停执行。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> TracePoint 允许调试器挂钩到方法调用、行执行等事件，从而可以设置断点并在特定位置检查程序的状态。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JavaScript UDFs 是首个可用的 SMT 功能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> JavaScript UDFs 提供了灵活性，允许使用简单的代码片段对消息属性和数据进行自定义转换，适用于格式转换或数据遮盖和编辑等多种用例。</span>
+                        <strong style="color: #1e40af">指令序列 (iseq) 表示 Ruby 的字节码并帮助调试器进行检测。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 指令序列 (Iseq) 提供了对代码底层表示的访问，允许调试器切换内部标志或修改指令，进而控制程序的执行流程。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">直接转换减少了延迟和运维开销</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于简单任务，无需使用 Dataflow 或 Cloud Run 等中间服务，这提高了端到端性能并简化了基础设施管理。</span>
+                        <strong style="color: #1e40af">CRuby C API 为高级调试器功能提供更深层次的控制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CRuby C API 支持智能单步调试、复杂的调用栈操作等功能，这些功能仅通过公共 Ruby API 难以实现，但需要在可移植性和稳定性方面做出权衡。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">今天，我们正在推出 Pub/Sub 单消息转换 (SMTs)，方便直接在 Pub/Sub 内部执行简单的数据转换。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Pub/Sub 单消息转换 (SMTs) 旨在提供一套功能，方便在消息实时传输过程中轻松验证、过滤、丰富和修改单个消息。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">首个 SMT 功能现已正式发布：JavaScript 用户定义函数 (UDFs)，它允许您通过 JavaScript 代码片段直接在 Pub/Sub 内部对消息属性、数据或两者进行简单、轻量级的修改。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">转换直接在 Pub/Sub 内部执行，无需维护额外的服务或基础设施来进行数据转换。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过避免为轻量级转换使用额外产品，流式架构的端到端延迟得到了改善。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">调试是软件开发的关键部分，但大多数开发人员在使用调试器时并不知道其工作原理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每当调试器在断点处暂停时，TracePoint 都会发挥作用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">指令序列在 Ruby 调试中起着至关重要的作用。它通过标记字节码中的关键执行点来实现调试功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了支持这些高级功能，开发者需要深入研究 Ruby 提供的底层调试 API。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">TracePoint 和指令序列构成了现代 Ruby 调试器如何观察和与运行中的 Ruby 代码交互的基础。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Google Cloud Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Kamal Aboul-Hosn, Prateek Duble</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Dmitry Pogrebnoy</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">686</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1939</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Pub/Sub</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Google Cloud</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloud Services</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Messaging</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Streaming Data</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Ruby</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TracePoint</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">指令序列</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CRuby</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/6428ba">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c79a5f">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
