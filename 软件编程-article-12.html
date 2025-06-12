@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Ruby 调试器剖析：TracePoint、指令序列和 CRuby API | The RubyMine Blog</title>
+        <title>一个 vue3 指令让 el-table 自动轮播</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Ruby 调试器剖析：TracePoint、指令序列和 CRuby API | The RubyMine Blog</h2>
-        <p>6/10/2025, 7:34:53 AM</p>
+        <h2>一个 vue3 指令让 el-table 自动轮播</h2>
+        <p>6/11/2025, 12:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">探索 Ruby 调试器背后的核心技术：TracePoint、指令序列和 CRuby C 级别 API。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">通过 Vue3 自定义指令为 Element Plus 的 el-table 实现自动向上滚动轮播效果。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入研究驱动 Ruby 调试器的基本机制，重点介绍 TracePoint、指令序列和 Ruby 的 C 级别 API。文章解释了 TracePoint 如何拦截运行时事件，并通过一个简单的调试器示例，演示其暂停执行和检查程序状态的能力。指令序列被介绍为 Ruby 的字节码，展示了调试器如何利用其标记来检测代码，并启用诸如单步调试和断点等功能。最后，文章讨论了 CRuby C API，强调它们在实现高级调试器功能（如智能单步调试和调用栈导航）中的作用，同时也指出了它们在平台锁定和版本不稳定性方面存在的权衡。本文是 RubyMine 团队负责人演讲系列文章之一。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了一个为 Element Plus 的 el-table 组件实现自动轮播的 Vue3 自定义指令的开发过程。文章首先分析了 el-table 的 DOM 结构，确定了控制滚动的关键元素（el-scrollbar__wrap 和 el-scrollbar__view）。接着阐述了实现自动滚动、鼠标悬停停止、鼠标移出继续、滚轮滚动后恢复以及列表元素不足时不滚动的五大核心思路。随后提供了完整的指令代码，包括 created、mounted 和 unmounted 生命周期中的逻辑实现，涵盖了变量初始化、DOM 获取、事件监听、定时器控制和清理等细节。最后给出了指令的注册方法和在 el-table 上使用的示例，并演示了如何通过参数调整滚动速度。该指令提供了一种不依赖第三方库的简单有效方案来增强 el-table 的展示能力。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">TracePoint 使调试器能够拦截运行时事件以暂停执行。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> TracePoint 允许调试器挂钩到方法调用、行执行等事件，从而可以设置断点并在特定位置检查程序的状态。</span>
+                        <strong style="color: #1e40af">识别 el-table 关键 DOM 结构是实现滚动的核心</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过分析找到包裹列表项的固定高度容器`el-scrollbar__wrap`和实际内容区域`el-scrollbar__view`，才能通过操作`el-scrollbar__wrap`的`scrollTop`实现滚动。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">指令序列 (iseq) 表示 Ruby 的字节码并帮助调试器进行检测。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 指令序列 (Iseq) 提供了对代码底层表示的访问，允许调试器切换内部标志或修改指令，进而控制程序的执行流程。</span>
+                        <strong style="color: #1e40af">利用定时器和 scrollTop 属性驱动自动滚动</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 设置定时器周期性地增加`el-scrollbar__wrap`的`scrollTop`值，结合变量存储当前位置，实现列表内容的连续向上滚动效果。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">CRuby C API 为高级调试器功能提供更深层次的控制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CRuby C API 支持智能单步调试、复杂的调用栈操作等功能，这些功能仅通过公共 Ruby API 难以实现，但需要在可移植性和稳定性方面做出权衡。</span>
+                        <strong style="color: #1e40af">通过监听鼠标事件控制滚动暂停与恢复</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为`el-scrollbar__wrap`添加 mouseover 和 mouseout 事件监听，配合布尔变量控制定时器逻辑的执行，实现悬停暂停和移出恢复功能。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">判断内容高度实现条件性滚动</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 比较`el-scrollbar__view`和`el-scrollbar__wrap`的高度，仅当内容高度大于容器高度时才启用自动滚动，避免列表项不足时的异常行为。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">利用 Vue 3 指令的生命周期钩子管理状态、定时器和事件监听</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 `created` 钩子中初始化指令所需的状态变量（如定时器、滚动状态、当前位置）；在 `mounted` 钩子中获取 DOM 元素、设置定时器和添加事件监听；在 `unmounted` 钩子中清理定时器和移除事件监听，确保资源正确释放，避免内存泄露。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">调试是软件开发的关键部分，但大多数开发人员在使用调试器时并不知道其工作原理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每当调试器在断点处暂停时，TracePoint 都会发挥作用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">指令序列在 Ruby 调试中起着至关重要的作用。它通过标记字节码中的关键执行点来实现调试功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了支持这些高级功能，开发者需要深入研究 Ruby 提供的底层调试 API。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">TracePoint 和指令序列构成了现代 Ruby 调试器如何观察和与运行中的 Ruby 代码交互的基础。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过观察 el-table 的结构可以发现 el-scrollbar__view 里面放着所有的元素，而 el-scrollbar__wrap 是一个固定高度的容器</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只需要获取到 el-scrollbar__wrap 这个 DOM，并且再给一个定时器，不断的改变它的 scrollTop 值，就可以实现自动滚动的效果</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了每次鼠标在列表中滚动之后，我们的轮播还可以在当前滚动的位置，继续轮播，只需要在鼠标移出的时候，将当前 el-scrollbar__wrap 的 scrollTop 赋给前面存储的变量</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只需要判断 el-scrollbar__view 这个容器的高度，是否大于 el-scrollbar__wrap 的高度，是就可以滚动，不是就不滚动。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +66,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Dmitry Pogrebnoy</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">飞天猫猫头</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1939</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1505</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Ruby</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TracePoint</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">指令序列</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CRuby</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术实践</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动轮播</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">表格组件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vue3</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Element Plus</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/c79a5f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/16bfa8">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
