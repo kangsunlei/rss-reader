@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>我们在 Workers 中发布了 FinalizationRegistry：为什么你不应该使用它</title>
+        <title>数据库模式设计简化：范式化 vs 反范式化</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>我们在 Workers 中发布了 FinalizationRegistry：为什么你不应该使用它</h2>
-        <p>6/11/2025, 2:00:01 PM</p>
+        <h2>数据库模式设计简化：范式化 vs 反范式化</h2>
+        <p>6/12/2025, 3:30:25 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">解释了 JavaScript FinalizationRegistry API，说明了尽管其具有非确定性，为何仍将其添加到 Cloudflare Workers，并推荐通过显式资源管理实现可预测的清理。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">介绍数据库模式范式化与反范式化的权衡，并计划进行详细比较。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文讨论了将 JavaScript FinalizationRegistry API 集成到 Cloudflare Workers 中，主要是为了在使用 WebAssembly ( Wasm ) 时辅助内存管理。文章对比了 JavaScript 的自动垃圾回收和 Wasm 的手动内存管理，强调了两者之间共享内存的挑战，例如潜在的内存泄漏。虽然 FinalizationRegistry 允许为垃圾回收对象注册清理回调，但其非确定性特性（回调可能运行延迟或根本不运行）使其不适合可靠的资源管理。Cloudflare 启用它是为了支持高级 Wasm 用例，但也添加了安全措施，例如阻止在回调中进行 I/O 操作，并分析了其安全影响（混淆代理、GC 定时器），得出现有隔离模型是足够的结论。文章强烈推荐使用更新的、确定性的显式资源管理提案（`using`/`await using`）作为在 JavaScript 中实现可预测资源清理的更好替代方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文讨论了数据库模式设计中的根本挑战：在为了数据完整性而进行范式化与为了性能而进行反范式化之间做出选择。文章强调了模式设计对系统性能、功能实现速度和可伸缩性的重大影响。虽然常被视为冲突的方法，但文章认为范式化和反范式化是互补工具，它们解决的是不同的问题——完整性和可维护性 vs 读取效率和性能。文章承诺将详细探讨范式的基础、反范式化策略及其各自的权衡，旨在为根据具体的系统目标和规模选择适当的方法提供理解。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JS ( GC ) 和 Wasm ( 手动 ) 之间的内存共享复杂且容易出现内存泄漏。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> JavaScript 自动管理内存，而 WebAssembly 需要手动释放。在 JS 中操作 Wasm 内存需要小心处理以避免内存泄漏，尤其是在 Workers 等受限环境中。</span>
+                        <strong style="color: #1e40af">数据库模式设计深刻影响系统性能和开发。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 有效的模式设计对于查询速度、特性开发速度以及大规模系统性能至关重要，可以避免瓶颈和耗费巨大的重构。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">FinalizationRegistry 在 GC 时提供回调，但它是非确定性的，对于关键清理不可靠。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该 API 允许注册终结器，但不能保证它们何时或是否会运行，因此对于重要的资源释放逻辑来说，这是一个糟糕的选择。</span>
+                        <strong style="color: #1e40af">范式化和反范式化是工具，而非对立方法。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它们是互补策略，每种策略都针对模式设计的不同方面：完整性/可维护性（范式化）与读取性能（反范式化）。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Cloudflare 添加了 FinalizationRegistry 并采取了安全措施，阻止在回调中进行 I/O 操作。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为特定的 Wasm 用例启用，Cloudflare 限制了回调以防止开发者依赖非确定性时序来实现副作用，从而减轻误用。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">显式资源管理是推荐的、确定性的清理替代方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `using`/`await using` 语法提供了一种可靠的方式来确保资源在超出作用域时能够可预测地被清理，这与非确定性的 GC 终结器不同。</span>
+                        <strong style="color: #1e40af">在不同方法之间做出选择需要理解权衡。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 决定取决于当前的系统需求、规模和目标，需要在数据一致性和最小冗余与负载下的读取效率之间取得平衡。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">然而，尽管它可用，我们的总体建议是：**在大多数情况下避免直接使用它。**</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然偶尔的内存泄漏可能不会立即造成问题，但随着时间的推移，它们会导致内存使用量增加并降低性能，尤其是在像 Cloudflare Workers 这样的内存受限环境中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">FinalizationRegistry 存在一个根本性问题：垃圾回收是非确定性的，可能会在将来的某个任意时间清理你的未使用内存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">考虑到其非确定性特性，开发者很少将终结器用于任何重要的程序逻辑。将其视为最后的安全网，而不是主要的清理机制...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">显式资源管理...引入了一种确定性方法来处理需要手动清理的资源...</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模式设计在决定查询运行速度、功能实现的便捷性以及系统在大规模运行时表现如何方面起着至关重要的作用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个工程团队都会遇到同样的分岔路口：为了清晰的结构和一致性对模式进行范式化，还是为了速度和简洁性进行反范式化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实际上，范式化和反范式化并非相互竞争的方法，而只是完成任务的工具。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">范式化侧重于数据完整性、最小冗余和长期可维护性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">反范式化优先考虑读取效率、访问的简洁性以及负载下的性能。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Ketan Gupta</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">80</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2824</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">262</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">WebAssembly</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">FinalizationRegistry</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare Workers</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模式设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">范式化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">反范式化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/f8cda3">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYASURBVO3BQW4ky5LAQDKg+1+Z00tfJZCokib+g5vZP6x1icNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhf54UMqf6niicpvqnii8qRiUnmj4g2Vv1TxicNaFzmsdZHDWhf54csqvknliconKj6hMlVMKm9UvKEyVTyp+CaVbzqsdZHDWhc5rHWRH36ZyhsVn6iYVJ6oTBWTylTxRsWkMlVMKn9J5Y2K33RY6yKHtS5yWOsiP/zHqDyp+ITKGypTxaQyVUwqU8Wk8l9yWOsih7UucljrIj/8j6t4ovKXVKaKN1TeqPgvOax1kcNaFzmsdZEfflnFTVSeVEwVk8pUMak8UZkqnqhMKk8q3qi4yWGtixzWushhrYv88GUqf0llqnhSMak8UZkqJpWpYlKZKiaVqeJJxaTyhsrNDmtd5LDWRQ5rXeSHD1XcROWNijdUPqHyCZWp4knF/5LDWhc5rHWRw1oX+eFDKlPFN6lMFU8qPqHypOKJylQxqXyTyhsVT1TeqPimw1oXOax1kcNaF7F/+EUqb1Q8UXlS8UTljYpJ5ZsqJpWpYlKZKj6h8kbFbzqsdZHDWhc5rHUR+4cvUpkqJpWbVEwqb1RMKlPFE5WpYlKZKiaVqWJSmSomlaliUnlS8U2HtS5yWOsih7UuYv/wh1SmikllqniiMlW8ofKk4g2Vb6qYVKaKN1S+qeKbDmtd5LDWRQ5rXeSHD6lMFZ+omFSmik+o/KWKSWWqmFSeVEwqU8WkMlV8QuU3Hda6yGGtixzWusgPX6bypOKNijdU3qj4popJZap4UnETlScqU8UnDmtd5LDWRQ5rXcT+4RepTBVvqEwVT1Q+UTGpvFHxhspU8QmVb6qYVKaKbzqsdZHDWhc5rHWRHz6kMlW8oTJVTBWTyhsVT1QmlaniicoTlaniEypvVEwqb6hMFZPKVPGJw1oXOax1kcNaF/nhy1SmiicVT1SeVEwqk8qTiknlicpUMalMFU8qnqhMFZPKN1X8fzqsdZHDWhc5rHWRH76s4hMqU8UnKiaVSWWqmFSeqEwVk8obFU9U3lCZKp6oPKn4TYe1LnJY6yKHtS7yw4cqnqh8QuVJxRsVk8qTiknlicobFZPKGxWTyhOVqeImh7UucljrIoe1LvLDh1TeqJhUpoonKpPKVDGpTBVTxaQyVTypeENlUpkqJpVvqphUPlHxTYe1LnJY6yKHtS7yw4cq3lB5Q2WqmFQmlW9SmSreUHlSMalMFZ+omFTeqJhUpopvOqx1kcNaFzmsdZEfPqQyVUwqU8Wk8qTijYqbVLxR8UTlScVvqvhNh7UucljrIoe1LvLDL6t4UvFE5ZtUpoqp4jepTBWTypOKJypTxVQxqUwVk8qTim86rHWRw1oXOax1EfuHD6hMFZPKk4pJZaqYVD5R8YbKGxVPVJ5UvKFyk4pPHNa6yGGtixzWuoj9wwdUblIxqXyi4jepTBVPVP5SxaQyVXzTYa2LHNa6yGGti9g//A9TmSqeqEwVk8o3VUwqb1RMKk8q3lCZKiaVNyo+cVjrIoe1LnJY6yI/fEjlL1VMFU9U3qh4ovKJijdUPqEyVXxTxTcd1rrIYa2LHNa6yA9fVvFNKt9UMal8omJSmVSmiicq31TxhsqTit90WOsih7UucljrIj/8MpU3Kj6hMlW8UfGGylTxROUTFZPKpPJNFX/psNZFDmtd5LDWRX74j1OZKp6oTBVPKp6oTBWfUJkqJpWpYlJ5Q2WqmFSmik8c1rrIYa2LHNa6yA//MRWTyqTyCZWp4knFpDJVPFGZKiaVqeITFZPKpPKbDmtd5LDWRQ5rXeSHX1bxl1SmiknlScWkMlW8oTJVvFHxpGJSmSq+qeI3Hda6yGGtixzWusgPX6byl1Q+UTGpPFGZKiaVb1J5o+KNiicVk8pU8U2HtS5yWOsih7UuYv+w1iUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5P8AAPPdYoFkAugAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/dc6b29">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

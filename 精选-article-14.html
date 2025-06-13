@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>MiniCPM 4.0 技术报告：端侧速度的奔涌，是模型的自我 Rag</title>
+        <title>从 browser-use 出发，品 Agent 实现</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>MiniCPM 4.0 技术报告：端侧速度的奔涌，是模型的自我 Rag</h2>
-        <p>6/9/2025, 12:15:00 PM</p>
+        <h2>从 browser-use 出发，品 Agent 实现</h2>
+        <p>6/11/2025, 12:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度解析了 MiniCPM 4.0 模型，重点介绍了其通过原生稀疏、高效推理、极致量化等技术实现的端侧性能飞跃。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">从工程师视角深入解析了 LLM Agent 的实现原理与工程实践，以开源项目 browser-use 为例。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 OpenBMB 发布的端侧大模型 MiniCPM 4.0 的技术亮点。文章指出 MiniCPM 4.0 原生支持稀疏性，在速度和性能上大幅领先同类模型，特别是在显存受限的长文本场景下。核心技术包括：InfLLM v2（可训练稀疏注意力，实现“自我 RAG”）、FR-Spec（基于高频词表的投机采样加速）、BitCPM4（训练阶段集成 1.58bit 极致量化）、定制推理引擎 CPM.cu 和跨平台部署系统 ArkInfer，以及“风洞 2.0”小模型试错训练法。这些系统级优化使得 MiniCPM 4.0 能在端侧设备上稳定、快速、低成本地运行 128K 长文本，体现了团队在端侧模型优化和部署上的深厚积累。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文从工程师的视角出发，系统地回顾了 LLM 应用从纯对话到 Workflow 编排再到 Agent 的演进过程。重点阐述了 Agent 的三个核心组成部分：记忆(Memory)、规划(Planning)和工具(Tools)。详细介绍了 Agent 的两种规划范式（分解优先与交错分解）和记忆的分类（短期与长期）。作者以 browser-use 项目为例，剖析了其工程架构，包括 Agent Core、MessageManager、Memory、LLM Interface、Controller 和 BrowserContext 等组件及其交互流程。文中特别强调了 SystemPrompt、AgentMessagePrompt、PlannerPrompt 和 toolPrompt 在 Agent 运行中的作用，并分析了 browser-use 如何通过 SystemPrompt、示例引导和 Pydantic 进行结构化输出的保证。最后，文章探讨了 browser-use 的记忆管理实现，并对生产环境的持久化存储提出了建议。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MiniCPM 4.0 通过系统级优化大幅提升端侧推理速度和效率</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章详细介绍了原生稀疏、草稿加速、极致量化等技术，显著优化了模型在资源受限设备的运行效率，推理速度最高可快 220 倍。</span>
+                        <strong style="color: #1e40af">Agent 是 LLM 应用演进的新阶段，具备自主规划和执行能力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 相比 Workflow 编排更进一步，能够根据用户需求自主决策、规划步骤，并调用工具与环境交互，大幅提升生产力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">InfLLM v2 稀疏注意力机制降低长文本计算成本并模拟 RAG 特性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该机制让模型仅关注文本中的关键“语义块”，大幅减少长文本处理时的计算量和显存占用，实现端侧 128K 长文本的稳定运行。</span>
+                        <strong style="color: #1e40af">记忆、规划和工具是构建 Agent 的三大核心要素。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 记忆（短期/长期）提供上下文和经验，规划负责任务分解和策略调整，工具赋予 Agent 与外部世界交互的能力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">BitCPM4 采用 QAT 将深度量化融入训练，平衡压缩与性能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在训练阶段考虑 1.58bit 的三值量化，模型在极致压缩体积（压缩 90%）的同时，仍能保持出色的评测表现。</span>
+                        <strong style="color: #1e40af">ReAct 框架是实现 Agent 运行时逻辑的有效方式。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴人类思维模式，通过思考(Thought)→行动(Action)→观察(Observation)循环，使 Agent 能逐步逼近目标并从错误中学习。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">定制推理引擎和部署系统保障模型高效跨平台运行</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 自研的 CPM.cu 推理引擎和 ArkInfer 部署系统针对 MiniCPM 结构优化，确保模型在多种芯片和平台上稳定、快速、便捷地部署。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">多层面技术创新构成优化闭环，实现端侧高性能低成本</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章强调 MiniCPM 4.0 并非依赖单一技术突破，而是通过模型架构、推理、量化、部署和训练等各个环节的系统化、闭环式优化，最终在端侧实现了 128K 长文本的稳定、快速和低成本运行。</span>
+                        <strong style="color: #1e40af">结构化输出是 Agent 稳定性的核心。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在 System Prompt 中明确格式、提供示例和使用 Pydantic 等工具进行强制验证，确保 LLM 输出稳定可靠，便于后续处理和工具调用。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">面壁搞端侧，是专业的</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">他们搞了套原生稀疏 ，让模型本身就有了一些 rag 的特性，打破很多端侧的限制，更快、更强</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MiniCPM 这次直接上了三值，参数只用三种值表示：-1、0、+1，平均下来是 1.58bit</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MiniCPM 自己写了推理引擎，叫 CPM.cu</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">先用小模型，把风向试出来</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">用户只需要简单的描述一下自己的需求，LLM 就可以使用丰富的工具和不断扩展的上下文环境，像人一样不断地规划、执行，甚至实时生成代码运行在沙箱环境里，最终达成用户的目的，生产力大大提升。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果我们要讲 agent，就不可避免的提到 ReAct 框架。它和我们人完成一个目标的流程很像。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">长期记忆可以存储相当长的时间信息，作为代理在查询时可以处理的外部向量存储，可通过快速检索进行访问。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体能够使用外部 API 工具来拓展模型的能力，从而获得大模型以外的能力，例如：搜索网页、设置代办、代码执行等。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">agent 运行的稳定性很大一点在于模型能否给出稳定格式的输出。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +63,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">赛博禅心</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">赛博禅心</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">星绪</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2953</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">46 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">11354</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">端侧模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MiniCPM 4.0</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">稀疏注意力</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">量化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI应用开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">browser-use</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">浏览器自动化</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/2fc6d4">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/7d6305">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATmSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGHDRPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNDZAn1ExA3lAzAblRcwPkN6l546Rq0UnVopOqRZ8sU7MJyA2QSc0NkAnIpGYC8gSQb1KzCcimk6pFJ1WLTqoWffJlQJ5Q84SaCciNmifUvAHkm4A8oeabTqoWnVQtOqla9Mk/Rs0NkEnNE0AmNU+o+ZedVC06qVp0UrXokz8OyKTmCSCTmm8CcqPmLzupWnRSteikatEnX6bmm9TcAJnUTEBugDwB5Dep+S85qVp0UrXopGrRJ8uA/CYgk5pvUjMBmdRMQCY1E5AngPyXnVQtOqladFK1CH/kHwJkUnMD5Dep+ZedVC06qVp0UrXok5eATGomIJOaCcikZgIyqXkCyKTmCTUTkCfUfBOQSc0NkEnNppOqRSdVi06qFuGPvABkUnMDZFLzBpBJzQ2QSc0EZFJzA+QJNROQJ9TcAJnU3ACZ1LxxUrXopGrRSdWiT74MyBNAnlBzA+QGyKTmCTUTkEnNjZobIE+omYD8ppOqRSdVi06qFn3ykpobNROQJ9TcAJnUTGomIDdAJjXfBOQNIJOaSc0EZFKz6aRq0UnVopOqRZ98GZA3gDwB5EbNBGRSMwGZ1ExAboBMajapmYBMam6ATGreOKladFK16KRq0SfLgDwBZFJzA2RSswnIG2q+Ccik5gk1E5BNJ1WLTqoWnVQt+uQlIJuAPAHkRs0E5EbNBORGzQRkUnOjZgLyTUC+6aRq0UnVopOqRZ+8pOYNIDdqngByo2YCMgGZ1ExAJjU3QCY1E5BJzW9Ss+mkatFJ1aKTqkX4Iy8AuVHzBJAbNROQSc0E5Ak1E5A31ExANqmZgExqJiA3at44qVp0UrXopGrRJy+pmYDcALlRcwPkCTUTkEnNBORGzQRkUjMBmdRMQCY1E5BJzRNAJjUTkE0nVYtOqhadVC365CUgk5oJyKRmAnID5Akgk5obIJuAfBOQSc2k5gbIN51ULTqpWnRSteiTl9RMQCY1N2pu1NwAeULNBORGzQTkCTUTkDfU3ACZ1Nyo2XRSteikatFJ1SL8kReATGomIDdqboBMam6A3KiZgNyoeQLIpGYC8k1q/p9OqhadVC06qVqEP/KHAflNaiYgk5obIDdqngAyqZmAPKHmjZOqRSdVi06qFn3yEpDfpGZS8wSQJ9S8AeQNIJOaGyCTmgnIN51ULTqpWnRSteiTZWo2AXkCyKTmRs0E5Ak1E5BJzQ2QGzWb1ExANp1ULTqpWnRSteiTLwPyhJongDyhZgIyqdkEZFJzA+QNNTdAvumkatFJ1aKTqkWf/HFqJiA3QG6A3KiZgExqboDcqHkCyA2Q33RSteikatFJ1aJP/jggk5oJyDepmYBMaiY1E5AJyKRmAnIDZFJzA2TTSdWik6pFJ1WLPvkyNd+kZgIyqZmATGomIDdAJjU3QJ5Qc6NmAjKpuQEyqdl0UrXopGrRSdWiT5YB+U1AJjWb1NwAuVEzAXkCyBNAJjU3QCY1b5xULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteh/SjUqeO404ssAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
