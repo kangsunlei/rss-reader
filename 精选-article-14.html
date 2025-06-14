@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>从 browser-use 出发，品 Agent 实现</title>
+        <title>Qwen3-Embedding 技术报告解读</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>从 browser-use 出发，品 Agent 实现</h2>
-        <p>6/11/2025, 12:30:00 AM</p>
+        <h2>Qwen3-Embedding 技术报告解读</h2>
+        <p>6/12/2025, 1:54:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">从工程师视角深入解析了 LLM Agent 的实现原理与工程实践，以开源项目 browser-use 为例。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">解读 Qwen3 Embedding/Reranker 技术报告，介绍其基于 Qwen3 大模型、数据合成和模型合并的创新与 SOTA 性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文从工程师的视角出发，系统地回顾了 LLM 应用从纯对话到 Workflow 编排再到 Agent 的演进过程。重点阐述了 Agent 的三个核心组成部分：记忆(Memory)、规划(Planning)和工具(Tools)。详细介绍了 Agent 的两种规划范式（分解优先与交错分解）和记忆的分类（短期与长期）。作者以 browser-use 项目为例，剖析了其工程架构，包括 Agent Core、MessageManager、Memory、LLM Interface、Controller 和 BrowserContext 等组件及其交互流程。文中特别强调了 SystemPrompt、AgentMessagePrompt、PlannerPrompt 和 toolPrompt 在 Agent 运行中的作用，并分析了 browser-use 如何通过 SystemPrompt、示例引导和 Pydantic 进行结构化输出的保证。最后，文章探讨了 browser-use 的记忆管理实现，并对生产环境的持久化存储提出了建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度解读了 Qwen3 Embedding 和 Qwen3 Reranker 系列模型的技术报告。文章首先阐述了文本嵌入和重排序在 NLP/IR 中的重要性，并指出现有方法在可扩展性、上下文理解和任务对齐上的挑战。Qwen3 系列模型基于强大的 Qwen3 基础模型构建，并采用创新的多阶段训练流程，尤其是利用 Qwen3 LLM 大规模合成高质量训练数据，并结合模型合并策略提升鲁棒性。实验结果表明，Qwen3 Embedding 系列在 MTEB 多语言及代码基准测试中取得 SOTA 性能，超越 Gemini-Embedding 等模型。Qwen3 Reranker 模型也展现了优异的重排序能力。文章详细分析了其创新点、与前人工作的对比及实验结果，并强调了开源对社区的贡献。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Agent 是 LLM 应用演进的新阶段，具备自主规划和执行能力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 相比 Workflow 编排更进一步，能够根据用户需求自主决策、规划步骤，并调用工具与环境交互，大幅提升生产力。</span>
+                        <strong style="color: #1e40af">Qwen3 Embedding/Reranker 模型在多项基准测试中达到 SOTA</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Qwen3 系列模型在 MTEB 多语言、代码等基准测试中超越了现有领先的开源和商业模型，证明其在语义理解和相关性判断上的卓越能力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">记忆、规划和工具是构建 Agent 的三大核心要素。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 记忆（短期/长期）提供上下文和经验，规划负责任务分解和策略调整，工具赋予 Agent 与外部世界交互的能力。</span>
+                        <strong style="color: #1e40af">创新性利用 LLM 大规模合成高质量训练数据</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Qwen3 LLM 生成约 1.5 亿对多样化、多语言、多任务的相关性数据，突破了传统数据收集瓶颈，提升了模型性能，特别在低资源场景下。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">ReAct 框架是实现 Agent 运行时逻辑的有效方式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴人类思维模式，通过思考(Thought)→行动(Action)→观察(Observation)循环，使 Agent 能逐步逼近目标并从错误中学习。</span>
+                        <strong style="color: #1e40af">基于 Qwen3 LLM 构建强大的模型骨干</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Qwen3 大模型强大的多语言文本理解和生成能力作为基础，为 Embedding 和 Reranker 模型带来了更丰富的世界知识和推理能力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">结构化输出是 Agent 稳定性的核心。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在 System Prompt 中明确格式、提供示例和使用 Pydantic 等工具进行强制验证，确保 LLM 输出稳定可靠，便于后续处理和工具调用。</span>
+                        <strong style="color: #1e40af">采用模型合并策略增强模型鲁棒性和泛化能力</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过球面线性插值(slerp)合并微调检查点，平滑模型参数，减少过拟合，使模型在不同数据分布下表现更稳定。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">提供多种模型尺寸和灵活功能以满足不同需求</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 提供 0.6B、4B、8B 等不同规模模型，支持灵活嵌入维度和可定制指令，方便用户根据实际部署环境和应用场景进行选择和优化。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">用户只需要简单的描述一下自己的需求，LLM 就可以使用丰富的工具和不断扩展的上下文环境，像人一样不断地规划、执行，甚至实时生成代码运行在沙箱环境里，最终达成用户的目的，生产力大大提升。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果我们要讲 agent，就不可避免的提到 ReAct 框架。它和我们人完成一个目标的流程很像。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">长期记忆可以存储相当长的时间信息，作为代理在查询时可以处理的外部向量存储，可通过快速检索进行访问。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体能够使用外部 API 工具来拓展模型的能力，从而获得大模型以外的能力，例如：搜索网页、设置代办、代码执行等。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">agent 运行的稳定性很大一点在于模型能否给出稳定格式的输出。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Qwen3 Embedding 系列在 MTEB 多语言基准测试中的得分为 70.58，在 MTEB 代码基准测试中的得分为 80.68，超越了之前最先进的专有嵌入模型 Gemini-Embedding。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个关键创新是利用 Qwen3 LLM 本身来合成高质量、多样化的多领域和多语言训练数据，从而增强了训练流程，尤其是在低资源场景下。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">论文强调了使用模型合并技术（特别是球面线性插值 (slerp)）来增强模型的鲁棒性和泛化能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本文在多阶段训练的第二阶段中，选择性地加入了这些高质量的合成数据，进一步提升了模型的整体性能和泛化能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将 Qwen3 Embedding 和 Qwen3-Reranker 模型（0.6B、4B 和 8B）公开发布，鼓励社区使用和在此基础上进行研究和开发，从而促进人工智能技术的更广泛发展。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,27 +66,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">星绪</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">AINLP</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ChallengeHub</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">46 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">11354</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6741</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI应用开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">browser-use</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">浏览器自动化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文本嵌入</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">重排序</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Qwen3</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型训练</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/7d6305">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATmSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGHDRPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNDZAn1ExA3lAzAblRcwPkN6l546Rq0UnVopOqRZ8sU7MJyA2QSc0NkAnIpGYC8gSQb1KzCcimk6pFJ1WLTqoWffJlQJ5Q84SaCciNmifUvAHkm4A8oeabTqoWnVQtOqla9Mk/Rs0NkEnNE0AmNU+o+ZedVC06qVp0UrXokz8OyKTmCSCTmm8CcqPmLzupWnRSteikatEnX6bmm9TcAJnUTEBugDwB5Dep+S85qVp0UrXopGrRJ8uA/CYgk5pvUjMBmdRMQCY1E5AngPyXnVQtOqladFK1CH/kHwJkUnMD5Dep+ZedVC06qVp0UrXok5eATGomIJOaCcikZgIyqXkCyKTmCTUTkCfUfBOQSc0NkEnNppOqRSdVi06qFuGPvABkUnMDZFLzBpBJzQ2QSc0EZFJzA+QJNROQJ9TcAJnU3ACZ1LxxUrXopGrRSdWiT74MyBNAnlBzA+QGyKTmCTUTkEnNjZobIE+omYD8ppOqRSdVi06qFn3ykpobNROQJ9TcAJnUTGomIDdAJjXfBOQNIJOaSc0EZFKz6aRq0UnVopOqRZ98GZA3gDwB5EbNBGRSMwGZ1ExAboBMajapmYBMam6ATGreOKladFK16KRq0SfLgDwBZFJzA2RSswnIG2q+Ccik5gk1E5BNJ1WLTqoWnVQt+uQlIJuAPAHkRs0E5EbNBORGzQRkUnOjZgLyTUC+6aRq0UnVopOqRZ+8pOYNIDdqngByo2YCMgGZ1ExAJjU3QCY1E5BJzW9Ss+mkatFJ1aKTqkX4Iy8AuVHzBJAbNROQSc0E5Ak1E5A31ExANqmZgExqJiA3at44qVp0UrXopGrRJy+pmYDcALlRcwPkCTUTkEnNBORGzQRkUjMBmdRMQCY1E5BJzRNAJjUTkE0nVYtOqhadVC365CUgk5oJyKRmAnID5Akgk5obIJuAfBOQSc2k5gbIN51ULTqpWnRSteiTl9RMQCY1N2pu1NwAeULNBORGzQTkCTUTkDfU3ACZ1Nyo2XRSteikatFJ1SL8kReATGomIDdqboBMam6A3KiZgNyoeQLIpGYC8k1q/p9OqhadVC06qVqEP/KHAflNaiYgk5obIDdqngAyqZmAPKHmjZOqRSdVi06qFn3yEpDfpGZS8wSQJ9S8AeQNIJOaGyCTmgnIN51ULTqpWnRSteiTZWo2AXkCyKTmRs0E5Ak1E5BJzQ2QGzWb1ExANp1ULTqpWnRSteiTLwPyhJongDyhZgIyqdkEZFJzA+QNNTdAvumkatFJ1aKTqkWf/HFqJiA3QG6A3KiZgExqboDcqHkCyA2Q33RSteikatFJ1aJP/jggk5oJyDepmYBMaiY1E5AJyKRmAnIDZFJzA2TTSdWik6pFJ1WLPvkyNd+kZgIyqZmATGomIDdAJjU3QJ5Qc6NmAjKpuQEyqdl0UrXopGrRSdWiT5YB+U1AJjWb1NwAuVEzAXkCyBNAJjU3QCY1b5xULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteh/SjUqeO404ssAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/a20cf4">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
