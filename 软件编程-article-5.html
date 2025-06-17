@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>HTAP：统一数据库系统的兴衰？</title>
+        <title>Redis 是单线程模型？｜得物技术</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>HTAP：统一数据库系统的兴衰？</h2>
-        <p>6/15/2025, 12:00:00 AM</p>
+        <h2>Redis 是单线程模型？｜得物技术</h2>
+        <p>6/16/2025, 10:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">报道了周孙提出关于 HTAP 统一数据库系统失败、转向组合式系统的主张所引发的辩论。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">深入分析 Redis 6.0 多线程 IO 特性，揭示其对性能的提升、源码实现及潜在不足。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章讨论了周孙提出的一个争议性观点，即长期以来关于在单一混合事务/分析处理（HTAP）系统中统一事务（OLTP）和分析（OLAP）处理的愿景并未实现。孙认为，资源竞争和复杂性等实际挑战，加上云架构青睐模块化，导致专用系统胜出。他认为，现代的“HTAP”是通过组合式系统实现的，这些系统结合了 OLTP 数据库、流处理器、数据湖（Iceberg）和查询引擎（Spark、Trino、ClickHouse）等组件。文章还介绍了社区的反驳观点，强调了组合式系统的复杂性以及更简单的统一数据库对于较小用例的持续相关性，表明关于最优数据架构的辩论仍在进行中。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了围绕 Redis“单线程”模型的实际情况，特别是 Redis 6.0 引入的多线程 IO 特性。文章首先回顾了 Redis 命令执行仍是单线程的核心，并介绍了 4.0、6.0 版本引入后台线程及 IO 多线程的演进，同时提及了近期 Valkey 8.0 在异步 IO 上的进展及相关社区背景。接着，文章详细解析了 Redis 6.0 多线程 IO 的配置、读写流程概述、基于源码的初始化和具体流程分析，包括其动态暂停与开启机制。通过性能测试数据，文章展示了多线程 IO 在 GET/SET 操作下相对于单线程的显著性能提升，尤其在高并发、小数据量场景。最后，文章客观分析了 Redis 6.0 多线程 IO 在 CPU 利用率和异步能力等方面的现有不足，并展望了 Valkey 8.0 的进一步改进，为理解 Redis 网络模型演进提供了全面的视角。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">统一 HTAP 数据库的愿景因实际挑战而基本失败。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 资源竞争、系统复杂性以及向模块化云架构的转变阻碍了单一系统尝试合并 OLTP 和 OLAP 的广泛采用。</span>
+                        <strong style="color: #1e40af">Redis 核心命令执行仍为单线程模型，但 IO 操作可在多线程并行</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 澄清 Redis 单线程模型仅指命令执行，Redis 6.0 引入多线程 IO 处理网络读写和协议解析，是其性能提升的关键。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">现代集成数据处理是通过专业化组件组成的组合式系统实现的。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 团队不再依赖单一数据库，而是构建结合不同数据库、流处理器、存储层和查询引擎的架构来实现实时分析。</span>
+                        <strong style="color: #1e40af">多线程 IO 通过主线程分发任务并阻塞等待 IO 线程完成</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 主线程负责接收连接、分配客户端到 IO 线程读写，然后等待 IO 线程处理完毕，再执行命令或处理后续写操作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">组合式架构虽然提供灵活性和专业性，但也引入了复杂性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 集成多个“一流”组件会增加组成部分的数量，需要大量精力进行数据传输和管理。</span>
+                        <strong style="color: #1e40af">Redis 6.0 多线程 IO 可根据待写客户端数量动态暂停与开启</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当待写客户端数量少于线程数两倍时，会暂停多线程 IO，切换回同步处理，减少线程切换开销。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">统一或单一数据库解决方案对于特定用例，尤其是较小的用例，仍然实用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于要求不那么严格的团队或项目，单一数据库能够较好地处理多种工作负载的便利性可以超过复杂组合式系统的优势。</span>
+                        <strong style="color: #1e40af">开启多线程 IO 显著提升 Redis 性能，尤其在高并发、小数据场景</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 性能测试结果显示，在特定环境下，开启 4 个 IO 线程可使 GET/SET QPS 翻倍，证明了多线程 IO 的有效性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Redis 6.0 多线程 IO 在 CPU 利用率和异步能力上仍有不足</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> IO 线程需等待主线程，未充分利用 CPU；缺乏完全异步能力限制了进一步性能提升，为后续版本改进方向。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">长期以来关于在单一系统中统一事务和分析工作负载的愿景未能实现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即使在当今的解耦数据栈中，需求依然不变：对新鲜的事务数据进行快速的 OLAP 查询。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">它仍然是 HTAP；但通过组合而非数据库整合来实现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当替代方案如此复杂、组成部分如此之多时，你不能说 HTAP 已死。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">没有“一刀切”的解决方案——虽然大型团队正在意识到紧耦合是有问题的，但对于小型团队、小型项目来说，拥有一个能够较好地处理“一切”的单一数据库实际上非常方便和实用，因此，我认为 HTAP 作为一项功能很有意义，但可能不适合作为一个名称，因为我们的数据库需要具备的功能不仅仅是分析和事务处理。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们常说 Redis 是单线程模型，是指 Redis 采用单线程的事件驱动模型，只有并且只会在一个主线程中执行 Redis 命令操作</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Redis6.0 中引入了多线程 IO 特性，将 Redis 单节点访问请求从 10W 提升到 20W。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Redis6.0 引入多线程 IO，但多线程部分只是用来处理网络数据的读写和协议解析，执行命令仍然是单线程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从上面可以看到 GET/SET 命令在设置 4 个 IO 线程时，QPS 相比于大部分情况下的单线程，性能几乎是翻倍了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CPU 核心利用率不足：当前主线程仍负责大部分的 IO 相关任务，并且当主线程处理客户端的命令时，IO 线程会空闲相当长的时间</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +66,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Renato Losio</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">竹径</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">611</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7262</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">HTAP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据仓库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据湖</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OLTP</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多线程IO</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">单线程模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源码分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a9a588">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/82d518">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

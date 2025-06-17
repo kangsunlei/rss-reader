@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>OpenTelemetry 与 Prometheus：基于资源属性提升的更优集成方案</title>
+        <title>将 Prometheus 告警规则迁移至 Grafana</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>OpenTelemetry 与 Prometheus：基于资源属性提升的更优集成方案</h2>
-        <p>6/15/2025, 12:03:40 PM</p>
+        <h2>将 Prometheus 告警规则迁移至 Grafana</h2>
+        <p>6/16/2025, 6:45:51 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Prometheus 3.0 资源属性提升简化了 OpenTelemetry 指标集成，优化了仪表盘功能和关联性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Grafana 12 引入新的用户界面和 API，简化 Prometheus 告警规则的迁移。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了将 OpenTelemetry 指标与 Prometheus 集成时面临的挑战，尤其是在核心 OTel 属性作为标签使用不便，需要复杂变通方案时。文章介绍了 Prometheus 3.0 的资源属性提升功能，它将预定义的（且可配置的）OpenTelemetry 资源属性列表直接提升为指标标签，从而解决此问题。这种增强功能显著简化了仪表盘过滤、指标探索，并实现了跨指标 (Prometheus)、日志 (Loki) 和追踪 (Tempo) 的无缝关联。文章阐述了如何在 Grafana Cloud、Prometheus OSS 和 Grafana Mimir 中启用此功能，并提供了最佳实践，例如完全采用 OpenTelemetry 语义约定而非传统的 Prometheus 标签。同时，文章通过示例说明了使用新的提升属性进行常见 PromQL 查询 RED 指标的方法。文章强调这种标准化如何促进社区仪表盘的丰富化，并提升整体可观测性实践。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Grafana 12 中新的**批量**告警和记录规则导入功能。这项功能旨在解决将现有 Prometheus 告警规则迁移到 Grafana 的问题，这些规则通常使用 `mimirtool` 或 `cortextool` 等工具进行管理。解决的核心问题是 Prometheus（将空结果视为健康）和 Grafana（使用“无数据”状态）之间告警评估行为的差异。Grafana 12 通过提供与 Prometheus 工具兼容的 API，并引入用于**批量**导入的用户界面来解决这个问题。在幕后，Grafana 向导入的规则添加了一个数学表达式，以确保评估行为与 Prometheus 保持一致。本文还介绍了为导入的规则启用 Grafana 的高级功能（基于角色的访问控制、可视化、路由），并引用了有关实际迁移步骤的文档。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">资源属性提升简化了 OTel 指标的仪表盘展示和探索过程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 OTel 资源属性提升为 Prometheus 标签，可以直接过滤和切分标准属性 (如 `service.name`)，与传统方法相比，简化了查询和仪表盘的创建。</span>
+                        <strong style="color: #1e40af">Grafana 12 通过用户界面和 API 简化了 Prometheus 告警的迁移。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新功能支持批量导入 Prometheus 告警和记录规则到 Grafana，减少手动工作和潜在错误。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">该功能增强了指标、日志和追踪之间的关联性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使标准 OTel 资源属性在 Prometheus 指标中可用作标签 (并与 Loki 日志对齐)，有助于将指标链接到相应的日志和追踪，以实现统一的可观测性。</span>
+                        <strong style="color: #1e40af">导入尊重 Prometheus 的评估行为，尽管存在差异。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Grafana 在导入过程中添加了一个查询后数学表达式，以确保规则的行为与在 Prometheus 中一样，一致地处理空查询结果。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">它使得全面采纳 OpenTelemetry 语义约定成为可能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用户可以不再使用传统的 Prometheus `job` / `instance` 标签，而是在查询和警报中标准化使用 OTel 的描述性 `service.namespace`、`service.name` 等，从而提高一致性和清晰度。</span>
+                        <strong style="color: #1e40af">现有的 Prometheus 工具可以与 Grafana API 一起使用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 兼容的 API 允许使用 `mimirtool` 或 `cortextool` 的工作流直接指向 Grafana 实例，保留已建立的 CI/CD 管道。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">迁移的规则可以访问高级 Grafana 告警功能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 导入后，规则可以利用 Grafana 的基于角色的访问控制、状态历史记录、版本控制、增强的路由和可视化功能。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了解决这些痛点，Prometheus 引入了资源属性提升功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">资源属性提升不再需要在仪表盘和 PromQL 查询中使用继承自 Prometheus 命名约定的 `job` 和 `instance` 标签。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">保持 Prometheus 指标和 Loki 日志中资源属性提升的一致性，有助于简化关联过程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">OpenTelemetry 指标的一致性支持 PromQL 查询的标准化和重用，资源属性提升则进一步简化了这一流程。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果我们可以在不重写 Prometheus 风格告警的情况下轻松地将其迁移到 Grafana 中呢？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了使这成为可能，我们向 Grafana 添加了与 Mimir 和 Loki 兼容的 API，因此如果您的工作流程已经使用 `mimirtool` 或 `cortextool`，则只需将它们指向您的 Grafana 实例，一切都会继续工作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但是，将告警从 Prometheus 转换为 Grafana 并不总是像看起来那么简单。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了保留类似 Prometheus 的行为，导入程序在 Prometheus 查询之后向规则处理流程添加了一个小的数学表达式。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +63,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">80</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Cyrille Le Clerc</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sonia Aguilar, Alexander Akhmetov</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1478</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">866</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenTelemetry</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prometheus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">指标</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">资源属性提升</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Grafana</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prometheus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">告警</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">迁移</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/2a902f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/eca6f2">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
