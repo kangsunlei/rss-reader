@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Redis 是单线程模型？｜得物技术</title>
+        <title>Alloy Operator 助力 Kubernetes 监控配置</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Redis 是单线程模型？｜得物技术</h2>
-        <p>6/16/2025, 10:30:00 AM</p>
+        <h2>Alloy Operator 助力 Kubernetes 监控配置</h2>
+        <p>6/17/2025, 3:17:29 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">深入分析 Redis 6.0 多线程 IO 特性，揭示其对性能的提升、源码实现及潜在不足。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Grafana 在 K8s 监控 Helm chart v3.0 中引入 Alloy Operator，旨在简化配置并增强动态遥测数据收集能力。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了围绕 Redis“单线程”模型的实际情况，特别是 Redis 6.0 引入的多线程 IO 特性。文章首先回顾了 Redis 命令执行仍是单线程的核心，并介绍了 4.0、6.0 版本引入后台线程及 IO 多线程的演进，同时提及了近期 Valkey 8.0 在异步 IO 上的进展及相关社区背景。接着，文章详细解析了 Redis 6.0 多线程 IO 的配置、读写流程概述、基于源码的初始化和具体流程分析，包括其动态暂停与开启机制。通过性能测试数据，文章展示了多线程 IO 在 GET/SET 操作下相对于单线程的显著性能提升，尤其在高并发、小数据量场景。最后，文章客观分析了 Redis 6.0 多线程 IO 在 CPU 利用率和异步能力等方面的现有不足，并展望了 Valkey 8.0 的进一步改进，为理解 Redis 网络模型演进提供了全面的视角。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文宣布发布 Kubernetes 监控 Helm chart 的 3.0 版本，该版本引入了全新的 Alloy Operator。此项开发的驱动力源于早期版本的挑战，特别是体积庞大的 `values.yaml` 文件，以及 Helm 子图在管理多个 Alloy 实例时存在的局限性。Alloy Operator 采用了一种动态方法，它能够根据用户在 Helm chart 中选择的功能，直接配置 Grafana Alloy 收集器及其依赖项（例如权限和端口）。显著的优势在于，它简化了如链路追踪的尾部采样等高级功能的配置。该 Operator 通过处理由 Helm chart 部署的自定义 `kind: Alloy` 对象来发挥作用。此外，本文还提供了从早期 Helm chart 版本迁移的指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Redis 核心命令执行仍为单线程模型，但 IO 操作可在多线程并行</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 澄清 Redis 单线程模型仅指命令执行，Redis 6.0 引入多线程 IO 处理网络读写和协议解析，是其性能提升的关键。</span>
+                        <strong style="color: #1e40af">Alloy Operator 简化 Kubernetes 监控配置</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它采用更动态和模块化的方法，取代了 Helm chart 中复杂且庞大的 `values.yaml` 文件。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">多线程 IO 通过主线程分发任务并阻塞等待 IO 线程完成</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 主线程负责接收连接、分配客户端到 IO 线程读写，然后等待 IO 线程处理完毕，再执行命令或处理后续写操作。</span>
+                        <strong style="color: #1e40af">实现动态功能对 Alloy 实例的影响</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用户可以在 Helm chart 中启用所需功能，Operator 便会自动配置相应的 Alloy 收集器和依赖项。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Redis 6.0 多线程 IO 可根据待写客户端数量动态暂停与开启</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当待写客户端数量少于线程数两倍时，会暂停多线程 IO，切换回同步处理，减少线程切换开销。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">开启多线程 IO 显著提升 Redis 性能，尤其在高并发、小数据场景</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 性能测试结果显示，在特定环境下，开启 4 个 IO 线程可使 GET/SET QPS 翻倍，证明了多线程 IO 的有效性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Redis 6.0 多线程 IO 在 CPU 利用率和异步能力上仍有不足</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> IO 线程需等待主线程，未充分利用 CPU；缺乏完全异步能力限制了进一步性能提升，为后续版本改进方向。</span>
+                        <strong style="color: #1e40af">简化尾部采样等高级功能的设置</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该 Operator 能够自动完成包括尾部采样在内的高级功能所需的 Alloy 实例的部署与配置。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们常说 Redis 是单线程模型，是指 Redis 采用单线程的事件驱动模型，只有并且只会在一个主线程中执行 Redis 命令操作</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Redis6.0 中引入了多线程 IO 特性，将 Redis 单节点访问请求从 10W 提升到 20W。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Redis6.0 引入多线程 IO，但多线程部分只是用来处理网络数据的读写和协议解析，执行命令仍然是单线程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从上面可以看到 GET/SET 命令在设置 4 个 IO 线程时，QPS 相比于大部分情况下的单线程，性能几乎是翻倍了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CPU 核心利用率不足：当前主线程仍负责大部分的 IO 相关任务，并且当主线程处理客户端的命令时，IO 线程会空闲相当长的时间</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Helm chart 的主要 `values.yaml` 文件非常庞大。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Alloy Operator 还可以利用 Kubernetes 监控 Helm chart 中的指令，动态配置传统的 Alloy 对象。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现在，启用尾部采样就像在 `otlp` 类型的目标中启用它一样简单。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Alloy Operator 是一个基于 Helm 的、小 footprint (资源占用) 的 Operator，它使用 Operator SDK 构建。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所有这些改进均受到了我们卓越社区的反馈与建议的启发。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">竹径</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Pete Wall, Beverly Buchanan</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7262</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">912</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多线程IO</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">单线程模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源码分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Grafana</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Alloy Operator</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Helm Chart</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/82d518">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/58dab3">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
