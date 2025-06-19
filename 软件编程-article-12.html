@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>【第 3530 期】像高手一样调试程序</title>
+        <title>加一个 JVM 参数，让系统可用率从 95%提高到 99.995%</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>【第 3530 期】像高手一样调试程序</h2>
-        <p>6/17/2025, 12:03:00 AM</p>
+        <h2>加一个 JVM 参数，让系统可用率从 95%提高到 99.995%</h2>
+        <p>6/18/2025, 8:39:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一篇关于如何像专业侦探一样高效调试程序的实用指南，强调思维方式、工具掌握与团队协作。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">通过 JVM 参数调优和应用级预热，将高并发系统因索引切换导致的可用率从 95% 提升至 99.995%。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了提升程序调试效率的方法。作者认为，优秀的调试者应像侦探一样，通过逐步排查和逻辑推理定位问题，避免盲目猜测。文章强调了熟练掌握调试工具的重要性，涵盖了打印语句、断点调试、性能分析、网络调试等多种手段，并特别提到了前端开发者常用的 Chrome DevTools。此外，文章还提出通过团队内部经验分享来积累集体智慧，以及利用“橡皮鸭调试法”帮助个人理清思路。核心思想是：调试是核心技能，思维方式比工具更重要，简单方法如打印语句也很有效。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细记录了针对一个高并发、低延迟 Java 系统在内存索引切换时出现的可用性问题。通过深入分析 GC 日志，定位到问题根源在于大对象（索引）在年轻代 YGC 时的频繁复制（Object Copy）导致长时间 STW。作者尝试了一系列 JVM 参数优化，包括调整 MaxTenuringThreshold、InitialTenuringThreshold、AlwaysTenure 使索引尽早晋升老年代，以及升级到 ZGC，逐步提升了系统稳定性。最终，结合运维发布策略，通过应用代码层面的“Eden 区预热”机制，确保索引在断流期间被强制复制到老年代，彻底消除了 YGC 长暂停的影响，实现了索引无感切换，将系统可用率显著提升。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">调试需采用侦探式思维，按部就班而非凭空猜测。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 像侦探一样重现 bug、检查变量状态，逐步追踪代码执行路径，这是高效定位问题的关键，避免走弯路。</span>
+                        <strong style="color: #1e40af">高并发系统服务抖动根源在于大对象（内存索引）YGC 复制导致 STW。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 流量大、RT 敏感、内存压力高是导致大对象在年轻代频繁复制引发长时间 GC 暂停，进而服务请求超时的核心原因。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">投入时间熟练掌握各类调试工具至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 掌握语言内置调试器、浏览器开发者工具等，能够更专注于问题本身，提高调试效率和深度。</span>
+                        <strong style="color: #1e40af">JVM 参数调整可优化大对象晋升时机，减少年轻代复制次数。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过设置 MaxTenuringThreshold=0 等参数，能让大对象在第一次 YGC 时直接晋升老年代，减少复制次数，缩短 STW 时间。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">不要吝啬使用打印/日志语句作为调试起点。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 打印是最简单、门槛最低的调试手段，快速验证代码执行和变量状态，解决不复杂的问题非常高效。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">积极与团队成员分享调试经验，共同成长。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 记录和分享典型的 bug 案例与解决过程，能积累团队知识库，帮助成员更快应对类似问题。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用“橡皮鸭调试法”理清思路，发现盲点。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 向虚拟对象或同事阐述问题，强迫自己系统梳理细节，往往能在讲述过程中自行找到遗漏或错误。</span>
+                        <strong style="color: #1e40af">结合应用层“预热”策略可彻底解决索引切换时的 GC 长暂停。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用发布断流窗口，通过制造临时对象撑爆 Eden 区，强制新索引在断流期间完成晋升，保障接流后 YGC 快速进行。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个优秀的调试者，应该像侦探一样去面对问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">像一个对这段代码一无所知的人那样，按部就班、逐步排查。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我认为调试是一种双重技能：一方面是前面讲到的思维方式和流程，另一方面就是强大的工具，只有两者结合，才能高效地发现并解决问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不要吝啬使用 print！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的调试工具，是你对某个东西的理解。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">调试不仅仅是修复 bug，更是一项核心的开发技能。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">然而默认参数可能无法满足某些极端性能和稳定性要求的特殊场景。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">服务抖动的根本原因已锁定：系统 A 加载的索引非常大，导致 YGC 时索引在堆内存的复制过程耗时久，复制期间业务线程被长时间暂停，导致上游请求大量超时报错。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对象在堆内存中的流转路径是：Eden =&gt; S0 =&gt; S1 =&gt; S0 =&gt; S1 =&gt; ... =&gt; Old</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本次优化前，每次索引切换后会出现 2 次连续的长耗时 YGC，在不改任何一行业务代码、不加一台机器的前提下，仅通过设置 MaxTenuringThreshold=0，GC 长暂停时间直接减半。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这类似分布式系统中的 CAP 定理：一致性（Consistency）、可用性（Availability）、分区容错性（Partition Tolerance）无法兼得，最多能同时满足两个（CA、AP、CP）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果称 Case2 中提前被复制到老年代的索引体积比例为"缓解程度"，则索引切换前 Eden 区占用量与本方案"缓解程度"的关系如下</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">答案是：可以。类似"预热"的思路，每次新索引切换后、重新接流前，手动构造一些临时的、不需要的对象，保证至少把 Eden 区耗尽一次，迫使新索引在断流期间一定被全部复制到老年代。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +60,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Juhis</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">吉多</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2908</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">31 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7623</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术实践</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">经验分享</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GC调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">G1GC</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ZGC</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/77406b">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c67ea9">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
