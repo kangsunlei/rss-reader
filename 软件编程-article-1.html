@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Grafana：GitHub 工作流漏洞事后审查与安全改进</title>
+        <title>如何使用 Ansible 设置 Grafana Mimir</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,24 @@
         </style>
     </head>
     <body>
-        <h2>Grafana：GitHub 工作流漏洞事后审查与安全改进</h2>
-        <p>6/18/2025, 7:52:39 PM</p>
+        <h2>如何使用 Ansible 设置 Grafana Mimir</h2>
+        <p>6/19/2025, 4:32:14 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Grafana 对 GitHub 工作流漏洞进行审查，并已实施安全增强措施。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本指南详细介绍了使用 Ansible 部署和管理 Grafana Mimir 的方法，涵盖安装、配置、高可用性设置和指标验证。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Grafana Labs 对一起安全漏洞的事后审查。该漏洞源于不安全的 GitHub Action，利用了 `pull-request-target`（目标拉取请求）。它允许从受信任环境中的恶意分支执行代码，从而暴露包括凭证在内的环境变量。通过 CIA triad（保密性、完整性和可用性）框架分析影响，调查确认没有生产系统受到入侵，没有代码修改，也没有客户数据暴露。作为回应，Grafana 将 Gato-X、Zizmor 和 TruffleHog 等开源工具集成到 CI/CD 流水线中。此外，还通过隔离式 Vault 和短期令牌增强了凭证管理，并增加了金丝雀令牌（一种预先部署的诱饵，用于检测未授权访问）的使用。本文强调了事件的透明度以及从中吸取的教训。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">- 使用 Grafana Ansible 集合部署 Grafana Mimir
+- 提供分步指南，包含代码示例和配置模板
+- 配置高可用性 Mimir 部署
+- 使用 Grafana 探索 Mimir 指标
+- 展示 Ansible 在自动化 Mimir 配置和管理方面的强大功能</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +40,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">不安全的 GitHub Action (使用了 `pull-request-target`) 导致代码执行漏洞。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 `pull-request-target`（目标拉取请求）而不是 `pull-request`（拉取请求）允许从受信任的工作流环境中的分支执行恶意代码。</span>
+                        <strong style="color: #1e40af">Grafana Mimir 与 Ansible 集成</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Grafana Ansible 集合增加了对 Mimir 部署的支持，允许自动化配置和管理。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">没有生产系统或客户数据受到入侵。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管凭证暴露，但调查确认没有未经授权访问生产系统，没有代码修改，也没有客户数据暴露，保证了 CIA 三元组的完整性。</span>
+                        <strong style="color: #1e40af">详细的设置指南</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章提供了从安装 Ansible 集合到配置和部署 Mimir 的分步说明，包括高可用性设置。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">新的安全工具集成到 CI/CD 流水线中。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Gato-X、Zizmor 和 TruffleHog 现在是 CI/CD 流水线中的强制步骤，用于检测不安全的操作、静态分析代码并扫描凭证。</span>
+                        <strong style="color: #1e40af">高可用性配置</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 指南涵盖了使用 Ansible 配置 Mimir 以实现高可用性，确保冗余和可靠的部署。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">凭证管理通过隔离式 Vault 和短期令牌得到增强，警报系统也进行了优化。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实施了隔离式 Vault、短期令牌并增加了金丝雀令牌的使用，以减轻未来凭证暴露的风险。</span>
+                        <strong style="color: #1e40af">探索 Mimir 指标</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章提供了使用 Grafana 探索 Mimir 收集的指标的步骤，使您能够深入了解系统性能。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Ansible 的强大功能</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章展示了 Ansible 在自动化 Mimir 配置和管理方面的强大功能，简化了部署和维护任务。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +62,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们已经确认，没有发生代码修改，没有未经授权访问生产系统，没有客户数据暴露，也没有个人信息访问。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个利用 `pull-request-target`（目标拉取请求）而不是更安全的 `pull-request`（拉取请求）的脆弱 GitHub Action 导致了一起安全事件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了防止将来发生此类事件，我们要求在所有操作中运行开源工具 Gato-X...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们为我们的主动安全措施按计划启动而感到自豪。我们的金丝雀令牌在尝试使用它们时提醒了我们。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">作为一家开源公司，我们希望对事件保持透明，并尽快分享我们掌握的关于该事件的所有细节...</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Grafana Ansible 集合现已支持 Mimir 部署，使 Grafana 管理员能够自动化 Mimir 的配置和管理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Mimir 模块高度可配置，由于配置模板，您可以轻松地根据您的特定需求定制您的部署。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">探索其他指标，如 CPU 负载、内存使用、磁盘 I/O、网络带宽，并创建仪表板以深入了解系统的性能。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +70,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Joe McManus</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Gerard van Engelen</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">997</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">906</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">漏洞</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">事件响应</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DevSecOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Actions</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Grafana Mimir</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Ansible</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DevOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">配置管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">监控</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/d8f987">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/60fe35">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
