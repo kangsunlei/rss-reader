@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>OpenAI: 构建 AI 智能体实用指南</title>
+        <title>加一个 JVM 参数，让系统可用率从 95%提高到 99.995%</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>OpenAI: 构建 AI 智能体实用指南</h2>
-        <p>6/17/2025, 3:50:13 PM</p>
+        <h2>加一个 JVM 参数，让系统可用率从 95%提高到 99.995%</h2>
+        <p>6/18/2025, 8:39:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">基于 OpenAI 指南，系统阐述构建 AI 智能体的定义、适用场景、核心组件、架构、安全及未来展望。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">通过 JVM 参数调优和应用级预热，将高并发系统因索引切换导致的可用率从 95% 提升至 99.995%。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度分析了 OpenAI 发布的《构建 AI 智能体实用指南》，首先明确了 AI 智能体作为能够自主代理用户完成任务的新型软件范式，区别于传统工具。接着，详细论述了最适合应用智能体的三类复杂场景：复杂决策、难以维护的规则系统及非结构化数据处理。文章的核心部分阐述了智能体的三大基石：模型（LLM 作为大脑）、工具（连接外部世界的双手）和指令（行为准则），并强调了它们之间的关注点分离优势。在架构与编排方面，推荐从简单的单一智能体入手，根据需求逐步演进至多智能体系统，并介绍了主管模式和去中心化模式。最后，重点强调了生产级智能体的安全可靠性，提出了分层防御体系（如分类器、过滤器、工具风险评估）和必要的人工监督干预（HITL）机制。整篇文章结构清晰，为技术从业者提供了构建实用 AI 智能体的全面方法论。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细记录了针对一个高并发、低延迟 Java 系统在内存索引切换时出现的可用性问题。通过深入分析 GC 日志，定位到问题根源在于大对象（索引）在年轻代 YGC 时的频繁复制（Object Copy）导致长时间 STW。作者尝试了一系列 JVM 参数优化，包括调整 MaxTenuringThreshold、InitialTenuringThreshold、AlwaysTenure 使索引尽早晋升老年代，以及升级到 ZGC，逐步提升了系统稳定性。最终，结合运维发布策略，通过应用代码层面的“Eden 区预热”机制，确保索引在断流期间被强制复制到老年代，彻底消除了 YGC 长暂停的影响，实现了索引无感切换，将系统可用率显著提升。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 智能体是能够自主代理用户完成复杂任务的新软件范式</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 智能体以 LLM 为核心，能够控制工作流，进行推理、决策和动态修正，区别于仅作为用户工具的传统软件。</span>
+                        <strong style="color: #1e40af">高并发系统服务抖动根源在于大对象（内存索引）YGC 复制导致 STW。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 流量大、RT 敏感、内存压力高是导致大对象在年轻代频繁复制引发长时间 GC 暂停，进而服务请求超时的核心原因。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">智能体最适用于复杂决策、规则难维护和非结构化数据处理场景</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些场景涉及认知劳动，智能体能处理模糊性、理解上下文，弥补传统规则方法的不足，提升自动化水平。</span>
+                        <strong style="color: #1e40af">JVM 参数调整可优化大对象晋升时机，减少年轻代复制次数。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过设置 MaxTenuringThreshold=0 等参数，能让大对象在第一次 YGC 时直接晋升老年代，减少复制次数，缩短 STW 时间。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">构建智能体需依赖模型、工具、指令三大核心组件及其分离</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型负责思考，工具实现行动，指令定义策略。分离设计提升了系统的灵活性、可维护性和模块化水平.</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">应采取从单一到多智能体的渐进式架构演进策略</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从简单的单一智能体开始，管理认知负荷，根据业务复杂性逐步引入主管模式或去中心化模式进行编排。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">生产级智能体必须构建分层安全护栏并集成人工干预机制</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用分层防御体系（如分类器、过滤器）应对风险，通过 HITL 机制在关键节点确保人类监督和最终控制权。</span>
+                        <strong style="color: #1e40af">结合应用层“预热”策略可彻底解决索引切换时的 GC 长暂停。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用发布断流窗口，通过制造临时对象撑爆 Eden 区，强制新索引在断流期间完成晋升，保障接流后 YGC 快速进行。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 智能体（Agent）代表了一种新兴的软件范式，其核心特征在于能够以高度的独立性代表用户完成任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个真正的智能体系统，集成了推理、记忆、工具使用和工作流管理等多种能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种从"执行指令"到"实现意图"的转变，是 AI 智能体带来的最深刻的范式革命。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尽管 AI 智能体功能强大，但并非所有自动化任务都需要或适合采用智能体架构。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过从最强模型入手，开发者实际上是在测试中消除或最小化了"模型能力不足"这一变量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将指令的编写视为"指令即代码"（Instructions as Code）的实践，是走向专业化智能体开发的关键。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在系统中规划并内置清晰的人工监督与干预机制（Human-in-the-Loop， HITL）是部署生产级智能体的一项基本要求。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">然而默认参数可能无法满足某些极端性能和稳定性要求的特殊场景。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">服务抖动的根本原因已锁定：系统 A 加载的索引非常大，导致 YGC 时索引在堆内存的复制过程耗时久，复制期间业务线程被长时间暂停，导致上游请求大量超时报错。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对象在堆内存中的流转路径是：Eden =&gt; S0 =&gt; S1 =&gt; S0 =&gt; S1 =&gt; ... =&gt; Old</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本次优化前，每次索引切换后会出现 2 次连续的长耗时 YGC，在不改任何一行业务代码、不加一台机器的前提下，仅通过设置 MaxTenuringThreshold=0，GC 长暂停时间直接减半。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这类似分布式系统中的 CAP 定理：一致性（Consistency）、可用性（Availability）、分区容错性（Partition Tolerance）无法兼得，最多能同时满足两个（CA、AP、CP）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果称 Case2 中提前被复制到老年代的索引体积比例为"缓解程度"，则索引切换前 Eden 区占用量与本方案"缓解程度"的关系如下</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">答案是：可以。类似"预热"的思路，每次新索引切换后、重新接流前，手动构造一些临时的、不需要的对象，保证至少把 Eden 区耗尽一次，迫使新索引在断流期间一定被全部复制到老年代。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +60,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">94</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">宝玉的分享</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">宝玉</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">吉多</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">56 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">13786</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">31 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7623</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">指令</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编排</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GC调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">G1GC</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ZGC</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/551c99">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c67ea9">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
