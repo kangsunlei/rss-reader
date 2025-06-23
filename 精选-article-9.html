@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>JDK 高版本特性总结与 ZGC 实践</title>
+        <title>如何构建和调优高可用性的 Agent？浅谈阿里云服务领域 Agent 构建的方法论</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>JDK 高版本特性总结与 ZGC 实践</h2>
-        <p>6/20/2025, 12:00:00 AM</p>
+        <h2>如何构建和调优高可用性的 Agent？浅谈阿里云服务领域 Agent 构建的方法论</h2>
+        <p>6/20/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">美团技术团队分享了升级至 JDK 17 的关键特性，以及结合 ZGC 在实际服务中实现的显著性能提升与成本节约。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">探讨阿里云服务领域 Agent 构建实践，分享解决 Agent 不稳定、规划、领域集成和响应速度等挑战的方法论及调优路径。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这篇文章来自美团技术团队，深入探讨了从广泛使用的 Java 8 升级到长期支持版本 JDK 17 的价值和实践经验。文章首先总结了 JDK 9 到 17 引入的核心特性，包括 var 局部变量类型推断、密封类、Record 类、优化的 switch 表达式、文本块、instanceof 模式匹配、NullPointerExceptions 优化以及集合/Stream/Optional 的增强等语言层面改进；同时也介绍了 HttpClient、jpackage、进程相关 API 等新工具和 API。文章的重点在于垃圾回收器的改进，特别是 ZGC。作者详细阐述了 ZGC 的低停顿特性及其与 CMS/G1 的原理差异，并通过美团内部两个核心服务（智能决策系统和内容安全核心服务）的实际升级案例和性能对比数据（如 TP9999/TP999 延迟、CPU 占用、服务失败率、元空间使用等），有力证明了 JDK 17 + ZGC 带来的显著性能提升和稳定性改善，以及由此带来的机器成本下降约 10%。最后，文章提供了升级过程中的一些实践建议，强调兼容性问题解决和性能测试的重要性。整体而言，文章结合理论介绍和翔实的实践数据，为考虑升级高版本 JDK 和优化 GC 的技术团队提供了宝贵的参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章基于阿里云服务领域 Agent 的实践经验，深入剖析了当前 Agent 技术落地面临的核心挑战。首先梳理了 Agent 概念的广义与狭义之争，指出实际应用中需要平衡理想化的自主智能体与可控的任务代理。随后详细阐述了 Agent 运行效果不稳定、规划权衡（自主规划 vs Workflow）、领域信息集成困难及响应速度慢这四大主要痛点，并针对性地提出了解决方案：通过 AI 辅助优化 Prompt、结合 Workflow 与 Multi-Agent 架构权衡规划、运用 RAG/外部技能/领域模型训练集成领域知识、以及代码预转换/推理加速/模型小型化提升性能。最后，文章总结了一个从原型构建到持续调优的 Agent 演化路径图，为技术从业者构建高可用性 Agent 提供了实用的方法论参考。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JDK 17 引入多项语言及 API 特性提升开发效率与代码质量</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新的语法糖和 API 如 var、record、文本块、HttpClient 等，简化了代码编写，提高了可读性和功能性，减少了样板代码。</span>
+                        <strong style="color: #1e40af">Agent 概念存在广义与狭义之分，落地实践需平衡自主性和可控性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 狭义的 Agent 是理想化的智能体，自主性强但稳定性差；广义 Agent 是自动化任务代理，可控性高。实际落地需结合两者优点。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">ZGC 是低停顿垃圾回收器，尤其适用于大内存服务</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ZGC 通过并发标记、转移和重定位，将停顿时间控制在毫秒级别，有效解决了传统 GC 在大堆内存场景下的性能瓶颈。</span>
+                        <strong style="color: #1e40af">Agent 落地面临稳定性、规划权衡、领域信息集成、响应速度四大挑战。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Prompt 不稳定、自主规划难控、领域知识缺失、大模型推理慢是 Agent 从概念走向实用的主要障碍。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">美团实践证明，JDK 17+ZGC 显著改善服务性能与稳定性并降低成本</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 智能决策和内容安全服务的案例表明，升级后 TP9999/TP999 延迟、CPU 占用、失败率、元空间使用均有明显优化，并带来 10%的机器成本下降。</span>
+                        <strong style="color: #1e40af">结合 AI 辅助 Prompt、混合规划模式和领域模型训练可提升 Agent 可用性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 AI 优化 Prompt，通过 Workflow 与 Multi-Agent 架构实现内外部平衡，借助领域知识注入提高专业性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">升级高版本 JDK 需要重点关注兼容性并进行充分性能测试</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 特别是与现有中间件、依赖库的兼容性问题，需要细致的安装部署、问题排查和基于实际流量的性能验证。</span>
+                        <strong style="color: #1e40af">通过代码优化、推理加速和模型小型化可有效提升 Agent 响应速度。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 减少大模型参与比例、应用高性能推理技术、选用或蒸馏小参数模型，能在保证效果前提下加快运行效率。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Agent 构建是持续调优过程，应循序渐进从原型走向复杂架构和定制训练。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从低成本 Prompt 原型开始，逐步引入 Workflow、Multi-Agent、直至领域模型训练，根据场景要求投入成本实现效果提升。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">升级后服务性能和稳定性指标也得到巨大的飞跃，同时机器成本可以下降约 10%，升级 JDK 版本收益十分明显。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">目前正处在 AI 时代的爆发期，Java AI SDK 的最小支持版本为 JDK 17，这让升级 JDK 版本变得更具价值。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ZGC 在标记、转移和重定位阶段几乎都是并发的，这是 ZGC 实现停顿时间小于 10ms 目标的最关键原因。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ZGC 几乎所有暂停都只依赖于 GC Roots 集合大小，停顿时间不会随着堆的大小或者活跃对象的大小而增加。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与 ZGC 对比，G1 的转移阶段完全 STW 的，且停顿时间随存活对象的大小增加而增加。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">狭义的 Agent 定义，目前来看还是一种"技术理想主义"，是一个我们需要不断努力为之奋斗的、美好的目标。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">很显然会看到一个规律：LLM 自主规划的智能化程度越高，可控性越低，而 Workflow 编排的可控性越高，则智能化则越低。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果想要实现上面曲线图里的中间状态，就需要做到 LLM 自主规划与 Workflow 相结合，也就是使用 Multi-Agent（多智能体）架构来实现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种"内可控、外自主"的模式就是一种基于 Multi-Agent 实现的模式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从使用提示词开始构建原型，到 Workflow 的构造、Multi-Agent 架构设计、模型的训练和调优，这个成本是随之不断的在上升的，但理想情况下，Agent 的运行效果也是随着成本的投入在不断得到提升...</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,27 +66,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">美团技术团队</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">作者: 美团信息安全团队</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">飞樰</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">37 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9080</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">50 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">12285</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JDK升级</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java 17</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ZGC</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GC优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent构建</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/8144f0">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/b347a9">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
