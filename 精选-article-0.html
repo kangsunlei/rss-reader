@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>罗永浩：梁文锋建议我「靠嘴吃饭」，我想做个播客帮助科技创业者</title>
+        <title>深入 PromQL：探究 Prometheus 查询机制</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,30 @@
         </style>
     </head>
     <body>
-        <h2>罗永浩：梁文锋建议我「靠嘴吃饭」，我想做个播客帮助科技创业者</h2>
-        <p>6/21/2025, 1:39:00 PM</p>
+        <h2>深入 PromQL：探究 Prometheus 查询机制</h2>
+        <p>6/23/2025, 4:07:36 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">罗永浩与 AI 创业者探讨 AI 时代产品创新、人机关系及创业策略，并透露即将上线的新产品计划。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入解析 Prometheus 中 PromQL 查询的内部机制，涵盖解析、执行和输出过程，并提供优化查询性能的见解。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章记录了罗永浩在 AGI Playground 2025 大会上与 AI 创业者王登科（独响创始人）、谢扬（Fellou 创始人）及极客公园创始人张鹏的圆桌对话。罗永浩分享了投身智能硬件和 AI 软硬件结合的经历，透露其纯软件 AI 产品将在两三个月内上线，聚焦**效率工具（如邮件处理）**等垂直场景。他认为 AI 时代大公司反应慢，创业公司有机会，并计划做科技播客和年度科技大会，利用个人影响力助推年轻创业者。与会者还讨论了 AI 时代 UX 创新的重要性，人与 AI 关系的重塑（超越工具，建立**情感连接和陪伴**），以及面对巨头竞争，创业公司应聚焦人才、组织和用户心智。文章观点犀利，提供了资深创业者对 AI 浪潮下产品、市场和创业的深度洞察。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文由 Prometheus 维护者和 Grafana Labs 杰出工程师撰写，深入探讨了 PromQL（Prometheus 查询语言）的复杂性。文章旨在通过分解从查询执行到数据检索和输出的过程，揭示 PromQL 查询的内部工作原理。作者分享了在 PromCon 2024 上题为“深入 PromQL 查询：理解机制”的会议中获得的见解，并在本博客文章中扩展了关键点。
+
+文章首先概述了 PromQL，强调了其在指定数据计算的指标和操作中的作用。它区分了即时查询和范围查询，并提供了每种查询的可视化示例。PromQL 的核心组件，包括选择表达式、函数、聚合和运算符，都进行了简要解释。
+
+接下来详细介绍了解析阶段，其中文本 PromQL 查询被转换为抽象语法树 (ASTs)。本节包括了一个简单查询如何被解析为树结构的视觉表示。
+
+然后探讨了执行阶段，重点介绍了 PromQL 引擎如何处理 AST。这包括在索引中查找序列、检索单个数据点（样本）以及处理不同类型的函数和聚合。文章还涵盖了二元运算符的机制，包括标签匹配和序列连接。
+
+输出阶段讨论了 PromQL 查询通常如何通过 Prometheus HTTP API 发送，以及结果以 JSON 格式返回的方式。它还涉及错误处理和查询执行统计的收集。
+
+文章最后提出了进一步探索的建议，包括使用 OpenTelemetry、Jaeger 和 Grafana Tempo 等追踪和分析工具来深入了解查询执行。还推荐使用 Grafana 的构建模式和 PromLens 来学习和优化 PromQL 查询。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +46,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">罗永浩新 AI 产品聚焦效率工具，计划近期上线纯软件方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 经历硬件和软件研发挑战后，罗永浩的新公司将推出效率工具集，初期可能从邮件处理等垂直场景切入，瞄准尚未被巨头有效解决的需求。</span>
+                        <strong style="color: #1e40af">PromQL 概述</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PromQL 用于指定数据计算的指标和操作，有两种主要查询类型：即时查询和范围查询。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">计划利用“靠嘴吃饭”优势，通过播客和大型活动助推 AI 科技创业。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴 Lex Fridman 等模式，罗永浩希望通过深度对谈和“科技春晚”形式，帮助年轻 AI 创业者获得关注和资源，同时辅助自己的创业项目。</span>
+                        <strong style="color: #1e40af">解析 PromQL 查询</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文本 PromQL 查询由解析器转换为抽象语法树 (ASTs)，这是查询执行前的关键步骤。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 时代巨头行动迟缓，创业公司应把握机遇，在人才、组织和用户心智上构建壁垒。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与会者认为，尽管大公司资源多，但在快速变化的 AI 领域，其组织效率和认知壁垒不如创业公司，为后者提供了竞争空间，尤其应考虑出海。</span>
+                        <strong style="color: #1e40af">执行机制</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PromQL 引擎处理 AST，在索引中查找序列，检索样本，并处理各种函数和聚合。二元运算符涉及标签匹配和序列连接。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">GUI 和 UX 在 AI 时代依然重要，需探索新的交互模式，提升用户体验和情感连接。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 认为纯对话交互有局限性，应通过巧妙的设计和非对话交互方式，让用户更自然、愉悦地使用 AI，并与 AI 建立长期、独特的关系（如 AI 陪伴功能）。</span>
+                        <strong style="color: #1e40af">输出和错误处理</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PromQL 查询通过 Prometheus HTTP API 发送，结果以 JSON 格式返回。还讨论了错误处理和查询执行统计。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 产品需引导用户正确认知 AI 能力，既不高估也不低估，发挥其最大价值。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当前普通用户对 AI 的理解和使用存在局限，优秀的产品应通过设计引导用户，让他们发现 AI 的潜力，并学会有效利用，从简单问询到深度应用。</span>
+                        <strong style="color: #1e40af">深入见解的高级工具</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 追踪和分析工具如 OpenTelemetry、Jaeger 和 Grafana Tempo 可以提供更深入的查询执行见解。推荐使用 Grafana 的构建模式和 PromLens 来学习和优化 PromQL 查询。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +68,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但是我们纯软件的（方案）可能两三个月内就要上了，所以我又出来得瑟一下，就是为了给推出做准备。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我回来后认真想了想，我也不排除会去做'靠嘴吃饭'这件事...考虑是做类似 Lex Fridman、Joe Rogan 那样的播客...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但两年半过去了，至少在我看来，Siri 依旧毫无起色。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尽管模型能力足够，聊天也不该是唯一交互方式------就像人和人相处也不全靠对话，可能是默默相处或喝杯酒什么的，所以我们也觉得创造新的连接方式可行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">既不能让他们低估 AI 的能力，也不能高估其无所不能，我们现在产品基本上都是围绕着这个来动脑筋。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不敢赌，做什么风险投资</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">PromQL 查询的目的是表达你想要使用的指标以及你想要对这些指标执行的操作，以计算结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">PromQL 由解析器处理以创建抽象语法树 (AST)，引擎执行该树，从存储中提取数据，然后输出结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">二元运算符可能是 PromQL 中最计算密集的部分，因为构建哈希表和查找匹配的过程在每个时间步都会重复。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Prometheus 使用 OpenTelemetry 进行追踪，因此如果你有像 Jaeger 或 Grafana Tempo 这样的分布式追踪系统，你可以使用它来查看单个查询并了解它们的执行方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然我希望这篇博客文章和我的演讲是有帮助的资源，但我知道你可以更深入地探讨这个话题。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +76,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Founder Park</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Founder&nbsp;Park</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">62 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">15456</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Bryan Boreham</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2574</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI创业</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI产品</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人机关系</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人机交互</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">罗永浩</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PromQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prometheus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">查询语言</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/0cf2e1">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/23e47d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

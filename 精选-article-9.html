@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何构建和调优高可用性的 Agent？浅谈阿里云服务领域 Agent 构建的方法论</title>
+        <title>我给豆包，加了个绿色按钮... 由此，聊聊人机协作的设计</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何构建和调优高可用性的 Agent？浅谈阿里云服务领域 Agent 构建的方法论</h2>
-        <p>6/20/2025, 12:31:00 AM</p>
+        <h2>我给豆包，加了个绿色按钮... 由此，聊聊人机协作的设计</h2>
+        <p>6/20/2025, 12:49:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">探讨阿里云服务领域 Agent 构建实践，分享解决 Agent 不稳定、规划、领域集成和响应速度等挑战的方法论及调优路径。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章通过 AI 播客案例，探讨如何将 AI 能力通过“嵌点”嵌入现有流程，提升人机协作效率，而非独立工具。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章基于阿里云服务领域 Agent 的实践经验，深入剖析了当前 Agent 技术落地面临的核心挑战。首先梳理了 Agent 概念的广义与狭义之争，指出实际应用中需要平衡理想化的自主智能体与可控的任务代理。随后详细阐述了 Agent 运行效果不稳定、规划权衡（自主规划 vs Workflow）、领域信息集成困难及响应速度慢这四大主要痛点，并针对性地提出了解决方案：通过 AI 辅助优化 Prompt、结合 Workflow 与 Multi-Agent 架构权衡规划、运用 RAG/外部技能/领域模型训练集成领域知识、以及代码预转换/推理加速/模型小型化提升性能。最后，文章总结了一个从原型构建到持续调优的 Agent 演化路径图，为技术从业者构建高可用性 Agent 提供了实用的方法论参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章以豆包 AI 播客为例，剖析了优秀 AI 产品因时间错位、内容孤岛、习惯断层等“摩擦力”未能广泛普及的困境。作者通过为一个付费媒体内容生成 AI 播客的自动化脚本，展示了将 AI 功能嵌入现有用户流程的重要性。提出“嵌点”概念，强调 AI 应像二维码、划词翻译一样，无感地融入用户路径，而非独立存在。核心观点是 AI 成功的关键在于能否“顺手”，利用用户路径依赖，在正确的时间和地点提供服务。最终，AI 的价值在于其隐身于工作流之后，成为无处不在的协作助手。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Agent 概念存在广义与狭义之分，落地实践需平衡自主性和可控性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 狭义的 Agent 是理想化的智能体，自主性强但稳定性差；广义 Agent 是自动化任务代理，可控性高。实际落地需结合两者优点。</span>
+                        <strong style="color: #1e40af">AI 产品失败常因“摩擦力”过大，脱离用户习惯与流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 多数 AI 产品要求用户改变现有习惯或增加额外步骤，如 AI 播客的时间错位、内容孤岛，导致虽技术优秀但难融入用户日常。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Agent 落地面临稳定性、规划权衡、领域信息集成、响应速度四大挑战。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Prompt 不稳定、自主规划难控、领域知识缺失、大模型推理慢是 Agent 从概念走向实用的主要障碍。</span>
+                        <strong style="color: #1e40af">应将 AI 能力作为“嵌点”，嵌入现有产品和用户路径中。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 效仿划词翻译、二维码支付，将 AI 功能融入到用户自然的操作流程中，在其需要时即时出现，减少切换成本，提高使用效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">结合 AI 辅助 Prompt、混合规划模式和领域模型训练可提升 Agent 可用性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 AI 优化 Prompt，通过 Workflow 与 Multi-Agent 架构实现内外部平衡，借助领域知识注入提高专业性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过代码优化、推理加速和模型小型化可有效提升 Agent 响应速度。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 减少大模型参与比例、应用高性能推理技术、选用或蒸馏小参数模型，能在保证效果前提下加快运行效率。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Agent 构建是持续调优过程，应循序渐进从原型走向复杂架构和定制训练。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从低成本 Prompt 原型开始，逐步引入 Workflow、Multi-Agent、直至领域模型训练，根据场景要求投入成本实现效果提升。</span>
+                        <strong style="color: #1e40af">最好的 AI 应是无感、隐身的，成为顺手的协作助手。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当 AI 融入日常工作流，用户无需刻意感知其存在，像使用水电一样自然，技术的价值才能真正体现，实现高效人机协作。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">狭义的 Agent 定义，目前来看还是一种"技术理想主义"，是一个我们需要不断努力为之奋斗的、美好的目标。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">很显然会看到一个规律：LLM 自主规划的智能化程度越高，可控性越低，而 Workflow 编排的可控性越高，则智能化则越低。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果想要实现上面曲线图里的中间状态，就需要做到 LLM 自主规划与 Workflow 相结合，也就是使用 Multi-Agent（多智能体）架构来实现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种"内可控、外自主"的模式就是一种基于 Multi-Agent 实现的模式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从使用提示词开始构建原型，到 Workflow 的构造、Multi-Agent 架构设计、模型的训练和调优，这个成本是随之不断的在上升的，但理想情况下，Agent 的运行效果也是随着成本的投入在不断得到提升...</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为什么很多优秀产品，最后进了收藏夹？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当这些简单的步骤组合到一起后，用户行为就断了</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 真正需要的，只是一个按钮、一次默认行为，就能触发它做完一件不需要人主动决策的事</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">结构能插得上，比功能是否足够强更重要</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的 AI，是你意识不到的 AI</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -68,25 +62,25 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">飞樰</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">赛博禅心</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">赛博禅心</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">50 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">12285</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">14 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3391</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent构建</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人机协作</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI交互</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户体验</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">嵌点理论</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/b347a9">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/f88729">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATCSURBVO3BQY4cSRIEQdNA/f/Lujz6KYBEejWbsyaCf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXok5eA/CQ1E5AbNROQGzUTkEnNBOQJNU8A+Ulq3jipWnRSteikatEny9RsAvI3qXlCzQ2QGzU3ajYB2XRSteikatFJ1aJPvgzIE2o2AblRMwF5Qs0NkEnNBOQNIE+o+aaTqkUnVYtOqhZ98o9TMwGZ1ExAJiA3am6A3KiZgPyXnVQtOqladFK16JN/HJBJzRtqJiCTmieA/D85qVp0UrXopGrRJ1+m5pvU3ACZ1NwA2aTmBsgban6Tk6pFJ1WLTqoWfbIMyE8CMql5AsikZgLyhJoJyKTmDSC/2UnVopOqRSdViz55Sc3fpGYCMqmZgNwA2aTmDTX/kpOqRSdVi06qFn3yEpBJzQ2Qb1KzSc0TQCY1E5AbIJOaGyCTmgnIE2reOKladFK16KRq0SdfBmRS8waQGyCTmifU3ACZ1Lyh5gkgm9RsOqladFK16KRq0SfLgDwBZFIzAZnU3ACZgExqngByA2RSc6PmBsik5kbNE2q+6aRq0UnVopOqRfhHXgByo2YCcqPmBsgTaiYgN2pugHyTmjeATGpugExq3jipWnRSteikatEnL6mZgDyh5gbIpGYCMql5Qs0E5A01E5A3gNyomdT8TSdVi06qFp1ULfrkLwMyqZnUPAFkUjOpeULNBOQGyI2aN9RMQH6Tk6pFJ1WLTqoWffISkDfU3ACZ1NyomYDcqJnUTEBu1ExAJjUTkBs1N0AmNTdAJjUTkE0nVYtOqhadVC365CU1bwCZ1ExqJiBvqJmATGomNTdAJjVPqJmAPAFkUvM3nVQtOqladFK1CP/IIiA/Sc0bQG7UbAJyo+YNIJOan3RSteikatFJ1aJPXgIyqZmATGomIDdqngDyhpoJyI2aTUAmNTdAJjUTkBs1m06qFp1ULTqpWvTJMiBvqJmATGqeUDMBmdTcqJmATEAmNROQN4BMaiY1E5BJzQ2QSc0bJ1WLTqoWnVQtwj/yApAbNROQSc0TQCY1N0AmNTdAJjU3QCY1E5AbNROQb1LzTSdVi06qFp1ULfrky4A8AeQJIJvU3ACZ1ExAJjU3QH4SkEnNppOqRSdVi06qFn3ykppNap4AMql5AsiNmjeATGpu1DwB5EbNTzqpWnRSteikatEnLwH5SWpugDyhZgIyAdkE5Akgk5rf7KRq0UnVopOqRZ8sU7MJyBNqboBMQCY1N0AmIN+k5gk1f9NJ1aKTqkUnVYs++TIgT6j5JjUTkAnIE2pugDwB5A0gk5obIJOaN06qFp1ULTqpWvTJfxyQbwLyhpoJyKRmAjKp+U1OqhadVC06qVr0yT9OzRNqJiCTmhsgk5oJyKRmAnKj5gkgk5oJyE86qVp0UrXopGrRJ1+m5jcBMqmZgNyomYBMam7U3AB5Qs0E5EbNBGTTSdWik6pFJ1WLPlkG5CcBuVGzCcik5gkgT6i5AXKj5kbNppOqRSdVi06qFuEfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfofRaQiSqWjw94AAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
