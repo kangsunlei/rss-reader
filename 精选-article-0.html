@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>程序员的提示工程实战手册</title>
+        <title>深入 PromQL：探究 Prometheus 查询机制</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,30 @@
         </style>
     </head>
     <body>
-        <h2>程序员的提示工程实战手册</h2>
-        <p>6/25/2025, 3:16:33 PM</p>
+        <h2>深入 PromQL：探究 Prometheus 查询机制</h2>
+        <p>6/26/2025, 12:44:37 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一份面向程序员的提示工程实战手册，教授如何用高效提示词提升 AI 编程助手的使用效果。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入解析 Prometheus 中 PromQL 查询的内部机制，涵盖解析、执行和输出过程，并提供优化查询性能的见解。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文面向程序员，是一份关于如何通过高效提示词（提示工程）充分利用 AI 编程助手的实战指南。文章首先阐述了提示词质量是决定 AI 输出代码和建议好坏的关键，并系统地介绍了构建高效代码提示的基础原则，包括提供充足上下文、明确目标、分解任务、利用输入/输出示例、进行角色扮演和持续迭代等。接着，文章针对代码调试、重构和新功能实现等核心开发场景，详细解析了具体的提示模式和实用技巧，并通过“糟糕提示 vs. 改进提示”的直观对比案例，生动展示了如何通过优化提示流程，从泛泛回复获取精确、可操作的 AI 辅助结果。文中提供了大量可直接应用的提示词模板和实践指导，旨在帮助开发者显著提升日常编程效率和质量。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文由 Prometheus 维护者和 Grafana Labs 杰出工程师撰写，深入探讨了 PromQL（Prometheus 查询语言）的复杂性。文章旨在通过分解从查询执行到数据检索和输出的过程，揭示 PromQL 查询的内部工作原理。作者分享了在 PromCon 2024 上题为“深入 PromQL 查询：理解机制”的会议中获得的见解，并在本博客文章中扩展了关键点。
+
+文章首先概述了 PromQL，强调了其在指定数据计算的指标和操作中的作用。它区分了即时查询和范围查询，并提供了每种查询的可视化示例。PromQL 的核心组件，包括选择表达式、函数、聚合和运算符，都进行了简要解释。
+
+接下来详细介绍了解析阶段，其中文本 PromQL 查询被转换为抽象语法树 (ASTs)。本节包括了一个简单查询如何被解析为树结构的视觉表示。
+
+然后探讨了执行阶段，重点介绍了 PromQL 引擎如何处理 AST。这包括在索引中查找序列、检索单个数据点（样本）以及处理不同类型的函数和聚合。文章还涵盖了二元运算符的机制，包括标签匹配和序列连接。
+
+输出阶段讨论了 PromQL 查询通常如何通过 Prometheus HTTP API 发送，以及结果以 JSON 格式返回的方式。它还涉及错误处理和查询执行统计的收集。
+
+文章最后提出了进一步探索的建议，包括使用 OpenTelemetry、Jaeger 和 Grafana Tempo 等追踪和分析工具来深入了解查询执行。还推荐使用 Grafana 的构建模式和 PromLens 来学习和优化 PromQL 查询。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +46,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">提示工程是提升 AI 编程助手输出质量的关键技能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 能否写出高质量的提示词直接决定了 AI 生成的代码或建议是否准确、实用和富有创意，远超不当请求的泛泛回复。</span>
+                        <strong style="color: #1e40af">PromQL 概述</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PromQL 用于指定数据计算的指标和操作，有两种主要查询类型：即时查询和范围查询。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">提供丰富的上下文和明确目标是高效提示的基础</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 向 AI 清晰说明项目背景、技术栈、具体问题和预期结果，能显著提高 AI 理解能力，产出精确可操作的解决方案。</span>
+                        <strong style="color: #1e40af">解析 PromQL 查询</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文本 PromQL 查询由解析器转换为抽象语法树 (ASTs)，这是查询执行前的关键步骤。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">分解复杂任务和迭代优化能提高交互效率和结果可控性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将大型开发需求拆解为小步骤，并通过多轮对话逐步完善 AI 输出，更符合人类开发习惯，也避免 AI 因提示过大而混乱。</span>
+                        <strong style="color: #1e40af">执行机制</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PromQL 引擎处理 AST，在索引中查找序列，检索样本，并处理各种函数和聚合。二元运算符涉及标签匹配和序列连接。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">运用角色扮演、输入/输出示例和约束锚定来引导 AI 行为</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过设定 AI 角色、提供具体案例或指定限制条件，可以使 AI 响应更具针对性、风格和与项目兼容性。</span>
+                        <strong style="color: #1e40af">输出和错误处理</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PromQL 查询通过 Prometheus HTTP API 发送，结果以 JSON 格式返回。还讨论了错误处理和查询执行统计。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">调试、重构和实现新功能场景下有针对性的提示模式</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章提供了针对不同开发任务的实用提示模板和技巧，如模拟调试、寻求替代方案、分步重构和内联提示等，提高了 AI 在具体工作中的辅助效能。</span>
+                        <strong style="color: #1e40af">深入见解的高级工具</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 追踪和分析工具如 OpenTelemetry、Jaeger 和 Grafana Tempo 可以提供更深入的查询执行见解。推荐使用 Grafana 的构建模式和 PromLens 来学习和优化 PromQL 查询。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +68,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 输出的*质量* 在很大程度上取决于你提供的*提示词质量*。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">清晰性 和 上下文 是区分模糊建议和精确、可操作解决方案的关键。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将复杂的大任务分解成连续的小步骤，避免因提示过于庞大或含糊而导致 AI 混乱。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将 AI 视为一个你可以指导的伙伴------追求进步而非第一次就完美。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">总之，在使用 AI 助手进行调试时，细节和方向是你的朋友。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">PromQL 查询的目的是表达你想要使用的指标以及你想要对这些指标执行的操作，以计算结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">PromQL 由解析器处理以创建抽象语法树 (AST)，引擎执行该树，从存储中提取数据，然后输出结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">二元运算符可能是 PromQL 中最计算密集的部分，因为构建哈希表和查找匹配的过程在每个时间步都会重复。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Prometheus 使用 OpenTelemetry 进行追踪，因此如果你有像 Jaeger 或 Grafana Tempo 这样的分布式追踪系统，你可以使用它来查看单个查询并了解它们的执行方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然我希望这篇博客文章和我的演讲是有帮助的资源，但我知道你可以更深入地探讨这个话题。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +76,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">94</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">宝玉的分享</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">宝玉</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">79 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">19657</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Bryan Boreham</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2574</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI编程助手</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM应用</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码生成</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PromQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prometheus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">查询语言</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/539020">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATKSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBOQJNTdAJjVvAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBtqvgnIE2omIE+o2QRk00nVopOqRSdViz75MiBPqHlCzRNAJjU3QCY1k5r/JyBPqPmmk6pFJ1WLTqoWffLHAblRcwNkUnMDZFIzAZnUTEAmNf8lJ1WLTqoWnVQt+uSPUzMBuVGzCcgbQCY1f9lJ1aKTqkUnVYs++TI1v0nNBOQNNZOaCcikZgLyTWr+JSdVi06qFp1ULfpkGZDfBGRSc6NmAjKpmYBMat5QMwF5Asi/7KRq0UnVopOqRZ+8pOZfAuQGyKRmE5AbIE+o+UtOqhadVC06qVr0yUtAJjUTkBs1E5An1DwB5AbIpGYC8puATGpugExqJiA3at44qVp0UrXopGoR/sgLQCY1bwCZ1ExAnlDzBJAbNROQSc0NkG9S8wSQSc0bJ1WLTqoWnVQt+uQlNROQSc0bQCY1m4B8E5BJzRtAngByo2bTSdWik6pFJ1WLPnkJyBtAbtQ8AeRGzaRmAjKpmYA8oeYGyKRmk5obIJOaN06qFp1ULTqpWoQ/8gKQSc0EZJOaCcgbap4AMqmZgNyo+SYgN2q+6aRq0UnVopOqRfgjLwCZ1NwAmdRMQCY1bwCZ1ExAbtRMQG7U3ACZ1NwAuVFzA+QJNW+cVC06qVp0UrUIf+QFIDdqboA8oeYJIE+oeQPI/5OaCcgTat44qVp0UrXopGrRJ8vUPKHmN6l5AsiNmknNDZAbNTdAnlAzAZnUbDqpWnRSteikatEnXwZkUnMD5A01N0Bu1GwC8gSQSc2kZgIyAZnU/KaTqkUnVYtOqhZ98pKaCcik5gbIpOYGyKRmAnKjZgIyAZnUTEBugNyomYA8AWRSMwGZgPymk6pFJ1WLTqoWffISkEnNBOQJIDdqbtTcALlRMwH5JjUTkDfUTEAmNd90UrXopGrRSdWiT15Sc6Pmm4DcqHlDzQ2QGzVvAJnU/MtOqhadVC06qVqEP7IIyI2aCcgTam6ATGpugNyoeQLIjZoJyG9S800nVYtOqhadVC3CH/nDgExqJiCTmk1AnlAzAZnUPAFkk5o3TqoWnVQtOqla9MlLQH6TmhsgN0AmNTdAJjWTmgnIpGYC8gSQSc0TaiYgk5pNJ1WLTqoWnVQt+mSZmk1AnlBzA2QCcqNmAnKj5kbNBORGzTcBmdS8cVK16KRq0UnVok++DMgTap5QcwPkCTVvALlRcwPkDTUTkEnNN51ULTqpWnRSteiTPw7IpGZSMwGZ1ExA3lDzhJoJyKTmBsgEZFJzA2RS88ZJ1aKTqkUnVYs++Y8B8gSQGzVPAHlCzRNAJjU3QCY133RSteikatFJ1aJPvkzNN6mZgExqboBMaiYgN2omNU8AmdS8AWRSMwGZ1Gw6qVp0UrXopGrRJ8uA/CYgN0Bu1ExAbtQ8AWSTmn/ZSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gcc9i47NWveYwAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/23e47d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
