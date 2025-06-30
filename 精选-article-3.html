@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>#156. 硅谷产品大神 Peter Deng：从 0 到 1 打造数十亿用户产品的核心心法</title>
+        <title>深入 PromQL：探究 Prometheus 查询机制</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,30 @@
         </style>
     </head>
     <body>
-        <h2>#156. 硅谷产品大神 Peter Deng：从 0 到 1 打造数十亿用户产品的核心心法</h2>
-        <p>6/27/2025, 6:35:43 AM</p>
+        <h2>深入 PromQL：探究 Prometheus 查询机制</h2>
+        <p>6/27/2025, 4:07:54 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">硅谷产品大神 Peter Deng 分享打造数十亿用户产品的核心心法、团队与招聘秘诀及 AI 影响。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入解析 Prometheus 中 PromQL 查询的内部机制，涵盖解析、执行和输出过程，并提供优化查询性能的见解。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本期播客邀请前 OpenAI、Instagram、Uber、Facebook 等公司产品高管 Peter Deng，深度解析从 0 到 1 到规模化打造数十亿用户产品的关键。Peter 分享了在 Uber 学到的“产品本身没那么重要”的反直觉教训，强调用户消费的是整体体验。他认为伟大科技公司常基于现有技术有效应用而非纯技术突破。播客详细阐述了规模化阶段需建立系统性思维和增长团队的重要性。Peter 独创了五种产品经理类型框架，并分享了“六个月法则”等独特招聘秘诀，强调招聘互补型人才和成长型思维。他对 AI 颠覆教育的见解独到，认为未来提问能力和高阶抽象思维更重要。此外，他还讨论了 AI 创业护城河（独家数据和工作流整合）、AI 公司产品团队价值、向上管理技巧及从失败中学习的经验，为技术从业者提供了宝贵的实践指导和职业发展洞察。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文由 Prometheus 维护者和 Grafana Labs 杰出工程师撰写，深入探讨了 PromQL（Prometheus 查询语言）的复杂性。文章旨在通过分解从查询执行到数据检索和输出的过程，揭示 PromQL 查询的内部工作原理。作者分享了在 PromCon 2024 上题为“深入 PromQL 查询：理解机制”的会议中获得的见解，并在本博客文章中扩展了关键点。
+
+文章首先概述了 PromQL，强调了其在指定数据计算的指标和操作中的作用。它区分了即时查询和范围查询，并提供了每种查询的可视化示例。PromQL 的核心组件，包括选择表达式、函数、聚合和运算符，都进行了简要解释。
+
+接下来详细介绍了解析阶段，其中文本 PromQL 查询被转换为抽象语法树 (ASTs)。本节包括了一个简单查询如何被解析为树结构的视觉表示。
+
+然后探讨了执行阶段，重点介绍了 PromQL 引擎如何处理 AST。这包括在索引中查找序列、检索单个数据点（样本）以及处理不同类型的函数和聚合。文章还涵盖了二元运算符的机制，包括标签匹配和序列连接。
+
+输出阶段讨论了 PromQL 查询通常如何通过 Prometheus HTTP API 发送，以及结果以 JSON 格式返回的方式。它还涉及错误处理和查询执行统计的收集。
+
+文章最后提出了进一步探索的建议，包括使用 OpenTelemetry、Jaeger 和 Grafana Tempo 等追踪和分析工具来深入了解查询执行。还推荐使用 Grafana 的构建模式和 PromLens 来学习和优化 PromQL 查询。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +46,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">产品本身重要性次于整体用户体验与商业逻辑</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Uber 等公司经验表明，用户购买的是包含价格、效率、服务等在内的整体体验，而非仅屏幕上的功能，商业合理性同样关键。</span>
+                        <strong style="color: #1e40af">PromQL 概述</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PromQL 用于指定数据计算的指标和操作，有两种主要查询类型：即时查询和范围查询。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">伟大科技公司常通过有效应用现有技术实现突破</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Facebook、Uber 等成功并非全赖技术原创，而是通过在成熟技术上构建满足用户需求的产品，并持续打磨优化体验。</span>
+                        <strong style="color: #1e40af">解析 PromQL 查询</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文本 PromQL 查询由解析器转换为抽象语法树 (ASTs)，这是查询执行前的关键步骤。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">产品从 1 到 100 规模化需构建可靠系统与体系</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 达到超大规模增长需要像下棋一样提前规划，建立可快速前进的系统，如新闻流架构、Uber 上车点系统等，需先慢后快。</span>
+                        <strong style="color: #1e40af">执行机制</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PromQL 引擎处理 AST，在索引中查找序列，检索样本，并处理各种函数和聚合。二元运算符涉及标签匹配和序列连接。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">高效团队建设需招聘互补人才并重视成长型思维</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 像组建“复仇者联盟”一样寻找具有不同“超能力”的顶尖人才，招聘强调自主性（六个月法则）和持续学习改进的意愿。</span>
+                        <strong style="color: #1e40af">输出和错误处理</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PromQL 查询通过 Prometheus HTTP API 发送，结果以 JSON 格式返回。还讨论了错误处理和查询执行统计。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 将重塑教育，提问能力和高阶抽象思维成核心技能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 解放人类记忆和基础工作，未来教育应侧重培养学生提出好问题的能力，以及在高抽象层次上进行思考和创造。</span>
+                        <strong style="color: #1e40af">深入见解的高级工具</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 追踪和分析工具如 OpenTelemetry、Jaeger 和 Grafana Tempo 可以提供更深入的查询执行见解。推荐使用 Grafana 的构建模式和 PromLens 来学习和优化 PromQL 查询。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +68,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有时候你做的产品本身其实没那么重要，这是我在 Uber 学到的。作为用户我们消费的是一个整体体验。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最有价值的科技公司往往不是依靠技术突破起家，而是通过构建在现有技术基础上满足用户需求的产品和服务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当你处于从 1 到 5 或者 1 到 10 的阶段，我发现一件非常有帮助的事儿，就是衡量一切。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我有一个标准，入职六个月后，如果还是我在告诉你该做什么，那说明我招错人了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我认为未来有一件事会变得非常重要，那就是要懂得如何提出正确的问题...将成为区分工作成果好坏的一个关键。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">PromQL 查询的目的是表达你想要使用的指标以及你想要对这些指标执行的操作，以计算结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">PromQL 由解析器处理以创建抽象语法树 (AST)，引擎执行该树，从存储中提取数据，然后输出结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">二元运算符可能是 PromQL 中最计算密集的部分，因为构建哈希表和查找匹配的过程在每个时间步都会重复。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Prometheus 使用 OpenTelemetry 进行追踪，因此如果你有像 Jaeger 或 Grafana Tempo 这样的分布式追踪系统，你可以使用它来查看单个查询并了解它们的执行方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然我希望这篇博客文章和我的演讲是有帮助的资源，但我知道你可以更深入地探讨这个话题。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +76,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">94</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">跨国串门儿计划</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">跨国串门儿计划</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1448</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Bryan Boreham</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2574</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">团队建设</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">招聘</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人工智能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI产品</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品规模化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">科技创业</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Peter Deng</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">硅谷</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PromQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prometheus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">查询语言</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/podcast/f54dfa5">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/23e47d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
