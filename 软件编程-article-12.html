@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>APM 最佳实践指南：工程师必知该做与不该做的事项</title>
+        <title>CVE-2025-53367：DjVuLibre 中的可被利用越界写漏洞</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>APM 最佳实践指南：工程师必知该做与不该做的事项</h2>
-        <p>7/3/2025, 5:04:54 AM</p>
+        <h2>CVE-2025-53367：DjVuLibre 中的可被利用越界写漏洞</h2>
+        <p>7/3/2025, 8:52:20 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一份包含可操作建议的 APM 最佳实践指南，涵盖监控代码植入策略、监控方法选择与实施技巧，并提供大量代码示例以优化应用性能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">概述了通过模糊测试发现的 DjVuLibre 关键越界写漏洞 (CVE-2025-53367)，攻击者可通过特制文档在 Linux 系统实现代码执行，维护团队在 48 小时内发布了修复补丁。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文作为综合指南，详细阐述了应用性能管理(APM)的最佳实践，重点介绍主动监控方案与落地实施方法。内容包含三大基础遥测数据类型（追踪 Traces、指标 Metrics、日志 Logs）的运用，如何平衡自动植入与手动添加业务关键监控点，以及避免监控过度植入的常见误区。文章详细解析了实时监控、合成监控和分布式追踪等具体实施方案，并提供智能告警设置与指标基数管理的实用技巧。进阶部分探讨了多编程语言环境中的上下文传播、传统系统集成方案以及 ES|QL 追踪分析技术。通过丰富的代码示例和明确的实施建议/避坑指南，为各类技术场景提供可落地的解决方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文披露了 CVE-2025-53367，这是通过模糊测试 Evince 文档阅读器在 DjVuLibre 3.5.29 中发现的关键越界写漏洞。该缺陷存在于 MMRDecoder::scanruns 方法中，未经验证的缓冲区写入会导致堆破坏。PoC 利用程序展示了通过欺骗默认 Linux 文档查看器 (Evince/Papers) 处理恶意 DjVu 文件（即使伪装成 PDF）实现远程代码执行的能力。虽然 AppArmor 配置文件缓解了该漏洞（限制任意进程执行但允许 Chrome 访问），但利用程序仍能绕过 ASLR 通过 Google Chrome 执行命令。文章提供了漏洞的技术分析，包括显示缺失边界检查的代码片段，并强调了维护团队在报告后两天内修复问题的快速响应速度。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">合理搭配自动植入与关键业务的手动监控点</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 自动植入监控代码能以最小改动满足 80% 的基础监控需求，而针对关键业务逻辑手动添加监控点可以在不显著增加系统开销的前提下提供更丰富的上下文信息。</span>
+                        <strong style="color: #1e40af">通过模糊测试发现 DjVuLibre 可导致代码执行的越界写漏洞</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MMRDecoder::scanruns 方法未校验缓冲区边界，通过模糊测试发现该缺陷，攻击者可通过特制文档触发堆破坏，在 Linux 桌面环境实现远程代码执行</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实施智能采样策略与基数管理以优化成本</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对高流量服务采用头部采样(head-based sampling)，对错误场景采用尾部采样(tail-based sampling)，同时严格控制高基数(high-cardinality)属性的使用以避免指标存储成本激增。</span>
+                        <strong style="color: #1e40af">漏洞利用可绕过文件扩展名检测</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使恶意 DjVu 文件伪装成 PDF 格式，默认文档查看器仍会调用 DjVuLibre 解析，使得攻击更具隐蔽性</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">建立以用户体验为中心的服务等级目标体系</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基于真实用户体验制定的服务等级目标(SLOs)来设置告警阈值，既能有效避免告警泛滥(alert fatigue)，又能确保监控系统聚焦于真正影响业务的性能问题。</span>
+                        <strong style="color: #1e40af">PoC 证明可绕过 ASLR 但受 AppArmor 策略限制</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管存在地址空间随机化保护，漏洞利用仍能可靠执行命令，但 AppArmor 策略限制仅允许通过 Google Chrome 执行特定操作，无法启动任意进程</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">构建端到端的全栈监控可视化能力</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 建立从前端用户交互到后端服务调用，乃至跨系统边界的全链路监控体系，是准确定位和解决性能瓶颈的必要条件。</span>
+                        <strong style="color: #1e40af">维护团队在 48 小时内发布修复补丁</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从漏洞报告到修复版本发布仅耗时两天，体现了开源社区对安全问题的快速响应能力，成为漏洞修复的典型案例</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">确保异构环境中的上下文传递与传统系统集成</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在混合了多种编程语言和技术栈的复杂架构中，确保调用链上下文的无损传递，以及为传统系统建立可观测性接入方案，是维持系统整体可观测性的关键所在。</span>
+                        <strong style="color: #1e40af">漏洞研究采用系统化的模糊测试方法</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过针对 Evince 文档阅读器的模糊测试发现该漏洞，展示了现代安全研究中自动化测试工具的关键作用</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">APM 不应作为事后补救措施，而应从系统设计之初就纳入架构考量</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正的挑战不在于数据采集本身，而在于如何在不影响系统性能的前提下采集到有价值的数据</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">过度植入监控代码可能导致 15%～20% 的性能开销，建议通过基准测试对比来评估监控系统自身的性能影响</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">基于底层系统指标的告警泛滥问题：应该聚焦那些真正影响终端用户的服务等级指标</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在微服务架构中，跨服务边界的上下文传递是高效排查复杂问题的关键所在</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">传统系统在分布式追踪中往往表现为黑盒，可通过日志关联(log correlation)和合成监控点(synthetic spans)等技术手段提升其可见性</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们要特别感谢 Léon Bottou 和 Bill Riemers 的快速响应，在我们首次联系他们后不到两天就发布了修复补丁！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当用户尝试打开特制文档时，该漏洞可能被利用来在 Linux 桌面系统上获取代码执行权限。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即使 DjVu 文件的文件名带有 .pdf 扩展名，Evince/Papers 也会自动检测其为 DjVu 文档并调用 DjVuLibre 进行解码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该 PoC 在完全更新的 Ubuntu 25.04 (x86_64) 系统上有效，且所有标准安全保护均已启用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">scanruns 方法没有检查这些指针是否保持在分配缓冲区的边界内。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,26 +66,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Elastic Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Elastic Observability Team</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The GitHub Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Kevin Backhouse, Antonio Morales</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2242</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">613</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">应用性能管理(APM)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能监控(Performance Monitoring)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性(Observability)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenTelemetry</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务(Microservices)</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">漏洞研究</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CVE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DjVuLibre</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓冲区溢出</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux 安全</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a011fc">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/6ac488">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
