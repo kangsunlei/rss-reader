@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>TimescaleDB 如何助力我们伸缩分析与报告能力</title>
+        <title>pod 丢包了，你会怎么查?</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>TimescaleDB 如何助力我们伸缩分析与报告能力</h2>
-        <p>7/8/2025, 2:00:00 PM</p>
+        <h2>pod 丢包了，你会怎么查?</h2>
+        <p>7/8/2025, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 阐述了其为何选择 TimescaleDB (PostgreSQL 扩展) 以伸缩其零信任产品组合中的分析与报告能力，侧重于简化设计，避免过度超前优化。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细记录了排查 Kubernetes Pod 丢包问题的全过程，最终定位并解决了由 lldpd 服务引起的数据包丢失。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细阐述了 Cloudflare 在为其零信任产品组合构建分析与报告能力过程中的实践。作者推崇“简单至上”的架构理念，强调不必要的复杂性和过度超前优化所带来的成本。最初，他们曾考虑采用 ClickHouse 实现高吞吐量数据接入，但发现其运维负担对于他们最初的特定需求而言过高。随后，他们尝试利用纯 PostgreSQL 进行分析，并详细介绍了诸如多列索引策略（时间戳置于最后，高区分度列优先）以及预计算聚合等优化实践，以提升查询性能。尽管这些 PostgreSQL 优化带来了显著的性能提升，但他们在自动物化视图和手动分区方面面临挑战。最终，他们选择了 TimescaleDB (PostgreSQL 扩展)，因为它能与现有的 PostgreSQL 生态系统无缝集成，并提供诸如列存储和稀疏索引等专用功能，从而在保证系统简洁性的同时，显著提升了原始数据查询性能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文以一次 CAT 系统红盘事件为引，深入探讨了 Kubernetes Pod 网络丢包的排查过程。作者通过确定影响面、寻找共性、实时观察和抓包分析等系统性步骤，逐步缩小问题范围。最终，结合 tcpdump 抓包结果和历史命令排查，发现是宿主机上意外安装并运行的 lldpd 服务导致 Pod 接收到二层 LLDP 协议包，但 Pod 内网络栈无法处理而丢弃。文章提供了详细的排查命令和思路，并给出了停止 lldpd 服务的解决方案，强调了在容器环境中关闭不必要服务的必要性。同时，也分享了作者在排查过程中遇到的其他工具和环境问题，为读者提供了宝贵的实践经验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用“简单至上”的架构理念可以避免过度超前优化，并降低运营开销。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 优先采用最简化的组件进行初始产品发布，能够加速交付、测试与学习过程，并将复杂性延迟到确有需要时再引入，从而降低维护成本和潜在的中断风险。</span>
+                        <strong style="color: #1e40af">系统化故障排查流程是定位复杂问题的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章通过“确定影响面”、“找共性”、“实时观察”、“抓包分析”和“补充印证”等步骤，展现了高效、严谨的故障排查方法论，值得借鉴。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">纯 PostgreSQL 可以针对时序分析进行优化，但对于大规模原始数据查询存在局限性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 诸如特定的多列索引排序方式（时间戳置于最后）和预计算聚合等技术能够显著提升查询性能，但 PostgreSQL 的原生分区限制可能会阻碍大规模原始数据集的伸缩。</span>
+                        <strong style="color: #1e40af">容器环境下的网络丢包可能与宿主机服务异常相关。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 案例表明，宿主机上运行的不必要服务（如 lldpd）可能向 Pod 发送二层协议包，导致 Pod 内网卡丢弃，这揭示了容器与宿主机网络交互的复杂性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">TimescaleDB 为在 PostgreSQL 生态系统中伸缩时序分析能力提供了一种务实的解决方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过利用 TimescaleDB 作为 PostgreSQL 扩展，团队可以获得专业的时序功能（如列存储和稀疏索引）和高性能，而无需引入全新的数据库系统，从而简化了技术栈。</span>
+                        <strong style="color: #1e40af">熟练运用网络诊断工具是解决网络问题的基础。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文中详细介绍了如`watch`、`ifconfig`、`tcpdump`等命令在定位丢包问题中的应用，体现了扎实的基础工具使用能力对于 SRE 的重要性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">作为工程师，我们很容易陷入为可能永远不会发生的场景进行设计的陷阱。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们难以准确预测未来需求，每一个新增组件都意味着更高的潜在成本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ClickHouse 是一辆需要专业赛道才能发挥性能的跑车，而我们需要的只是日常代步车。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了获得时间范围查询的最佳性能，我们遵循以下列顺序规则：时间戳列始终置于最后。其他列为前导列，按其区分度排序，从最高区分度的列开始。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">TimescaleDB 被打包为 PostgreSQL 扩展，它可以与其无缝共存，从而可以访问整个 Postgres 生态系统。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Pod 内丢包每 30s 加 1</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">根据之前发现的规律 "Pod 内丢包每 30s 加 1" 进行排查，发现 lldp 探测很可疑</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">容器环境用不到 lldpd， 关闭即可</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">其实 关不关 lldpd 并不影响应用，lldp 是一个二层的协议。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Robert Cepa</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">81</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ClayWangzhi</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4161</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">823</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PostgreSQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TimescaleDB</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ClickHouse</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排查</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">容器网络</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Pod丢包</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Calico</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/b5d941">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/fec694">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
