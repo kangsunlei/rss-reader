@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>改进的异常检测和更快的根本原因分析：Grafana 云应用可观测性的最新功能</title>
+        <title>Netflix Tudum 架构演进：从 CQRS (Kafka) 到 RAW Hollow</title>
         <style>
             body {
                 padding: 12px;
@@ -15,41 +15,72 @@
         </style>
     </head>
     <body>
-        <h2>改进的异常检测和更快的根本原因分析：Grafana 云应用可观测性的最新功能</h2>
-        <p>7/9/2025, 9:18:52 AM</p>
+        <h2>Netflix Tudum 架构演进：从 CQRS (Kafka) 到 RAW Hollow</h2>
+        <p>7/10/2025, 7:35:32 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
+            </h3>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Netflix Tudum 架构通过从基于 Kafka 的 CQRS 迁移到 RAW Hollow，显著提升了内容传播速度和读写一致性。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文讨论了 Grafana 云应用可观测性的最新更新，包括时间框架比较以分析应用随时间性能，自动基线化以快速检测异常，以及用于缩小问题维度的 group-by 和 filter-by 功能。此外，还引入了上下文导航以加快根本原因分析。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Netflix Tudum 的架构演进，最初采用服务端驱动 UI (SDUI) 架构，重点是从基于 Kafka 的最终一致性 CQRS 模式演变为利用 Netflix 内部 RAW Hollow 数据库的更高性能模型。最初，Tudum 采用 CQRS 来分离编辑写入路径和访客读取路径，利用 Kafka 实现事件驱动的数据传播。然而，这种设置导致内部内容预览存在数分钟延迟，主要由于多步骤流程和低效的近缓存失效导致，阻碍了编辑效率。为了解决这个问题，Tudum 采用了 RAW Hollow，这是一种创新的内存、同地共存的压缩对象数据库。通过将 RAW Hollow 直接集成到读路径服务中，该架构消除了对 Kafka、页面数据服务和外部键值存储的需求。这种简化使得编辑器的数据传播时间大大缩短（秒而不是分钟），并显著加快了首页构建时间（从约 1.4 秒到约 0.4 秒）。文章强调了 RAW Hollow 在内存占用方面的效率及其为内部用户提供强大的读后写一致性的能力，同时保持了公共消费的高可用性，强调了在分布式系统中减少 I/O 和简化缓存的优势。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">从最终一致性过渡到强一致性大大减少了内容传播延迟。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基于 Kafka 的 CQRS 架构导致编辑内容更新延迟数分钟，而 RAW Hollow 解决方案实现了近乎即时的预览，这对于内部工作流程至关重要。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">用内存、同地共存的数据库替换外部数据服务简化了架构并提高了性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过集成 RAW Hollow，Tudum 消除了多服务跳转和 I/O 操作，从而大大减少了请求时间和整体系统复杂性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">将整个数据集保存在内存中可以克服常见的缓存挑战，尤其是失效问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> RAW Hollow 通过在应用内存中提供完整的压缩数据集，避免了复杂的缓存失效问题，从而简化数据管理。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种架构的一个主要缺点是，进行编辑和观察到该编辑反映在网站上的延迟。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">RAW Hollow 是由 Netflix 开发的一种创新的内存、同地共存的压缩对象数据库，旨在处理支持强大读后写一致性的中小型数据集。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在我们简化的架构中，我们取消了页面数据服务、键值存储和卡夫卡基础设施，转而使用 RAW Hollow。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">编写者和编辑可以在几秒钟内预览更改，而不是几分钟，同时仍然为 Tudum 访问者保持高可用性和内存缓存 --- 两全其美。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最小化顺序操作的数量可以显著减少响应时间。I/O 往往是性能的主要敌人。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Cedric Ziel</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Netflix TechBlog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Netflix Technology Blog</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">932</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1421</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">应用可观测性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Grafana云</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CQRS (命令查询职责分离)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存数据库</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a69b68">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/ec6aa3">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

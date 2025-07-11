@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Discord 如何利用高性能技术存储数万亿条消息</title>
+        <title>JSON 数据转换：匹配任意模式</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Discord 如何利用高性能技术存储数万亿条消息</h2>
-        <p>7/8/2025, 3:30:51 PM</p>
+        <h2>JSON 数据转换：匹配任意模式</h2>
+        <p>7/10/2025, 4:23:53 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Discord 如何成功地对其消息存储进行重新架构，从 Apache Cassandra 过渡到 ScyllaDB。通过实施基于 Rust 的数据服务层，实现了高性能和稳定的运维，成功处理了数万亿条消息。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本教程演示如何使用 Python 和 Pandas 转换、清理 JSON 数据，使其符合预定义模式，并进行数据验证。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入分析了 Discord 如何扩展其消息存储以处理数万亿条消息，解决了其最初基于 Apache Cassandra 的架构所面临的挑战。文章重点介绍了诸如热分区、读取延迟高、由于压缩导致的高运营开销以及在极端规模下出现的 JVM 垃圾回收问题。为了克服这些问题，Discord 迁移到 ScyllaDB，利用其 C++ 实现获得更好的性能和无 GC 停顿，并利用其基于单核分片的架构来提高隔离性。至关重要的是，他们引入了一个基于 Rust 的数据服务层，作为中间层来控制并发、保护数据库免受过载影响，并实施请求合并。迁移过程涉及双写和一个基于 Rust 实现的自定义回填工具，在零停机前提下快速完成。迁移后，Discord 取得了显著的改进，包括减少了节点数量、降低了延迟并增强了运营稳定性，成功经受住了 2022 年 FIFA 世界杯决赛期间的严峻考验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文全面介绍了如何转换和清理 JSON 数据，使其符合目标模式。这是数据传输和 API 集成中常见的挑战。文章通过一个合成的客户数据集，展示了实际应用场景。首先需要定义目标模式，这是数据转换的基础。然后，文章详细对比了两种基于 Python 的方法：一种是使用纯 Python 内置的 `json` 模块进行简单转换，另一种是利用强大的 `pandas` 库，尤其适用于处理更大、更复杂的数据集。对于这两种方法，文章都提供了清晰、循序渐进的说明，以及可执行的代码示例，包括加载原始 JSON 数据、实现转换逻辑（例如重命名字段、删除不必要的字段和处理缺失数据）以及保存清理后的输出。文章还强调了性能差异，`pandas` 在处理大数据集时表现出更高的效率。此外，文章还强调了数据完整性的重要性，介绍了如何使用 `jsonschema` 库验证转换后的 JSON 数据是否符合目标模式，确保输出符合预期结构。本指南内容全面且具有实践性，是帮助开发者规范化和高效清理 JSON 数据的优秀资源。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Apache Cassandra 在 Discord 的大规模应用中面临着严重的运营和性能问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于热分区、压缩滞后导致的读取速度慢以及频繁的 JVM 垃圾回收暂停等问题，Cassandra 逐渐成为瓶颈，需要不断的人工干预并阻碍了系统增长。</span>
+                        <strong style="color: #1e40af">JSON 模式转换对于无缝数据传输和 API 集成至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模式不匹配会中断工作流程。因此，清理和规范化 JSON 数据对于确保系统间数据交换和导入的准确性至关重要。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">ScyllaDB 提供了一种兼容但性能更高且更稳定的数据库解决方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过切换到 ScyllaDB（基于 C++，单核分片），Discord 消除了 GC 问题并实现了可预测的性能，同时保持了与其现有数据模型和查询语言的兼容性。</span>
+                        <strong style="color: #1e40af">纯 Python 适用于小型数据集，而 Pandas 擅长处理大型、复杂的数据。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章对比了纯 Python 和 Pandas 两种方法。纯 Python 适用于简单转换，而 Pandas 在处理大型复杂数据集时，性能更优且功能更强大。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">基于 Rust 的数据服务层对于保护数据库和提高并发性至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这个中间层使用 Rust 构建，具有原生性能和并发安全性，实现了请求合并和一致性哈希路由，从而显著降低了数据库负载并提高了整体系统弹性。</span>
+                        <strong style="color: #1e40af">根据预定义的模式验证清理后的 JSON，确保数据完整性并防止错误。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 `jsonschema` 等库，开发者可以自动验证转换后的数据结构是否符合预期，及时发现格式错误或缺失字段。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在这个规模下，即使是最小的架构选择也会产生很大的影响。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最终，旨在随 Discord 扩展的数据库已成为瓶颈。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ScyllaDB 作为一种自然的替代方案进入视野。它保留了与 Apache Cassandra 的查询语言和数据模型的兼容性，这意味着周围的应用程序逻辑可以基本保持不变。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">它们背后的目标很简单：隔离高吞吐量操作、控制并发并保护数据库免受意外过载。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">自定义迁移器实现了每秒 320 万条消息的吞吐量，从而将总迁移时间从几个月减少到仅 9 天。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">无论是 API 数据传输还是 JSON 导入，模式不匹配都可能导致工作流程中断。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">学习如何清理和规范化 JSON 数据可以确保平滑、无错误的数据传输。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JSON 模式本质上是一个蓝图，用于描述必需字段、字段名、数据类型和标准化格式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本教程表明，使用纯 Python 清理和重构 JSON 是一种更直接的方法，适用于小型数据集或简单转换。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">随着数据规模增大和复杂度提高，可能需要纯 Python 无法提供的高级数据清理方法。此时，Pandas 是更优选择。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Nneoma Uche</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2160</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1977</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库迁移</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可扩展性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Apache Cassandra</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JSON数据转换</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据清洗</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Python编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Pandas库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JSON模式</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/054be1">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/5ee417">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
