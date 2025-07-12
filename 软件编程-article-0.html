@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Netflix Tudum 架构演进：从 CQRS (Kafka) 到 RAW Hollow</title>
+        <title>JavaScript 错误处理手册</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Netflix Tudum 架构演进：从 CQRS (Kafka) 到 RAW Hollow</h2>
-        <p>7/10/2025, 7:35:32 PM</p>
+        <h2>JavaScript 错误处理手册</h2>
+        <p>7/11/2025, 6:52:06 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Netflix Tudum 架构通过从基于 Kafka 的 CQRS 迁移到 RAW Hollow，显著提升了内容传播速度和读写一致性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本手册全面介绍了 JavaScript 错误处理，涵盖错误类型、`try-catch` 机制、`Error` 对象的结构分析、抛出/重新抛出错误，以及 `finally` 块的使用及注意事项。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Netflix Tudum 的架构演进，最初采用服务端驱动 UI (SDUI) 架构，重点是从基于 Kafka 的最终一致性 CQRS 模式演变为利用 Netflix 内部 RAW Hollow 数据库的更高性能模型。最初，Tudum 采用 CQRS 来分离编辑写入路径和访客读取路径，利用 Kafka 实现事件驱动的数据传播。然而，这种设置导致内部内容预览存在数分钟延迟，主要由于多步骤流程和低效的近缓存失效导致，阻碍了编辑效率。为了解决这个问题，Tudum 采用了 RAW Hollow，这是一种创新的内存、同地共存的压缩对象数据库。通过将 RAW Hollow 直接集成到读路径服务中，该架构消除了对 Kafka、页面数据服务和外部键值存储的需求。这种简化使得编辑器的数据传播时间大大缩短（秒而不是分钟），并显著加快了首页构建时间（从约 1.4 秒到约 0.4 秒）。文章强调了 RAW Hollow 在内存占用方面的效率及其为内部用户提供强大的读后写一致性的能力，同时保持了公共消费的高可用性，强调了在分布式系统中减少 I/O 和简化缓存的优势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文档是一份关于 JavaScript 错误处理的详细手册，强调了优雅错误管理对用户体验和调试的重要性。首先，手册介绍了常见的 JavaScript 错误类型，如 `ReferenceError`、`TypeError` 和 `SyntaxError`，并解释它们产生的原因。接着，深入探讨 `try-catch` 机制，通过处理除以零和 JSON 格式错误等实际案例，展示其用法。然后，剖析 `Error` 对象，详细说明其 `name`、`message` 和 `stack` 属性，以实现有效的调试。此外，手册还解释了如何手动 `throw` 和 `rethrow` 错误，以实现分层处理（例如，在 API 层、服务层和 UI 层之间）。最后，手册介绍了用于清理操作的 `finally` 块，同时提醒其可能覆盖返回值或抛出的错误，建议主要用于无副作用的代码。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">从最终一致性过渡到强一致性大大减少了内容传播延迟。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基于 Kafka 的 CQRS 架构导致编辑内容更新延迟数分钟，而 RAW Hollow 解决方案实现了近乎即时的预览，这对于内部工作流程至关重要。</span>
+                        <strong style="color: #1e40af">优雅的错误处理对于构建健壮的 JavaScript 应用程序和改善用户体验至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 适当的错误管理能够防止应用程序崩溃，确保流畅的用户交互，并为开发人员提供必要的调试信息，以有效地识别和解决问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">用内存、同地共存的数据库替换外部数据服务简化了架构并提高了性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过集成 RAW Hollow，Tudum 消除了多服务跳转和 I/O 操作，从而大大减少了请求时间和整体系统复杂性。</span>
+                        <strong style="color: #1e40af">`try-catch` 机制是管理运行时错误和防止应用程序故障的基础。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `try-catch` 机制允许开发人员在 `try` 块中隔离潜在的问题代码，并优雅地处理在相应的 `catch` 块中抛出的任何异常，从而保持应用程序的稳定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将整个数据集保存在内存中可以克服常见的缓存挑战，尤其是失效问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> RAW Hollow 通过在应用内存中提供完整的压缩数据集，避免了复杂的缓存失效问题，从而简化数据管理。</span>
+                        <strong style="color: #1e40af">理解 `Error` 对象和战略性的 `throw`/`rethrow` 模式能够实现复杂的错误管理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 `Error` 对象的属性（`name`、`message`、`stack`）和重新抛出错误，可以实现上下文日志记录、分层错误处理，以及在不同应用程序层（例如，API、业务逻辑、UI）上呈现用户友好的错误信息。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种架构的一个主要缺点是，进行编辑和观察到该编辑反映在网站上的延迟。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">RAW Hollow 是由 Netflix 开发的一种创新的内存、同地共存的压缩对象数据库，旨在处理支持强大读后写一致性的中小型数据集。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在我们简化的架构中，我们取消了页面数据服务、键值存储和卡夫卡基础设施，转而使用 RAW Hollow。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">编写者和编辑可以在几秒钟内预览更改，而不是几分钟，同时仍然为 Tudum 访问者保持高可用性和内存缓存 --- 两全其美。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最小化顺序操作的数量可以显著减少响应时间。I/O 往往是性能的主要敌人。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在应用程序开发中，错误和异常是不可避免的。作为程序员，我们有责任优雅地处理这些错误，从而保证应用程序的用户体验。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与其使应用程序崩溃，不如使用 `try...catch` 机制进行优雅处理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JavaScript 中的错误不仅仅是提示消息，它们是结构化的对象，包含了关于出错位置和原因的丰富信息。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JavaScript 提供了 `throw` 语句来手动触发错误。在处理代码中的无效条件时，该语句非常有用（例如，除以零的情况）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">`finally` 块可以覆盖返回值或抛出的错误。这种行为可能会令人困惑，并可能导致难以发现的错误。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,27 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Netflix TechBlog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Netflix Technology Blog</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Tapas Adhikary</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1421</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">14 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3374</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CQRS (命令查询职责分离)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存数据库</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Error Handling</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Try-Catch</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Debugging</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Frontend Development</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/ec6aa3">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/758471">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATxSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEehHDXhPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNDZAbNTdA3lAzAblRcwPkN6l546Rq0UnVopOqRZ8sU7MJyA2QGzVPqJmAPAHkm9RsArLppGrRSdWik6pFn3wZkCfUPKHmBsiNmhs1bwD5JiBPqPmmk6pFJ1WLTqoWffJ/Rs0NkEnNBGRS84Saf9lJ1aKTqkUnVYs++eOATGomNROQSc2k5puA3Kj5y06qFp1ULTqpWvTJl6n5JjUTkBs1N0AmNU8A+U1q/ktOqhadVC06qVr0yTIgvwnIpGYCcgNkUjMBmdRMQCY1E5BJzQTkCSD/ZSdVi06qFp1ULcIf+YcAuVFzA2RSMwF5Q82/7KRq0UnVopOqRZ+8BGRSMwGZ1ExAJjUTkEnNN6mZgLyh5puATGpugExqNp1ULTqpWnRStQh/5IuATGpugExqJiCTmhsgN2pugExqJiBPqJmAPKHmBsik5gbIpOaNk6pFJ1WLTqoWfbIMyBtqJiCTmhsgN2pugDyhZgIyqblRcwPkCTUTkN90UrXopGrRSdWiT14CMqnZpOYGyBNAbtT8JiBvAJnUTGomIJOaTSdVi06qFp1ULfpkGZBJzRtAnlAzAZnUTEAmIJOaGyA3QCY1m9RMQCY1N0AmNW+cVC06qVp0UrUIf2QRkBs1E5AbNb8JyI2aCcik5gkgb6iZgExqboBMat44qVp0UrXopGrRJy8BuVEzAblRMwF5Q80NkBs1N2omIJOaGzUTkG8C8k0nVYtOqhadVC365MuA3Ki5UTMBeQLIJiCTmhsgk5oJyKTmN6nZdFK16KRq0UnVok9eUjMBeQPIE2qeADKpmYA8AeRGzQTkBsgTat4AMql546Rq0UnVopOqRZ8sU/MEkBs1TwC5UfMEkEnNBGRSMwGZ1ExAJjUTkEnNE0AmNROQTSdVi06qFp1ULfrkJSCTmgnIjZobIDdqJjU3QG7UvAHkm4BMaiY1N0C+6aRq0UnVopOqRZ+8pGYCMqmZgExAbtTcAHlCzQTkBsgbaiYgb6i5ATKpuVGz6aRq0UnVopOqRZ+8BGRS84SaGyA3aiYgk5o31DwB5A0gN0Bu1Nyo+aaTqkUnVYtOqhbhj/xhQL5JzQ2QSc0NkBs1TwCZ1ExAnlDzxknVopOqRSdViz55CchvUjOpmYBMaiYgk5obIJOaJ4C8AWRScwNkUjMB+aaTqkUnVYtOqhZ9skzNJiBPqJmATGpugExqbtRMQCY1N0Bu1GxS800nVYtOqhadVC365MuAPKHmCSA3aiYgk5pJzQRkUvMEkEnNDZA31NwAuVHzxknVopOqRSdViz7549RMQCYgTwCZ1NwAmdTcALlR8wSQGyC/6aRq0UnVopOqRZ/8cUA2qZmATGomNROQSc2kZgIyAZnUTEBugExqboBsOqladFK16KRq0Sdfpuab1ExAngDyBJBJzQ2QJ9TcqJmATGpugExqNp1ULTqpWnRSteiTZUB+E5BJzQTkRs0EZFJzA+RGzQTkCSBPAJnU3ACZ1LxxUrXopGrRSdUi/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWi/wEV1T5hGIonCwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
