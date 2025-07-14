@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quicksilver v2：全球分布式键值存储的演进（第一部分）</title>
+        <title>一个月重写三次代码库、三个月就换套写法！吴恩达：AI 创业拼的是速度，代码不重要</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Quicksilver v2：全球分布式键值存储的演进（第一部分）</h2>
-        <p>7/10/2025, 2:00:00 PM</p>
+        <h2>一个月重写三次代码库、三个月就换套写法！吴恩达：AI 创业拼的是速度，代码不重要</h2>
+        <p>7/11/2025, 6:56:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Quicksilver v1.5：Cloudflare 的全球键值存储 (K/V 存储) 演进，旨在提升规模、一致性和效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">吴恩达强调 AI 创业成功的关键在于极致的执行速度，通过聚焦应用层、善用 AI 编程工具、快速试错和迭代来加速产品落地。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Cloudflare 的 Quicksilver 键值存储从 v1 到 v1.5 的演进过程，其主要驱动力是在快速扩展的全球分布式网络中，对磁盘空间优化日益增长的需求。文章阐述了最初的 Quicksilver v1 如何依赖于每个服务器上的完整数据复制，但随着 Cloudflare 数据规模的增长，这种方式变得越来越低效。为了解决这个问题，Quicksilver v1.5 引入了一种更为复杂的设计，其中包含两种新的服务器角色：存储完整数据集的“副本节点”和充当持久缓存的“代理节点”。代理节点能够智能地淘汰未使用的数​​据，从而释放磁盘空间，尤其是在资源受限的叶子节点上。接下来，作者深入探讨了在此过渡期间遇到的三个主要技术挑战。首先，是实现一种使用 RocksDB 的强大持久缓存机制，该机制通过压缩过滤器进行管理，实现 LRU 淘汰（最近最少使用淘汰算法），并受到硬性限制的保护。其次，在异步复制环境中保持顺序一致性，这对客户端信任至关重要。这一目标通过多版本并发控制 (MVCC) 来实现，以处理副本数据落后于代理的情况；同时，代理上采用“滑动窗口”方法来管理代理数据领先于副本时的最新更新。最后，文章还介绍了如何通过在代理上实现键和值分离，并利用 Bloom 过滤器进行快速内存检查，从而有效地处理大量“负查找”（即对不存在的键的请求）。文章最后简要介绍了使用 Consul 的服务发现机制，该机制确保代理能够可靠地定位分布式系统中的副本。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章整理了吴恩达在 Y Combinator 的最新演讲，核心观点是 AI 创业的成败在于执行速度。他指出，当前 AI 行业最大的机会在于应用层，因为应用能直接创造收入。为提升速度，创业者应聚焦“具体”且可快速落地的想法，避免模糊概念。AI 编程工具（如 Agentic 编码助手）极大地提升了开发效率，使得快速构建原型和频繁重写代码库成为常态，工程成本大幅降低。这导致产品反馈和用户验证成为新的瓶颈，要求产品经理具备更强的工程思维。吴恩达还强调要警惕 AI 被过度炒作的现象，并呼吁更多人学习编程和理解 AI，以负责任的方式利用 AI 赋能各行各业，保护开源生态。文章提供了 AI 创业者提升效率和应对挑战的实践经验和独到见解。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">引入副本和代理角色显著优化了全球分布式键值存储中的磁盘空间使用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种设计允许较小的数据中心（叶子节点）通过仅缓存热点键来减少存储，从而避免了在所有地方存储完整数据集的低效率，同时仍然确保数据的可用性。</span>
+                        <strong style="color: #1e40af">AI 创业成功的关键在于极致的执行速度，而非过早追求代码完美</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 AI 时代，技术发展迅速，创业公司应通过快速试错、迭代和验证来抢占先机，代码可频繁重写以适应变化，速度远比代码的“宝贵性”重要。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">多版本并发控制 (MVCC) 和滑动窗口机制对于在异步全球复制中保持顺序一致性至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MVCC 通过提供历史键版本来处理副本数据落后于代理的情况，而滑动窗口机制确保代理即使在代理数据领先于副本时，也能提供最新的更新。</span>
+                        <strong style="color: #1e40af">AI 创业的最大机会在应用层，且需聚焦具体可执行的想法</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 应用层最能创造商业价值和收入，创业者应将宏观想法转化为具体、可立即动工的方案，以便快速验证市场需求和可行性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在代理上分离键和值提供了一种有效的解决方案，用于处理大量负查找。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方法利用 Bloom 过滤器在内存中快速检查，以确定键是否存在。这避免了因缓存未命中而查询副本所带来的性能下降和网络开销。</span>
+                        <strong style="color: #1e40af">AI 编程工具显著提升开发效率，改变了传统软件工程模式</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新一代 AI 编码助手（如 Agentic 编码助手）能将原型开发效率提升 10 倍以上，降低了代码编写和技术栈选择的成本，使得并行原型和快速重构成为可能。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">产品反馈速度成为新的瓶颈，要求产品经理具备工程思维</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工程效率提升后，获取用户反馈并据此调整产品成为制约速度的关键，未来产品经理与工程师的比例可能反转，跨职能能力更受青睐。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们意识到在每台服务器上存储完整数据集是低效的。由于统一的设计，在一个区域或数据中心访问的数据会在全球范围内复制，即使它在其他地方从未被访问过。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从一开始，Quicksilver 就为客户端提供了顺序一致性：如果键 A 在键 B 之前写入，则不可能先读取键 B 而不读取键 A。我们致力于在新设计中保持这一保证。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有了 MVCC，我们不再为每次更新覆盖默认列族中键的最新值。相反，我们在 RocksDB 中引入了一个新的 MVCC 列族，其中所有更新都存储有相应的复制索引。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">唯一有问题的键是那些最近更新的键，代理已经知道这些键，但副本不知道。基于这个洞察，我们意识到这个问题应该在代理端而不是在副本端解决。这就是所谓的滑动窗口方法。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最后，我们决定实施键和值分离，将所有键存储在代理上，但仅持久化缓存键的值。从缓存中逐出键实际上会导致删除其值。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">衡量一家初创公司未来成败的一个关键因素，就是执行速度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最大机会几乎必然是在应用层，因为只有应用才能创造更多收入，反哺云、模型和芯片公司。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在写原型验证代码时，效率提升完全不是 50%，而是至少 10 倍，甚至更多！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">代码本身变得没那么重要了。比如我在一些团队里，一个月内把整个代码库推翻重写三遍已经不是什么新鲜事了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">未来最有能力的人，是那些能让计算机完全按自己意图去做事的人。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -62,25 +65,25 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Anton Dort-Golts</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">15 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3509</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">36 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8937</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">键值存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">一致性模型</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI创业</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">创业策略</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人工智能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI编程工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agentic AI</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/b41190">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS3SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOabwIyqXkDyBNqJiC/Sc0bJ1WLTqoWnVQt+mSZmk1A3gDyBpAn1ExqNqnZBGTTSdWik6pFJ1WLPvkyIE+oeQLIjZobIJOaCcgbQJ5Q8wSQJ9R800nVopOqRSdViz75x6iZgDwB5Ak1E5BJzQRkUvMvOaladFK16KRq0Sf/GCCTmm8CMqmZgPw/OaladFK16KRq0SdfpuZPAjKpmYDcqJmATGpu1NwAmdQ8oeZvclK16KRq0UnVok+WAfmT1ExAnlAzAZnUTEAmNROQSc0bQP5mJ1WLTqoWnVQtwh/5DwPyhpongNyouQEyqfmXnFQtOqladFK1CH/kBSCTmgnIJjU3QCY1E5AbNW8AmdTcAJnUTEA2qfmmk6pFJ1WLTqoWffKHqZmATGreAPIGkEnNBGRScwPkBsgbap4AMql546Rq0UnVopOqRfgji4DcqJmAPKHmBsik5gbIpOYGyBNqboDcqPkvOaladFK16KRqEf7IFwGZ1HwTkDfUbALyTWomIJOaCcikZtNJ1aKTqkUnVYs+WQbkBsiNmgnIpOYJNTdAngAyqZmA3Kj5TUAmNd90UrXopGrRSdUi/JG/CJBJzZ8EZFIzAflNaiYgk5ongExq3jipWnRSteikahH+yAtAnlAzAXlDzQ2QJ9RMQN5QcwNkUnMDZFIzAblR800nVYtOqhadVC3CH/kiIE+ouQEyqXkCyCY1TwC5UXMD5EbNDZBJzaaTqkUnVYtOqhZ98svUTEBugLwB5Ak1bwCZ1NyoeUPNBORGzTedVC06qVp0UrXok5eA3KiZgNwAmdQ8AWRS8wSQGzUTkDeATGomIDdAJjUTkBsgk5o3TqoWnVQtOqla9MkyNROQSc0TQCY1E5AngDyhZgIyqZmATEAmNTdAJjUTkEnNG2o2nVQtOqladFK1CH/kBSCTmhsgk5ongExqngDyTWomIJOaCcikZgLyhJobIJOaTSdVi06qFp1ULfrkDwPyhJpNaiYgk5oJyA2QSc0E5AbIJiA3QCY1b5xULTqpWnRStQh/5D8MyCY1E5BJzQTkCTUTkEnNE0A2qXnjpGrRSdWik6pFn7wE5DepmdRMQG7UvAFkUnMDZALyBJBJzRtqvumkatFJ1aKTqkWfLFOzCcgNkBs1b6j5k9Q8oeYGyI2aN06qFp1ULTqpWvTJlwF5Qs0bam6A3Ki5AfKGmgnIBGQTkEnNN51ULTqpWnRSteiTfwyQSc2k5gbIpGZSMwHZpOYGyKRmAnID5EbNGydVi06qFp1ULfrkH6PmBsgbQJ5Qc6PmBsgNkDfUbDqpWnRSteikatEnX6bmm9RMQG7UTEBugNyoeQPIpGZSMwGZ1ExAJjUTkG86qVp0UrXopGrRJ8uA/CYgTwCZ1NwAeQLIpGYCMqmZgExqboDcAJnUfNNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+B4r9FlD3PER+AAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/f98430">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATcSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2RSMwF5Qs0bQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8oSaCcik5gbIBOQJNZOaTWo2Adl0UrXopGrRSdWiT74MyBNqngByo2YCcqNmAvIGkCfUPAHkCTXfdFK16KRq0UnVok/+ckAmNROQCcgTaiYgk5oJyKTmb3JSteikatFJ1aJP/jJqboDcqHkCyKRmAvJ/clK16KRq0UnVok++TM1vAvIGkCfU3Ki5ATKpeULNf8lJ1aKTqkUnVYs+WQbk36RmAjKpmYBMaiYgk5oJyKRmAjKpeQPIf9lJ1aKTqkUnVYvwR/5gQCY13wTkRs0NkEnN3+SkatFJ1aKTqkX4Iy8AmdRMQDapuQHyhpo3gExqboBMaiYgm9R800nVopOqRSdViz75ZWomIJOaN9RsAjKpmYBMam6A3AB5Q80TQCY1b5xULTqpWnRStQh/ZBGQSc0EZFIzAfkmNROQSc0NkCfU3AC5UfMnOaladFK16KRqEf7IFwGZ1ExAbtQ8AWRSMwGZ1HwTkG9SMwGZ1ExAJjWbTqoWnVQtOqla9MkyIG+omYBMaiYgk5oJyA2QSc0NkEnNBORGzW8CMqn5ppOqRSdVi06qFn3yy4BMaiYgk5pNaiYgN0AmNROQJ4C8oWYCMql5Asik5o2TqkUnVYtOqhbhjywC8oaaCciNmhsg/yY1N0AmNTdAJjUTkBs133RSteikatFJ1SL8kS8CcqNmAjKpmYDcqHkCyBtqngByo+YGyI2aGyCTmk0nVYtOqhadVC365MvU3ACZ1ExA3gDyhJoJyKTmBsik5kbNG2omIDdqvumkatFJ1aKTqkWfvATkDTU3aiYgb6i5AfIEkDeATGomIDdAJjUTkBsgk5o3TqoWnVQtOqla9MkyNROQSc0NkDeATGqeUHMDZFIzAZmATGpugExqJiCTmjfUbDqpWnRSteikatEnX6bmBsiNmhsgTwC5UfMEkEnNBOQGyKRmAnIDZFIzqZmATGo2nVQtOqladFK1CH/kBSCTmhsgk5oJyI2aGyBPqJmATGomIE+omYB8k5oJyBNq3jipWnRSteikahH+yB8MyKTmCSBPqJmAPKFmAjKpeQLIJjVvnFQtOqladFK16JOXgPwmNZOaCcik5gk1E5AJyKTmBsgE5Akgk5o31HzTSdWik6pFJ1WLPlmmZhOQGyA3QG7U3Kj5N6l5Qs0NkBs1b5xULTqpWnRSteiTLwPyhJpNaiYgbwB5Q80EZAKyCcik5ptOqhadVC06qVr0yf+MmgnIjZpJzQRkk5obIJOaCcgNkBs1b5xULTqpWnRSteiTv4yaCcik5kbNBOQNNTdqboDcAHlDzaaTqkUnVYtOqhZ98mVqvknNjZobNROQJ9S8AWRSM6mZgExqJiCTmgnIN51ULTqpWnRSteiTZUB+E5BJzQRkUjMBuVEzAbkBMqmZgExqJiCTmhsgN0AmNd90UrXopGrRSdUi/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWifwAp+kI52cx+4AAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

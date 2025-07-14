@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>腾讯云 TDSQL-C 全球数据库技术揭秘</title>
+        <title>理解 Tree Shaking：原理与那些“甩不掉”的代码陷阱</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>腾讯云 TDSQL-C 全球数据库技术揭秘</h2>
-        <p>7/11/2025, 7:02:00 AM</p>
+        <h2>理解 Tree Shaking：原理与那些“甩不掉”的代码陷阱</h2>
+        <p>7/12/2025, 1:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">详细揭示了腾讯云 TDSQL-C 全球数据库的架构演进与核心技术，包括存算分离、高效日志复制、跨地域高可用及写转发机制。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入解析了前端构建中 Tree Shaking 的原理、必要条件，并结合代码示例详细阐述了导致其失效的常见陷阱及解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了腾讯云 TDSQL-C 云原生关系型数据库的技术演进与全球数据库核心技术。首先，介绍了 TDSQL-C 如何通过存算分离架构解决传统 MySQL 的痛点，并演进至“Log is Database”架构，实现高弹性、高性能，并提及 2021 年发布 Serverless 版本以及 2023 年通过并行查询和列存索引增强 HTAP 能力。接着，详细阐述了全球数据库的跨城市、跨洲际部署能力，通过主从 Region 高效物理复制同步数据，并支持多 RO 节点分担读压。重点揭秘了底层存储引擎 DBSTORE 从 2.0 到 3.0 的升级，引入 LOGSTORE 组件提升日志持久化和发送效率，并通过多线程并发优化跨地域网络延迟。此外，文章还详细讲解了全球数据库的计划内/计划外可用区切换机制，以及透明的写转发和多种一致性级别支持，为全球化业务部署提供了可靠方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了前端优化技术 Tree Shaking。首先阐述了其作为静态分析技术的工作原理、必须使用 ES Module 以及生产模式构建的前提条件。随后，通过多个代码示例，深入剖析了 Tree Shaking 常见的失效场景，包括使用 CommonJS 模块、聚合导出对象、通过间接引用（如`export default *`）转发模块、以及含有副作用的模块。针对每个失效场景，文章均给出了清晰的建议修复方式。最后，提供了通过查看构建产物体积和代码来验证 Tree Shaking 是否生效的方法，并总结了常见错误用法及其修复方案。文章内容全面且实用，对前端开发者优化项目构建体积具有很高的指导价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">TDSQL-C 通过存算分离解决传统 MySQL 痛点</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用“Log is Database”架构，实现秒级升降配、故障恢复和 PB 级存储，大幅提升了数据库的弹性与性能。</span>
+                        <strong style="color: #1e40af">Tree Shaking 依赖 ES Module 的静态分析特性来移除死代码</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Tree Shaking 是一种静态分析技术，它通过分析 ES Module 的导入导出关系，识别并移除未被实际引用的代码，从而减小最终打包体积。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">全球数据库实现跨地域数据高效同步与容灾</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过主从 Region 物理复制全量数据集，支持区域内就近读和多地部署，提供全球容灾能力，确保业务连续性。</span>
+                        <strong style="color: #1e40af">多种动态语法和模块导出方式会阻碍 Tree Shaking 生效</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CommonJS、导出聚合对象、间接引用、动态属性访问以及模块副作用等，都会因无法进行静态分析而导致 Tree Shaking 失效，增加不必要的代码体积。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">DBSTORE 3.0 引入 LOGSTORE 提升日志处理效率</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过解耦日志持久化和页面存储，优化日志发送链路，并通过多线程并发解决跨洲际网络延迟，提升复制效率。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">提供完善的全球数据库高可用切换机制</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 支持计划内降级升级和计划外故障自动切换，确保在不同场景下服务的高可用性，降低运维风险。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">写转发与多一致性级别提升全球业务灵活性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 允许从 Region 接收写请求并透明转发至主 Region，并支持多种数据一致性配置以平衡响应与数据同步需求。</span>
+                        <strong style="color: #1e40af">理解并正确配置副作用模块是确保 Tree Shaking 彻底的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于有副作用的模块，构建工具默认会保留，需要通过`package.json`中的`sideEffects`字段明确告知构建工具其行为，以实现更精细的优化。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">TDSQL-C 采用存储和计算分离的架构，所有计算节点共享一份数据，提供秒级的配置升降级、故障恢复，单节点可支持百万级 QPS，自动维护数据和备份，最高以 GB/秒的速度并行回档。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">“Log is Database” 这种架构最小化网络 IO，存储层能解析 redolog。内核和存储深度组合优化，避免了 RW 节点页面刷脏，checkpoint 等行为。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">全球数据库是一个可跨城市、跨国甚至跨洲际部署的数据库网络集群，不同区域间有全量数据集，通过高效物理复制同步数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">主库通过多线程并发提高发送效率。主库为每个 standby dump 请求生成一个协调线程和多个 worker 线程，协调线程从 log buffer 或者 cdp 中获取一段区域的日志，然后计算好并行执行的分片，每个 worker 线程发送各自分片到 standby...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">用户提高一致性级别，用户的应用程序会花更多时间等待在更改在 RO 的回放，可以在快速响应与一致性之间选择平衡。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Tree Shaking 是一种 **「静态分析（Static Analysis）」** 技术，用于在构建过程中移除未被引用的 ES 模块导出内容。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你可能只用了 add，但由于 math 是整个对象，打包工具无法静态分析 math.sub 是否会在运行时被用到。因此它会**「保留整个模块」** 的内容（包括 sub）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Tree Shaking 并不是魔法，而是一种依赖静态语法分析的工具优化手段。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -67,25 +61,25 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">高可用架构</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">高可用架构</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">15 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3602</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">38 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9329</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">存储计算分离</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高可用架构</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端构建</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Tree Shaking</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Webpack</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ES Module</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/611dab">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/fc9f1d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
