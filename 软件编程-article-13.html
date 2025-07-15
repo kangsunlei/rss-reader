@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>理解 Tree Shaking：原理与那些“甩不掉”的代码陷阱</title>
+        <title>Vue 实现一个“液态玻璃”效果登录卡片</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>理解 Tree Shaking：原理与那些“甩不掉”的代码陷阱</h2>
-        <p>7/12/2025, 1:00:00 AM</p>
+        <h2>Vue 实现一个“液态玻璃”效果登录卡片</h2>
+        <p>7/14/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入解析了前端构建中 Tree Shaking 的原理、必要条件，并结合代码示例详细阐述了导致其失效的常见陷阱及解决方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了如何使用 Vue、CSS3 的`backdrop-filter`和 SVG 滤镜实现一个带有 3D 倾斜交互的液态玻璃效果登录卡片。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了前端优化技术 Tree Shaking。首先阐述了其作为静态分析技术的工作原理、必须使用 ES Module 以及生产模式构建的前提条件。随后，通过多个代码示例，深入剖析了 Tree Shaking 常见的失效场景，包括使用 CommonJS 模块、聚合导出对象、通过间接引用（如`export default *`）转发模块、以及含有副作用的模块。针对每个失效场景，文章均给出了清晰的建议修复方式。最后，提供了通过查看构建产物体积和代码来验证 Tree Shaking 是否生效的方法，并总结了常见错误用法及其修复方案。文章内容全面且实用，对前端开发者优化项目构建体积具有很高的指导价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入讲解了在 Vue 项目中实现“液态玻璃”UI 效果的完整过程。首先，介绍了液态玻璃效果的核心视觉原理，包括多层叠加、模糊、色调、高光以及 SVG 滤镜带来的微妙扭曲感。接着，详细阐述了如何通过监听鼠标移动，利用 CSS `transform`属性实现卡片的 3D 灵动倾斜交互。文章提供了从 HTML 结构搭建、SVG 滤镜定义、背景设置、多层玻璃结构样式到 Vue 组件方法实现的完整代码示例和详细步骤，并给出了阴影、圆角、性能和浏览器兼容性等方面的优化建议，为前端开发者提供了一个实用且具有视觉吸引力的 UI 效果实现指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Tree Shaking 依赖 ES Module 的静态分析特性来移除死代码</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Tree Shaking 是一种静态分析技术，它通过分析 ES Module 的导入导出关系，识别并移除未被实际引用的代码，从而减小最终打包体积。</span>
+                        <strong style="color: #1e40af">SVG 滤镜与 CSS `backdrop-filter`结合实现液态玻璃效果</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 SVG 的`feTurbulence`和`feDisplacementMap`创建表面扭曲，结合`backdrop-filter: blur`实现背景虚化，是构建液态质感的关键技术组合。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">多种动态语法和模块导出方式会阻碍 Tree Shaking 生效</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CommonJS、导出聚合对象、间接引用、动态属性访问以及模块副作用等，都会因无法进行静态分析而导致 Tree Shaking 失效，增加不必要的代码体积。</span>
+                        <strong style="color: #1e40af">多层叠加是模拟真实玻璃质感的视觉核心</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 登录卡片由模糊层、色调层、高光层和内容层多层叠加组成，每层负责模拟玻璃的不同视觉特性，共同营造通透、折射和高光质感。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">理解并正确配置副作用模块是确保 Tree Shaking 彻底的关键</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于有副作用的模块，构建工具默认会保留，需要通过`package.json`中的`sideEffects`字段明确告知构建工具其行为，以实现更精细的优化。</span>
+                        <strong style="color: #1e40af">JavaScript 监听鼠标事件实现 3D 灵动倾斜交互</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Vue 组件的`handleMouseMove`方法动态计算鼠标位置并设置 CSS `transform`属性，使卡片随鼠标移动产生逼真的 3D 旋转效果，增强用户体验。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">细节优化、性能考量与浏览器兼容性是实现高质量液态玻璃效果的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章强调了通过柔和阴影、高光线条、圆角一致性等细节打磨来提升视觉高级感。同时，也指出了`backdrop-filter`可能带来的性能损耗以及浏览器兼容性问题，提醒开发者在实际应用中需注意权衡与优化。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Tree Shaking 是一种 **「静态分析（Static Analysis）」** 技术，用于在构建过程中移除未被引用的 ES 模块导出内容。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你可能只用了 add，但由于 math 是整个对象，打包工具无法静态分析 math.sub 是否会在运行时被用到。因此它会**「保留整个模块」** 的内容（包括 sub）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Tree Shaking 并不是魔法，而是一种依赖静态语法分析的工具优化手段。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">液态玻璃（Liquid Glass）是一种极具现代感的 UI 视觉风格，常见于高端网站和操作系统界面。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">液态玻璃效果的核心是多层视觉叠加：模糊层、色调层、高光层和 SVG 滤镜。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过 SVG 的 feTurbulence 和 feDisplacementMap，让玻璃表面产生微妙的扭曲和流动感。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">鼠标移动时，卡片会根据指针位置灵动倾斜。鼠标移出时，卡片平滑恢复。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">液态玻璃效果是现代前端视觉的代表之一。只要理解其原理，分层实现、细致调优，任何人都能做出媲美 macOS、Win11 的高端玻璃 UI。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +63,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">38 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9329</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2063</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端构建</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Tree Shaking</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Webpack</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ES Module</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">UI设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vue.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CSS3</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SVG滤镜</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/fc9f1d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/476646">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATLSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2RScwPkRs0bQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gaQSc0TQJ5QM6nZpGYTkE0nVYtOqhadVC365MuAPKHmCSA3aiYgk5obIG8AeULNE0CeUPNNJ1WLTqoWnVQt+uQvo+ZGzRNqJiCTmgnIpGYCMqn5m5xULTqpWnRSteiT/xkgk5obIJOaCcikZgLyf3JSteikatFJ1aJPvkzNbwIyqXlDzQRkUnOj5gbIpOYJNf8lJ1WLTqoWnVQt+mQZkH+TmgnIpGYCMqmZgExqJiCTmgnIpOYNIP9lJ1WLTqoWnVQtwh/5gwG5UbMJyI2aGyCTmr/JSdWik6pFJ1WL8EdeADKpmYBsUvMEkCfUvAFkUnMDZFIzAdmk5ptOqhadVC06qVr0yUtqNql5AsiNmgnIpGYCcqNmAjKpuQFyA+QNNU8AmdS8cVK16KRq0UnVIvyRLwKySc0E5A01TwB5Qs0NkBs1f5KTqkUnVYtOqhZ98hKQGzUTkEnNE0Bu1ExAngByo+YJIG8AuVEzAZnUTEAmNZtOqhadVC06qVr0yTI1N2qeADKp+SY1E5AJyKRmAnKj5jcBmdR800nVopOqRSdVi/BHFgG5UfMGkEnNBOQJNROQGzUTkN+kZgIyqXkCyKTmjZOqRSdVi06qFuGPLAIyqbkBsknNBGRSMwGZ1ExA3lBzA2RScwNkUjMBuVHzTSdVi06qFp1ULfrkJSCb1DwBZAJyA2RSMwGZ1ExAJjVPANkEZFJzA2RSs+mkatFJ1aKTqkWfvKRmAjIBuVFzA+RGzW9ScwNkUnOj5g01E5AbNd90UrXopGrRSdUi/JEXgExqJiBPqHkDyI2aTUBu1ExAbtRMQJ5QMwGZ1ExAJjVvnFQtOqladFK16JMvU3MDZAJyo+ZGzQRkE5BJzQRkAjKpuQEyqZmATGreULPppGrRSdWik6pFn3wZkBs1E5BJzQRkUvMEkE1AJjUTkBsgk5oJyA2QSc2kZgIyqdl0UrXopGrRSdUi/JEXgExqngDyhJobIG+ouQHyhJoJyDepmYA8oeaNk6pFJ1WLTqoW4Y/8wYBMaiYgk5pNQJ5QMwGZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5pJzY2aCciNmhsgk5obIBOQJ4BMat5Q800nVYtOqhadVC36ZJmaTUBugExqJiA3ap5Q85vUPKHm33RSteikatFJ1aJPvgzIE2o2qZmAvAHkDTUTkAnIJiCTmm86qVp0UrXopGrRJ385IJOaN9RMQDapuQEyqZmA3AC5UfPGSdWik6pFJ1WLPvnLAHkCyI2aCcgTam7U3AC5AfKGmk0nVYtOqhadVC365MvUfJOaCcgNkEnNDZAbNW8AmdRMaiYgk5oJyKRmAvJNJ1WLTqoWnVQt+mQZkN8E5EbNE0DeADKpmYBMaiYgk5obIDdAJjXfdFK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVon8ANVM2Nj8L9WAAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
