@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nginx 正式拥抱现代 JavaScript！</title>
+        <title>低并发编程｜如何用 720 个请求让后端服务器瘫痪</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Nginx 正式拥抱现代 JavaScript！</h2>
-        <p>7/14/2025, 1:39:00 AM</p>
+        <h2>低并发编程｜如何用 720 个请求让后端服务器瘫痪</h2>
+        <p>7/15/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Nginx 正式集成 QuickJS 引擎，全面支持现代 JavaScript，显著增强了其动态处理能力与配置灵活性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入分析了一起由核心依赖初始化异常、异常捕获不当和无超时等待导致的低并发下后端服务瘫痪故障的排查与修复过程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 Nginx 在引入 QuickJS 引擎后，对现代 JavaScript 支持的重大意义。传统 Nginx 配置在面对复杂动态需求时显得力不从心，而早期 njs 模块对 JS 语法支持有限。QuickJS 的引入解决了这一痛点，它是一个轻量级但功能完整的 JS 引擎，支持 ES2023 标准，包括模块导入导出、异步编程等。这使得开发者可以在 Nginx 层实现更复杂的逻辑，如动态路由、接口鉴权、自定义日志和请求处理。文章指出，Nginx 拥抱 JavaScript 是基于 JS 开发者庞大的生态、清晰的配置逻辑以及 QuickJS 小巧高效的特性。JS 在 Nginx 中的应用并非一蹴而就，而是逐步渗透，最终成为其脚本化能力的核心语言。文章最后强调，JavaScript 正成为一种“万能胶水语言”，在不取代 Nginx 核心功能的前提下，使其更加灵活和现代化。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细复盘了一起生产环境中后端服务在低并发下却意外瘫痪的故障。作者首先指出故障的根本原因是应用启动时，核心依赖模块因网络问题初始化失败，但缺乏有效的校验和兜底处理。这导致后续请求在处理过程中抛出`ExceptionInInitializerError`，且该错误未能被上层`catch Exception`捕获，也未能在 Reactor Mono 流的`onErrorResume`之前被处理，从而中断了流处理。最终，订阅方因`blockGet`未设置超时而无限等待，耗尽 HSF 线程池，导致服务不可用。文章详细阐述了从 HSF 线程池满的现象出发，通过线程堆栈分析、日志排查、Arthas 验证等步骤，层层深入定位问题的过程。最后，作者强调了应用启动阶段对关键组件状态检查、全局异常处理策略以及响应式编程中超时设置的重要性，并提出了三项具体的修复措施，为开发者提供了宝贵的故障排查和系统稳定性建设经验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Nginx 引入 QuickJS 引擎，实现对现代 JavaScript 的全面支持。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> QuickJS 作为轻量级但功能完整的 JS 引擎，为 Nginx 带来了 ES2023 标准支持，包括模块化和异步编程，解决了早期 njs 语法受限的问题。</span>
+                        <strong style="color: #1e40af">低并发下的服务瘫痪往往是多重小错误累积的结果</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使是看似微小的初始化异常、捕获范围不足、缺乏超时设置等问题，在特定组合下也能导致系统级故障，需全面审视。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JavaScript 在 Nginx 中实现更复杂的工程化逻辑。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者现在可以在 Nginx 层实现动态路由、轻量级接口验证、异步日志生成、自定义 Header/Body 处理等，极大地扩展了 Nginx 的能力。</span>
+                        <strong style="color: #1e40af">应用启动时对核心依赖的强校验至关重要</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 核心组件的初始化成功应作为应用健康上线的强制条件，避免带病上线，从而预防运行时出现不可预测的问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JS 成为 Nginx 脚本化核心语言是必然趋势。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 得益于 JS 庞大的开发者群体、清晰的配置逻辑以及 QuickJS 的轻量高效，JS 正逐步渗透并成为 Nginx 基础设施领域的核心脚本语言。</span>
+                        <strong style="color: #1e40af">全局异常处理和响应式流的错误处理需全面覆盖</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于可能抛出`Error`或`Throwable`的场景，应使用更宽泛的`catch Throwable`，并在响应式编程中确保兜底机制能正确处理异常，避免流中断。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">阻塞式调用必须设置合理的超时时间</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在分布式系统中，任何阻塞等待都应有明确的超时限制，以防止因上游无响应或异常导致下游线程资源耗尽。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Nginx 官方悄悄宣布：njs 引入对 QuickJS 的支持。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">QuickJS 是一个超轻量 JavaScript 引擎，体积只有 367 KiB，却支持完整的 ES2023 标准。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这不是'小打小闹'的扩展，而是真正意义上的'现代 JavaScript 编程'跑在 Nginx 里了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JS 开发者太多了，门槛低、学习成本小。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Nginx 还是那个 Nginx，但现在，它脑子里装了一块 JavaScript 的芯。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本次故障的根本原因是应用启动时未对核心依赖模块的初始化异常进行有效校验和兜底处理，导致后续请求处理过程中抛出无法被捕获的初始化错误，进而引发流处理中断与线程阻塞，最终使 HSF 线程池耗尽、服务不可用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">综上所述，本次故障凸显了应用启动阶段缺乏对关键组件状态的有效检查及全局异常处理策略的重要性，下文会展开讲述整个排查过程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ExceptionInInitializerError 是 Java 的一个运行时异常，表示在类的静态初始化过程中发生了错误（如静态代码块或静态变量初始化时抛出异常）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">问题已经比较清晰了：如果这个 error 没有被正确捕获，就会导致流进入错误状态，如果没有正确使用 doOnError 和 onErrorResume，流就会出现终止，从而订阅者永远无法获取到流的结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">很多很大的空难事件，是由一个个微小错误累计而成的，软件行业也是类似的，很多大型的故障比如最近的 google cloud 认证服务瘫痪导致的 cloudfare 大面积服务不可用竟然是一个错误配置引发的空指针异常引发的一连串连锁反应导致的。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +63,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端充电宝</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">前端充电宝</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">26 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6397</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">16 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3939</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Nginx</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">QuickJS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">njs</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Web服务器</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排查</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">线程池</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">异常处理</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/373954">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATASURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyA3aiYgN2reAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkE1AJjUTkAnIE2omNZvUbAKy6aRq0UnVopOqRZ98GZAn1DwB5A0gk5oJyBtAnlDzBJAn1HzTSdWik6pFJ1WLPvnHqJmA3Ki5UTMBmdRMQCY1E5BJzb/kpGrRSdWik6pFn/zj1NwAmdRMQCY1E5BJzQTkv+SkatFJ1aKTqkWffJmaP5maGzUTkEnNjZobIJOaJ9T8SU6qFp1ULTqpWvTJMiB/EiCTmgnIpGYCMqmZgExqJiCTmjeA/MlOqhadVC06qVr0yUtq/iZAnlAzAXlCzQRkUnOj5m9yUrXopGrRSdUi/JEXgExqJiCb1NwAmdT8JiCTmhsgk5oJyCY133RSteikatFJ1aJPXlKzSc0TQCY1TwB5Qs0EZFJzA+QGyBtqngAyqXnjpGrRSdWik6pF+CMvAHlDzQ2QSc0bQG7U3AB5Qs0NkBs1f5OTqkUnVYtOqhZ9skzNDZAbIJOaJ4A8oeYGyKTmCSBvALlRMwGZ1ExAJjWbTqoWnVQtOqlahD/yApAn1ExAnlDzBJBvUjMBuVHzTUBu1HzTSdWik6pFJ1WLPvnDqHkCyKTmRs0TQCY1E5AngLyhZgIyqXkCyKTmjZOqRSdVi06qFuGPLAJyo+YJIJOaGyCTmjeAvKHmBsik5gbIpGYCcqPmm06qFp1ULTqpWvTJMjU3QG7UTGomIDdqboBMaiYgT6h5AsgmIJOaGyCTmk0nVYtOqhadVC365CUgk5obNTdA3gAyqZnUvKHmBsik5kbNG2omIDdqvumkatFJ1aKTqkWffBmQSc2NmjeA3ACZ1NyouQHyBpBJzQTkBsikZgJyA2RS88ZJ1aKTqkUnVYs++TI1E5BJzQTkCTU3QG6A3AC5UTMBmYBMam6ATGomIJOaN9RsOqladFK16KRq0Se/TM0EZFLzBJBvUjMBmYBMaiYgN0AmNROQGyCTmknNBGRSs+mkatFJ1aKTqkWf/DIgk5oJyI2aGzU3QCY1m4BMaiYgN0A2AbkBMql546Rq0UnVopOqRfgjfzEgT6jZBOQJNROQSc0TQDapeeOkatFJ1aKTqkWfvATkN6mZ1DwBZFLzBJBJzQ2QCcgTQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAJjUTkEnNG2p+k5on1Pw/nVQtOqladFK16JMvA/KEmk1qboBMam6AvKFmAjIB2QRkUvNNJ1WLTqoWnVQt+uQfA+RGzRtqJiCb1NwAmdRMQG6A3Kh546Rq0UnVopOqRZ/849RMQCY1N0DeUHOj5gbIDZA31Gw6qVp0UrXopGrRJ1+m5pvU3AB5AsgTat4AMqmZ1ExAJjUTkEnNBOSbTqoWnVQtOqla9MkyIL8JyBNqvgnIpGYCMqmZgExqboDcAJnUfNNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+B8JlJz+HZzTaAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/5c2de8">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
