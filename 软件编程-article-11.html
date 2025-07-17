@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>低并发编程｜如何用 720 个请求让后端服务器瘫痪</title>
+        <title>人工智能在软件开发中的未来</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>低并发编程｜如何用 720 个请求让后端服务器瘫痪</h2>
-        <p>7/15/2025, 12:31:00 AM</p>
+        <h2>人工智能在软件开发中的未来</h2>
+        <p>7/16/2025, 1:38:30 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入分析了一起由核心依赖初始化异常、异常捕获不当和无超时等待导致的低并发下后端服务瘫痪故障的排查与修复过程。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了人工智能在软件开发中两种未来趋势，即通用人工智能驱动的转型和人工智能增强的生产力，并分析了开发者和组织面临的机遇与挑战。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细复盘了一起生产环境中后端服务在低并发下却意外瘫痪的故障。作者首先指出故障的根本原因是应用启动时，核心依赖模块因网络问题初始化失败，但缺乏有效的校验和兜底处理。这导致后续请求在处理过程中抛出`ExceptionInInitializerError`，且该错误未能被上层`catch Exception`捕获，也未能在 Reactor Mono 流的`onErrorResume`之前被处理，从而中断了流处理。最终，订阅方因`blockGet`未设置超时而无限等待，耗尽 HSF 线程池，导致服务不可用。文章详细阐述了从 HSF 线程池满的现象出发，通过线程堆栈分析、日志排查、Arthas 验证等步骤，层层深入定位问题的过程。最后，作者强调了应用启动阶段对关键组件状态检查、全局异常处理策略以及响应式编程中超时设置的重要性，并提出了三项具体的修复措施，为开发者提供了宝贵的故障排查和系统稳定性建设经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了人工智能在软件开发中不断演变的角色，提出了两种截然不同的未来情景：一种是通用人工智能驱动的、以自主 AI 智能体开发者为核心的格局重塑，另一种是人工智能对人类能力的增强。它讨论了能够处理复杂工程任务的 AI 智能体的兴起，可能形成协作的“人工智能团队”，这将需要专门的工具、专门的工作空间（本地与云端推理）以及用于代码共享的以 AI 为中心的市场。这种情况还探讨了人工智能如何改变代码本身的性质，从而导致机器优化的结构或以人工智能为中心的新编程语言，并强调了使用人工智能管理大量遗留代码库的重大挑战。文章还强调了下一代集成开发环境对于促进无缝人机协作（人机协作体验 - HAX）的关键需求，以及人工智能在安全、知识产权和代码认证方面的重要性。在更为保守的情景中，人工智能通过自动化调试和性能分析等任务来增强现有的开发者工作流程，人工智能助手扩展到产品经理和质量保证等其他角色。这两种情景都强调了人工智能在软件开发中发挥积极作用的必然性，需要新的界面、验证工具和适应性强的工作流程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">低并发下的服务瘫痪往往是多重小错误累积的结果</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使是看似微小的初始化异常、捕获范围不足、缺乏超时设置等问题，在特定组合下也能导致系统级故障，需全面审视。</span>
+                        <strong style="color: #1e40af">人工智能将导致软件开发中两种截然不同的未来：通用人工智能驱动的转型或人工智能增强的人类生产力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章概述了这两种情景，详细描述了它们对开发者角色、工具和软件开发生命周期的潜在影响，强调了主动准备的必要性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">应用启动时对核心依赖的强校验至关重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 核心组件的初始化成功应作为应用健康上线的强制条件，避免带病上线，从而预防运行时出现不可预测的问题。</span>
+                        <strong style="color: #1e40af">自主 AI 智能体将需要新的生态系统、专用工具和以 AI 为中心的市场。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着人工智能承担复杂的编码任务，专用工作区、协作平台和人工智能生成代码的市场将至关重要，反映了人类开发环境。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">全局异常处理和响应式流的错误处理需全面覆盖</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于可能抛出`Error`或`Throwable`的场景，应使用更宽泛的`catch Throwable`，并在响应式编程中确保兜底机制能正确处理异常，避免流中断。</span>
+                        <strong style="color: #1e40af">人工智能将从根本上改变软件的结构和创建方式，催生机器优化的代码和以人工智能为中心的新编程语言，并为管理遗留代码库提供先进的解决方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章探讨了代码如何演变为机器优先、人工智能首选语言的出现，以及人工智能在维护和现代化现有庞大遗留代码库中的关键作用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">阻塞式调用必须设置合理的超时时间</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在分布式系统中，任何阻塞等待都应有明确的超时限制，以防止因上游无响应或异常导致下游线程资源耗尽。</span>
+                        <strong style="color: #1e40af">人机协作将需要下一代集成开发环境和新兴的人机协作体验（HAX）领域。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使具备人工智能的先进功能，人为监督仍然至关重要。未来的集成开发环境必须促进无缝交互、代码验证和项目监督，从而推动人机协作体验的发展。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">随着人工智能在开发中应用日益广泛，相关的监管和伦理挑战也日益凸显。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 人工智能生成的代码安全性、知识产权以及对正式审计和认证的需求等问题将变得至关重要，从而为新的检查和认证工具创造机会。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本次故障的根本原因是应用启动时未对核心依赖模块的初始化异常进行有效校验和兜底处理，导致后续请求处理过程中抛出无法被捕获的初始化错误，进而引发流处理中断与线程阻塞，最终使 HSF 线程池耗尽、服务不可用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">综上所述，本次故障凸显了应用启动阶段缺乏对关键组件状态的有效检查及全局异常处理策略的重要性，下文会展开讲述整个排查过程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ExceptionInInitializerError 是 Java 的一个运行时异常，表示在类的静态初始化过程中发生了错误（如静态代码块或静态变量初始化时抛出异常）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">问题已经比较清晰了：如果这个 error 没有被正确捕获，就会导致流进入错误状态，如果没有正确使用 doOnError 和 onErrorResume，流就会出现终止，从而订阅者永远无法获取到流的结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">很多很大的空难事件，是由一个个微小错误累计而成的，软件行业也是类似的，很多大型的故障比如最近的 google cloud 认证服务瘫痪导致的 cloudfare 大面积服务不可用竟然是一个错误配置引发的空指针异常引发的一连串连锁反应导致的。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">人工智能不再遥不可及，它已来临，并改变着我们构建软件的方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">随着技术越来越接近通用人工智能的水平，我们开始看到不仅可以提供帮助，而且可以主动编写代码的 AI 智能体。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即使人工智能团队承担了繁重的工作，我们仍然需要人类来指导、完善和批准最终产品。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">首要问题是安全性。显然，人工智能并非完美，其错误可能导致实际损害。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">无论未来如何，有一点是明确的：人工智能将从支持型助手演变为编码、测试和分析中的积极参与者。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +66,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Egor Bogomolov</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">16 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3939</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2519</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排查</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">线程池</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">异常处理</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人工智能在软件开发中的应用</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人工智能的未来</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人机协作</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/5c2de8">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/b94d03">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>化繁为简：使用 GitHub Copilot 助手改善开发者工作流</title>
+        <title>防御 GitHub 恶意克隆</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>化繁为简：使用 GitHub Copilot 助手改善开发者工作流</h2>
-        <p>7/15/2025, 4:00:00 PM</p>
+        <h2>防御 GitHub 恶意克隆</h2>
+        <p>7/16/2025, 9:14:33 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本教程演示了 GitHub Copilot 助手如何通过重构现有项目、识别技术债，甚至协助 UI 更改，从而显著改善开发者工作流，将混乱项目转化为结构清晰、文档完善的项目。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文解析 GitHub 恶意克隆攻击，指导如何通过分析贡献者信息、提交模式及文件内容识别恶意克隆，并提供应对措施。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文阐述了如何利用 GitHub Copilot 编码助手来简化和增强开发者工作流，将最初非结构化的项目转化为组织良好、测试充分、文档完善的代码库。以个人 GitHub Actions 的项目 (`validate-file-exists`) 作为案例研究，作者详细介绍了一个实际且循序渐进的过程。关键步骤包括优化 Copilot 自定义指令以更好地对齐任务，并创建一个 `copilot-setup-steps.yaml` 文件，为助手配备必要的开发环境工具。然后，本教程展示了 Copilot 如何有效地识别和优先处理技术债 (Technical Debt)，以及随后 Copilot 编码助手如何自主生成和管理 Pull Request 以解决这些问题，包括修复 `package.json` 不一致、更新 README、添加输入验证和编写新测试。一个值得注意的亮点是在 Pull Request 中与 Copilot 进行实时调试和迭代改进的过程。文章进一步展示了 Copilot 的高级功能，展示了它在协助对一个独立项目进行 UI 更改方面的能力，包括点击放置和拖放功能，这得益于其新的 Playwright 集成以进行视觉验证。作者最后强调 GitHub Copilot 编码助手是一个协作的队友，如果正确引导，可以显著加速项目清理和重构，鼓励开发者将这些助手功能应用于他们现有的待优化项目。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文讨论了 GitHub 上持续存在的网络威胁，攻击者镜像合法仓库并注入混淆的恶意软件以窃取凭据和加密货币。由于频繁的自动化提交，这些恶意克隆通常在搜索结果中排名高于原始仓库，诱导开发者。作者作为攻击目标，提供了一个识别此类攻击的实用指南。关键缓解策略包括验证贡献者信息，搜索克隆仓库（通常显示可疑活动），检查隐藏提交历史的频繁自动化提交，以及比较文件内容（例如，带有可疑链接的 AI 生成的 README 文件）。本文还简要描述了所涉及的信息窃取恶意软件，并建议采取的行动，例如记录证据、通知维护者以及向 GitHub 报告。最后，它提出了关于 AI 对未来攻击的影响以及平台需要调整其检测机制的关键问题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">为 AI 助手构建结构化设置对提升贡献质量至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 正确配置的自定义指令和设置文件 (`copilot-instructions.md`， `copilot-setup-steps.yaml`) 提供了必要的上下文和工具，使 Copilot 助手能够做出有意义的、高质量的代码贡献。</span>
+                        <strong style="color: #1e40af">恶意 GitHub 克隆利用搜索排名来传播信息窃取型恶意软件。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 攻击者用包含恶意软件的克隆仓库淹没 GitHub，由于自动化的、高频率的更新，这些仓库经常出现在搜索结果的顶部，欺骗开发者下载恶意代码。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 助手可以主动识别和解决技术债。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> GitHub Copilot 助手可以分析代码库以查明技术债，优先处理问题，然后通过 Pull Request 自主创建和解决这些问题，从而释放开发人员的时间。</span>
+                        <strong style="color: #1e40af">可疑的提交模式和隐藏的历史是恶意克隆的关键指标。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 自动化的恶意仓库表现出不自然的、定期的提交模式，通常隐藏详细的提交历史，并重复修改 README 文件等文件，其中包含恶意链接，这与人工驱动的项目不同。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 助手的应用范围从代码扩展到 UI 和调试任务。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过像 Playwright 这样的集成，GitHub Copilot 编码助手可以协助执行复杂的任务，例如实现 UI 更改和执行实时调试，展示了它们在不同开发阶段的多功能性。</span>
+                        <strong style="color: #1e40af">验证信息、比较文件内容和报告是至关重要的缓解步骤。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者应该仔细检查贡献者信息，比较 README 文件和其他文件是否存在不一致之处，并及时向 GitHub 报告任何可疑仓库，以保护社区。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本教程展示了我们如何使用 **GitHub Copilot 编码助手** 来重构和增强一个名为 `validate-file-exists` 的个人 GitHub Actions 的项目。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">像我们任何开发人员一样，GitHub Copilot 编码助手需要一个合适的工作环境。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个项目中存在哪些技术债？请给我一个我们需要关注的领域的优先列表。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Copilot 在 11 分钟多一点的时间内完成了所有任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Playwright 现在默认与 GitHub Copilot 编码助手一起安装，这让 Copilot 也可以验证视觉行为。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">GitHub 正在努力控制一场持续不断的攻击，这场攻击正在用数百万个代码仓库淹没该网站。这些仓库包含混淆的恶意软件，这些恶意软件会从开发者设备窃取密码和加密货币。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于搜索引擎和 GitHub 自己的搜索排名偏爱最近的活动，这些克隆的仓库经常浮到顶部——然后它们会诱导开发者下载恶意软件代码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">恶意克隆由自动化代理运行，因此提交历史符合一种对于人类来说相当不寻常的模式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">人类现在可能很容易发现这些模式和低质量的内容。但是……想象一下你正在使用编码代理，很多这样的代理。这些代理会选择恶意克隆而不是原始克隆吗？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种情况真的让我想起了 Google 的早期。那时，该公司不得不与大量的垃圾邮件作斗争，这些垃圾邮件是由于关键词堆砌和操纵性的 SEO 策略造成的。大型科技公司是否会重蹈覆辙，需要通过类似“佛罗里达更新”的方式来应对 AI 垃圾信息？</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The GitHub Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Chris Reddington</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">brooklyn</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1684</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1485</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Copilot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 助手</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工作流</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">重构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术债</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Security</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">供应链攻击</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">恶意软件检测</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">仓库保护</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/829c71">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/b71845">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATwSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGHDRPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNG0AmNROQN9RMQG7U3AD5TWreOKladFK16KRq0SfL1GwCcgNkUjMBmdRMQCY1E5AngHyTmk1ANp1ULTqpWnRSteiTLwPyhJon1NyoeUPNG0C+CcgTar7ppGrRSdWik6pFn/zjgExqJjU3QG7UPKHmX3ZSteikatFJ1aJP/jggN2omIJOa3wTkRs1fdlK16KRq0UnVok++TM03qXkDyKRmUjMBuQHym9T8l5xULTqpWnRSteiTZUB+E5BJzQRkUjMBuQEyqZmATGomIJOaCcgTQP7LTqoWnVQtOqlahD/yDwFyo+YGyKRmAvKGmn/ZSdWik6pFJ1WLPnkJyKRmAjKpmYBMaiYgk5obNROQJ9RMQN5Q801AJjU3QCY1m06qFp1ULTqpWoQ/8gKQGzUTkCfUTEAmNROQb1IzAXlCzQTkCTU3QCY1N0AmNW+cVC06qVp0UrUIf2QRkBs1N0DeUDMBmdQ8AWRScwNkUvMGkEnNE0CeUPPGSdWik6pFJ1WLPlmmZgIyAblR8wSQTUAmNd8E5A0gk5pJzQRkUrPppGrRSdWik6pFn7wEZFIzqXkDyI2aCcgbaiYgk5oJyA2QSc0mNROQSc0NkEnNGydVi06qFp1ULfrkJTUTkDfUTGreUDMBmdRMQN5Q801AJjVPqJmAbDqpWnRSteikatEnv0zNE0DeADKpmYDcqLlRMwGZ1NyomYB8E5BvOqladFK16KRq0ScvAdkEZFLzBpAJyKTmCSCTmhsgk5oJyKTmN6nZdFK16KRq0UnVok+WqbkBcqNmAnKjZgIyqfkmIDdqJiA3QJ5Q8waQSc0bJ1WLTqoWnVQtwh9ZBGRSMwGZ1DwB5EbNE0AmNU8AmdRMQCY1E5BJzQRkUnMD5EbNBGRS88ZJ1aKTqkUnVYs+eQnIpOYJIJOaCciNmieA3ACZ1DwB5JuATGomNTdAvumkatFJ1aKTqkWfvKRmAnKjZgIyAZnU3ACZ1NyomYA8AeQJNROQN9TcAJnU3KjZdFK16KRq0UnVok9eAjKpuQEyqbkBMql5Asik5kbNjZobIG8AuQFyo+ZGzTedVC06qVp0UrXok5fUPKHmCTVPAJnUvAFkUjMBmdS8oeYJIDdAnlDzxknVopOqRSdViz55CchvUjOpeQLIDZBNQN4AMqm5ATKpmYB800nVopOqRSdViz5ZpmYTkCeATGomNTdAJjU3aiYgk5obIDdq/pKTqkUnVYtOqhZ98mVAnlDzBJBJzQRkUnOjZgIyqXkCyKTmBsgbav6fTqoWnVQtOqla9Mkfp2YCMql5Q80NkEnNDZAbNU8AuQHym06qFp1ULTqpWvTJHwfkBsikZgLyhJpJzQRkUjOpmYBMQCY1E5AbIJOaGyCbTqoWnVQtOqla9MmXqfkmNROQGyCTmgnIDZBJzQ2QJ9TcqJmATGpugExqNp1ULTqpWnRSteiTZUB+E5AbNROQGzVPALlRMwF5AsgTQCY1N0AmNW+cVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXof/O8RFUHj0sbAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
