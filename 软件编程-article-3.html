@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何激活 Django 的虚拟环境</title>
+        <title>Quicksilver v2：全球分布式键值存储的演进（第二部分）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何激活 Django 的虚拟环境</h2>
-        <p>7/16/2025, 4:58:44 PM</p>
+        <h2>Quicksilver v2：全球分布式键值存储的演进（第二部分）</h2>
+        <p>7/17/2025, 2:00:01 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本指南解释了 Python 虚拟环境，阐述其对 Django 项目的重要性，并提供在不同操作系统上创建、激活和管理的分步指南。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 详细介绍了其全球分布式键值存储 Quicksilver 的架构演进，该存储通过分层缓存、预取和分片技术实现卓越的扩展性和性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Python 虚拟环境，尤其针对 Django 开发。它详细解释了虚拟环境作为隔离工作空间的基本概念，对于防止包版本冲突，并在多个项目中保持开发环境的整洁至关重要。作者强调了其在遵循 Django 最佳实践中的作用。文章详细介绍了 Python 的安装，如何使用 `venv` 创建虚拟环境（简要提及 `virtualenv`），并详细说明了 Windows (CMD 和 PowerShell) 以及 Mac/Linux 的精确激活命令。此外，还涵盖了如何在隔离环境中安装和停用 Django。指南的 FAQ 部分解答了常见问题，并提供了有价值的额外提示，例如使用 `.gitignore` 进行版本控制以及使用 `requirements.txt` 进行高效的依赖管理，使其成为 Django 新手构建健壮、可维护项目的必备资源。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作为系列文章的第二篇，本文深入探讨了 Cloudflare 关键的全球分布式键值存储 Quicksilver 的架构演进。最初，Quicksilver V1 将所有 1.6 TB 的数据存储在每台服务器上，导致磁盘空间严重受限。中间解决方案 Quicksilver V1.5 引入了带本地缓存的代理模式，虽然将磁盘使用量减半，但由于实例大小不平衡以及缓存命中率假设随时间推移变得不准确，最终难以为继。最终解决方案 Quicksilver V2 实施了一个复杂的分层存储模型：第一层在每台服务器上使用本地缓存存储频繁访问的键；第二层引入了一个数据中心范围内的分片缓存，用于存储不经常访问但仍为热点的键；第三层由专用存储节点组成，维护“冷键”的完整副本。为了管理与这些存储节点的连接并防止过载，每个数据中心内部署了一个 Quicksilver “中继服务”，充当缓存未命中的中介。关键创新包括反应式预取，它在数据中心内分发已解析的缓存未命中，从而显著提高本地缓存命中率至 99.9% 以上。重新引入用于第二层缓存的分片技术实现了可扩展的缓存增长，并改善了 DNS 等延迟敏感实例的保留时间，而无需增加单台服务器的磁盘空间。这种多层自适应方法确保了 Cloudflare 海量网络的高性能、高效资源利用和强大的可扩展性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">虚拟环境隔离项目依赖，避免冲突，保证开发环境清洁。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过为每个项目创建专用工作空间，开发人员可以管理不同的包版本而不会产生干扰，这对于维护稳定且可重现的开发环境至关重要。</span>
+                        <strong style="color: #1e40af">Quicksilver V2 实施了一个三级分层存储架构，以优化磁盘空间和性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Quicksilver 通过在本地缓存、分片数据中心缓存和冷键中央副本间分割数据，有效管理不断增长的 1.6 TB 数据集，减少每台服务器的存储需求。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">激活虚拟环境与操作系统相关，对项目特定包的安装至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章针对 Windows (CMD/PowerShell) 和 Mac/Linux 提供了清晰的命令，指导用户将终端链接到项目隔离环境。</span>
+                        <strong style="color: #1e40af">反应式预取通过在数据中心内分发已解析的缓存未命中来显著提高缓存命中率。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种机制主动使用其他服务器最近未命中的键填充本地缓存，从而实现超过 99.9% 的缓存命中率，并减少关键服务的尾部延迟。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">`.gitignore` 和 `requirements.txt` 等最佳实践增强了项目管理和协作效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些技巧帮助开发者从版本控制中排除不必要文件，轻松共享项目依赖，简化团队协作和部署流程。</span>
+                        <strong style="color: #1e40af">数据中心范围内的分片缓存提供了可扩展的缓存增长，并改善了数据局部性，而无需增加单台服务器的磁盘使用量。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这允许较大的数据中心通过经由分片在服务器之间分配较大的缓存来维护更大的缓存，从而确保 DNS 等延迟敏感实例的更高保留时间，同时保持可扩展性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虚拟环境就像是你的项目的专属私人工作空间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尽早理解虚拟环境能帮你避免很多麻烦。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Django 推荐使用虚拟环境，特别是当你希望遵循最佳实践时。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">`(venv)` 前缀表示虚拟环境已激活。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">激活 Django 虚拟环境看似小事，实则是成为一名自信、有条理的开发者的重要一步。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Quicksilver 目前包含超过 50 亿个键值对，总大小为 1.6 TB，并且在全球范围内每秒处理超过 30 亿个键。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">可扩展性问题的解决方案源于一项新的发现。事实证明，实际上有无数的键值几乎从未使用过。我们称这些为 *冷键*。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">数据中心中的所有服务器都会预取每个已解析的缓存未命中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过添加第二层缓存，可以在数据中心内解析的键的百分比显著提高。性能最差的实例的缓存命中率也高于 99.99%。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,26 +60,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">83</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Udemezue John</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Marten van de Sanden</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1013</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3046</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Python</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Django</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">虚拟环境</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发环境</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">依赖管理</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">键值存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分片</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/73cd66">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/0f5a5f">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
