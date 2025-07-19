@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>将 Prometheus 告警规则迁移至 Grafana</title>
+        <title>超清分辨率文生图模型微调实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>将 Prometheus 告警规则迁移至 Grafana</h2>
-        <p>7/17/2025, 7:21:33 AM</p>
+        <h2>超清分辨率文生图模型微调实践</h2>
+        <p>7/18/2025, 12:32:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Grafana 12 引入新的用户界面和 API，简化 Prometheus 告警规则的迁移。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细分享了阿里巴巴智能引擎团队在微调 FLUX.1-dev 模型以实现原生 2K 超清文生图能力上的实践经验和解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Grafana 12 中新的**批量**告警和记录规则导入功能。这项功能旨在解决将现有 Prometheus 告警规则迁移到 Grafana 的问题，这些规则通常使用 `mimirtool` 或 `cortextool` 等工具进行管理。解决的核心问题是 Prometheus（将空结果视为健康）和 Grafana（使用“无数据”状态）之间告警评估行为的差异。Grafana 12 通过提供与 Prometheus 工具兼容的 API，并引入用于**批量**导入的用户界面来解决这个问题。在幕后，Grafana 向导入的规则添加了一个数学表达式，以确保评估行为与 Prometheus 保持一致。本文还介绍了为导入的规则启用 Grafana 的高级功能（基于角色的访问控制、可视化、路由），并引用了有关实际迁移步骤的文档。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了阿里巴巴智能引擎团队在 AIGC 领域，如何通过微调 FLUX.1-dev 模型来支持原生 2K 超清分辨率图片生成。文章首先指出现有主流开源文生图模型在超越 1024 像素分辨率时，图片质量会急剧下降。针对这一问题，作者详细剖析了两个主要障碍：一是 ROPE 位置编码外推导致的“Grid Pattern”网格现象，解决方案是通过在更长序列上直接微调模型，使其具备对高分辨率图片序列的感知能力；二是扩散模型推理过程中 Dynamic Timestep Shift 策略导致的图片细节缺失，解决方案是在推理阶段禁用该策略。文章通过对比实验验证了微调后的模型在超清图片生成方面的显著提升。此外，文章还额外探讨了 Classifier-Free-Guidance (CFG) 蒸馏对模型使用 CFG 的影响及其局限性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Grafana 12 通过用户界面和 API 简化了 Prometheus 告警的迁移。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新功能支持批量导入 Prometheus 告警和记录规则到 Grafana，减少手动工作和潜在错误。</span>
+                        <strong style="color: #1e40af">主流文生图模型在原生超清分辨率下存在 Grid Pattern 和细节缺失问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当前开源模型在生成 2K 以上分辨率图片时，会出现规律性网格和画面细节丢失，无法满足高分辨率应用需求。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">导入尊重 Prometheus 的评估行为，尽管存在差异。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Grafana 在导入过程中添加了一个查询后数学表达式，以确保规则的行为与在 Prometheus 中一样，一致地处理空查询结果。</span>
+                        <strong style="color: #1e40af">通过在更长序列上微调模型，解决 ROPE 位置编码外推导致的 Grid Pattern</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴大语言模型中的“长度外推”问题，通过直接在超清图片数据上微调，使模型正确感知和处理更长的序列，消除网格现象。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">现有的 Prometheus 工具可以与 Grafana API 一起使用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 兼容的 API 允许使用 `mimirtool` 或 `cortextool` 的工作流直接指向 Grafana 实例，保留已建立的 CI/CD 管道。</span>
+                        <strong style="color: #1e40af">推理阶段禁用 Dynamic Timestep Shift 策略，解决高分辨率图片细节缺失</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该策略在训练时用于平衡不同尺寸图片加噪效果，但在高分辨率推理时会导致模型偏重构图而忽略细节，禁用后可提升细节还原度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">迁移的规则可以访问高级 Grafana 告警功能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 导入后，规则可以利用 Grafana 的基于角色的访问控制、状态历史记录、版本控制、增强的路由和可视化功能。</span>
+                        <strong style="color: #1e40af">FLUX.1-dev 的 CFG 蒸馏可能限制其在高 Guidance Scale 下的表现</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章指出，尽管 CFG 蒸馏能降低推理成本，但可能导致模型在较高的 Classifier-Free Guidance Scale 下生成图片质量下降。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果我们可以在不重写 Prometheus 风格告警的情况下轻松地将其迁移到 Grafana 中呢？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了使这成为可能，我们向 Grafana 添加了与 Mimir 和 Loki 兼容的 API，因此如果您的工作流程已经使用 `mimirtool` 或 `cortextool`，则只需将它们指向您的 Grafana 实例，一切都会继续工作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但是，将告警从 Prometheus 转换为 Grafana 并不总是像看起来那么简单。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了保留类似 Prometheus 的行为，导入程序在 Prometheus 查询之后向规则处理流程添加了一个小的数学表达式。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">抛开显存占用等工程问题，强行提高图片生成分辨率至 2048 像素级别，并不会导致模型无法生图，而是会让生图质量急剧下降。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过微调的确可以赋予 FLUX.1-dev 生成超清图片的能力，体现在模型的训练、推理阶段分别为：...训练阶段：...（1）直接在超清图片上微调...（2）通过多分辨率混合训练...；推理阶段：通过禁用 Dynamic Timestep Shift...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用一个主要在 1024*1024 分辨率图片上训练的 DIT，去生成 2048*2048 分辨率的图片，其实和大语言模型中使用一个训练序列长度为 4k 的模型，在测试阶段生成长度为 16k 的序列所遇到的“长度外推”问题是类似的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">采样得到的所有 timestep 几乎都集中在对画面构图影响更大的 t∈[0，5，1] 阶段，从而导致 DIT 模型基本没有被用于图片细节的还原，并最终导致了画面细节的缺失。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们相信一个全方位能力优秀的模型，可能无需使用 CFG 来提升图片质量，但至少目前的模型或多或少都存在不足，因此 CFG 仍然是十分有用的功能。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,26 +63,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sonia Aguilar, Alexander Akhmetov</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">866</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">77 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">19171</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Grafana</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prometheus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">告警</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">监控</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">迁移</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文生图</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型微调</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">FLUX.1-dev</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">扩散模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ROPE</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/eca6f2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/62bcd0">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
