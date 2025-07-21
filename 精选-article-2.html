@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>关于 OpenAI 的一些思考</title>
+        <title>Manus 创始人手把手拆解：如何系统性打造 AI Agent 的上下文工程？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>关于 OpenAI 的一些思考</h2>
-        <p>7/15/2025, 6:02:47 PM</p>
+        <h2>Manus 创始人手把手拆解：如何系统性打造 AI Agent 的上下文工程？</h2>
+        <p>7/19/2025, 4:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者从内部视角深度剖析了 OpenAI 的飞速发展、独特的公司文化、工程实践以及成功发布 Codex 的幕后故事，并分享了对 AI 行业未来格局的思考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Manus 创始人分享 AI Agent 上下文工程核心实践，详细阐述了围绕 KV-Cache 优化、行为约束、文件系统作为记忆、注意力操控、错误保留及 Few-Shot 陷阱的实战经验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章是作者在离开 OpenAI 后，对该公司文化、工程实践和产品发布经历的深度反思。作者首先说明了离开的个人原因，并强调了 OpenAI 作为构建通用人工智能（AGI）核心机构的巨大影响力。文章详细阐述了 OpenAI 的独特文化：极快的增长速度导致组织架构和沟通方式的持续演变；高度依赖 Slack 进行内部沟通；自下而上的研究文化和精英主义；强烈的“立即行动”偏好，允许团队未经许可启动项目；以及公司能闪电般调整方向的能力。此外，作者也指出公司承受着巨大的外部审视压力，内部运作高度神秘，且由于目标宏大、赌注极高而比想象中严肃。在工程方面，作者提到了 OpenAI 使用巨大的 monorepo、广泛依赖 Azure 服务、拥有强大的 Meta 人才输送链，以及“代码为王”的决策模式。然而，快速扩张也带来了 CI 崩溃、测试耗时等工程挑战。文章重点回顾了 Codex 项目在短短 7 周内从想法到发布的“疯狂冲刺”，展现了 OpenAI 惊人的执行效率和“敢于发布”的精神。最后，作者总结了在 OpenAI 的所学所得，并对创始人提出建议，认为通往 AGI 的道路是 OpenAI、Anthropic 和 Google 三强争霸的格局。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章由 Manus 联合创始人兼首席科学家 Peak 撰写，深入剖析了构建高性能 AI Agent 的上下文工程核心实践。作者首先解释了选择上下文工程而非从头训练模型的原因，强调其迭代速度快且能保持与底层模型正交性。随后，文章详细介绍了六个关键实践：首先，围绕 KV-Cache 设计以优化延迟和成本，通过保持提示前缀稳定、追加式上下文和明确标记缓存断点。其次，通过掩码而非移除的方式约束行为选择，避免动态增删工具导致的 KV-Cache 失效和模型混乱。第三，将文件系统视为终极上下文，实现无限容量、持久化和可还原的记忆，并探讨其对未来状态空间模型（SSM）的意义。第四，通过复述（如创建并更新 todo.md 文件）操控模型注意力，将核心目标推入模型近期注意力范围，减少任务偏离。第五，保留错误内容，让模型从失败中学习，提升错误恢复能力和适应性。最后，避免被 Few-Shot 反噬，通过引入上下文多样性来打破固定模式，防止模型过度泛化。文章总结强调了上下文工程对 Agent 运行速度、恢复能力和可扩展性的决定性作用，提供了宝贵的实战经验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,23 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">OpenAI 独特的公司文化促进了极致的执行效率和快速创新。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 公司以极快的增长速度、自下而上的研究、精英主义和“立即行动”偏好为特征，使得新想法能迅速得到验证并付诸实践，显著加速了产品开发进程。</span>
+                        <strong style="color: #1e40af">围绕 KV-Cache 优化是生产级 AI Agent 性能关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过保持提示前缀稳定、追加式上下文等策略，可显著降低推理延迟和成本，是提升 Agent 效率的核心手段，尤其在长上下文场景下效果显著。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Codex 项目 7 周内完成发布，展现了 OpenAI 惊人的产品交付能力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使作为大型组织，OpenAI 仍能通过精干的团队和高强度投入，在极短时间内将复杂项目从概念变为可用的产品，体现了其强大的工程和协调能力。</span>
+                        <strong style="color: #1e40af">通过掩码而非移除方式约束 Agent 行为更稳定高效。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在解码阶段通过屏蔽 token logits 动态限制工具选择，能避免 KV-Cache 失效和模型混乱，确保 Agent 在复杂行动空间中做出准确决策。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">OpenAI 在“普惠 AI”和 AI 安全方面的承诺是其核心 DNA。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 公司致力于将最前沿模型开放给公众使用，并高度重视实际的 AI 安全风险（如滥用、偏见），这与外界的一些看法形成对比，展现了其负责任的态度。</span>
+                        <strong style="color: #1e40af">将文件系统作为 Agent 的终极上下文和外部记忆。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用文件系统实现无限容量、天然持久且可直接操作的外部记忆，有效解决了长上下文限制和信息丢失问题，并为未来模型发展提供思路。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">OpenAI 在高速发展中面临内部工程挑战和外部巨大审视压力，但仍能保持极高的适应性和执行力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 公司的飞速扩张导致了沟通、组织和工程实践中的诸多问题（如 CI 不稳定、测试耗时），同时作为全球焦点，其一举一动都受到严格审视。尽管如此，OpenAI 依然能迅速调整方向，并专注于解决实际风险，展现出强大的韧性。</span>
+                        <strong style="color: #1e40af">通过复述策略操控模型注意力以减少任务偏离。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过不断重写待办清单等方式，将核心目标推入模型近期注意力范围，有效防止 Agent 在多步骤复杂任务中遗忘目标或偏离主题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在顶级 AI 实验室工作的经验对技术从业者具有极高的学习价值。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者强调，在 OpenAI 这类领先的 AI 实验室工作，是建立模型直觉、与顶尖人才合作、以及发布有影响力产品的绝佳机会，对个人职业成长和行业理解至关重要。</span>
+                        <strong style="color: #1e40af">保留错误内容能有效提升 Agent 的错误恢复能力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 允许模型看到失败的行动和观察结果，使其潜移默化地更新内部信念，降低重蹈覆辙的概率，是衡量 Agent 智能行为的关键指标。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">避免被 Few-Shot 反噬，引入上下文多样性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 语言模型是出色的模仿者，过度单一的 Few-Shot 示例可能导致模型陷入固定模式、漂移或产生幻觉。引入结构化变化和多样性有助于打破固定模式，提升 Agent 的健壮性。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +61,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所有事情，我是说_所有事情_，都靠 Slack 运转。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">公司里有**强烈的"立即行动"偏好** （你可以直接动手去做）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">很难夸大这种节奏是多么不可思议。我从未见过任何组织，无论大小，能在如此短的时间内从一个想法变成一个完全发布并免费提供的产品。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">公司在**普惠 AI 方面真正做到了"言行一致"**。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">OpenAI 或许是我见过的最雄心壮志到令人敬畏的组织。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在我看来，通往 AGI 的道路目前是三强争霸：OpenAI、Anthropic 和 Google。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果模型进步是上涨的潮水，我们希望 Manus 是船，而不是钉在海床上的柱子。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果只能选一个指标，我会说 KV 缓存命中率是生产级 AI 智能体最重要的单一指标，它直接影响延迟和成本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Manus 中，我们通过一个上下文感知的状态机来管理工具可用性。它并不真正移除工具，而是在解码阶段屏蔽相应 token 的 logits，从而根据当前上下文阻止（或强制）选择某些动作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">正因如此，我们在 Manus 中将文件系统视为终极上下文：容量无限、天然持久，并且代理可直接操作。模型学会按需读写文件，把文件系统不仅当作存储，更当作结构化、外化的记忆。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">根据我们的经验，提升智能体行为最有效的方法之一看似简单却极具欺骗性：把走错的路留在上下文中。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +69,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">94</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">宝玉的分享</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">宝玉</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">真格基金</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">真格基金</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7363</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4752</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">公司文化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">组织管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI行业</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术创业</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/4df944">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/dc4843">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATPSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk7PSKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJA31LwB5Ak1E5DfpOaNk6pFJ1WLTqoWfbJMzSYgb6h5AsgE5Ak1k5pNajYB2XRSteikatFJ1aJPvgzIE2qeADKpuQEyqZnUTEDeAPKEmieAPKHmm06qFp1ULTqpWvTJ/4yaCcgbaiYgk5oJyKTmb3JSteikatFJ1aJP/jJAJjVPqHkCyKRmAvJ/clK16KRq0UnVok++TM1vUnMDZFJzA+RGzY2aGyCTmifU/JucVC06qVp0UrXok2VA/k2ATGomIJOaGzUTkEnNBGRS8waQf7OTqkUnVYtOqhbhj/yHAZnUfBOQGzU3QCY1f5OTqkUnVYtOqhbhj7wAZFIzAdmk5gbIpOYJIDdqboBMam6ATGomIJvUfNNJ1aKTqkUnVYvwR34RkCfUTEAmNX8SkEnNDZBvUvMEkEnNGydVi06qFp1ULcIfeQHIpGYCMqm5AfKGmgnIG2omIE+ouQFyo+a/5KRq0UnVopOqRZ+8pOYNIJOaJ4BMQG7UTEAmNROQSc0TQN4AcqNmAjKpmYBMajadVC06qVp0UrXok5eAbALyhJoJyA2QJ9RMQCY1E5AbNb8JyKTmm06qFp1ULTqpWvTJl6l5Q80EZALyhJoJyA2QSc0E5Akgb6iZgExqngAyqXnjpGrRSdWik6pFnyxTMwG5UTMBmYDcqLkB8oaaCcgTam6ATGpugExqJiA3aiY1m06qFp1ULTqpWvTJHwbkRs0EZALyJ6l5AsgmIJOaGyCTmk0nVYtOqhadVC365A9TMwGZgExqJiCTmgnIBOQNNTdAJjU3at5QMwG5UfNNJ1WLTqoWnVQt+mQZkEnNDZAbNTdqbtRMQJ4AMqmZgLwBZFIzAbkBMqmZgNwAmdS8cVK16KRq0UnVok+WqXlCzQRkAjKpmYBMap5Qc6NmAjKpmYBMQCY1N0AmNROQSc0bajadVC06qVp0UrXoky8D8oaaGzUTkEnNE0CeADKpmYDcAJnUTEBugExqJjUTkEnNppOqRSdVi06qFn3yy9TcAJmA3KiZ1Nyo+SYgk5oJyA2QTUBugExq3jipWnRSteikahH+yH8YkEnNBOQJNU8AeULNBGRS8wSQTWreOKladFK16KRq0ScvAflNaiY1T6h5AsiNmhsgE5AngExq3lDzTSdVi06qFp1ULfpkmZpNQG6ATGomNW+o+ZPUPKHmCSCTmjdOqhadVC06qVr0yZcBeULNG0Bu1NwAmdRMQN5QMwGZgGwCMqmZ1Gw6qVp0UrXopGrRJ38ZNW+omYBMaiYgm9TcAJnUTEBugNyoeeOkatFJ1aKTqkWf/OWATGreAPKEmhs1N0BugLyhZtNJ1aKTqkUnVYs++TI136RmAjKpmYBsUvMGkEnNpGYCMqmZgExqJiDfdFK16KRq0UnVok+WAflNQCY1E5An1ExAngAyqZmATGomIJOaGyA3QCY133RSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aJ/ANVlMEgkyi3AAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
