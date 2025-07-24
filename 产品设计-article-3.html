@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>下拉菜单设计：为什么有的让人秒懂，有的让人抓狂？</title>
+        <title>处理带参数的 JavaScript 事件监听器 — Smashing Magazine</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>下拉菜单设计：为什么有的让人秒懂，有的让人抓狂？</h2>
-        <p>7/21/2025, 12:58:00 AM</p>
+        <h2>处理带参数的 JavaScript 事件监听器 — Smashing Magazine</h2>
+        <p>7/21/2025, 10:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">详细解析了下拉菜单的构成、交互原则及 10 个设计细节，旨在提升用户体验和操作效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了在 JavaScript 事件监听器中，使用箭头函数、匿名函数和闭包处理参数，并防止内存泄漏的有效方法。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了下拉菜单（Dropdown Menu）的设计精髓，从核心构成（触发元素、菜单容器、选项列表、辅助元素）入手，详细阐述了触发方式、展开方向、反馈状态及收起逻辑等交互设计原则。此外，文章还提出了 10 个实用的设计注意事项，包括避免长菜单、减少层级、禁用无效选项、考虑移动端适配、提供搜索功能以及设置默认选项等，旨在帮助设计师在节省空间与提升操作效率之间找到平衡，有效避免用户在下拉菜单使用中遇到的“抓狂”体验，从而提升整体界面简洁性和用户体验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在解决 JavaScript 开发中，向事件监听器传递参数并避免内存泄漏的常见问题。文章指出了在 `addEventListener` 中直接调用函数所导致的错误，并提供了两种解决方案：一是使用箭头函数或匿名函数，虽然需要 `AbortController` 来移除监听器，但适用于管理多个监听器；二是利用 JavaScript 闭包，它允许传递参数，并可以通过存储对 handler function 的引用，使用 `removeEventListener()` 方法移除监听器。文章强调，不再需要的事件监听器应及时移除，并为每种方法提供了代码示例，帮助开发者有效管理交互元素，避免性能问题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">下拉菜单设计需平衡空间节省与操作效率</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章全面剖析下拉菜单构成与交互原则，强调通过细节优化，在有限空间内提升用户操作效率，避免因设计不当导致用户困惑或“抓狂”。</span>
+                        <strong style="color: #1e40af">直接在 `addEventListener` 中调用函数会导致立即执行，而不是事件触发。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 一个常见的错误是 `button.addEventListener('click'， myFunction())`，这会立即执行 `myFunction`，阻止事件在点击时被触发，并可能由于不正确的参数类型而导致 `TypeError`。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">避免长菜单和过多层级是提升可用性的关键</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 指出选项过多或层级过深会增加认知负荷，建议采用分组、搜索、限制选项或替代 UI 组件，以简化操作流程，提高用户查找效率。</span>
+                        <strong style="color: #1e40af">箭头函数/匿名函数允许传递参数，但需要 `AbortController` 进行移除。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些函数提供了一种传递参数的快速方法，但由于其匿名性，`removeEventListener` 难以直接定位这些函数。`AbortController` 为批量移除提供了一个强大的解决方案。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">清晰的视觉反馈和逻辑排序能显著优化用户体验</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 强调通过明确的选中/禁用状态、一致的样式、图标辅助以及逻辑性选项排序，帮助用户快速理解并高效选择，从而提升整体可用性。</span>
+                        <strong style="color: #1e40af">闭包提供了一种传递参数的方式，同时保留了 `removeEventListener` 兼容性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过返回一个充当事件处理程序的内部函数，闭包允许访问外部作用域的变量（参数），并通过存储对外部函数的引用来启用 `removeEventListener`。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">正确移除事件监听器对于防止内存泄漏和性能问题至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 无论使用何种方法，在不再需要事件监听器时主动移除它们，是维护应用性能和防止资源消耗的基本最佳实践。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">下拉菜单（Dropdown Menu）是一种常见的交互组件，用于在有限的屏幕空间内展示多个选项，用户通过 hover 或点击触发展开，选择后自动收起，既节省界面空间，又能保持操作的简洁性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">合理的交互逻辑能提升用户操作效率，避免误触或困惑。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果下拉菜单中的选项过多，对于页面展示、用户使用来说，都不会很友好。长菜单会增加用户处理、比较一长串选项的认知负荷，导致用户会在一个简单的选择上花费更多时间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通常不建议使用仅有两个选项的下拉菜单，这会增加一些不必要的操作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">合理设计的下拉菜单能在 「节省空间」 和 「操作效率」之间找到平衡，是提升界面简洁性的重要组件。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JavaScript 事件监听器在添加后通常不会被移除。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">浏览器通过立即调用该函数来响应此行代码，而不管是否发生了点击事件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用箭头函数和匿名函数的唯一问题是，它们无法使用传统的 `removeEventListener()` 方法移除；您将必须使用 `AbortController`，这对于简单的情况来说可能有些过度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JavaScript 中的闭包是另一种可以帮助我们处理事件处理函数的功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">始终在不再需要事件监听器时移除它们以防止内存泄漏是一个好习惯。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,27 +63,26 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Clip设计夹</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Clip设计夹</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Smashing Magazine</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">hello@smashingmagazine.com (Amejimaobari Ollornwi)</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">产品设计</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">15 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3615</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1011</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">UI设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">UX设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">交互设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">下拉菜单</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">设计原则</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">事件处理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存泄漏</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">闭包</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AbortController</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/fcb6f0">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/3f0ec4">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=2">返回目录</a>
     </body>
     <script>
