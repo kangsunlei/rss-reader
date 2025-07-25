@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AI 写代码的“上下文陷阱”：为什么 AI 总是写错？如何系统性解决？</title>
+        <title>从频繁告警到平稳发布：服务冷启动 CPU 风暴优化实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>AI 写代码的“上下文陷阱”：为什么 AI 总是写错？如何系统性解决？</h2>
-        <p>7/23/2025, 12:31:00 AM</p>
+        <h2>从频繁告警到平稳发布：服务冷启动 CPU 风暴优化实践</h2>
+        <p>7/23/2025, 12:01:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章分析 AI 代码生成中的“上下文陷阱”，提出分层记忆与系统化上下文管理方法，以提升 AI 编程的准确性和效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">针对服务冷启动期间 CPU 飙升问题，文章详细分析了其原因并提供了基于流量灰度和 Spring 框架源码优化的解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 AI 辅助代码生成中常见的“上下文陷阱”问题，即 AI 因缺乏完整、精确和聚焦的上下文信息而导致代码生成错误。作者提出了一套系统性的解决方案，核心是“上下文工程”和应用级记忆结构的设计。该方案将上下文分为三层：应用基础记忆（系统架构、技术栈等）、功能模块记忆（具体功能描述、链路图、关键逻辑）和需求迭代记忆（当前业务需求、技术方案）。文章详细阐述了如何利用 AI 辅助记忆的构建、维护和更新，实现记忆的渐进式完善，从而大幅降低每次变更的知识负担，形成高效的 AI 编程正循环。此外，文章还探讨了代码生成与测试中的实践，如任务拆解、AI 生成测试代码、AI 自 Review，并提出了应对 AI“作弊”和“超额输出”问题的策略。文中提供了具体的项目结构、DAO 层、API 层、单元测试和文档规范示例，为开发者提供了极具实践价值的指导，旨在帮助技术从业者更有效地与 AI 协作编程。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了服务冷启动时 CPU 持续高负载的现象，从 Dubbo/HTTP 接口超时、CPU 异常、线程突刺及老年代内存上涨等多个维度进行问题表象分析。通过初步判断线程不足和上下文切换是原因，并尝试了流量灰度（成功）和缓存预热（失败）。最终，文章利用线程堆栈和 CPU 火焰图，定位到 Spring 框架中`calculateStringDistance`方法在处理未匹配属性时产生高 CPU 消耗，进一步加剧了服务冷启动时的 CPU 风暴，结合流量灰度成功解决了问题，为服务高可用性提供了重要保障。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">完整、精确、聚焦的上下文是 AI 充分发挥代码生成能力的关键。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 像人类一样，需要全面理解系统架构、业务需求、代码实现路径等背景信息，才能生成高质量代码，上下文的质量直接决定 AI 产出。</span>
+                        <strong style="color: #1e40af">服务冷启动 CPU 飙升是多维度问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 表现为接口超时、CPU 饱和、线程剧增和老年代内存快速上涨，初步判断与线程不足和频繁上下文切换相关。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">构建应用级分层记忆结构，系统化管理 AI 编程上下文。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将上下文划分为应用基础、功能模块和需求迭代三层，形成类似系统架构的记忆体系，确保 AI 在不同粒度上获取所需信息，提升准确性。</span>
+                        <strong style="color: #1e40af">流量灰度是有效缓解手段</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过逐步接入线上流量，可以有效避免服务启动初期因流量冲击导致的 CPU 风暴和性能问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 AI 辅助记忆的构建、维护和持续更新，形成高效正循环。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 可协助冷启动记忆、根据代码线索构建功能记忆、生成技术方案，并在开发过程中修正和总结经验，显著降低人工维护负担。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过任务拆解、AI 生成测试与自 Review，平衡效率与质量。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将大任务分解为小任务，让 AI 生成并验证测试代码，并进行代码自检，有效控制 AI 产出质量，避免成为“填坑奴隶”。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">需应对 AI“作弊”和“超额输出”问题，并通过规则进行约束。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当 AI 无法完成任务时可能出现绕过测试、直接给出结果等作弊行为；同时，AI 可能输出不着边际的方案，需通过明确的规则进行限制。</span>
+                        <strong style="color: #1e40af">深入源码分析是解决复杂问题的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合线程堆栈和 CPU 火焰图，定位到 Spring 框架中`calculateStringDistance`方法在处理未匹配属性时产生高 CPU 消耗，该方法在高并发场景下进一步加剧了服务启动时的 CPU 负载，揭示了性能瓶颈的深层技术细节。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">完整+精确+聚焦的上下文是充分使用模型能力的关键。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">像设计系统架构一样设计上下文架构，暗合近期讨论比较多的上下文工程(context engineering)的概念。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心是系统性的分层分模块管理上下文，最大程度让 AI 辅助维护上下文，每次变更的知识负担就可以大幅度下降(输入具体需求即可)，配合渐进式的更新维护，使用 AI 编程工具的效率正循环就形成了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">平衡效率和质量：核心是控制单个任务不要过大，当下过大的任务质量和验证过程都会失控。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 AI 反复多次无法完成任务时，就会出现作弊现象，比如硬编码绕开测试、模型自己直接给出结果等。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本文的重点在于问题的发现、分析及解决思路。对于 CPU 相关的问题，火焰图和 Arthas 是非常有效的工具，建议大家在遇到类似情况时，积极尝试使用这些工具进行排查和解决。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">引起 CPU 飙升的原因主要是由于过多的 Runnable 状态线程以及频繁的线程上下文切换所导致。我们观察到系统中存在大量已启动的线程，这些线程的状态在 Blocked（锁等待、IO 等待等）和 Runnable 之间不断变化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">流量灰度可以解决该问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这一变化表明，随着系统的稳定运行，CPU 负载逐渐得到缓解，但 calculateStringDistance 方法仍然是性能瓶颈之一。它虽然不是 CPU 使用率飙升的根因，但它在服务启动后进一步加剧了 CPU 的负载。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过查询堆栈信息并查看源代码，我们发现这是 Spring 框架在解析请求参数并注入属性的过程中所触发的。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,27 +60,27 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">94</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">53 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">13228</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">46 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">11374</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码生成</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CPU分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">服务冷启动</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spring框架</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM</span>
                     </span>
                 </div>
             
         </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/014c42">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/af4070">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATjSURBVO3BQY4cSRIEQdNA/f/Lujz6KYBEejXZsyaCf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXok5eA/CQ1E5An1NwAmdS8AeQJNROQn6TmjZOqRSdVi06qFn2yTM0mIE+omYBMQCY1bwB5Qs0E5Ak1m4BsOqladFK16KRq0SdfBuQJNU+oeULNE0AmNZOavwnIE2q+6aRq0UnVopOqRZ/8ckAmNd8EZFIzAZnUTEAmNf8lJ1WLTqoWnVQt+uSXU7NJzQTkBsgbQCY1v9lJ1aKTqkUnVYs++TI1f5OaJ4BMam6ATGomIN+k5l9yUrXopGrRSdWiT5YB+UlAJjUTkEnNBGRSMwGZ1LyhZgLyBJB/2UnVopOqRSdVi/CP/GJAnlCzCcgmNb/ZSdWik6pFJ1WLPnkJyKRmAnKjZgLyhJobIBOQGzUTkL8JyKTmBsikZgJyo+aNk6pFJ1WLTqoW4R95AcgTaiYgk5obIDdqJiBPqHkCyKTmBsg3qXkCyKTmjZOqRSdVi06qFn2yTM0NkEnNBOQNIJOaCcikZgIyqXkDyKTmDSBPALlRs+mkatFJ1aKTqkWfLANyo+ZGzRtAJiCTmgnIE0CeUHMDZFKzSc0NkEnNGydVi06qFp1ULcI/sgjIjZongExqJiCTmgnIjZongExqJiA3ar4JyI2abzqpWnRSteikatEn/xggk5oJyKRmAvIEkEnNE0AmNTdAJjU3QG7UTGomIBOQGzVvnFQtOqladFK16JNlaiYgN0AmNROQN9RMQCY1E5BJzaTmBsgTQN4AMqn5m06qFp1ULTqpWvTJS0AmNZOaCcikZgIyqdmkZgIyqbkBMqmZ1NwAuVFzA+QJNROQSc2mk6pFJ1WLTqoWffJlQJ5QMwG5UXMD5EbNDZA3gDwBZFIzqZmATEAmNT/ppGrRSdWik6pFn7yk5kbNG2pugNyoeQLIG0Bu1ExAngAyqZmATEB+0knVopOqRSdViz55CcikZgLyhJoJyKTmRs0NkEnNpOYGyCY1E5A31ExAJjXfdFK16KRq0UnVok9eUnOj5gbIBGRSMwF5Asik5gbIpGZSMwG5UfMGkEnNv+ykatFJ1aKTqkX4RxYBuVHzBJAbNROQSc0E5Ak1TwC5UTMB+UlqvumkatFJ1aKTqkWfLFOzSc0NkEnNBGRSMwGZ1ExAJjUTkE1qngDyBJAbNW+cVC06qVp0UrXok5eA/CQ1T6iZgNwAmdTcqJmATGomIE8AmdQ8oWYCMqnZdFK16KRq0UnVok+WqdkE5A0gk5obIBOQJ9TcqJmA3Kj5TU6qFp1ULTqpWvTJlwF5Qs0TaiYgk5obIJOaGyA3QG7U3AB5Q80EZFLzTSdVi06qFp1ULfrklwMyqZmATGomNROQN9Q8oWYCMqm5ATIBmdTcAJnUvHFSteikatFJ1aJP/s8AuVEzAZnU3AB5Qs0TQCY1N0AmNd90UrXopGrRSdWiT75MzTepeUPNjZoJyKRmUvMEkEnNG0AmNROQSc2mk6pFJ1WLTqoWfbIMyE8CMqnZBGRS8wSQTWr+ZSdVi06qFp1ULcI/UrXkpGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWvQ/Qm1BRhUBOfMAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
