@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>构建安全可扩展远程 MCP 服务器指南</title>
+        <title>【第 3559 期】深入分析 await fetch() 性能问题及优化方法</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>构建安全可扩展远程 MCP 服务器指南</h2>
-        <p>7/25/2025, 5:12:02 PM</p>
+        <h2>【第 3559 期】深入分析 await fetch() 性能问题及优化方法</h2>
+        <p>7/28/2025, 12:01:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详述如何利用 OAuth 2.1、密钥管理、AI 网关及可观测性实践，构建安全且可扩展的远程 MCP 服务器。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入分析了 JavaScript 中 await fetch()可能导致的性能问题，并提供了包括连接复用、流式解析、并发控制及协议优化在内的全面解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入指导如何构建安全可扩展的远程 MCP 服务器，该服务器使 AI 代理无需定制 API 连接器即可连接外部工具和数据源。鉴于 MCP 服务器连接 AI 代理与敏感企业资源，安全性至关重要，使其成为重点保护对象。本文详述 MCP 规范如何利用 OAuth 2.1 实现稳健授权，并概述授权服务器发现、动态客户端注册和资源指示器等特性，以简化安全集成。进一步探讨复杂多用户场景下的问题，通过严格的令牌验证、用户身份验证和数据隔离来解决“Confused Deputy”问题。为实现可扩展性，本文建议使用 AI 网关集中处理如速率限制、请求转换和缓存等通用任务，从而将这些任务从核心业务逻辑中分离。最后，概述了必要的生产环境部署模式，包括采用具有工作负载身份的现代密钥管理服务（如 Azure Key Vault、AWS Secrets Manager）以增强安全性并实现密钥动态轮换。同时强调，必须通过结构化日志、分布式追踪、专用安全事件日志和指标收集，以及自动化告警和可视化实现全面的可观测性，从而全面了解服务器运作状态，主动进行问题检测和诊断。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文对 JavaScript 应用中 await fetch()的常见性能瓶颈进行了系统性剖析。作者首先揭示了冷启动 TCP 连接（DNS 解析、TCP/TLS 握手）带来的延迟，并提出了使用 undici 的 Agent 进行连接复用、DNS 缓存的解决方案。其次，文章深入探讨了 response.json()在处理大量数据时阻塞事件循环的问题，倡导采用流式解析以提升效率。针对循环中 await 导致的串行执行低效，文章给出了限制并发数量的有效策略。此外，文中还涵盖了优化响应体大小（如 Brotli 压缩）、简化 CORS 预检请求、解决 HTTP/2 HOL 阻塞以及 JSON.stringify()序列化性能问题等多个方面。文章特别区分了 Node.js 和浏览器端的 fetch 优化策略，为不同开发环境提供了针对性的实践建议，旨在帮助开发者显著提升应用的网络请求性能和用户体验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MCP 与 OAuth 2.1 的集成提供了稳健且标准化的授权框架。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 OAuth 2.1（包括 PRM、动态客户端注册和资源指示器）简化了安全的客户端-服务器通信，并防止了常见的漏洞（如令牌重用），从而减少了实施工作。</span>
+                        <strong style="color: #1e40af">揭示 await fetch()在冷启动连接和大数据解析中的性能瓶颈</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 首次请求涉及 DNS、TCP 和 TLS 握手带来的数百毫秒延迟，以及 response.json()处理大文件时阻塞事件循环、占用 CPU 资源，是常见的性能痛点。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">有效的密钥管理对于生产就绪的 MCP 服务器至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从环境变量转移到专用密钥管理服务和工作负载身份，通过集中加密和动态管理敏感凭据来增强安全性，显著降低攻击面。</span>
+                        <strong style="color: #1e40af">通过连接复用和流式处理显著提升网络请求效率</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 undici 的 Agent 管理 Keep-Alive 连接，避免重复握手；采用流式 JSON 解析，避免一次性加载大文件，有效降低延迟和内存占用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 网关和全面的可观测性对于可扩展且有弹性的 MCP 部署至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 网关集中处理如速率限制和令牌验证等常见问题，而结构化日志、分布式追踪和指标则提供关键洞察，可用于大规模监控性能和安全态势。</span>
+                        <strong style="color: #1e40af">优化并发控制和网络协议以提升系统吞吐量</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 避免在循环中串行 await，通过限制并发数量来平衡资源；同时，利用 HTTP/2 多路复用或 HTTP/3 的 0-RTT 特性，可进一步减少请求延迟。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">区分 Node.js 与浏览器端 fetch 优化策略，提供针对性指导</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Node.js 环境可使用 undici、自定义 Agent 等；浏览器端则侧重缓存、请求合并、懒加载和后端压缩，指导开发者根据场景选择最佳实践。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与传统 API 在受控环境服务已知客户端不同，MCP 服务器是 AI 代理与无限数据源之间的桥梁，这些数据源可能包含敏感企业资源。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于 MCP 要求采用 OAuth 2.1 作为默认授权方式，开发者可使用现有 OAuth 库将授权功能构建到 MCP 服务器中，无需过度定制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现代方法是将密钥从应用程序的配置中移出，并移至专用密钥管理服务中，例如 Azure 密钥库、AWS 密钥管理器或 HashiCorp Vault。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 网关类似于常见的 API 网关，位于 MCP 客户端和 MCP 服务器之间，充当屏障和流量管理器的角色。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">构建可扩展且安全的 MCP 服务器意味着对服务器运作状态有全面的了解。因此，需要有效的可观测性，即能够完全访问日志、指标和追踪信息。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即使是像 await fetch() 这样简单的代码，也可能会无意中拖慢应用的速度，导致网络请求延迟，让用户体验变差。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每次调用 fetch() 都会创建一个新的套接字连接，这包括以下几个步骤：DNS 解析、TCP 握手、TLS 握手。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当服务器返回大量 JSON 数据（例如 5-10MB 或更多）时，response.json() 会阻塞事件循环，占满 100% 的 CPU 资源。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在循环中执行多个异步任务时，如果使用 await，它们会按顺序一个一个执行，即使它们本可以并行完成。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了获得更好的性能，建议使用 undici 的 request 方法来替代内建的 fetch，因为它更快、开销更小。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -62,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The GitHub Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Den Delimarsky</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2439</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2404</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可扩展性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OAuth 2.1</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 网关</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Node.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Web性能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">fetch API</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/667606" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/586b4d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/667606">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATWSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyA3aiYgN2reAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCfUTEAmIJOaCcgE5Ak1k5pNajYB2XRSteikatFJ1aJPvgzIE2qeADKpeUPNBOQNIE+oeQLIE2q+6aRq0UnVopOqRZ/8nwMyqZnUTEAmNROQSc0EZFLzLzmpWnRSteikatEn/xggk5oJyBNAJjUTkEnNBOT/yUnVopOqRSdViz75MjV/EpAbNTdqJiCTmhs1N0AmNU+o+ZucVC06qVp0UrXok2VA/iQ1E5BJzQRkUjMBmdRMQCY1E5BJzRtA/mYnVYtOqhadVC3CH/kPAzKpuQEyqXkCyI2aGyCTmn/JSdWik6pFJ1WL8EdeADKpmYBsUrMJyKTmDSCTmhsgk5oJyCY133RSteikatFJ1aJPfpmaTUCeUDOpmYDcqJmATGpugNwAeUPNE0AmNW+cVC06qVp0UrUIf2QRkBs1E5BJzQTkDTUTkEnNBGRSMwF5Qs0NkBs1/yUnVYtOqhadVC365C8DZFIzAZnUTEBu1Lyh5gkgbwC5UTMBmdRMQCY1m06qFp1ULTqpWvTJS0Bu1ExAbtRMQCY1N2qeADKpuQEyqZmA3Kj5TUAmNd90UrXopGrRSdUi/JEXgDyh5m8C5Ak1E5DfpGYCMql5Asik5o2TqkUnVYtOqhbhj3wRkEnNBOQJNTdAbtTcAJnUTECeUHMDZFJzA2RSMwG5UfNNJ1WLTqoWnVQt+uQlIJOaGyCTmgnIpOYGyKTmBsik5gbIjZongGwCMqm5ATKp2XRSteikatFJ1aJPlgGZ1ExAJiCTmgnIjZon1ExAJjVvAJnU3Kh5Q80E5EbNN51ULTqpWnRSteiTZWomIG+o+ZOATGomIG8AmdRMQG6ATGomIDdAJjVvnFQtOqladFK16JMvU/MGkBs1E5AbNTdAboBMaiYgE5BJzQ2QSc0EZFLzhppNJ1WLTqoWnVQtwh95AcikZgIyqZmATGr+JCBvqJmATGomIJOaCcgTam6ATGo2nVQtOqladFK1CH/kBSCTmk1AbtRMQCY1N0AmNTdAnlAzAfkmNROQJ9S8cVK16KRq0UnVIvyR/zAgk5obIJOaN4A8oWYCMql5AsgmNW+cVC06qVp0UrXok5eA/CY1k5oJyDcBmdTcAJmAPAFkUvOGmm86qVp0UrXopGrRJ8vUbAJyA2RSMwG5ATKpuVHzm9Q8oeZPOqladFK16KRq0SdfBuQJNW8AuVHzBpA31ExAJiCbgExqvumkatFJ1aKTqkWf/GPU3AC5UXOjZgKySc0NkEnNBOQGyI2aN06qFp1ULTqpWvTJPw7IJiBPqLlRcwPkBsgbajadVC06qVp0UrXoky9T801qJiCTmgnIJjVvAJnUTGomIJOaCcikZgLyTSdVi06qFp1ULfpkGZDfBGRSMwF5AsgbQCY1E5BJzQRkUnMD5AbIpOabTqoWnVQtOqlahD9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9D+Q5zw/uPX4eAAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/586b4d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYHSURBVO3BQW4ER5IAQfcE//9lXx3jVEChm1RqNszsH6x1icNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhf54UMqf6liUvlLFU9UnlRMKm9UvKHylyo+cVjrIoe1LnJY6yI/fFnFN6m8UTGpPKmYVN5QmSomlUllqviEylTxpOKbVL7psNZFDmtd5LDWRX74ZSpvVPwllU9UPKl4Q2WqmFS+SeWNit90WOsih7UucljrIj/8x1VMKlPFE5WpYlKZVJ5UTCpTxaQyVUwqU8Wk8r/ksNZFDmtd5LDWRX74j1OZKiaVT1RMKm9UPKmYVJ6oTBX/Sw5rXeSw1kUOa13kh19W8ZsqnlRMKlPFX1KZKqaKN1SmijcqbnJY6yKHtS5yWOsiP3yZyl9SmSomlaliUpkqJpWpYlJ5ojJVTCpTxaQyVXxC5WaHtS5yWOsih7Uu8sOHKv5NFZPKJ1SmiknlmyreUJkqnlT8lxzWushhrYsc1rqI/YMPqEwVT1R+U8Wk8qTiicpUMak8qXiiMlU8UXmj4onKVDGpvFHxicNaFzmsdZHDWhf54ZepPKl4Q+WJylQxqUwqTyomlTdUnlRMKlPFk4pvUnlS8ZsOa13ksNZFDmtd5IcPVXxC5RMVk8qTiicqb1R8U8Wk8kRlqvhNKk8qPnFY6yKHtS5yWOsiP3xI5UnFpPKk4g2VN1Q+UTGpTBWTyjdVfEJlqnii8qTimw5rXeSw1kUOa13khy+reFIxqUwqTyqeVEwqv6liUpkqJpWpYlKZKp6ovFHxRsWk8psOa13ksNZFDmtd5Ic/pjJVvKHyRGWqeKLyRGWqeFIxqTxRmSo+UfFNKlPFbzqsdZHDWhc5rHWRHz5UMak8qZhUpopJ5UnFpPJEZaqYVJ6oTBVPKiaVN1SmijdUpopJ5UnFXzqsdZHDWhc5rHWRHz6kMlV8U8UTlTcqJpUnFU9UpopJZaqYVJ5UPKmYVKaKSeUNlaliUpkqPnFY6yKHtS5yWOsi9g8+oPKk4g2Vv1QxqbxR8QmVqWJS+TdV/KXDWhc5rHWRw1oX+eHLKt5QmSo+ofKkYlKZKiaVN1S+qeKJyhsVk8pUMalMFZPKVPGJw1oXOax1kcNaF/nhl6l8QuVJxW+qmFQmlU9UTCpvVDxRmVSmiknl33RY6yKHtS5yWOsi9g/+RSpPKv6SylQxqUwVv0nlScWkMlU8Ufmmik8c1rrIYa2LHNa6iP2DL1KZKiaVqeKJyhsV36QyVUwqU8WkMlU8UXlSMalMFZ9QmSr+0mGtixzWushhrYvYP/iAyhsVk8pU8URlqnii8qRiUnlS8W9SmSo+ofKk4i8d1rrIYa2LHNa6yA9fVvFGxaTyTRWTyqQyVUwqb6hMFZPKN6m8UfGGyhsVnzisdZHDWhc5rHWRH/5lKlPFJ1SmiqliUnlDZar4popJ5UnFpPJEZap4ovKXDmtd5LDWRQ5rXcT+wQdU/lLFpDJVTCpTxaTypOI3qUwVT1T+UsWkMlV802GtixzWushhrYv88KGKm1VMKlPFGypvVDypmFSmijcq3lCZKiaVqeI3Hda6yGGtixzWusgPH1L5SxVPVKaKN1TeqJhUnqhMFVPFN6lMFTc7rHWRw1oXOax1kR++rOKbVL6pYlKZKp6ovKEyVTxR+aaKN1T+TYe1LnJY6yKHtS7ywy9TeaPim1SeVLxRMak8qZhUpopvUvlExRsqU8UnDmtd5LDWRQ5rXeSH/2cqJpU3Kt5QmSqeVEwqU8UTlaliUpkqnqhMFb/psNZFDmtd5LDWRX74j6t4ovKkYlKZKiaVqeINlaniEypTxRsqU8UTld90WOsih7UucljrIj/8soq/pDJVPFF5o+INlScqU8VUMalMFZPKf9lhrYsc1rrIYa2L/PBlKn9J5YnKk4onKr+p4o2KSeU3Vfylw1oXOax1kcNaF7F/sNYlDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeT/ACHo2XKCp8d1AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

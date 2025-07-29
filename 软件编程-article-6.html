@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>智能购物清单和食谱管理工具：自托管的家庭收支助手 | 开源日报 No.678</title>
+        <title>Java volatile 关键字到底是什么｜得物技术</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>智能购物清单和食谱管理工具：自托管的家庭收支助手 | 开源日报 No.678</h2>
-        <p>7/27/2025, 1:00:00 AM</p>
+        <h2>Java volatile 关键字到底是什么｜得物技术</h2>
+        <p>7/28/2025, 10:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章简要介绍了自托管智能购物清单和食谱管理工具 kitchenowl，并列举了其他四个不同领域的开源项目。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 Java `volatile`关键字的底层原理，通过剖析指令重排序和内存可见性问题在 CPU 缓存、MESI 协议、Store Buffer 及 JIT 编译器层面的成因，阐明了`volatile`如何通过内存屏障解决这些并发难题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章以“开源日报”的形式，核心介绍了自托管的智能购物清单和食谱管理工具 kitchenowl，该工具支持多平台使用，具备实时同步、离线功能、食谱管理、膳食计划以及家庭收支跟踪等实用功能。此外，文章还简要列举并介绍了其他四个开源项目，包括 Tachiyomi 漫画阅读器官网、一个集成多种功能的 Telegram 机器人集合、一个与 Llama 3 模型相关的学习项目，以及一个兼容 EVM 链的铭文自动化铸造工具。文章旨在为读者提供近期值得关注的开源项目概览，但对各项目的技术细节和实现原理未作深入探讨。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细剖析了 Java `volatile`关键字在并发编程中的核心作用及其底层机制。开篇通过一个并发编程示例引出指令重排序导致的问题，并指出传统解释对底层原理的缺失。随后，文章深入讲解了 CPU 乱序执行的根源——CPU 与内存的速度差异、多级缓存（L1、L2、L3）的引入、缓存行以及为解决多核缓存一致性而诞生的 MESI 协议。为避免 CPU 空闲，引入了 Store Buffer，但 Store Buffer 又导致了新的乱序执行问题。文章指出`volatile`通过插入内存屏障来强制刷新 Store Buffer，从而解决 CPU 层面的指令重排序。接着，文章探讨了编译器（特别是 JIT C2 编译器）的重排序优化如何导致内存可见性问题，并通过 JITWatch 工具的分析证明 C2 的激进优化可能导致循环变量无法及时更新。最后，文章总结了`volatile`的实际应用场景，即在多线程共享可变变量时使用。整体内容深入浅出，从硬件层面到 JVM 层面，详细解释了`volatile`的工作原理。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">kitchenowl 提供多功能自托管家庭管理方案，集购物、食谱、收支于一体。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作为开源项目，它允许用户完全掌控数据，并通过多平台支持、实时同步和离线功能，提升家庭日常管理的效率和便利性。</span>
+                        <strong style="color: #1e40af">指令重排序是并发编程中导致数据不一致的关键问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CPU 乱序执行（为提升效率引入多级缓存、Store Buffer）和编译器优化（JIT C2 激进优化）都会导致指令执行顺序与代码顺序不符，从而引发不可预测的并发问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">文章展示了涵盖多领域的开源项目，满足不同技术兴趣和需求。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从个人生产力工具到 AI 模型学习再到区块链应用，体现了开源社区的活跃与创新，为开发者提供了广泛的探索方向。</span>
+                        <strong style="color: #1e40af">`volatile`通过插入内存屏障来解决 CPU 层面的指令重排序和内存可见性问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 内存屏障强制刷新 Store Buffer 中的数据到主存，并确保缓存一致性协议生效，从而保证对`volatile`变量的写操作对其他线程立即可见。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“开源日报”形式有助于读者快速发现新奇实用的开源工具。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种短平快的介绍模式，降低了用户了解新项目的门槛，有效扩展了技术视野，是获取开源动态的有效途径。</span>
+                        <strong style="color: #1e40af">JIT 编译器的激进优化是导致内存可见性问题的另一重要原因。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> C2 编译器可能将循环条件变量优化为常量，导致线程无法感知其他线程对其的修改，使程序陷入死循环，`volatile`能阻止这种优化。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">理解`volatile`的底层原理有助于开发者写出更健壮的并发代码。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 深入了解 JVM 内存模型、CPU 缓存机制和编译器优化，能帮助开发者在多线程环境下正确使用`volatile`，避免常见的并发陷阱。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">kitchenowl 是一个自托管的智能购物清单和食谱管理工具，支持多平台使用 (移动/网页/桌面)，具有实时同步、离线功能、食谱管理、膳食计划和家庭收支跟踪等实用功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">后端采用 Flask 开发，前端使用 Flutter 实现，支持原生移动、网页及桌面应用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">tg_bot_collections 是一个集合了 yihong0618 的 Telegram 机器人功能的项目。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Llama 是一个与 Llama 3 模型相关的项目，提供了多种实用的笔记本和示例。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">evm-inscription-mint 是一个兼容 EVM 链的铭文自动化 Mint 工具。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">volatile 作为 Java 的基础关键字，一直是个熟悉又神秘的存在。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">hanpens-beofre 是 JVM 对开发者的保证，即不管 JVM 如何优化（JIT 编译），都会保证上述原则一定成立。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">去告诉 CPU，我在此处定义了一个内存屏障，自这里开始，后续所有针对高速缓存的写入，都必须先把 store buffer 中的数据全部 flush 回高速缓存中！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">可以看出，由于 C2 编译器的激进优化，编译后的机器码不再判断 running 变量，从而产生了内存可见性问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有的有的，我们在多线程开发中，只要变量被多个线程共享，且是可变的，加上 volatile 准没错：）</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">开源服务指南</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">开源服务指南</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">570</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">72 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">17832</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自托管</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">家庭管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">食谱管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Telegram Bot</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">volatile</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">指令重排序</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/bacc34" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/8b570a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/bacc34">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/8b570a">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
