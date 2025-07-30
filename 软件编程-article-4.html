@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>动态计算：我们如何构建无服务器服务器 - Vercel</title>
+        <title>JavaScript 内存泄漏排查方法</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>动态计算：我们如何构建无服务器服务器 - Vercel</h2>
-        <p>7/28/2025, 1:00:00 PM</p>
+        <h2>JavaScript 内存泄漏排查方法</h2>
+        <p>7/29/2025, 7:58:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Vercel 的“动态计算”通过自定义 TCP 隧道和智能路由重新构建无服务器架构，实现高效的请求多路复用，减少冷启动并启用动态 CPU 定价。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">详细介绍了如何使用 Chrome DevTools 的 Memory 工具，通过堆快照分析和案例实践，高效排查 JavaScript 内存泄漏问题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Vercel 为构建“动态计算”而进行的为期两年的工程努力。这是一项无服务器创新，旨在克服传统无服务器平台（如 AWS Lambda）的局限性，最初的驱动力是支持 React 服务端组件 (RSC) 和 Next.js 应用路由的流式传输能力。文章解释了如何开发基于自定义 TCP 的传输层以实现流式响应和双向通信，打破了传统的每个实例一次调用的模型。文章介绍了 `compute-resolver` 服务，这是一个分布式系统组件，负责智能地将请求路由到多个区域中现有的空闲函数实例，以最大限度地重用资源并最大限度地减少冷启动。此外，它还描述了一个复杂的基于 Rust 的健康监控系统，该系统动态适应实例负载，确保最佳性能和资源利用率。这些基础性的改变为“动态 CPU 定价”铺平了道路，使客户只需为活跃的计算时间付费，从而为 I/O 密集型工作负载节省高达 95% 的成本。使客户只需为活跃的计算时间付费，从而显著降低成本。对于 I/O 密集型工作负载，成本节省高达 95%。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章全面阐述了 JavaScript 内存泄漏的排查方法。首先，定义了内存泄漏概念并介绍了 Chrome DevTools 中 Memory 工具的核心功能，如快照视图（摘要与对比）、类筛选器及各项指标（浅层大小、保留大小）。接着，详细讲解了堆快照的分析技巧，包括如何复现操作、抓取快照、筛选可疑引用链（优先关注内存增量大、Detached 元素、常见泄漏类型如事件监听和定时器，以及频繁出现的引用链）。最后，通过一个具体的监听器泄漏案例，展示了从发现问题到定位代码的完整排查流程，为前端开发者提供了实用的内存优化指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">基于自定义 TCP 的传输层是实现流式传输和双向通信的基础。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这项创新使 Vercel 能够克服 AWS Lambda 最初的局限性，并促进了 React 服务端组件等功能。它也为超越简单请求-响应模型的高级功能奠定了基础。</span>
+                        <strong style="color: #1e40af">掌握 DevTools Memory 工具的核心功能与视图可高效分析内存。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章详细介绍了 Memory 工具的摘要视图和对比视图，以及构造函数、对象、浅层大小和保留大小等关键概念，为内存分析奠定基础。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在单个 Lambda 实例上多路复用请求可显著提高资源利用率并降低成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将多个并发请求发送到空闲函数实例，Vercel 打破了传统的每个实例一次调用的模型，大大降低了空闲计算成本，特别是对于像 LLM (大型语言模型) 这样的 I/O 密集型工作负载。</span>
+                        <strong style="color: #1e40af">系统化的排查步骤是定位 JavaScript 内存泄漏的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从复现操作、抓取快照到筛选、分析引用链，文章提供了一套清晰的排查流程，强调重复操作、关注增量和常见泄漏类型的重要性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">智能路由和精密的健康监控可确保最佳性能和资源分配。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `compute-resolver` 服务和基于 Rust 的核心动态管理流量和实例健康状况，防止过载和冷启动，自动适应工作负载配置文件，以在分布式区域实现最大效率。</span>
+                        <strong style="color: #1e40af">结合业务逻辑和引用链分析能精准定位泄漏代码。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 建议从业务逻辑推断不应存在的对象，并关注距离根节点较远的引用，利用 DevTools 的代码跳转功能，最终确定导致泄漏的具体代码。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">具有动态 CPU 定价的动态计算为每周超过 450 亿个请求提供支持，为客户节省高达 95% 的成本，并且从不收取空闲时间的 CPU 费用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">答案是引入 Lambda 简单事件响应模型之外的一种新的安全传输方式，该传输方式将每个实例安全地连接回我们的基础设施。换句话说，我们在 Vercel 和 AWS Lambda 函数之间创建了一个隧道。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">重用已打开的隧道，将更多流量发送到空闲函数实例，可以避免浪费资源，减少冷启动，并降低成本。特别是对于请求并发高于 1 的 I/O 密集型工作负载，效果更明显。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们的解决方案是构建一个名为 `compute-resolver` 的新服务，该服务充当 Vercel 代理 Pod（Pod 是 Kubernetes 中的最小部署单元）的类似 DNS 的解析器，以解析为 Vercel 函数路由 Pod。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">您现在只需为您使用的实际资源付费：每个函数实例使用的活跃 CPU 时间（以毫秒为单位）以及每个函数实例使用的预配置内存（以 GB-小时为单位）。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">内存泄漏（Memory Leak）是指程序中已动态分配的堆内存由于某种原因程序未释放或无法释放，造成系统内存的浪费，导致程序运行速度减慢，甚至系统崩溃等严重后果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">比较执行泄漏操作前和执行泄漏操作后的快照，筛选疑似泄漏的引用链。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">事件监听(EventListener)、定时器(DOMTimer)、数组(Array)，这是最容易导致内存泄漏的几种数据类型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果某一条类似的引用链频繁出现，那么很有可能该引用链中出现了泄漏。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">导致泄漏的引用比较容易发生在"距离"较大的地方，也就是距离根节点比较远的对象（DOMTimer 除外）。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -62,30 +62,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Vercel News</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Tom Lienard</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">字节跳动技术团队</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">字节跳动技术团队</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1773</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">26 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6301</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器计算</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vercel</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS Lambda</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存泄漏</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Chrome DevTools</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/28372b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/3b9eb2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/28372b">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/3b9eb2">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
