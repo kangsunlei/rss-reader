@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>“老中间件”自救：昔日并发王者、十五年开源老将全力押注 Agentic AI 找活路，转型做 Java 版 LangChain</title>
+        <title>得物向量数据库落地实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>“老中间件”自救：昔日并发王者、十五年开源老将全力押注 Agentic AI 找活路，转型做 Java 版 LangChain</h2>
-        <p>7/29/2025, 7:01:00 AM</p>
+        <h2>得物向量数据库落地实践</h2>
+        <p>7/30/2025, 11:21:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">昔日 Java 并发中间件 Akka 为求生存，全力转型 Agentic AI，推出 Java 版 LangChain，以高性能和集成优势解决 AI Agent 系统复杂性挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">得物技术团队详细分享了其在 GenAI 场景下，从选型到实践、运维的向量数据库落地经验，重点介绍了 Milvus 和 Zilliz 的应用与高可用架构演进。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入分析了老牌 JVM 并发中间件 Akka 在面临财务困境和客户流失后，如何抓住客户对 AI 功能激增的需求和 Agentic AI 的市场热度，通过战略转型全力押注 Agentic AI。Akka 发布了 Agentic Platform，旨在提供一个高性能、集成度高的 Java 版 LangChain 替代方案，声称能将 Agentic 系统开发速度提升 3 倍，计算资源降低三分之一，并比 LangChain 效率高 70%。文章详细阐述了 Agentic AI 作为“第五次计算浪潮”带来的万亿级用户和系统复杂度挑战，以及传统分布式架构在面对 Agentic 系统时遇到的延迟、状态管理等问题。Akka 平台通过集成编排、智能体、内存与流式传输四大核心组件，并具备流式端点、智能体适配器、智能体编排、内存数据库+CRDT 和 Agent 生命周期管理五大能力，旨在解决这些挑战。文章也提及了 Akka 通过许可证变更实现财务好转，以及与开源分叉 Pekko 的对比，强调了 Akka 在技术投入和发展上的优势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了得物在大模型和生成式 AI 背景下，如何选择、部署和优化向量数据库的实践经验。首先介绍了向量数据库的背景、工作原理以及与传统数据库的区别。接着，通过多维度对比分析了主流向量数据库和索引方案（HNSW、DiskANN），阐述了得物选择 Milvus 作为核心向量数据库的原因，并针对高并发、大数据量场景引入 Zilliz。文章详细展示了 Milvus 部署架构的演进，包括存储拆分、资源池迁移（以提升资源利用率和实现成本优化）、DiskANN 索引应用及性能压测。最后，分享了高可用架构设计、迁移方案以及运维过程中关于索引原理和 QueryNode 扩容误区的宝贵沉淀。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Akka 通过转型 Agentic AI，从传统中间件向高性能 AI Agent 平台进化。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Akka 面临财务困境，发现客户对 AI 功能的需求激增，因此决定利用其在分布式系统和高并发方面的积累，构建一个集成度高、性能优越的 Agentic AI 平台，以应对市场新趋势。</span>
+                        <strong style="color: #1e40af">向量数据库是 GenAI 时代不可或缺的基础设施</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章强调了向量数据库在处理非结构化数据、实现高效相似度搜索方面的核心作用，是支撑大模型和生成式 AI 应用的关键技术。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Agentic AI 被视为“第五次计算浪潮”，带来前所未有的系统复杂度挑战。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 面对万亿级用户和每秒百万级事务的 Agentic 系统，传统技术栈已无法满足需求，需要全新的架构范式来处理高并发、状态管理和持续交互等问题。</span>
+                        <strong style="color: #1e40af">得物根据业务需求和技术栈综合评估并选择 Milvus 与 Zilliz</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 得物根据亿级数据量、高性能要求、快速扩缩容、K8s 适配、团队技术栈和社区支持等多个维度，最终选择了 Milvus，并针对核心业务场景引入了性能更优的 Zilliz。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Akka Agentic Platform 通过集成核心组件解决 Agentic AI 架构难题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 平台提供了编排、智能体、内存、流式传输等四大核心组件，并具备流式端点、适配器、编排、内存+CRDT 及生命周期管理等五大能力，旨在提供一站式、高性能的 Agentic 系统开发方案。</span>
+                        <strong style="color: #1e40af">实践中通过架构演进和索引优化提升系统性能与资源利用率</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从共享存储拆分到独立存储，从独立资源池到共享资源池的混部，以及引入 DiskANN 索引进行成本优化，体现了系统架构的持续演进和精细化管理。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Akka 通过许可证变更实现营收增长，并强调其技术优势超越开源替代方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 2022 年 Akka 将 Apache 许可证改为 BSL 后，公司实现盈利，并指出其开源分叉 Pekko 因缺乏社区投入和核心功能更新而未能跟上 Akka 的发展。</span>
+                        <strong style="color: #1e40af">高可用架构是保障向量数据库稳定运行的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章详细探讨了同城多机房混部、多副本就近访问、业务交叉访问等多种高可用方案，为读者提供了实际可行的灾备体系构建思路。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">运维经验揭示了向量数据库性能优化的常见误区</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过对 HNSW 和 DiskANN 索引原理的深入解析，以及对'querynode 越多越快'误区的澄清，提供了宝贵的运维洞察，有助于避免实践中的性能陷阱。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们是时候抛开偏见了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如今我们正在扭转乾坤，构建起一套比任何 Langchain 现有技术都更丰富、也更复杂的 AI 功能集。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们坚信，Agentic AI 将成为第五次计算浪潮。这是一个你无法忽视的巨大趋势。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">试想一下，在面对万亿用户、每秒百万级事务处理、Agent 分布式并行处理的场景下，你还会用 Python + MySQL 写系统吗？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但 Flink 之类只是独立系统，仅适用于计算。而借助 Akka，我们将智能体编排、内存与流式传输功能集成至同一编程包内。其优势在于，用户能够一站式对所有功能进行编程，且各项功能均使用相同的计算资源。也正因为如此，我们的执行效率才会比 Langchain 高出 70%。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">向量数据库作为 GenAI 的基础设施之一，通过量化的高维空间数据结构（如 HNSW 算法），实现对嵌入向量（Embeddings Vector）的高效存储、索引和最近邻搜索（ANN），支撑包括多模态数据表征在内的复杂智能应用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果数据量比较大，并且前期人力不足可以使用云托管方案。选择 Zilliz、Pinecone、Vespa 或者 Qdrant，如果后期计划从云上迁移到自建可以选择 Zilliz、Vespa 或者 Qdrant。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对 DBA 而言，向量数据库领域需要持续的知识更新和技术支持。从问题解决效率来看，国内技术社区对 Milvus 的支持体系相较于 Qdrant 更为完善。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过监控发现有很多集群数据量比较大，但是 QPS 并不是那么高，这时候就考虑对这些性能要求不高的集群是否有降本的方案。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">milvus 打散的基本单位是 segment，一般 segment 大小(1G/个)，他的粒度比 redis cluster 要大。理论上的理想情况是 1 个 segment 对应 1 个 querynode，但是实际情况会收到多因素的干扰，会导致 querynode 越多出现不稳定的概率越大。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,30 +67,31 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4903</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">35 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8612</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agentic AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">中间件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发编程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Milvus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Zilliz</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">HNSW</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DiskANN</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/a4fd65" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/efa1a7" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a4fd65">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAX3SURBVO3BQW4kSRLAQDKg/3+Zq6OfEkiUpI5ZuJl9Y61LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWusgXH1L5SxWTyl+qeKLypGJSeaPiDZW/VPGJw1oXOax1kcNaF/nih1X8JJU3KiaVJxWTyhsqU8WkMqlMFZ9QmSqeVPwklZ90WOsih7UucljrIl/8MpU3Kv6SyicqnlS8oTJVTCo/SeWNit90WOsih7UucljrIl/8x1VMKk8qJpWpYlKZVJ5UTCpTxaQyVUwqU8Wk8v/ksNZFDmtd5LDWRb74j1OZKp6oTBVPKiaVNyqeVEwqT1Smiv8nh7UucljrIoe1LvLFL6v4TRX/JSpTxVTxhspU8UbFTQ5rXeSw1kUOa13kix+m8pdUpopJZaqYVKaKSWWqmFSeqEwVk8pUMalMFZ9QudlhrYsc1rrIYa2LfPGhin+pYlL5hMpUMan8pIo3VKaKJxX/JYe1LnJY6yKHtS5i3/iAylTxROU3VUwqTyqeqEwVk8qTiicqU8UTlTcqnqhMFZPKGxWfOKx1kcNaFzmsdRH7xi9SeaPiicqTiicqb1RMKj+pYlKZKiaVqeITKm9U/KbDWhc5rHWRw1oX+eJDKp+oeKLypGJSeVLxROWNip9UMak8UXmj4hMqTyo+cVjrIoe1LnJY6yJffKhiUpkqJpUnKlPFE5UnFZPKJyomlaliUvlJFZ9QmSqeqDyp+EmHtS5yWOsih7Uu8sU/pvJEZap4Q+VJxaTyRsWkMlVMKlPFpDJVPFGZKiaVqeKNiknlNx3WushhrYsc1rqIfeMDKk8q/pLKVDGpTBWTypOKN1TeqHhD5UnFJ1Smit90WOsih7UucljrIl98qGJSmVSmikllqphUpop/SWWqeFIxqbyhMlVMFU9UpopJ5UnFXzqsdZHDWhc5rHWRLz6kMlU8UXmjYlKZKn5TxROVqWJSmSomlScVb6hMFZ9QmSomlaniE4e1LnJY6yKHtS5i3/iAypOKN1SeVEwqn6iYVN6o+ITKVDGp/EsVf+mw1kUOa13ksNZFvvhhFZ+oeKNiUnlSMalMFZPKGyo/qeKJyhsVk8pUMalMFZPKVPGJw1oXOax1kcNaF/nil6m8UTGpPKn4l1Q+UTGpvFHxRGVSmSomlX/psNZFDmtd5LDWRewb/5DKk4pPqEwVn1CZKn6TypOKSWWqeKLykyo+cVjrIoe1LnJY6yJf/DCVqWJSeUPljYo3VKaKSWWqmFSmikllqnii8qTiScUTlaliUpkq/tJhrYsc1rrIYa2L2Dc+oPKbKp6oTBWTyicqbqLypOKJyhsVf+mw1kUOa13ksNZF7BsfUJkqPqHyRsVvUpkqnqhMFZPKv1Qxqfykik8c1rrIYa2LHNa6yBe/TOWNiicqT1Smip+kMlX8pIpJZap4ovJEZap4ovKXDmtd5LDWRQ5rXcS+8QGVv1QxqUwVk8onKn6TylTxROUvVUwqU8VPOqx1kcNaFzmsdZEvPlRxs4pJZap4Q+WNiicVk8pU8UbFGypTxaQyVfymw1oXOax1kcNaF/niQyp/qeKJylTxhsobFZPKE5WpYqr4SSpTxc0Oa13ksNZFDmtd5IsfVvGTVH5SxaTypGJSeUNlqnii8pMq3lD5lw5rXeSw1kUOa13ki1+m8kbFJyomlTcqnlRMKk8qJpWp4iepfKLiDZWp4hOHtS5yWOsih7Uu8sX/GZVPqEwVn1CZKp5UTCpTxROVqWJSmSqeqEwVv+mw1kUOa13ksNZFvviPq3iiMlU8UXmiMlW8oTJVfEJlqnhDZap4ovKbDmtd5LDWRQ5rXeSLX1bxl1Smiicqb1S8ofJEZaqYKiaVqeKJyn/JYa2LHNa6yGGti9g3PqDylyomlTcq3lD5TRWfUHlSMak8qfiXDmtd5LDWRQ5rXcS+sdYlDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeR/uibcURmWkxsAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/efa1a7">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
