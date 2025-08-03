@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>轻量级静态代码分析利器：精准识别漏洞与编码规范 | 开源日报 No.683</title>
+        <title>Kubernetes 环境中作业帮大模型服务流量调度优化实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>轻量级静态代码分析利器：精准识别漏洞与编码规范 | 开源日报 No.683</h2>
-        <p>8/1/2025, 1:01:00 AM</p>
+        <h2>Kubernetes 环境中作业帮大模型服务流量调度优化实践</h2>
+        <p>8/2/2025, 2:12:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文作为“开源日报”介绍了 Semgrep 静态代码分析工具，以及 FunSearch、Papermage、Salamander 和 build-it-figma-ai 等多个领域的开源项目。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作业帮在大模型服务部署于 Kubernetes 环境时，通过自研模型网关解决了传统 Ingress 在流量调度、并发控制、KV Cache 利用和异构硬件优化等方面的局限，显著提升了服务性能和稳定性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这篇“开源日报”文章汇总并简要介绍了五个近期值得关注的开源项目。重点关注轻量级静态代码分析工具 Semgrep，强调其支持 30 多种编程语言、语义化扫描、本地运行保障隐私，以及与 IDE 和 CI/CD 流水线的集成能力。文章提及了 Semgrep 的社区版和功能更强大的 AppSec 平台版。此外，还概括性地介绍了 Google DeepMind 利用大型语言模型进行数学发现的 FunSearch、用于科学论文 NLP 和 CV 研究的 Papermage 库、Windows 双面文件管理器 Open Salamander，以及 Figma/FigJam 的 AI UI 设计工具 build-it-figma-ai。整体文章内容呈现为项目列表，旨在提供快速概览而非深入分析。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了在大模型服务广泛应用背景下，Kubernetes 环境中传统 Ingress 在流量调度方面面临的挑战，包括基于路径的路由限制、缺乏并发控制、KV Cache 利用不足、不支持异构硬件优化以及成本跟踪缺失。为解决这些问题，作业帮提出并实践了一种创新的“模型网关（Model API Gateway）”方案。该方案集成了模型路由、基于最小堆的并发控制、KV Cache 亲和路由、异构设备感知调度以及基于 token 的成本分配五大核心功能。文章详细阐述了每项功能的实现原理、优势及其如何克服传统方案的痛点，最终实现大模型服务的易用性、稳定性、性能和成本管理的全面提升。该方案对企业级 AI 服务平台、云服务提供商和研究实验室具有重要的实践参考价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,11 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Semgrep 是高效轻量级的静态代码分析工具</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它通过语义化扫描提高漏洞检测准确性，支持多语言和 IDE/CI/CD 集成，且本地运行保障代码隐私，是代码安全和规范检查的利器。</span>
+                        <strong style="color: #1e40af">传统 Ingress 无法满足大模型服务在动态路由、并发控制和资源利用上的特殊需求。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 大模型推理对 GPU 显存敏感，现有负载均衡策略易导致 OOM；静态路由和缺乏 KV Cache 亲和性也限制了性能和运维效率，急需针对性解决方案。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">文章提供了多元化的开源技术视野</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过介绍代码安全、AI 数学发现、科学 NLP、文件管理及 AI 辅助 UI 设计等领域的项目，帮助读者快速了解不同领域的技术动态和工具。</span>
+                        <strong style="color: #1e40af">作业帮构建的模型网关通过多项创新功能全面优化大模型流量调度。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型路由、基于最小堆的并发控制、KV Cache 亲和、异构设备感知和 token 成本分配，共同解决了大模型部署的关键痛点，提升了系统整体效能。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">该方案显著提升了服务的稳定性、性能、易用性并实现了精细化成本管理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过避免 OOM、提高缓存命中率、优化异构资源利用和实现多租户计费，模型网关为企业级大模型服务提供了高价值的实践经验。</span>
                     </li>
             </ol>
         </div>
@@ -49,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">semgrep 是一个轻量级的静态代码分析工具，支持 30+ 种编程语言，提供语义化代码扫描功能，能够本地运行保障隐私安全。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">语义化搜索类似于源码的模式，而非简单字符串匹配，提高了查找准确性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">FunSearch 是一个利用大型语言模型进行程序搜索的数学发现工具。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">papermage 是一个支持科学论文的自然语言处理和计算机视觉研究的库。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">build-it-figma-ai 是一个用于在 Figma 和 FigJam 中绘制和草绘用户界面的工具小部件。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在大模型服务场景中，Ingress 存在以下局限：缺乏并发控制、KV Cache 利用不足、不支持异构硬件优化、成本跟踪缺失。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">作业帮提出了一种综合的大模型服务流量调度方案，专为 Kubernetes 中的大模型服务设计，整合成模型网关 (Model API Gateway)。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">作业帮提出了一种基于最小堆的最小连接调度算法，优先选择活跃连接数最少的实例分配流量，并设置每个实例的并发上限，确保服务稳定性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">KV Cache 亲和路由通过请求方指定会话标识或 prefix caching 自动计算将请求路由到已有相应 KV Cache 的后端实例，增加缓存命中率，提升推理效率。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过模型网关 (Model API Gateway) 实现针对 Kubernetes 中大模型服务独特需求的流量调度方案，克服了传统 Ingress 的局限性。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -57,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">开源服务指南</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">开源服务指南</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4028</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">15 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3585</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">静态代码分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自然语言处理</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大模型服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">流量调度</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPU优化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/67e1f2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/88a1cb" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/67e1f2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/88a1cb">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
