@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>深入理解大语言模型：令牌化机制解析</title>
+        <title>优化隐私代理双重验证延迟：从 40 毫秒降至 1 毫秒以下</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>深入理解大语言模型：令牌化机制解析</h2>
-        <p>8/4/2025, 3:30:24 PM</p>
+        <h2>优化隐私代理双重验证延迟：从 40 毫秒降至 1 毫秒以下</h2>
+        <p>8/5/2025, 2:00:01 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文解析大语言模型如何通过令牌化处理文本，以及该方法对模型性能和常见问题的影响。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 通过诊断和修复纳格算法、延迟 ACK 和小型 TCP 之间的交互问题，成功将隐私代理的双重验证延迟从 40 毫秒降低到 1 毫秒以下。文章详细介绍了其优化过程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文全面解释了令牌在大语言模型中作为文本基本单位的关键作用，强调了其在模型操作、成本和上下文理解中的重要性。它阐述了令牌化对于有效的词汇管理、处理未登录词和优化计算需求至关重要。本文描述了常见的令牌化方法，如字节对编码 (BPE)、WordPiece、SentencePiece 和 Unigram，概述了它们在 GPT、BERT 和 T5 等主流大语言模型中的机制和应用。此外，它还讨论了令牌化对大语言模型性能的实际影响，包括与上下文窗口相关的限制、用于应用程序编程接口 (API) 成本的令牌计数以及非英语语言、特殊字符、数值推理和代码生成中的特殊表现。文章最后强调，理解令牌化是掌握现代 AI 的优势与局限的关键。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">这篇来自 Cloudflare 的文章深入探讨了其隐私代理产品的性能优化，特别是针对 Privacy Pass 令牌的双重验证中约 40 毫秒的延迟。调查始于像 Jaeger 这样的追踪工具，随后通过全面的指标确认了问题的影响范围。在排除健康检查延迟和连接池争用等初步假设后，该团队受到科学方法的启发，发现了根本原因：纳格算法和延迟 ACK 之间意外的交互。 这种情况的发生是由于单个 `memcached` 命令在 `TcpStream` 上的多个小 `write_all` 调用导致了数据包碎片化。由于 Linux 服务器上的 `CONFIG_HZ=1000` 设置，初始的“get”命令部分发送后，会触发来自内核的 40 毫秒延迟 ACK，然后才会传输命令的其余部分。 解决方案包括重构代码以使用 `BufWriter<tcpstream>`，它在用户空间中缓冲小写入，并在 `flush` 时将完整的 `memcached` 命令作为单个 TCP 数据包发送。 这一修复成功地将双重验证延迟降低到 1 毫秒以下，显著改善了用户的浏览体验和隐私特性。</tcpstream></p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">令牌是大语言模型处理的基本单位，而不是单词，它决定了模型如何理解和生成信息。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 大语言模型将文本转换为数字令牌嵌入以进行神经网络处理，这从根本上塑造了它们对语言的理解和生成，影响了从输入/输出到运营成本的一切。</span>
+                        <strong style="color: #1e40af">系统的、数据驱动的调试对于诊断细微的性能瓶颈至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 本文演示了使用追踪（Jaeger）和全面的指标来验证问题范围，然后系统地应用科学方法来形成和反驳假设，从而找到真正的根本原因。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">高效的令牌化对于大语言模型词汇管理、处理未登录词和计算效率至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 令牌化策略，特别是子词单元，使大语言模型能够管理有限的词汇表，有效地处理未登录词，并减少序列长度，从而直接影响性能和资源利用率。</span>
+                        <strong style="color: #1e40af">纳格算法和延迟 ACK 的交互可能会为小型 TCP 写入引入显著的延迟。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `TcpStream` 上 `write_all` 调用的碎片化写入会触发纳格算法和延迟 ACK，导致 40 毫秒的延迟，因为内核在发送缓冲的段之前等待更多数据或 ACK。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">令牌化显著影响大语言模型性能的特殊表现，尤其是在数值推理、跨语言理解和代码生成方面。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 低效或不一致的令牌化会分割数值、非英语单词或代码语法，导致准确推理的困难、流畅性降低以及特定任务的精度降低。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">常见的令牌化方法（BPE、WordPiece、SentencePiece、Unigram）采用多种多样的策略来分解文本，以适应不同的模型架构和语言特征。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些方法在构建词汇的方法上有所不同（例如，基于频率的合并、可能性最大化、原始文本处理），每种方法都适用于不同的模型架构和语言特征。</span>
+                        <strong style="color: #1e40af">利用 `BufWriter` 是将小写入合并到单个 TCP 数据包中的有效解决方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在用户空间中缓冲多个小写入并将它们作为单个较大的数据包刷新，`BufWriter` 绕过了纳格算法/延迟 ACK 问题，从而消除了人为的延迟。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">令牌是大语言模型的核心。模型通过令牌接收输入、处理信息并输出结果，而应用程序编程接口 (API) 的使用也通常以令牌数量计费。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">嵌入向量能够捕捉令牌之间的语义关联，使得意义相近的令牌在高维空间中也彼此靠近。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大型语言模型的许多挑战和特殊表现并非源于模型本身，而是源于文本的令牌化方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">理解令牌化可以帮助你编写更好的提示，估算应用程序编程接口 (API) 成本，排除问题，并掌握现代 AI 的优势与局限。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每次用户通过隐私代理访问网站时，我们都会验证其请求头部的 Privacy Pass 令牌。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们从科学方法中汲取灵感。我们分析了我们的代码，创建了代码段导致延迟的原因的理论，并使用数据来拒绝这些理论。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">纳格算法本身不是问题，但当与另一个功能（延迟 ACK）一起启用时，延迟可能会逐渐增加。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们的 Linux 服务器具有延迟的最小边界... CONFIG_HZ=1000... 导致 40 毫秒的延迟。这就是数字的来源！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">解决方法是使用 `BufWriter<tcpstream>`，以便 `write_all` 将小消息缓冲在用户空间内存缓冲区中，并且 `flush` 将以一条消息发送整个 `memcached` 命令。</tcpstream></li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Ben Yang</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1717</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1797</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Tokenization</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自然语言处理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">字节对编码</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TCP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">延迟</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/fcca93" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/ecd0b8" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/fcca93">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/ecd0b8">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYKSURBVO3BQW4ERxLAQLKg/3+Z62OeGmjMSFs2MsL+wVqXOKx1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZEfPqTylyomlb9U8UTlScWk8kbFGyp/qeITh7UucljrIoe1LvLDl1V8k8pvqphU3lCZKiaVSWWq+ITKVPGk4ptUvumw1kUOa13ksNZFfvhlKm9U/CWVT1Q8qXhDZaqYVL5J5Y2K33RY6yKHtS5yWOsiP/zLVTxRmSomlaliUplUnlRMKlPFpDJVTCpTxaTyX3JY6yKHtS5yWOsiP/zLqUwVU8Wk8kbFpPJGxZOKSeWJylTxX3JY6yKHtS5yWOsiP/yyit9U8UbFpPKXVKaKqeINlanijYqbHNa6yGGtixzWusgPX6byl1SmikllqnhDZaqYVJ6oTBWTylQxqUwVn1C52WGtixzWushhrYvYP/gPUXmjYlKZKiaVJxWTylTxhsqTiv+Sw1oXOax1kcNaF7F/8AGVqeKJym+qmFSeVDxRmSomlScVT1Smiicqb1Q8UZkqJpU3Kj5xWOsih7UucljrIj/8MpU3Kp6ovFExqUwqTyomlTdUnlRMKlPFk4pvUnlS8ZsOa13ksNZFDmtd5IcPVXyiYlJ5o2JSmSqmiicqb1R8U8Wk8kRlqphUpopPqDyp+MRhrYsc1rrIYa2L/PBlKlPFpPJGxROVN1Q+UTGpTBWTyjdVPFF5ojJVPFF5UvFNh7UucljrIoe1LvLDh1Q+ofJEZaqYKiaVSeVJxaTyRsWkMlVMKlPFpDJVPFGZKiaVT1RMKr/psNZFDmtd5LDWRX74YxVPVKaKJypvVLyhMlU8qZhUnqhMFZ9QmSomlTdUporfdFjrIoe1LnJY6yI/fKhiUnmi8qRiUpkqpopJZaqYVKaKN1SmiicVk8obKlPFk4pJZaqYVJ5U/KXDWhc5rHWRw1oX+eFDKlPFpDJVTCpPKr6pYlJ5UvFEZaqYVKaKSeVJxRsqU8Wk8obKVDGpTBWfOKx1kcNaFzmsdRH7Bx9QeaPiicpfqphU3qj4hMpUMalMFZPKb6r4S4e1LnJY6yKHtS7yw4cqvqnim1Smiknlm1S+qeKbKiaVqWJSmSomlaniE4e1LnJY6yKHtS7yw5epvFHxROVJxaTyTRWTyqTyiYpJ5Y2KJyqTylQxqfw/Hda6yGGtixzWusgPH1KZKt5QmSqmit9U8UTlScU3VUwqb6g8qZhU3lD5TYe1LnJY6yKHtS7ywx9TeUPlScVU8YbKGxWTylQxqUwVT1SeVLxRMalMFZPKVPGXDmtd5LDWRQ5rXeSHP1YxqTyp+ITKVDFVTCpvVDypeKPiico3qdzksNZFDmtd5LDWRX74ZSpPKiaVT1RMFW9UTCpvqEwVk8pfUpkqJpUnKm9UfOKw1kUOa13ksNZFfvg/U5kqPqEyVTxRmSqeqEwV31QxqUwVk8obKlPFE5W/dFjrIoe1LnJY6yL2Dz6g8qRiUvlNFZPKJyp+k8pU8UTlL1VMKlPFNx3WushhrYsc1rqI/YN/MZUnFZPKVPGGyhsVb6hMFZPKk4o3VKaKSWWq+E2HtS5yWOsih7Uu8sOHVP5SxW9SmSqeVEwqT1Smiqnim1Smipsd1rrIYa2LHNa6yA9fVvFNKp9QmSomlaliUvmEylTxROWbKt5Q+X86rHWRw1oXOax1kR9+mcobFZ+oeKIyVbxRMak8qZhUpopvUvlExRsqU8UnDmtd5LDWRQ5rXeSH/xiVJxVPVL5JZap4UjGpTBVPVKaKSWWqeKIyVfymw1oXOax1kcNaF/nhX67iicqkMlU8qZhUpoo3VKaKT6hMFW+oTBVPVH7TYa2LHNa6yGGti/zwyyr+kspU8U0Vb6g8UZkqpoonFZPKv9lhrYsc1rrIYa2L/PBlKn9J5YnKVPGkYlL5TRVvqLxRMam8UfGXDmtd5LDWRQ5rXcT+wVqXOKx1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZH/AdE123nYywlsAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
