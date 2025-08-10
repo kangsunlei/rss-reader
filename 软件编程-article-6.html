@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>重新架构 Workers KV 以提高可用性和性能</title>
+        <title>Git 20 周年：Linus Torvalds 访谈回顾</title>
         <style>
             body {
                 padding: 12px;
@@ -15,77 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>重新架构 Workers KV 以提高可用性和性能</h2>
-        <p>8/8/2025, 2:00:01 PM</p>
+        <h2>Git 20 周年：Linus Torvalds 访谈回顾</h2>
+        <p>8/9/2025, 9:31:26 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 详细介绍了 Workers KV 的重新架构，旨在 2025 年的故障后增强可用性和性能。本次架构升级转向内部混合存储架构和多层一致性模型。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 通过分享与 Linus Torvalds 的访谈，纪念 Git 诞生 20 周年，并强调 Git 通过出色的合并功能，有效解决了补丁应用速度慢的问题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文概述了 Cloudflare 在 2025 年 6 月 12 日因第三方云供应商故障导致重大故障后，对其 Workers KV 服务进行的重大架构改革。最初依赖多个第三方对象存储提供商，该系统面临一致性问题和操作复杂性，导致暂时转移到单个提供商，但该提供商随后也出现故障。重新设计的 Workers KV 现在主要利用 Cloudflare 的内部分布式数据库，该数据库在多个集群中分片以实现可扩展性和持久性，并引入 KV 存储代理 (KVSP) 来管理连接和路由。一个关键的创新是混合存储方法，其中 KVSP 智能地将小对象路由到分布式数据库，将大对象路由到 Cloudflare R2。文章详细解释了多层一致性机制，包括竞争性写入/读取、后台协调和基于版本元数据的爬虫程序。这些机制对于维护跨双后端的数据一致性至关重要，并符合 AP/PA-EL 一致性模型。文章还详细介绍了阶段性部署和读写一致性退化的发现，以及通过对抗性测试解决该问题，展示了一种强大的系统弹性方法。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Cloudflare 将 Workers KV 重新架构为内部分布式数据库，以应对关键的第三方服务故障。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从外部对象存储转移到 Cloudflare 自己的分片、复制数据库增强了控制、可靠性和性能，直接解决了导致 2025 年事件的单点故障。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">混合存储解决方案优化了各种对象大小的性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Workers KV 现在通过 KVSP 智能地将小对象（小于 1KB）路由到分布式数据库，将较大的对象路由到 Cloudflare R2，从而利用每种存储类型的优势来实现效率和成本效益。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">多层一致性机制确保双后端操作中的数据完整性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该系统采用竞争性写入/读取、后台协调和基于版本元数据的连续爬虫程序来解决不一致问题，在最终一致性的前提下，平衡可用性和性能。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">今天，我们将提供有关 Workers KV 所做改进的最新信息，以确保类似的故障不会再次发生。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于此规模下以小于 1KB 对象为主的工作负载，数据库存储比传统的对象存储效率更高、成本效益更高。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们将数据分片到多个数据库集群中，每个集群都具有三向复制，以实现持久性和可用性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们扩展了 KVSP 以自动将更大的对象路由到 Cloudflare R2，从而创建了一种混合存储架构，该架构可以根据对象特征优化后端选择。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从分布式系统的角度来看，KV 在 CAP 定理中选择可用性 (AP) 而不是一致性 (CP)，更有趣的是，在没有分区的情况下，它还在 PACELC 定理中选择延迟而不是一致性，这意味着它在 PACELC 定理下是 PA/EL。</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 发布推文，庆祝 Git 这一广泛使用的分布式版本控制系统诞生 20 周年。它指出 Git 的诞生是为了解决补丁应用“非常缓慢”的问题，并强调了其革命性的合并能力。推文中还分享了对 Git 的创建者 Linus Torvalds 的采访链接，让读者了解 Git 的起源和影响。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Alex Robinson</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">78</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHub(@github)</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHub</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">14 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3381</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">261</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">键值存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统重构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高可用性</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Git</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linus Torvalds</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式版本控制系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Open Source</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Software Development</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/4e5b6a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/zh/status/1954113280273748442" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/4e5b6a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/status/1954113280273748442">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>修复 MCP 服务器设置中 Python ENOENT 错误的完整指南</title>
+        <title>37signals 全面采用 Omarchy</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>修复 MCP 服务器设置中 Python ENOENT 错误的完整指南</h2>
-        <p>8/8/2025, 5:49:04 PM</p>
+        <h2>37signals 全面采用 Omarchy</h2>
+        <p>8/9/2025, 3:24:12 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本指南旨在解决在 macOS 上设置 MCP 服务器时遇到的 'spawn python ENOENT' 错误，该错误主要由于 Python 升级后，Python 虚拟环境出现损坏所致。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">37signals 正式将其运维和 Ruby 团队迁移到 Omarchy Linux 和 Framework 笔记本电脑，旨在提升控制力、提高性能，并与他们的开源理念保持一致。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供详细的步骤，指导开发者修复在 macOS 上配置 MCP (模型上下文协议 Model Context Protocol) 服务器时遇到的 'spawn python ENOENT' 错误，此问题通常发生在通过 Homebrew 升级 Python 之后。文章首先解释了根本原因：Python 可执行文件被删除导致虚拟环境中的软链接断裂。随后，指导用户诊断损坏的虚拟环境，并从头开始重建。内容涵盖 MCP 服务器依赖的安装、服务器文件的定位以及服务器设置的全面测试。文章的很大一部分专门介绍如何配置 Claude Desktop 以与 MCP 服务器集成。这部分内容包括针对不同操作系统的特定配置文件路径。此外，本文还深入探讨 MCP 服务器的功能，提供替代安装方法（直接包安装和使用 UV 包管理器），并提供关键提示以防止未来出现 ENOENT 错误，例如将 `--copies` 与 `venv` 结合使用以及锁定 Homebrew Python 版本。最后，提供针对常见问题（如导入错误、权限问题和连接问题）的故障排除，使其成为 Python 开发者的实用资源。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">David Heinemeier Hansson 宣布 37signals 的一项战略决策：在未来三年内，其运维和 Ruby 编程团队将全面采用 Omarchy（他们基于 Arch 的 Linux 发行版）和 Framework 笔记本电脑。他挑战了普遍接受的 macOS / Windows 强制规定，并对 Linux 规范经常受到的质疑提出异议，认为 Linux 因其开源特性而提供无与伦比的控制力。虽然 DHH 承认与 Apple 芯片相比，电池续航时间略有减少等小缺点，但他强调了显著的生产力提升，尤其是在原生 Docker 支持和 PC 硬件上更快的 Ruby on Rails 测试套件执行方面，他声称其性能甚至优于最快的 M4 Max Mac。此举反映了 37signals 长期以来秉持的理念，即采用具有挑战性但最终能带来更大赋能的技术，这也让人想起他们早期对 Ruby 的投入和信任。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在 macOS 上，Python 升级后可能导致软链接断裂，从而引发 Python 虚拟环境中的 'ENOENT' 错误。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当系统无法找到 Python 可执行文件时，通常是由于 Homebrew 更新或清理删除了旧版本的 Python，导致虚拟环境中的软链接指向不存在的文件，从而引发此错误。</span>
+                        <strong style="color: #1e40af">拥抱 Linux 提供了优于封闭源代码操作系统的控制权和自主性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Linux 的开放性提供了完全的代码访问权限，从而实现了强大的定制和问题解决能力，这与商业替代方案不同，完全符合 37signals 的理念。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">从头开始重建虚拟环境是解决此问题的最可靠方法。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 完整重建虚拟环境可以确保所有路径和依赖项都已为当前 Python 安装正确配置，从而避免由损坏的软链接或过时的环境设置引起的问题。</span>
+                        <strong style="color: #1e40af">在 PC 硬件上切换到 Linux 可以显著提高开发人员的生产力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 原生 Docker 支持和在 Framework 台式机上更快的 Ruby on Rails 测试套件执行甚至优于高端 Mac，直接改善了开发周期和效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">正确配置 Claude Desktop 对于成功集成 MCP 服务器至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Claude Desktop 的配置文件中正确设置 Python 解释器路径、服务器脚本位置和工作目录，可以实现 AI 助手和 MCP 服务器之间的无缝通信。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用诸如使用 `--copies` 进行 venv 并锁定 Python 版本之类的最佳实践，可以防止未来出现 ENOENT 错误。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在虚拟环境中创建 Python 文件的实际副本，并防止 Homebrew 自动升级 Python，可以显著提高环境的稳定性，并降低未来出现与路径相关问题的可能性。</span>
+                        <strong style="color: #1e40af">37signals 提倡选择具有挑战性但能带来长期效益的技术，即使初期面临困难。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 37signals 采用 Ruby 等新兴技术以及现在的 Linux 的历史，反映了对能够提供更大控制和潜力的工具的承诺，即使最初存在障碍。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ENOENT (Error NO ENTry) 错误表示您的系统无法在指定路径找到 Python 可执行文件。这通常发生在文件丢失或无法访问时。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最可靠的解决方案是从头开始重建虚拟环境。这可以确保所有路径和依赖项都已针对当前 Python 安装进行正确配置。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 服务器通过提供对外部工具和数据源的结构化访问来扩展 Claude 的功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">创建虚拟环境时，请使用 `--copies` 标志：`python3 -m venv venv --copies`。这将创建文件的实际副本，而不是软链接，从而增强环境对 Python 升级的抵抗力。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">您使用 Linux 控制自己命运的能力远优于您从封闭源代码的商业操作系统获得的能力。这是当然！因为代码完全开放！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">偶尔在罕见情况下做出的小让步，但与 Apple 切换到自己的芯片之前我们在 Mac 上自愿忍受的性能和电池缺陷完全不同。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">另一方面，我们能够更快地在本地运行 Ruby on Rails 测试套件，从而大大提高生产力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这对我们来说是一次激动人心的新冒险。到目前为止，Omarchy 已经是我最喜欢的计算环境。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">知道你发现了一些超级特别的东西，但尚未广泛分发（但有望分发）。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Idris Olubisi</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">David Heinemeier Hansson</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">David Heinemeier Hansson</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1802</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">527</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排除</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ENOENT 错误</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Python</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">虚拟环境</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">macOS</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">操作系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者生产力</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">硬件</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/11f13a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/069e4a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/11f13a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAY+SURBVO3BQY4cSRLAQDLQ//8yV0c/JZCoak2s4Gb2B2td4rDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kV++JDK31TxRGWqeKIyVbyhMlVMKk8qJpWpYlKZKp6o/E0VnzisdZHDWhc5rHWRH76s4ptU3qh4ojJVvKHyiYpJ5Y2KSWWqeFLxTSrfdFjrIoe1LnJY6yI//DKVNyreUPmEylQxqUwVk8qTikllqphUJpXfpPJGxW86rHWRw1oXOax1kR/+MRVvqDypeFLxRGWqeKPiicq/5LDWRQ5rXeSw1kV++MepPKl4ovKJiicqT1SmiqniX3JY6yKHtS5yWOsiP/yyir9J5Zsq3lB5ojJVTCpPVJ5UvFFxk8NaFzmsdZHDWhf54ctU/ksVk8pUMalMFZPKVDGpTBWTylQxqUwVk8pUMam8oXKzw1oXOax1kcNaF/nhQxX/zyr+JpUnKk9UpoonFf9PDmtd5LDWRQ5rXcT+4AMqU8Wk8k0Vn1CZKiaVJxVPVKaKSeVJxaTyRsWk8k0Vv+mw1kUOa13ksNZFfvhlFd+kMlU8UXmi8ptUflPFJyomlTdUpopPHNa6yGGtixzWuoj9wRepTBWTylQxqXyi4onKVDGpvFExqUwVT1SmikllqphUpoo3VKaKSeVJxTcd1rrIYa2LHNa6yA9fVvGkYlJ5UvFE5Y2KSeVJxaTyhsonKiaVqWJSmSreUPkvHda6yGGtixzWusgPH1J5o+INlScVk8qTiicVk8pUMalMFW+oTCpvqPymiicqU8UnDmtd5LDWRQ5rXeSH/1jFGypPKr6pYlKZKp6oTBVTxaQyVTxRmSomlScVT1T+psNaFzmsdZHDWhexP/iLVKaKJypPKiaVJxVvqLxR8YbKVPEJlScVT1Smikllqvimw1oXOax1kcNaF7E/+IDKVPGbVJ5UTCpTxROVNyqeqEwVT1SeVEwqn6iYVJ5U/KbDWhc5rHWRw1oX+eHLVKaKT6hMFU9UvqliUnmiMlW8UTGpfKJiUplUpoo3VKaKTxzWushhrYsc1rrID19W8UTljYpPVEwqTyomlaliUpkqJpVvUnlD5UnFpPKk4jcd1rrIYa2LHNa6yA8fqvhExaQyqUwVk8pvqphUpoo3KiaVJxVvqEwVk8qkMlVMKpPKVPFNh7UucljrIoe1LmJ/8AGVT1S8ofJGxRsqTyo+ofJNFU9UvqniNx3WushhrYsc1rrID7+sYlKZVN6oeENlqphUnlR8QuVJxaQyVTxRmSqmiicqTyomlanimw5rXeSw1kUOa13khy+reFLxRGWqeEPljYpJ5YnKk4qp4onKE5UnFZPKGxWTypOKSWWq+MRhrYsc1rrIYa2L/PDLVJ5UTBWTyhsVT1SeVDyp+ITKVDGpPKl4o+KJylQxqTyp+KbDWhc5rHWRw1oX+eGXVbyhMlV8QmWqeENlqphUpoo3VJ5UTCpvqEwVT1TeUJkqPnFY6yKHtS5yWOsiP/xlKlPFVDGpPKl4UvFEZar4hMpU8aTiicpUMam8ofKk4g2VbzqsdZHDWhc5rHWRHz5U8UbFGxVPVJ5UTCpTxX9JZaqYKiaVJxVvqDxR+ZsOa13ksNZFDmtd5IcPqfxNFVPFb6qYVD5R8YbKJ1Smim+q+KbDWhc5rHWRw1oXsT/4gMpU8U0qU8Wk8qTiicqTiicqb1RMKlPFE5UnFW+ovFExqUwVnzisdZHDWhc5rHWRH36ZyhsV36QyVUwVk8onKp6oPFF5UjGpTCrfVPGk4psOa13ksNZFDmtd5Id/TMWkMqm8ofKk4onKVPFEZaqYVKaKSWWqeKLyRGWqmFSmik8c1rrIYa2LHNa6yA//uIpPqDxReVLxRGWqeEPlicqTiknljYpvOqx1kcNaFzmsdZEfflnFb6p4Q+VJxRsVT1SmiqliUpkqnlR8QmWqmFT+psNaFzmsdZHDWhf54ctU/iaVJxVPKiaVT6h8omJSmSomlScVk8pU8aRiUpkqvumw1kUOa13ksNZF7A/WusRhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2L/A9qsg9szcdt6AAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/069e4a">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

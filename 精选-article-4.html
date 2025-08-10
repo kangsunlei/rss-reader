@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>终于有人讲清 workflow 和 Agent 了</title>
+        <title>重新架构 Workers KV 以提高可用性和性能</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>终于有人讲清 workflow 和 Agent 了</h2>
-        <p>8/8/2025, 12:45:00 AM</p>
+        <h2>重新架构 Workers KV 以提高可用性和性能</h2>
+        <p>8/8/2025, 2:00:01 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章基于 Anthropic 框架，深入阐述了 LLM 应用中 Workflow 与 Agent 的定义、选型、设计模式及实践指南，强调工具提示工程对构建高效 AI Agent 系统的重要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 详细介绍了 Workers KV 的重新架构，旨在 2025 年的故障后增强可用性和性能。本次架构升级转向内部混合存储架构和多层一致性模型。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文以 Anthropic 的《Building effective agents》为基础，并融入作者的实战经验，全面解析了大型语言模型（LLM）应用中 Workflow（工作流）和 Agent（智能体）的核心概念与构建策略。文章首先区分了 Workflow 和 Agent 的适用场景及优劣势，并强调了在 LLM 应用开发中应优先选择简单方案的原则。随后，详细介绍了增强型 LLM、提示链、路由、并行化、编排者-工作者、评估-优化等多种类 Agent 系统设计模式，并通过丰富的实际案例（如内容审核、医疗研究助手、文学翻译系统）深入阐述了这些模式的应用与组合。特别地，文章强调了工具提示工程在 Agent 系统中的关键作用，提供了工具设计、接口优化和持续改进的实践建议。最后，结合智能客服和编程 Agent 的成功案例，总结了构建高效 Agent 系统的核心原则和实施要点，旨在为技术管理者、开发者和产品经理提供实用指导。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文概述了 Cloudflare 在 2025 年 6 月 12 日因第三方云供应商故障导致重大故障后，对其 Workers KV 服务进行的重大架构改革。最初依赖多个第三方对象存储提供商，该系统面临一致性问题和操作复杂性，导致暂时转移到单个提供商，但该提供商随后也出现故障。重新设计的 Workers KV 现在主要利用 Cloudflare 的内部分布式数据库，该数据库在多个集群中分片以实现可扩展性和持久性，并引入 KV 存储代理 (KVSP) 来管理连接和路由。一个关键的创新是混合存储方法，其中 KVSP 智能地将小对象路由到分布式数据库，将大对象路由到 Cloudflare R2。文章详细解释了多层一致性机制，包括竞争性写入/读取、后台协调和基于版本元数据的爬虫程序。这些机制对于维护跨双后端的数据一致性至关重要，并符合 AP/PA-EL 一致性模型。文章还详细介绍了阶段性部署和读写一致性退化的发现，以及通过对抗性测试解决该问题，展示了一种强大的系统弹性方法。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">明确区分 Workflow 与 Agent，并提供清晰的选型原则</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章详细定义了 Workflow 和 Agent 的特性、适用场景及优劣势，帮助开发者根据任务的可预测性和灵活性需求，选择最适合的 LLM 应用模式，避免不必要的复杂性。</span>
+                        <strong style="color: #1e40af">Cloudflare 将 Workers KV 重新架构为内部分布式数据库，以应对关键的第三方服务故障。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从外部对象存储转移到 Cloudflare 自己的分片、复制数据库增强了控制、可靠性和性能，直接解决了导致 2025 年事件的单点故障。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">系统性地介绍了多种类 Agent 系统设计模式及其组合应用</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 深入剖析了提示链、路由、并行化、编排者-工作者、评估-优化五大核心模式，并展示了它们如何灵活组合以应对不同复杂度的任务，为系统架构设计提供了丰富工具箱。</span>
+                        <strong style="color: #1e40af">混合存储解决方案优化了各种对象大小的性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Workers KV 现在通过 KVSP 智能地将小对象（小于 1KB）路由到分布式数据库，将较大的对象路由到 Cloudflare R2，从而利用每种存储类型的优势来实现效率和成本效益。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">强调工具提示工程是 Agent 成功落地的关键因素</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 提出工具提示工程的基本原则，指导如何设计清晰、简洁、LLM 友好的工具定义，确保 Agent 能够高效准确地选择和调用外部工具，极大提升系统性能和可靠性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">提供了 Agent 系统开发的实践指南和核心原则</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 总结了保持简单性、透明性、精心设计工具接口等关键开发原则，并结合实际案例，为构建强大、可靠、可维护的 Agent 系统提供了可操作的指导和建议。</span>
+                        <strong style="color: #1e40af">多层一致性机制确保双后端操作中的数据完整性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该系统采用竞争性写入/读取、后台协调和基于版本元数据的连续爬虫程序来解决不一致问题，在最终一致性的前提下，平衡可用性和性能。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Anthropic 强烈建议：**在构建 LLM 应用时，寻找尽可能简单的解决方案，*只在* 必要时增加应用复杂性**。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们建议开发者直接使用 LLM API：许多模式可以用几行代码实现。如果你使用框架，请确保理解底层代码。对底层工作的错误假设是客户错误的常见来源。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最成功的实现采用简单、可组合的模式，而非复杂的框架。这些设计模式是灵活的构建模块，可以根据具体应用需求进行组合和定制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体可以处理复杂任务，但其实现通常很直接 - 本质上是在循环中基于环境反馈使用工具的 LLMs。因此，清晰且合理的工具集及其说明文档至关重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">工具提示工程指的是：像编写提示词一样设计工具定义，使大模型能清晰理解工具的用途、使用方法和结果含义。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">今天，我们将提供有关 Workers KV 所做改进的最新信息，以确保类似的故障不会再次发生。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于此规模下以小于 1KB 对象为主的工作负载，数据库存储比传统的对象存储效率更高、成本效益更高。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们将数据分片到多个数据库集群中，每个集群都具有三向复制，以实现持久性和可用性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们扩展了 KVSP 以自动将更大的对象路由到 Cloudflare R2，从而创建了一种混合存储架构，该架构可以根据对象特征优化后端选择。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从分布式系统的角度来看，KV 在 CAP 定理中选择可用性 (AP) 而不是一致性 (CP)，更有趣的是，在没有分区的情况下，它还在 PACELC 定理中选择延迟而不是一致性，这意味着它在 PACELC 定理下是 PA/EL。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +62,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">38 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9455</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Alex Robinson</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">14 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3381</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM应用</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工作流</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent设计模式</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">键值存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统重构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高可用性</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/0732f8" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/4e5b6a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/0732f8">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/4e5b6a">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
