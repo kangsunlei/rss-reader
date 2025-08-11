@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>前端性能优化实录：把 5 秒白屏降到 1.2 秒，只做 7 件事</title>
+        <title>Cloudflare Quicksilver 多级缓存迁移实践：数十亿请求下的性能优化</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>前端性能优化实录：把 5 秒白屏降到 1.2 秒，只做 7 件事</h2>
-        <p>8/9/2025, 1:01:00 AM</p>
+        <h2>Cloudflare Quicksilver 多级缓存迁移实践：数十亿请求下的性能优化</h2>
+        <p>8/9/2025, 2:30:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细记录了 Vite 项目前端性能优化实战经验，通过聚焦代码瘦身、资源优化、网络加速、首屏体验、性能监控、渲染优化及持续改进等七项策略，成功将白屏时间从 5 秒降至 1.2 秒，并提供了可复用的解决方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 成功迁移 Quicksilver 至多级缓存架构，显著提升存储效率。新架构在大规模下保持了低延迟读取。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章以一个真实 Vite 项目为例，详细阐述了如何将前端项目的首屏加载时间从 5.2 秒大幅优化至 1.2 秒，实现了 77%的性能提升。作者围绕“只做 7 件事”的核心思路，从代码体积瘦身（代码分割、Tree-Shaking、代码压缩）、资源优化（图片 WebP/AVIF、懒加载、字体按需加载与预加载）、网络优化（CDN、缓存策略）、首屏优化（骨架屏、预渲染）、性能监控（Lighthouse、Web Vitals）以及代码优化（避免强制同步布局、使用 CSS 动画）六个主要方面，提供了具体的配置代码和实践建议。文章结构清晰，注重实战，旨在为前端开发者提供一套系统且高效的性能优化指南。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 的工程团队详细介绍了内部全局键值存储 Quicksilver 从“在所有地方存储所有内容”的 V1 模型到新的 V2 多级缓存系统的复杂迁移过程。面对 330 个数据中心快速扩展的 1.6TB 数据集带来的不可持续的磁盘使用量，他们采用了一种增量式的分布式缓存方案。V2 架构结合了本地服务器缓存、数据中心范围的分片缓存以及专用存储节点上的完整数据集副本，利用 RocksDB 进行持久存储。这个复杂的转换涉及迁移数十万个实时数据库，同时每秒处理数十亿个请求，并通过多版本并发控制 (MVCC) 和滑动窗口技术严格保持顺序一致性。最终实现了存储效率的大幅提升，以及全球网络中亚毫秒级的性能和超过 99.99% 的缓存命中率。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,23 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过 Vite 配置实现代码分割和压缩，显著减少了 JS 文件体积。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Vite 默认的代码分割和 Tree-Shaking 能力，并结合 terser 插件进行深度压缩，有效移除了冗余代码和调试信息，从而降低了首屏加载所需的资源大小。</span>
+                        <strong style="color: #1e40af">Cloudflare 的 Quicksilver V2 通过多级缓存策略大幅减少了存储空间占用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过从在每台服务器上存储完整数据集过渡到具有本地、分片和专用缓存的分层系统，Cloudflare 有效地解决了不可持续的磁盘增长问题，同时保持了高性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用现代图片格式和懒加载机制，大幅优化了图片资源加载。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将图片转换为 WebP/AVIF 等高效格式，并结合 IntersectionObserver 实现图片懒加载，减少了非视口区域图片的加载，提升了页面渲染速度。</span>
+                        <strong style="color: #1e40af">在大型实时迁移期间保持顺序一致性对于基础系统至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 Quicksilver 的广泛内部采用，向后兼容性和顺序一致性至关重要，通过 MVCC 和滑动窗口技术，在整个复杂数据库迁移过程中实现了这一目标。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 CDN 和浏览器缓存策略，加速了静态资源的传输。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将静态资源部署到 CDN，并通过 Nginx 配置长效缓存，有效利用浏览器缓存，减少了重复请求，显著提升了资源访问速度。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">骨架屏和预渲染技术有效改善了用户首屏体验。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在内容加载前展示骨架屏，减少白屏感知时间；通过 Vite 插件进行预渲染，提前生成关键页面 HTML，缩短了首次内容绘制时间。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">持续的性能监控是发现和解决性能瓶颈的关键。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章强调使用 Lighthouse 和 Web Vitals 等工具定期检测和监控核心性能指标，帮助开发者及时发现并定位性能问题，为优化提供数据支撑。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过优化 CSS 动画和避免强制同步布局，有效减少了页面重绘和重排。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章强调应优先使用 CSS 动画而非 JavaScript 动画，并避免在 JavaScript 中频繁读写布局属性导致的强制同步布局（FLS），从而提高页面渲染性能和流畅度。</span>
+                        <strong style="color: #1e40af">多层缓存架构可在全球范围内提供出色的缓存命中率和超低延迟。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将本地服务器缓存与数据中心范围的分片缓存和反应式预取相结合，可为数十亿个请求带来超过 99.99% 的缓存命中率和亚毫秒级响应时间。</span>
                     </li>
             </ol>
         </div>
@@ -61,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真实项目优化实录：从 5 秒白屏到 1.2 秒加载完成，Vite 项目性能优化全攻略，附可直接复用的代码片段。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过 Vite + 7 招优化，我们的项目从 5 秒白屏降到 1.2 秒加载完成，性能提升 77%。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">WebP/AVIF：使用现代图片格式，体积更小，质量更高。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">骨架屏：在内容加载完成前显示占位图，提升用户体验。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用 Lighthouse 定期检查性能，找出瓶颈。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Quicksilver 从一开始就为客户端提供顺序一致性 (...) 我们亲身体验了 [Hyrum 定律]，Quicksilver 在整个公司中被广泛采用，以至于我们在早期版本中引入的每个属性现在都被其他团队所依赖。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最新的架构具有本地服务器缓存、数据中心范围的分片缓存以及专用存储节点上的完整数据集副本，并具有反应式预取功能，可在服务器之间分发缓存未命中请求。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过添加第二层缓存，数据中心内可以解析的密钥比例显著提高。性能最差的实例的缓存命中率高于 99.99%。所有其他实例的缓存命中率均高于 99.999%。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -69,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Renato Losio</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7273</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">691</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vite</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Web性能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户体验</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码分割</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">键值存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统架构</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/5aca29" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/24de93" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/5aca29">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/24de93">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
