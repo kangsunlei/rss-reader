@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Atlassian 如何将 400 万个 Jira 数据库迁移至 AWS Aurora</title>
+        <title>Vercel Fluid：解决无服务器数据库连接问题</title>
         <style>
             body {
                 padding: 12px;
@@ -15,76 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>Atlassian 如何将 400 万个 Jira 数据库迁移至 AWS Aurora</h2>
-        <p>8/12/2025, 3:30:34 PM</p>
+        <h2>Vercel Fluid：解决无服务器数据库连接问题</h2>
+        <p>8/13/2025, 7:14:42 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Atlassian 将 400 万个 Jira PostgreSQL 数据库大规模迁移到 AWS Aurora 的过程，通过创新的“数据清理 (Draining)”方法克服了 PostgreSQL 文件数量限制等重大挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Guillermo Rauch 强调 Vercel 的 Fluid 技术如何用一行代码解决无服务器数据库连接池泄漏和成本问题，其功能类似于 Kubernetes 中的优雅数据库关闭。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Atlassian 将 400 万个 Jira 数据库从 AWS RDS PostgreSQL 迁移到 AWS Aurora PostgreSQL 的大型项目。该项目旨在提高成本效益、改善可靠性并增强性能。此次迁移面临着严格的限制，包括每个租户的停机时间少于 3 分钟，以及时间表为数月而非数年。Atlassian 最初采用了使用 AWS RDS 只读副本和 AWS Step Functions 进行编排的“迁移”策略，从而最大限度地减少了停机时间。然而，一个关键挑战出现了：由于 Jira 复杂的模式和多租户设置，Aurora 无法启动具有极高文件数量（每个集群超过 2000 万个文件）的实例。为了解决这个问题，Atlassian 开发了一种创新的“数据清理 (Draining)”解决方案，在迁移之前暂时减少每个集群的数据库数量，然后再重新填充新的 Aurora 集群。这种“链式迁移 (Daisy Chain)”方法最大限度地减少了临时基础设施的需求，并实现了每天高达 90，000 个数据库的惊人迁移速度。该项目成功地在迁移期间迁移了 260 万个数据库，在数据清理期间迁移了 180 万个数据库，处理了 274 亿个文件。最终的结果是更具成本效益、更可靠（99.99% SLA）且性能更高的 Aurora 基础设施，展示了大规模云数据库迁移的典范。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Atlassian 迁移到 AWS Aurora 旨在显著提高成本、可靠性和性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从 RDS PostgreSQL 迁移到 Aurora 承诺更高的正常运行时间 (99.99%)、通过实例缩减和自动扩展提高成本效益，以及通过最多 15 个读取器实例增强性能。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">PostgreSQL/Aurora 中的“文件数量上限”对大型多租户集群构成了关键且不可预见的挑战。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Jira 复杂的模式和每个租户一个数据库的模型导致每个集群数千万个文件，导致 Aurora 实例由于文件枚举延迟而在启动期间超时。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“数据清理 (Draining)”和“链式迁移 (Daisy Chain)”解决方案是克服文件数量限制问题的创新方法。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在迁移之前暂时减少每个集群的租户数据库数量，然后再重新填充，Atlassian 有效地管理了迁移，最大限度地减少了基础设施开销并实现了高吞吐量。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大多数公司都在努力迁移少量数据库而不会导致停机。Atlassian 每天都会定期迁移大约 1，000 个数据库，作为其日常运营的一部分，并且其用户永远不会注意到。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">他们的目标是将所有内容从 AWS RDS PostgreSQL 迁移到 AWS Aurora PostgreSQL。其优势包括：更高的成本效益、更高的可靠性（从 99.95% 升级到 99.99% 的正常运行时间）、通过 Aurora 自动扩展到峰值负载期间最多 15 个读取器实例的能力来增强性能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 Aurora 实例启动时，它会执行各种状态检查以确保一切正常。其中一项检查包括枚举（清点）集群卷中的所有文件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">他们开发的解决方案被称为“数据清理 (Draining)”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个三步流程创建了 Atlassian 所谓的“链式迁移 (Daisy Chain)”。</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Vercel 的 CEO Guillermo Rauch 认可了 Malte Ubl (@cramforce) 的一篇技术文章，该文章旨在消除关于无服务器计算需要更多数据库连接的误解。Rauch 强调，Vercel 的 'Fluid' 解决方案不仅旨在解决与无服务器相关的成本问题，更重要的是，解决数据库连接释放和连接池泄漏的长期问题。他解释说，Fluid 提供了一个简单的一行代码解决方案，为开发人员提供了一个关键的钩子来优雅地管理连接，类似于 Kubernetes 环境中 SIGTERM 触发的数据库关闭。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch(@rauchg)</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2318</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">338</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云迁移</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS Aurora</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PostgreSQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大型系统</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库连接</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">连接池化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vercel Fluid</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/312e0f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/zh/status/1955709617167851621" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/312e0f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/status/1955709617167851621">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
