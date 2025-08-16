@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ReSharper 2025.2：更上一层楼的性能优化 | .NET 工具博客</title>
+        <title>Kafka 如何实现零停机迁移</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>ReSharper 2025.2：更上一层楼的性能优化 | .NET 工具博客</h2>
-        <p>8/14/2025, 10:40:09 AM</p>
+        <h2>Kafka 如何实现零停机迁移</h2>
+        <p>8/15/2025, 5:36:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">ReSharper 2025.2 通过独立进程执行、优化的重构、更快的加载速度和即时导航，显著提升性能与响应性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细阐述了 AutoMQ 如何通过 Kafka Linking 实现 Kafka 集群的零停机、数据偏移量一致性迁移，解决传统方案的痛点。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">ReSharper 2025.2 提供了多项性能增强，旨在直接解决开发者面临的常见问题，并提高其生产力。 新的独立进程 (Out-of-Process， OOP) 模式将 ReSharper 与 Visual Studio 隔离，有效减少了令人沮丧的输入延迟，并提高了整体稳定性。 针对 Razor/Blazor 支持的重大优化，最大限度地减少了内存流量，并加速了“查找引用”等操作，使 Web 项目的开发更加顺畅。 核心重构，特别是“重命名”，现在速度更快，并提供更清晰的反馈，受益于并行处理和更小的内存占用，从而消除了延迟。 就地重构现在是非阻塞和异步的，允许开发人员在复杂操作期间立即输入，而不会中断。 此外，通过优化现代 SSD 的文件 I/O 和简化后台进程，解决方案加载和初始索引得到了显著加速，从而减少了等待时间。 一种新的“提前跳转”模式通过在完整解决方案索引完成之前实现即时文件导航来彻底改变启动过程，从而大大缩短了感知的启动时间，并让开发人员能够立即在大型项目上提高工作效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入分析了传统 Kafka 集群迁移（如使用 MirrorMaker 2）面临的停机时间、数据不一致（特别是 Offset 丢失）和运维复杂性等挑战。针对这些问题，文章重点介绍了 AutoMQ 提出的 Kafka Linking 创新方案。该方案基于“双写（Dual Write）”和“滚动升级（Rolling Upgrade）”两大核心原则，实现了 Kafka 与 AutoMQ 集群间的双向数据同步，并确保在迁移过程中 Producer 和 Consumer 无需中断服务。通过分批次、渐进式的 Producer 和 Consumer 迁移，以及自动化的 Consumer Group Offset 同步，Kafka Linking 能有效保证业务连续性和数据完整性，最终实现 Topic 主集群角色的平滑切换，为企业提供了可靠的 Kafka 云原生迁移路径。文章虽有产品推广性质，但技术细节丰富，论证严谨。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">独立进程执行显著提升了 ReSharper 的性能和稳定性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在与 Visual Studio 不同的进程中运行 ReSharper，新的 OOP 模式直接解决了输入延迟问题，提供了更流畅、更快速的编码体验，同时还增强了整体 IDE 的稳健性。</span>
+                        <strong style="color: #1e40af">传统 Kafka 迁移工具存在停机、数据偏移量丢失及运维复杂性问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MirrorMaker 2 等工具在迁移过程中需停止 Producer，且无法精确保留 Message Offset，导致业务中断和数据处理问题，增加运维负担。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">异步并行处理大大提高了开发人员的工作流程效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 非阻塞就地重构（允许立即输入而不会中断）和并行“重命名”操作等功能，结合针对 SSD 优化的文件读取以加快解决方案索引速度，共同减少了等待时间，并提高了关键开发任务期间的响应速度。</span>
+                        <strong style="color: #1e40af">AutoMQ Kafka Linking 通过双写机制确保迁移过程中的数据一致性与可用性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实现 Kafka 与 AutoMQ 集群间的双向数据同步，允许在迁移期间 Producer 和 Consumer 持续运行，同时支持安全回滚，避免数据丢失。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“提前跳转”模式使开发人员能够立即在大型解决方案上提高工作效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种创新的启动模式允许开发人员即使在完成完整解决方案索引之前也能立即导航和搜索文件，从而有效地消除了等待时间，并显著缩短了感知的启动时间，从而使用户能够更快地提高工作效率。</span>
+                        <strong style="color: #1e40af">滚动升级策略实现 Producer 和 Consumer 的无感知、零停机切换</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过分批次迁移 Producer 和 Consumer，并由 AutoMQ 自动管理 Consumer Group Offset 同步，确保业务持续不中断，提升迁移平滑度。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Kafka Linking 作为 AutoMQ 内置功能，简化了 Kafka 到云原生的迁移流程</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 无需额外组件或第三方系统，即可实现复杂 Kafka 集群的无中断迁移，结合云原生架构提升弹性与成本效益。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ReSharper 2025.2 是第一个支持在独立进程 (OOP) 中运行 ReSharper 的稳定版本，与 Microsoft Visual Studio 配合使用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最大的性能提升来自并行化验证可疑引用的阶段。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现在，ReSharper 允许用户立即开始输入，并在后台完成编辑后的所有分析工作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们取消了对 ReSharper 的旧限制，因此它现在可以充分利用您的 SSD 的功能，一次读取多个文件以加快启动速度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在大型解决方案上，此改进可以将您的有效启动时间最多减少一整分钟。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Kafka Linking 是 AutoMQ 针对这些挑战推出的创新方案，支持 Kafka 与 AutoMQ 集群双向写入及精准消费位点同步，通过滚动迁移实现业务与迁移解耦，真正做到"零停机"上线。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AutoMQ 提出了 Kafka Linking，用于实现从 Apache Kafka 到 AutoMQ 的集群迁移。这是业界首个在迁移过程中同时保证 零停机 与 数据 Offset 保留 的解决方案。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Kafka Linking 方案基于两个核心设计原则构建：双写（Dual Write）机制 与 滚动升级（Rolling Upgrade）策略。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AutoMQ 将这一滚动升级理念应用于 Kafka Linking 的集群迁移过程，目标是在 Client 无感知迁移 的同时，实现真正的 零停机切换。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AutoMQ Kafka Linking 是 AutoMQ 的内置功能，无需引入额外组件或第三方系统即可实现 Kafka 集群的无中断迁移。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sasha Ivanova</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1070</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">64 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">15771</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IDE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ReSharper</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Visual Studio</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">.NET</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kafka</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">迁移</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">零停机</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AutoMQ</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/7515c2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/c9f025" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/7515c2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c9f025">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

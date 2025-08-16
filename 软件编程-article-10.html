@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>提升 Visual Studio Chat 的代码理解能力</title>
+        <title>MNN LLM Chat iOS 流式输出优化实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>提升 Visual Studio Chat 的代码理解能力</h2>
-        <p>8/14/2025, 12:00:59 PM</p>
+        <h2>MNN LLM Chat iOS 流式输出优化实践</h2>
+        <p>8/15/2025, 8:45:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Visual Studio Copilot 集成了远程语义搜索，结合关键词搜索与 AI 驱动的上下文理解，为开发者提供更精确、基于意图的代码搜索结果，从而提升开发效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了 MNN LLM Chat iOS 应用如何通过智能流缓冲、UI 更新节流与批处理、以及打字机动画渲染三层协同优化，实现本地大语言模型流式输出的流畅体验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文宣布 Visual Studio Copilot 的代码搜索能力得到显著升级，引入了远程语义搜索。此前，Visual Studio Copilot 依赖于 BM25 算法进行关键词搜索，但该方法缺乏上下文理解，容易错过相关代码。新的语义搜索利用先进的向量嵌入，使系统能够掌握搜索查询和代码片段背后的含义和意图，匹配概念而非精确的词语。集成的语义搜索支持自然语言查询，从而提供更准确的结果。本文通过 Roslyn 仓库的并排比较展示了改进的精确度，表明语义搜索能够产生更少但更相关的结果。此功能适用于托管在 Azure DevOps 和 GitHub 仓库中已建立索引的解决方案，旨在节省时间，减少开发者在浏览复杂或不熟悉的代码库时的挫败感，从而显著提高生产力。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了阿里巴巴淘天集团在 iOS 客户端部署本地大语言模型 (LLM) 时，MNN LLM Chat 应用如何通过三层协同优化解决流式输出卡顿和文字显示生硬的用户体验问题。文章首先分析了模型输出与 UI 更新不匹配、频繁刷新导致性能瓶颈及缺乏视觉动画等核心问题。为此，作者提出并详细阐述了一套分层方案：底层利用 `OptimizedLlmStreamBuffer` 进行智能流缓冲（基于标点符号和阈值触发，并优化内存）；中间层通过基于 Swift Actor 模型的 `UIUpdateOptimizer` 实现 UI 更新的节流与批处理，确保线程安全并降低主线程压力；UI 层则由 `LLMMessageTextView` 提供沉浸式打字机动画。这些优化实践显著提升了本地 LLM 应用的文字输出流畅度，使其交互体验接近 ChatGPT 等在线服务的“丝滑”效果。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">语义搜索通过理解含义和意图，显著提高了代码搜索的准确性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与错过同义词的传统关键词搜索 (BM25) 不同，语义搜索使用向量嵌入来掌握上下文相似性，从而提供更相关的结果，更准确地匹配开发者的意图。</span>
+                        <strong style="color: #1e40af">三层协同优化方案全面解决了本地 LLM 流式输出的卡顿和生硬问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章针对本地大语言模型在 iOS 客户端的流式输出痛点，提出的智能流缓冲、UI 更新节流与批处理、以及打字机动画渲染的组合方案，从数据处理到 UI 呈现全面提升了用户体验，解决了模型推理速度快但 UI 更新跟不上所导致的体验问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将语义搜索集成到 Visual Studio Copilot 中可提高开发者生产力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过支持自然语言查询和提供精确的代码上下文，开发者可以快速浏览复杂的代码库，从而节省大量时间并减少开发过程中的挫败感。</span>
+                        <strong style="color: #1e40af">智能流缓冲 (OptimizedLlmStreamBuffer) 利用语义特征和阈值平衡 MNN 模型输出速度与 UI 刷新频率</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该底层优化通过识别中英文标点符号和设置缓冲阈值，确保 MNN 模型在语义完整或积累足够内容时才更新 UI，有效避免了频繁刷新和内容堆积，提升了数据流的平滑性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">此高级搜索功能可用于 Azure DevOps 和 GitHub 仓库。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 远程索引允许语义搜索在广泛使用的代码托管平台上运行，从而使广泛的开发者和项目可以使用此强大功能。</span>
+                        <strong style="color: #1e40af">基于 Swift Actor 的 UI 更新优化器 (UIUpdateOptimizer) 实现高效线程安全批处理</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 此中间层优化利用 Swift Actor 模型统一管理 UI 更新请求，通过批量触发和时间节流策略，显著降低主线程压力，尤其对于 MNN LLM 快速输出场景，有效提升了 UI 整体流畅度。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">UI 层打字机动画 (LLMMessageTextView) 模拟人类输入，显著增强用户沉浸感</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过精细的动画控制和生命周期管理，使 MNN LLM 的 AI 回复文字以自然渐进的方式呈现，极大地改善了交互体验，实现了类似 ChatGPT 的“丝滑”打字机效果，提升了用户对本地 LLM 应用的感知流畅度。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过将传统关键词搜索 (BM25) 的强大功能与前沿 AI 模型的深度上下文理解相结合，嵌入到 Visual Studio Copilot 代码搜索体验中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">借助高级向量嵌入，语义搜索将查询和代码转化为高维空间中的向量进行匹配，从而理解其含义，而不仅仅是匹配精确的词语。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用语义搜索，结果可能会更少，但它们会更准确。搜索引擎能够理解 “删除非同步修饰符” 和 “删除 Async 修饰符” 具有相同的含义，即使措辞不同，也证明了其对代码含义的更深入理解。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">远程语义搜索到 Visual Studio Copilot 标志着 Copilot 在理解开发者代码库方面向前迈出了一大步。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过分析模型输出与 UI 更新不匹配、频繁刷新导致性能瓶颈以及缺乏视觉动画等问题，作者提出了一套包含智能流缓冲、UI 更新节流与批处理、以及打字机动画渲染 的三层协同优化方案。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">OptimizedLlmStreamBuffer 是对标准 std::streambuf 的增强实现，通过智能缓冲策略解决模型输出与 UI 更新的频率不匹配问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">UIUpdateOptimizer 采用 Swift 5.5 引入的 Actor 并发模型，解决 UI 更新的线程安全和性能问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLMMessageTextView 的设计目标是创造接近人类打字速度的自然动画效果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">综上，结合三层的优化，通过以上多层协同优化方案，我们成功地将一个卡顿、生硬的文字输出体验转变为流畅、自然的现代化 AI 交互界面。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Visual Studio Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Pablo Gonzalez</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">746</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">24 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5767</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码搜索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">语义搜索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Visual Studio</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Copilot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI驱动的工具</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">流式输出</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MNN</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">iOS开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">移动开发</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/5c24b4" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/fd8781" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/5c24b4">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/fd8781">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS3SURBVO3BQW4EyREEwfDC/P/LLh5TlwIancPlSmGGP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaJ4DcqJmATGreAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkH8SkCfUTGo2qdkEZNNJ1aKTqkUnVYs++TIgT6h5AsgTaiYgk5oJyBtAnlDzBJAn1HzTSdWik6pFJ1WLPvkfp2YCcgPkCTUTkEnNBGRS87/kpGrRSdWik6pFn9R/UfMEkEnNBOT/yUnVopOqRSdViz75MjW/Sc0bQJ5Qc6PmBsik5gk1f8lJ1aKTqkUnVYs+WQbkLwEyqZmATGomIJOaCcikZgIyqXkDyF92UrXopGrRSdWiT15S85epmYA8oWYC8oSaCcik5kbNv8lJ1aKTqkUnVYvwR14AMqmZgGxS8wSQSc0NkBs1N0AmNTdAJjUTkE1qvumkatFJ1aKTqkX4I78IyKRmAjKpeQLIG2qeADKpuQHyTWqeADKpeeOkatFJ1aKTqkX4I/8gIJOaCcikZgIyqbkBcqNmAvKGmhsgN2r+TU6qFp1ULTqpWoQ/8gKQSc0EZFJzA2RSMwG5UTMBmdT8JiDfpGYCMqmZgExqNp1ULTqpWnRSteiTPw7IE0AmNROQGzU3QCY1E5AbNb8JyKTmm06qFp1ULTqpWoQ/sgjIpGYC8oSaGyCTmgnIpOYJIJOaCchvUjMBmdQ8AWRS88ZJ1aKTqkUnVYvwRxYBeUPNBOQJNTdAJjVPAHlCzQ2QSc0NkEnNBORGzTedVC06qVp0UrXok5eATGpugExqJiCTmjeA3ACZ1Dyh5gkgm4BMam6ATGo2nVQtOqladFK16JMvAzKpmYBMaiYgT6i5UTMBeULNDZBJzY2aN9RMQG7UfNNJ1aKTqkUnVYs++WOATGpugLyh5gbIpGYC8gaQSc0E5AbIpGYCcgNkUvPGSdWik6pFJ1WLPvllQG7UTECeAPIGkEnNBGRSMwGZgExqboBMaiYgk5o31Gw6qVp0UrXopGoR/sgLQCY1TwC5UfMGkEnNE0CeUDMBmdRMQCY1E5An1NwAmdRsOqladFK16KRq0Sd/HJBJzQRkUnMD5JuATGomIDdANgG5ATKpeeOkatFJ1aKTqkX4I/9iQL5JzQ2QJ9RMQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+kZlIzAdkE5EbNDZAJyBNAJjVvqPmmk6pFJ1WLTqoWfbJMzSYgN0AmNROQJ9T8JWqeUPMEkEnNGydVi06qFp1ULfrky4A8oeYNIJOaTUDeUDMBmYBsAjKpmdRsOqladFK16KRq0Sf/54BMaiYgk5oJyCY1N0AmNROQGyA3at44qVp0UrXopGrRJ3WlZgLyhJobNTdAboC8oWbTSdWik6pFJ1WLPvkyNd+k5g01b6h5A8ikZlIzAZnUTEAmNROQbzqpWnRSteikatEny4D8JiCTmk1AngAyqZmATGomIJOaGyA3QCY133RSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aL/ABTmHkXMQ+lPAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
