@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>打造高可用弹性平台：关键任务基础设施领域 20 余年经验洞察</title>
+        <title>Cloudflare 如何将 Quicksilver 迁移到多级缓存并处理数十亿个请求</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>打造高可用弹性平台：关键任务基础设施领域 20 余年经验洞察</h2>
-        <p>8/15/2025, 11:35:00 AM</p>
+        <h2>Cloudflare 如何将 Quicksilver 迁移到多级缓存并处理数十亿个请求</h2>
+        <p>8/16/2025, 7:22:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一位经验丰富的基础设施领导者分享了构建高度弹性、可扩展和安全平台的七个核心原则，这些原则来自在关键任务金融服务领域超过 20 年的经验积累。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 详细阐述了其全局键值存储 Quicksilver 如何从全量复制迁移至多级缓存架构，以应对数十亿请求并优化存储效率。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于一位在金融服务领域（美国运通、摩根大通、高盛）拥有超过 25 年经验的资深基础设施领导者的演讲，定义了技术语境下的“平台”概念，并概述了构建平台的七个关键原则。演讲者强调，卓越的平台通过隐藏复杂性来提供直观的体验，使其看起来“神奇”。一个关键原则是构建通用且可互换的组件，类似于乐高积木，从而简化消费并确保一致性（例如，通用的可观测性）。不可妥协的“三个 S”——稳定性、安全性、可扩展性——被强调为基础要求，尤其是在关键任务环境中，并强调要为 10 倍的增长而构建。通过持续的补丁和维护保持“常青”状态的重要性，即使在大规模情况下，也被强调以防止安全漏洞和技术债。此外，本文建议平台构建者通过利用现有解决方案并仅关注必要的自定义组件来“避免不必要的重复劳动”。最后，对于非核心请求保持“主见”并说“不”，以及通过优先考虑可持续的解决方案来“长期贪婪”，被认为是平台成功和长寿的关键。这些见解对所有构建大规模应用软件的开发者都具有参考价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了 Cloudflare 如何将其内部的全局键值存储 Quicksilver 从 V1 的“每处都存储全部内容”策略，逐步过渡到 V2 的分层缓存架构。V1 因数据量爆炸式增长导致存储空间迅速耗尽，促使 Cloudflare 寻求变革。文章详细介绍了 V1.5 作为过渡方案如何通过引入代理和复制服务器减少磁盘占用，以及 V2 如何实现本地每服务器缓存、数据中心范围分片缓存和专用存储节点副本的多级缓存策略，并选择 RocksDB 作为持久存储以解决内存使用和冷缓存问题。此外，文章强调了在迁移数百万个实时数据库、服务数十亿请求的同时，如何通过 MVCC 和滑动窗口等技术确保数据顺序一致性。最终，新架构显著提升了缓存命中率和响应性能，解决了关键瓶颈。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">提供直观和神奇的用户体验。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 卓越的平台隐藏了复杂性，使其使用起来简单直观，对用户来说显得“神奇”。这种抽象使用户能够专注于核心任务，无需关注底层复杂性。</span>
+                        <strong style="color: #1e40af">Quicksilver V1 面临存储效率瓶颈及 V1.5 的缓解。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> V1 全局全量数据复制导致存储资源快速耗尽，v1.5 通过引入代理和复制服务器角色，将磁盘占用减少了 50%，初步缓解了压力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用通用、可互换的组件构建并保持常青状态。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 平台应由标准化的乐高式组件（如通用可观测性、身份验证）构成，这些组件无缝互联，简化消费。持续的补丁和维护（“常青”状态）对于安全性和长期可行性至关重要，即使在大规模情况下也是如此。</span>
+                        <strong style="color: #1e40af">Cloudflare Quicksilver V2 多级缓存架构的设计。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> V2 采用本地、数据中心分片和专用存储节点多级缓存，结合响应式预取，有效提升存储效率和边缘低延迟读取性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">优先考虑不可妥协的稳定性、安全性、可扩展性（“三个 S”）。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于关键任务系统尤其重要，平台必须具有内在的稳定性、高度的安全性，并为未来的显著增长（例如，10 倍）而构建。这些属性是基础性的，不能妥协。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">战略重点：避免不必要的重复劳动，坚持己见。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 平台构建者应专注于核心价值，利用现有解决方案，而不是重新发明轮子。有主见意味着设定明确的界限，对非核心请求说“不”，并优先考虑为大多数人提供最大价值的东西，从而确保持续性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用长期视角，实现平台的可持续发展。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 优先考虑确保平台长期可持续性和可维护性的决策和投资，而不是眼前的短期利益。这包括战略性地消除技术债，并做出有利于平台寿命的选择。</span>
+                        <strong style="color: #1e40af">大规模系统迁移中保持数据顺序一致性的挑战与方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在处理异步复制时，通过多版本并发控制（MVCC）和滑动窗口方法，成功保持了 Quicksilver 在迁移过程和新架构下的顺序一致性。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">任何足够先进的技术，都与魔法无异。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">简单是极致的复杂。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在这种情况下，你必须同时拥有这三个。你不能选择放弃其中任何一个。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">多数平台的失败源于此。它们无法随客户需求同步扩展。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">宁可多说“不”，也不要轻易承诺。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">它需要永恒的关注。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">他们介绍了他们逐渐从"每一处都存储全部内容"的策略转变为采用分布式缓存系统的旅程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Quicksilver v1 在全局每个服务器上都存储完整的数据集，结果消耗了大量磁盘空间，1.6TB 的数据集在仅仅一年内就增长了 50%，意味着 Cloudflare 网络中的可用存储即将耗尽。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最新架构的特点是本地的每服务器一份缓存、数据中心范围内的分片缓存和在专用存储节点上的完整数据集副本，以及将未命中缓存分散在服务器之间的响应式预取。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Quicksilver 从一开始就为客户提供了顺序一致性......我们亲身体会了海勒姆定律，Quicksilver 在公司内部采用得如此广泛，以至于我们在早期版本中引入的每个属性现在都依赖其他团队。这意味着更改行为将不可避免地破坏现有特性并引入错误。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">添加第二缓存层后，可以在数据中心内解决的键的百分比显著提高。表现最差的实例具有高于 99.99% 的缓存命中率。所有其他实例的缓存命中率高于 99.999%。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Matthew Liste</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">32 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7850</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5469</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">平台工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">弹性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可扩展性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全性</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">键值存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据一致性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统迁移</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/9ce810" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/d8d355" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/9ce810">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/d8d355">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
