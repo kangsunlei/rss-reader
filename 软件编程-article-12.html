@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>为所有人赋能的工程效率</title>
+        <title>分布式系统中的超时、重试与幂等性</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>为所有人赋能的工程效率</h2>
-        <p>8/19/2025, 11:33:00 AM</p>
+        <h2>分布式系统中的超时、重试与幂等性</h2>
+        <p>8/20/2025, 9:13:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于谷歌研究，揭示工程效率的关键驱动因素，量化代码审查和技术文档中的偏见，并强调多元化的积极作用。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本指南旨在通过掌握超时、重试和幂等性，帮助读者设计高可用分布式系统，侧重实践应用而非理论的复杂性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了谷歌对工程效率进行广泛研究的发现，旨在应对投资优先级排序的挑战。研究确定了与开发者自我评估效率密切相关的核心因素，如工作热情和心理安全（支持性的项目环境）。研究结果常与直觉相悖，表明在工作热情和心理安全方面的投资回报高于对新工具或降低软件复杂性的投入。这项初步研究在三家不同的公司中进行了复制，突显了其更广泛的适用性。此外，研究还揭示了工程互动中显著的人口统计学偏见：女性、黑人、西班牙裔/拉丁裔和亚裔工程师，以及年长的工程师，在代码审查中会遇到更高的反对意见。同样，年长男性编写的技术文档被认为不如年轻男性编写的深入。为了解决代码审查偏见，谷歌开发了一个匿名代码审查工具，该工具在审查速度或质量上没有表现出下降，并减少了审查者之间的感知偏见。最后，文章强调，人口统计学多样性，尤其是性别和任期多样性，对团队效率有积极影响。这些见解为培养更高效和公平的工程环境提供了数据驱动的指导。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于 Sam Newman 的一次演讲，将构建弹性分布式系统的复杂性提炼为三个核心原则：超时、重试与幂等性。文章首先定义了分布式系统，并介绍了“三大黄金法则”，即信息传递需要时间、目标可能无法到达以及资源有限。作者深入阐述了超时机制，它通过释放资源来保障系统健康，并基于系统性能基线和用户期望，提供了设置阈值的实用建议，同时强调了可配置超时的重要性。随后，文章转向重试，证明了重试机制对于应对瞬时故障的必要性。同时，作者也警告不要过度重试，因为这可能会导致服务器过载，因此建议对重试次数进行可配置的限制。在介绍幂等性这一核心原则的同时，提供的文字记录主要集中在超时和重试的讨论上。总而言之，本文侧重于为开发者提供实用且可操作的策略，以构建强大的微服务架构。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">工程师的热情和心理安全是提升效率的关键因素。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 谷歌在多家公司进行的研究表明，与先进工具或降低系统复杂性等传统投资相比，工作热情和支持性的项目环境（心理安全）等因素与开发者效率的相关性更强。</span>
+                        <strong style="color: #1e40af">超时对于通过管理资源消耗来维护系统健康至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过根据性能基线和用户期望设置合理的超时阈值，系统可以释放资源，防止级联故障，并提高整体稳定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">代码审查和文档认知存在显著的人口统计学偏见。历史上处于边缘地位的群体和年长的工程师受到的影响尤为明显。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 数据显示，历史上处于边缘地位的群体（女性、黑人、西班牙裔/拉丁裔、亚裔工程师）和年长的工程师在代码审查中面临更高的反对意见，而年长作者编写的技术文档可能被认为不够深入，这突显了系统性偏见。</span>
+                        <strong style="color: #1e40af">重试对于处理分布式环境中的瞬时故障至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实施合理的重试机制有助于克服临时性的网络或服务问题。但必须设置重试次数的上限，防止目标服务过载。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">性别和任期多样性对提升团队效率有积极作用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对 GitHub 项目的研究表明，性别和任期多样性更高的团队往往效率更高，这突显了多元化团队超越伦理考量的商业价值。</span>
+                        <strong style="color: #1e40af">分布式系统中的根本挑战源于固有的网络不可靠性和有限的资源。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 理解信息传输需要时间、目标可能无法到达以及资源有限是使用超时和重试等模式设计健壮系统的关键。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在所有公司中，预测效率的最重要的事情是，我对我的工作充满热情。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我的团队成员乐于接受新想法。正如“亚里士多德计划”的主题演讲所指出的，这与心理安全息息相关。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">女性在代码审查中更有可能遇到更多反对意见，比男性高出 21%。种族或民族的情况类似，黑人工程师在代码审查中遇到更多反对意见的几率比白人工程师高 50%。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">事实证明，与年轻男性相比，人们认为年长男性的文章相对肤浅。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在我们的领域，性别多样性通常意味着更多女性的参与。研究表明，性别多样性更高的团队在代码编写方面往往效率更高。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">疯狂的定义是重复做同一件事，却期望得到不同的结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分布式系统是指这样一种系统，即使你不知道存在的计算机发生故障，也会导致你自己的计算机无法使用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从根本上讲，超时的意义在于优先考虑整个系统的健康状况，而不是单个请求的成功。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果一开始没有成功，再次尝试可能很有意义，因为它可能会奏效。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Emerson Murphy-Hill</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sam Newman</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7495</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">34 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8484</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工程效率</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工作场所偏见</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">组织心理学</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码审查</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统弹性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">超时</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">重试</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/e4e979" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/e2fa68" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/e4e979">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/e2fa68">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
