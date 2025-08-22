@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>分布式系统中的超时、重试与幂等性</title>
+        <title>Rust：自信编程之道</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>分布式系统中的超时、重试与幂等性</h2>
-        <p>8/20/2025, 9:13:00 AM</p>
+        <h2>Rust：自信编程之道</h2>
+        <p>8/21/2025, 11:26:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本指南旨在通过掌握超时、重试和幂等性，帮助读者设计高可用分布式系统，侧重实践应用而非理论的复杂性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 Rust 的性能、安全、正确性和人体工程学等核心价值如何实现“无畏编程”，并通过构建和运营高性能系统 Fly Proxy 的实例来证实这一点。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于 Sam Newman 的一次演讲，将构建弹性分布式系统的复杂性提炼为三个核心原则：超时、重试与幂等性。文章首先定义了分布式系统，并介绍了“三大黄金法则”，即信息传递需要时间、目标可能无法到达以及资源有限。作者深入阐述了超时机制，它通过释放资源来保障系统健康，并基于系统性能基线和用户期望，提供了设置阈值的实用建议，同时强调了可配置超时的重要性。随后，文章转向重试，证明了重试机制对于应对瞬时故障的必要性。同时，作者也警告不要过度重试，因为这可能会导致服务器过载，因此建议对重试次数进行可配置的限制。在介绍幂等性这一核心原则的同时，提供的文字记录主要集中在超时和重试的讨论上。总而言之，本文侧重于为开发者提供实用且可操作的策略，以构建强大的微服务架构。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于 Senyo Simpson 的演讲，深入探讨了 Rust 的“无畏编程”概念。文章指出，Rust 的设计将约束的负担从程序员转移到语言和编译器，从而确保高质量的代码并增强信心。Simpson 强调了性能、安全和人体工程学等软件价值如何深深植根于 Rust 的发展中，并构成 Rust 核心的自信编程理念。他借鉴了自己在 Fly.io 工作的经验，该公司使用 Rust、Tokio、Hyper 和 Tower 构建了对性能要求严苛的 Fly Proxy。他详细阐述了 Rust 的强大功能如何实现高性能和可预测性，这对于满足其代理的 100 毫秒严格延迟预算至关重要。文章提供了具体的例子，说明 Fly.io 如何利用 Rust 的特性来解决架构性能挑战，例如长时间运行的任务和锁竞争，从而显著降低延迟。文章还强调了 Rust 在确保正确性和可维护性方面的作用，并引用了 Discord 和 OneSignal 的经验，由于 Rust 的类型系统和编译器驱动的开发，它们减少了错误并简化了重构。虽然承认 Rust 并非没有其复杂性，但作者强烈认为，其内在价值使其成为构建健壮、高性能系统的卓越选择。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">超时对于通过管理资源消耗来维护系统健康至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过根据性能基线和用户期望设置合理的超时阈值，系统可以释放资源，防止级联故障，并提高整体稳定性。</span>
+                        <strong style="color: #1e40af">Rust 的核心价值通过将约束转移到语言，从而实现了“无畏编程”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Rust 注重性能、安全（通过借用检查器实现）、正确性（通过代数数据类型实现）和人体工程学，这使得开发者能够编写健壮的代码并充满信心，因为编译器会强制保证代码质量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">重试对于处理分布式环境中的瞬时故障至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实施合理的重试机制有助于克服临时性的网络或服务问题。但必须设置重试次数的上限，防止目标服务过载。</span>
+                        <strong style="color: #1e40af">Rust 提供了可预测的性能，这对于高需求、低延迟系统至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与垃圾回收语言不同，Rust 能够提供稳定的性能，避免意外的停顿。Fly Proxy 满足严格的 100 毫秒延迟预算，以及 Discord 从 Go 语言的迁移，都证明了这一点。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">分布式系统中的根本挑战源于固有的网络不可靠性和有限的资源。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 理解信息传输需要时间、目标可能无法到达以及资源有限是使用超时和重试等模式设计健壮系统的关键。</span>
+                        <strong style="color: #1e40af">Rust 的类型系统和编译器显著提高了代码的正确性和可维护性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 严格的类型系统可以防止大量的错误。编译器驱动的开发简化了重构，允许在编译器的指导下进行大幅度的代码更改。OneSignal 的经验证明了这一点。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">疯狂的定义是重复做同一件事，却期望得到不同的结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分布式系统是指这样一种系统，即使你不知道存在的计算机发生故障，也会导致你自己的计算机无法使用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从根本上讲，超时的意义在于优先考虑整个系统的健康状况，而不是单个请求的成功。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果一开始没有成功，再次尝试可能很有意义，因为它可能会奏效。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">那时我突然意识到，你可以将约束的负担从自己转移到语言上。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Rust 提倡一种无畏精神，你可以带着某种程度的“鲁莽”来编写代码，并与编译器合作，使其达到一定的标准和质量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Rust 使您能够更进一步，在比以前更广泛的领域中充满信心地进行编程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Rust 速度很快。真的很快。通常，即使您不采取任何具体措施，它也很快。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Rust 中编译器驱动的开发非常棒。我无法想象回到一种无法让我对某些东西进行根本性更改，然后引导我完成所有受影响且需要更改的不同部分的语言。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sam Newman</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Senyo Simpson</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">34 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8484</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">21 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5181</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统弹性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">超时</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">重试</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Rust</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/e2fa68" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/91077e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/e2fa68">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/91077e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
