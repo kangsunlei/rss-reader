@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Elastic Security 中高效威胁狩猎与检测规则构建指南</title>
+        <title>利用声明式流水线处理来自数千架飞机的数百万事件</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Elastic Security 中高效威胁狩猎与检测规则构建指南</h2>
-        <p>8/21/2025, 3:22:58 PM</p>
+        <h2>利用声明式流水线处理来自数千架飞机的数百万事件</h2>
+        <p>8/22/2025, 6:30:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文全面介绍了如何在 Elastic Security 中构建高效的自定义威胁检测规则，利用 ES|QL 和 Elastic AI Assistant 增强安全运营能力。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍如何利用 Databricks Lakeflow 和 PySpark 自定义数据源，简化 OpenSky Network 实时飞机事件的处理流程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了一种在 Elastic Security 中创建自定义威胁检测规则的结构化方法，强调了威胁检测的最佳实践。即使拥有强大的社区共享规则，填补特定于环境的覆盖范围差距仍然至关重要。该指南介绍了四个步骤：定义检测逻辑，创建包含上下文的规则，预览和测试，最终部署到生产环境。以 AWS CloudTrail 日志为例，本文演示了如何使用 ES|QL 的 CASE() 函数和 Elastic AI Assistant 优化针对权限提升尝试的威胁狩猎查询。此外，还介绍了如何构建高保真警报，例如检测 CloudTrail 日志记录规避。至关重要的是，本文强调了向规则添加全面的上下文信息（如严重性、MITRE ATT&amp;CK 映射、调查指南、误报示例），以缩短安全分析师的平均响应时间 (MTTR)。最后，文章总结了通过威胁模拟测试规则以及在生产环境部署后维护规则的建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在解决处理高吞吐量、低延迟和任务关键型流式数据的挑战，例如来自数千架飞机的实时航空电子事件。传统数据管道通常需要大量的编码和基础设施管理。本文提出的解决方案是利用 Databricks Lakeflow 声明式流水线和 PySpark (Python for Spark) 自定义数据源。Lakeflow 允许您在无服务器架构上，使用声明式 SQL 或 Python 在几分钟内构建可用于生产环境的流式流水线，并提供统一的治理。PySpark 自定义数据源是一项关键创新，它提供了一个清晰的抽象层，可以像内置 Spark 数据源一样轻松集成第三方 API（如 OpenSky Network），从而简化身份验证和错误处理等复杂性。此外，Lakeflow 的流式表采用声明式语义，实现了可靠且精确一次的数据摄取，简化了重复数据检测和延迟到达事件的处理。本文以 OpenSky Network 的实时航空电子数据为例，展示了如何以最少的代码摄取和处理这些数据，并强调了该平台自动管理底层流式基础设施、故障恢复和扩展的能力。本文还讨论了使用声明式流水线进行地理区域配置、API 身份验证和数据质量期望等可选配置。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">有效的检测规则构建应优先考虑底层攻击者技术，而非静态指标。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 关注行为模式确保检测具有相关性和抗规避能力，平衡精度和覆盖范围，避免警报疲劳，同时捕获高价值信号。</span>
+                        <strong style="color: #1e40af">PySpark 自定义数据源简化了与第三方 API 的集成。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该抽象层允许开发人员使用熟悉的 Spark DataFrame API 语法连接到 OpenSky Network 等服务，从而简化复杂的 API 调用、身份验证和错误处理，使外部数据摄取更加简单。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 ES|QL 和 AI Assistant 可以简化复杂检测逻辑的创建和优化。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ES|QL 提供强大的数据转换和分析能力，AI Assistant 则能辅助生成复杂查询和规则上下文，加速规则开发。</span>
+                        <strong style="color: #1e40af">Lakeflow 声明式流水线实现了可靠且精确一次的流式数据处理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Lakeflow 中的流式表简化了 IoT 数据流的复杂性，通过声明式配置处理重复数据检测、延迟到达事件，并确保精确一次的语义，从而提高数据可靠性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">全面的上下文和严格的测试对于减少 MTTR 和确保规则有效性至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 添加 MITRE ATT&amp;CK 映射、调查指南和误报示例等信息，结合部署前预览和端到端威胁模拟，可以增强分析师的能力并验证规则性能。</span>
+                        <strong style="color: #1e40af">声明式方法将重点从基础设施管理转移到业务逻辑。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过抽象出扩展、错误恢复和检查点等操作复杂性，Lakeflow 使数据工程师能够专注于核心业务逻辑，从而显著提高开发效率和运维效率。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">检测工程旨在根据可用数据、威胁情报和环境攻击面，实现威胁检测的落地。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在开发检测规则时，我们优先捕获底层攻击者技术，而不是仅仅依赖于容易被绕过的静态指标或签名。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">威胁者可利用此漏洞绕过 CloudTrail 监控，从而隐藏未经授权的权限变更。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">检测规则不仅定义了检测逻辑和执行频率，还为检测工程师和安全分析师提供了至关重要的上下文。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用 [Lakeflow 声明式流水线]，您可以使用纯 SQL（或者如果您喜欢 Python）在几分钟内构建可用于生产环境的流式流水线，并在具有统一治理和细粒度访问控制的无服务器架构上运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">PySpark 自定义数据源通过一个清晰的抽象层填补了这一空白，该抽象层使 API 集成与任何其他数据源一样简单。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Lakeflow 声明式流水线中的流式表通过声明式语义解决了这种复杂性。Lakeflow 在低延迟处理和高吞吐量应用方面均表现出色。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">数据工程师编写业务逻辑；该平台确保高效运维。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Elastic Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Kseniia Ignatovych, Isai Anthony</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2849</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1329</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">威胁检测</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全运营</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">检测工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">威胁狩猎</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云安全</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">流式数据</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">实时处理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ETL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器架构</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/7fcc28" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/388912" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/7fcc28">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/388912">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATMSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4DcqJmATGomIE+oeQLIb1LzxknVopOqRSdViz5ZpmYTkBsgk5oJyBNA3lDzTWo2Adl0UrXopGrRSdWiT74MyBNq3gAyqZmATGpugExAngDyhJongDyh5ptOqhadVC06qVr0yT9GzQRkk5oJyARkUjMB+ZedVC06qVp0UrXok7+cmgnIE0AmNW+omYDcqPmXnFQtOqladFK16JMvU/Ob1GxSc6PmRs0NkEnNE2r+JCdVi06qFp1ULfpkGZDfBGRSMwGZ1ExAJjUTkEnNBGRSMwGZ1LwB5E92UrXopGrRSdWiT15S8ydTMwF5Qs0baiYgk5obNX+Tk6pFJ1WLTqoW4Y+8AGRSswnIpGYCcqPmBsik5g0gk5obIE+ouQHyhJpNJ1WLTqoWnVQtwh9ZBOQNNW8AuVFzA2RSMwGZ1DwBZFLzBJAbNROQGzWbTqoWnVQtOqlahD/yApBJzSYgT6i5ATKpeQLIE2pugNyo+ZucVC06qVp0UrXok5fUPAFkUnOjZgIyqZmAvAHkCTU3QJ5QMwG5UTMBmdT8ppOqRSdVi06qFn3yEpAn1ExAJjUTkEnNBGRScwNkAvIGkEnNf0nNE0AmNW+cVC06qVp0UrXok2VqJiBvqJmAPAFkUvMGkBsg36RmAjKpuQHyTSdVi06qFp1ULfrkJTVPAJnU3AB5Q80EZFJzA+QNNTdAbtRMQCY1E5AbNd90UrXopGrRSdUi/JEXgGxScwNkUjMBmdTcAHlCzQRkUnMDZFIzAXlDzQRkUjMBmdS8cVK16KRq0UnVok+WqbkBMqm5AfKEmgnIN6mZgExqnlBzA2RSMwF5Qs2mk6pFJ1WLTqoWffIfA3Kj5gkgk5pNQDYBeQPIpGYCMgG5UfPGSdWik6pFJ1WLPlkG5Ak1N0AmNROQSc0E5A01T6iZgGxScwNkUnMDZNNJ1aKTqkUnVYs+WaZmAjKpmYDcqJmA3ACZ1NwAmdTcqJmAPKFmAvIEkBs1T6jZdFK16KRq0UnVok/+cEBu1ExAJiCTmjeA3ACZ1ExAfhOQJ9S8cVK16KRq0UnVIvyRvxiQSc0mIDdqJiA3aiYgk5ongNyo+U0nVYtOqhadVC3CH3kByG9S8wSQGzVPAJnU3AB5Qs0EZFIzAXlCzTedVC06qVp0UrXok2VqNgF5AsikZgIyAZnU/EnUPKHmBsikZtNJ1aKTqkUnVYs++TIgT6jZBOQJIP8lIG8AmdRMaiYgk5o3TqoWnVQtOqla9Mk/Ts0E5Ak1E5AJyBNqJiA3aiYgk5oJyARkUvNNJ1WLTqoWnVQt+uT/jJongLyh5kbNDZAbIE8AmdRsOqladFK16KRq0Sdfpua/BGRScwNkUnMDZFLzBpAn1ExAbtRMQCY1b5xULTqpWnRSteiTZUB+E5AbNTdAJjUTkBs1E5BJzQRkUnOjZgIyAXlDzaaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9D3WpKFBAl8ewAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
