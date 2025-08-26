@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>实现大文件上传全流程详解(补偿版本)</title>
+        <title>金丝雀令牌：Grafana Labs 的安全利器揭秘</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>实现大文件上传全流程详解(补偿版本)</h2>
-        <p>8/23/2025, 4:58:18 PM</p>
+        <h2>金丝雀令牌：Grafana Labs 的安全利器揭秘</h2>
+        <p>8/25/2025, 3:47:16 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细阐述了基于 Vue 和 Express 实现大文件分片上传、断点续传、秒传及并发控制的全流程技术方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详解 Grafana Labs 如何利用金丝雀令牌检测安全漏洞，并提供部署、集成和最佳实践，指导读者主动进行威胁检测。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了使用 Vue 和 Express 构建大文件上传系统的完整解决方案。作者从用户选择文件开始，逐步拆解为前端分片、哈希计算（采用抽样优化），前后端协同校验文件状态（实现秒传与断点续传），前端并发上传分片（通过请求池控制并发数并支持手动中断），最终到后端接收分片并利用流式处理合并文件。文章不仅提供了详细的代码示例，还总结了大文件哈希计算慢、并发请求过多、手动中断、分片合并顺序错乱、断点续传和内存溢出等核心难点及其解决方案，为开发者提供了全面且可操作的实践指南。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文讲述了 Grafana Labs 最近发生的安全事件，其中存在漏洞的 GitHub Actions 允许未经授权访问令牌，以及金丝雀令牌如何在检测攻击者活动中发挥作用。文章将金丝雀令牌解释为数字警戒线或诱饵，比蜜罐轻得多，可以在未经授权的访问时提醒安全团队。Grafana Labs 成功使用了 AWS API 密钥金丝雀令牌，策略性地放置，以快速识别入侵。文章概述了金丝雀令牌的四个步骤的生命周期（创建、放置、监控、响应），并讨论了它们的基础设施，利用 Thinkst 的云平台与 Grafana Cloud IRM 集成，以实现自动警报和响应。它提供了可操作的经验教训，包括速度、精确放置、元数据和集成的重要性。此外，它还为其他组织提供了关于制定放置策略、选择令牌类型、配置警报、防止意外触发以及识别目标对手的全面建议。最后，它讨论了提供商支持和误报等局限性，以及最佳实践，例如使用描述性提醒、每个位置一个令牌、分组管理以及自动化放置。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">抽样哈希计算大幅提升大文件唯一标识生成效率</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过仅读取文件首尾及中间少量片段计算哈希，显著缩短了 GB 级文件的哈希计算时间，优化了用户体验，是实现秒传和断点续传的基础。</span>
+                        <strong style="color: #1e40af">金丝雀令牌是用于早期入侵检测的有效、轻量级的数字警戒线。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些诱饵，如虚假的 API 密钥或文件，会在被访问时立即提醒安全团队，与传统方法相比，大大缩短了检测和遏制时间，正如 Grafana Labs 的事件响应所证明的那样。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">前后端协同校验实现秒传与断点续传</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 前端计算文件哈希后请求后端校验，判断文件是否已存在或部分上传，从而实现无需重复上传的秒传及仅上传缺失分片的断点续传，极大提升用户体验。</span>
+                        <strong style="color: #1e40af">战略性放置和集成对于最大程度地提高金丝雀令牌的有效性至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在风险较高的区域（例如，GitHub Secrets、云控制台）中放置不同的令牌类型，并将警报与事件响应工作流程（例如，Grafana Cloud IRM、Slack）集成，可确保快速、精确地识别和遏制威胁。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">并发控制与流式合并确保大文件上传的稳定性与效率</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 前端通过请求池限制并发上传数，避免系统过载；后端采用流式处理合并分片，有效防止内存溢出，共同保障了大文件上传过程的稳定性和资源效率。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AbortController 实现灵活的用户手动中断上传功能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 前端通过 AbortController 管理并中断所有正在进行的上传请求，允许用户随时停止上传，并能保证已上传分片不丢失，支持后续断点续传。</span>
+                        <strong style="color: #1e40af">部署金丝雀令牌需要结构化的生命周期并遵守最佳实践。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 遵循创建-放置-监控-响应的生命周期，加上使用描述性元数据、自动化放置和测试令牌等实践，可确保可靠且可扩展的检测能力，尽管存在误报等潜在限制。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在日常开发中，大文件上传是个绕不开的坎——动辄几百 MB 甚至 GB 级的文件，直接上传不仅容易超时，还会让用户体验大打折扣。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">用 `spark-md5` 库计算文件哈希，但有个关键优化：不读取整个文件，而是抽样读取部分片段（首尾分片全量 + 中间分片抽样），既能保证哈希唯一性，又能大幅提升大文件的计算速度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">用「请求池 + `Promise.race`」限制同时上传的分片数量（这里设为 6 个），避免请求过多导致浏览器 / 服务器压力过大。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果直接用 `fs.readFile` 读取所有分片内容再拼接，1GB 的文件会占用 1GB 内存，可能导致服务器内存溢出；而流操作（`createReadStream`/`createWriteStream`）是边读边写，内存占用始终很低（仅几 KB/MB）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大文件上传看似复杂，拆解后其实是「分片→校验→上传→合并」四个核心步骤，每个步骤解决一个具体问题。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">金丝雀令牌是数字警戒线或诱饵，对入侵者来说看起来很有价值，但没有合法的用途。如果有人发现并使用了你部署的令牌，你将立即收到警报。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果没有金丝雀令牌和我们警惕的团队，检测到这次攻击需要更长的时间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">放置很重要：选择正确的令牌类型，并将它们放置在攻击者实际寻找的位置。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">金丝雀令牌提供了有价值的、高可信度的入侵警报，但触发其中一个意味着攻击者已经进入你的系统。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在你的环境中部署正确的令牌类型，集成警报以实现自动化，并且永远不要低估在攻击者接触你的真实资产之前发现入侵的价值。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">掘金本周最热</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">再学一点就睡Orz</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Grafana Labs</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Mostafa Moradian</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4826</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2299</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大文件上传</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分片上传</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">断点续传</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">秒传</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vue</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">金丝雀令牌</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">事件响应</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">威胁检测</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DevSecOps</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/fe3096" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/e0a22d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/fe3096">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATmSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyA3am6ATGreAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCfUTEAmIJOaGyBPqJnUbFKzCcimk6pFJ1WLTqoWffJlQJ5Q8wSQSc0baiYgbwB5Qs0TQJ5Q800nVYtOqhadVC365B8DZFIzAbkB8oSaCcikZgIyqfmXnFQtOqladFK16JN/HJAbIJOaJ4BMaiYg/09OqhadVC06qVr0yZep+U1qJiCTmhsgT6i5UXMDZFLzhJo/yUnVopOqRSdViz5ZBuRvAmRSMwGZ1ExAJjUTkEnNG0D+ZCdVi06qFp1ULfrkJTV/MjUTkCfUTECeUDMBmdTcqPmbnFQtOqladFK1CH/kBSCTmgnIJjU3QG7U3AC5UXMDZFJzA2RSMwHZpOabTqoWnVQtOqlahD/yFwEyqbkBMqmZgExqngAyqbkB8k1qngAyqXnjpGrRSdWik6pF+CMvAPmTqLkBcqNmAvKGmhsgN2r+JidVi06qFp1ULfpkmZoJyBtqJiA3QCY1k5oJyBNqngDyBpAbNROQSc0EZFKz6aRq0UnVopOqRZ/8x9RMQCYgN2omIBOQSc2k5kbNBGRSMwG5UfObgExqvumkatFJ1aKTqkWfLAMyqZmAPKFmAjIBuVFzA2RSMwGZ1ExAngDyhpoJyKTmCSCTmjdOqhadVC06qVqEP/ICkEnNJiCTmgnIpGYC8oSaGyBPqLkBMqm5ATKpmYDcqPmmk6pFJ1WLTqoWffKSmgnIjZoJyI2aCcgTar5JzRNANgGZ1NwAmdRsOqladFK16KRq0SdfpmYCMqmZgExAJjU3QCY1E5BJzRNqboBMam7UvKFmAnKj5ptOqhadVC06qVr0yUtAJjUTkEnNBORGzQ2QN4BMaiYgk5oJyBtAJjUTkBsgk5oJyA2QSc0bJ1WLTqoWnVQt+uSXAZnU3AC5UXMDZFLzhJoJyKRmAjIBmdTcAJnUTEAmNW+o2XRSteikatFJ1aJP/mNAJjWTmgnIDZAbIDdqJiA3QCY1E5AbIJOaCcgNkEnNpGYCMqnZdFK16KRq0UnVok/+Y2pugNwAmdS8AWRSMwG5ATKpmYDcANkE5AbIpOaNk6pFJ1WLTqoW4Y/8xYBMam6A3KiZgExqJiBPqJmATGqeALJJzRsnVYtOqhadVC365CUgv0nNpGYCcqNmAvIEkEnNDZAJyBNAJjVvqPmmk6pFJ1WLTqoWfbJMzSYgN0Bu1NyoeULNb1LzhJongExq3jipWnRSteikatEnXwbkCTVvqJmAbALyhpoJyARkE5BJzaRm00nVopOqRSdViz75x6mZgExq3gCySc0NkEnNBOQGyI2aN06qFp1ULTqpWvRJPQLkCTU3am6A3AB5Q82mk6pFJ1WLTqoWffJlar5JzQTkRs0NkEnNjZo3gExqJjUTkEnNBGRSMwH5ppOqRSdVi06qFn2yDMhvAjKpuQHyTUAmNROQSc0EZFJzA+QGyKTmm06qFp1ULTqpWoQ/UrXkpGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWvQ/cbo8Wj4yO/cAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/e0a22d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
