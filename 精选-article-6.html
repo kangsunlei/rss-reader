@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>MoQ：重构互联网实时媒体架构</title>
+        <title>老年代的“滞留对象”：一次由提前晋升引发的线上内存告警排查</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>MoQ：重构互联网实时媒体架构</h2>
-        <p>8/22/2025, 2:00:00 PM</p>
+        <h2>老年代的“滞留对象”：一次由提前晋升引发的线上内存告警排查</h2>
+        <p>8/25/2025, 12:32:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">MoQ（基于 QUIC 的媒体传输）是一种新型开放协议，旨在通过基于 QUIC 的发布/订阅架构，整合低延迟互动特性与大规模广播能力，从而重构互联网实时媒体传输。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细记录了一次线上 Java 应用 G1 GC 老年代内存告警的排查过程，揭示了高 QPS 下临时对象提前晋升及 Mixed GC 未及时触发导致的内存滞留问题，并提供了解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析了互联网上实时通信的历史演变，强调了 RTMP（低延迟、低可扩展性）、HLS/DASH（高可扩展性、高延迟）和 WebRTC（低延迟、低广播可扩展性）等协议中固有的架构折衷。文章认为，这些分散的解决方案迫使开发人员在延迟、规模和运营复杂性之间做出艰难的权衡。文章介绍了互联网工程任务组（IETF）开发的基于 QUIC 的媒体传输（MoQ），并将其定位为旨在解决这一难题的基础技术。MoQ 利用 QUIC 的优势（例如，无队头阻塞、无缝连接迁移、快速建立、强制加密），并引入了用于媒体分发的发布/订阅模型。文章详细介绍了 MoQ 的分层架构（QUIC/WebTransport、MoQT、流媒体格式层）及其数据模型（轨道、组、对象），解释了它如何在广播规模上实现亚秒级延迟，并具有架构简洁性。至关重要的是，MoQ 不仅仅局限于媒体传输，而是正在发展成为一种通用的实时数据传输方案，适用于任何需要高效、可扩展交付的场景。Cloudflare 推出首个全球 MoQ 中继网络，标志着向验证和部署该标准迈出了重要一步。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文以一次线上内存告警为切入点，深入剖析了 Java 应用中 G1 垃圾回收器老年代内存持续增长的现象。作者通过内存 dump 分析，发现大量不可达的 NioChannel 对象滞留在老年代。文章系统排除了长生命周期对象和大对象直接晋升的可能性，最终定位问题为 Survivor 区不足导致的临时对象提前晋升，以及 G1 的 InitiatingHeapOccupancyPercent 参数设置过高，导致 Mixed GC 未能及时触发回收这些不可达对象。为解决此问题，作者通过调整 JVM 参数（如减小堆空间、Region 大小、降低 IHOP 阈值）成功促使 Mixed GC 回收了老年代对象，并提出了调整 SurvivorRatio 以避免提前晋升的根本性建议。整个排查过程逻辑清晰，论证严谨，提供了丰富的 GC 日志作为支撑。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">现有的实时媒体基础设施是分散的，迫使在延迟、规模和复杂性之间进行权衡。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管 RTMP、HLS/DASH 和 WebRTC 等协议各自解决了特定问题，但同时也引入了显著的妥协，导致实时应用生态系统复杂且互操作性差。</span>
+                        <strong style="color: #1e40af">高 QPS 场景下，临时对象可能因 Survivor 区不足而提前晋升至老年代。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Young GC 时，如果 Survivor 空间不足以容纳所有存活对象，部分年轻对象会被迫直接晋升到老年代，导致老年代短期内存使用量增加，甚至滞留。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MoQ 是一种开放的、由 IETF 开发的协议，旨在统一实时媒体技术体系。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MoQ 基于 QUIC 构建，旨在以简洁的架构实现广播级规模的亚秒级延迟，从而解决实时通信长期存在的难题。</span>
+                        <strong style="color: #1e40af">G1 GC 的 InitiatingHeapOccupancyPercent 参数过高会延误 Mixed GC 触发时机。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> IHOP 参数决定了老年代占用比例达到多少时触发并发标记，若设置过高，即便老年代存在大量不可达对象，Mixed GC 也无法及时清理，造成内存堆积。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MoQ 利用 QUIC 的传输优势和发布/订阅模型来实现高效的媒体分发。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> QUIC 负责消除队头阻塞并实现无缝连接迁移；而 MoQ 的发布/订阅系统则允许中继分发已命名的媒体轨道（对象、组），无需理解具体内容。</span>
+                        <strong style="color: #1e40af">通过调整 JVM 参数可有效优化 G1 GC 行为，解决老年代内存滞留问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过降低 IHOP 阈值、调整堆大小和 Region 大小，可以使 Mixed GC 更早、更频繁地介入，及时回收老年代中的不可达对象；同时调整 SurvivorRatio 能增大 Survivor 区，减少提前晋升。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MoQ 的分层架构支持灵活、可扩展和可互操作的实现，以用于各种实时数据。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过分离传输层（QUIC/WebTransport）、信令层（MoQT）和流媒体格式层，MoQ 既能实现创新，又能保持核心标准化，从而适用于媒体以外的多种实时数据类型。</span>
+                        <strong style="color: #1e40af">线上内存告警排查应遵循先止血、后分析、再解决的流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章展示了从紧急 dump 和 FullGC 止血，到通过内存分析工具定位问题对象、逐一排查晋升原因，最终通过参数调优解决问题的完整实践流程，具有很强的指导意义。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们常常不得不在延迟、规模和运营复杂性之间做出艰难的取舍。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MoQ 融合了 WebRTC 的低延迟互动、HLS/DASH 的高扩展性，以及统一架构的简洁性，所有这些都构建在现代传输层之上。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MoQ 旨在成为一种基础互联网技术，而不是专有产品。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过构建在 QUIC 之上，MoQ 解决了一些关键的流媒体问题：没有队头阻塞、连接迁移、快速连接建立以及内置的强制加密。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个名称体现了抽象的强大之处：MoQ 是一种通用的传输协议，适用于任何需要高效且大规模传输的实时数据。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于老年代的对象，大部分人第一印象是因为多次 GC 没有被回收所以晋升到老年代的。其实不然，本文对于老年代中发现大量不可达对象深入排查了一下，发现部分高 QPS 场景下临时对象的提前晋升问题和难以回收的现象。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实际上问题就是因为一大堆的不可达对象，占用了老年代并且没有触发 FullGC，从而导致了内存使用较高引发的告警。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对象提前晋升到 Old 区可能发生在 Young/Mixed GC 的时候，当动态分配的 Survivor 区域的空间小于本次 GC 要晋升的对象所需空间总和时，就会将部分未'年满'的对象直接放到 Old 区。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个 InitiatingHeapOccupancyPercent 的值设置不宜较大也不宜过小，较大可能导致 FullGC 的次数较多，而 Mixed 次数较少，从而导致 STW 的时长较长。过小的会就又会频繁的依法标记清理行为，GC 的负担较重，吞吐量下降。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现在回头来看，让 Old 区域增加的原因是因为提前晋升导致的。那么我们从源头上解决这个问题，就是如何避免这种'未老先升'的情况产生。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Mike English</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">14 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3431</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">33 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8049</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">实时通信</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">媒体流</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">协议设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">QUIC</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">G1 GC</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">垃圾回收</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/304e5a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/3285b9" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/304e5a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/3285b9">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>好的软件设计，看起来平平无奇</title>
+        <title>保护 VS Code 免受提示注入攻击</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>好的软件设计，看起来平平无奇</h2>
-        <p>8/23/2025, 6:19:06 PM</p>
+        <h2>保护 VS Code 免受提示注入攻击</h2>
+        <p>8/25/2025, 4:01:12 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">好的软件设计应简洁朴素，通过设计阶段消除故障模式，而非后期修补。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 VS Code 的 Copilot Chat 代理模式中存在的提示注入漏洞，该漏洞源于不当的工具处理和 LLM 对外部输入的错误解析，可能导致数据泄露和任意代码执行。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章核心观点是“好的软件设计，看起来平平无奇”，因为它专注于在设计阶段就消除潜在的故障模式，而非事后打补丁。作者通过亲身经历和案例阐述了这一理念。他指出，处理故障模式有两种方式：被动响应（打补丁）和主动消除。主动消除故障模式的具体策略包括：将低效或高风险组件移出核心路径，例如将产品目录接口的构建代码放入定时任务；彻底减少系统组件数量，简化复杂系统，如将文档管理系统重构为静态网站；集中化状态管理，确保核心数据单一事实来源，避免数据不一致；以及依赖经过实战考验的稳健系统，例如 Ruby 的 Unicorn Web 服务器，它通过进程隔离和利用 Linux 底层原语实现高可靠性。文章强调，真正的优秀设计是枯燥、不酷的，它不追求宏大复杂的架构，而是以简洁、可靠和消除风险为核心目标。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 VS Code 的 Copilot Chat 代理模式中发现的关键提示注入漏洞。该模式集成了大型语言模型 (LLM) 与本地开发环境和各种工具。代理的内部机制将工具输出和用户提示混合，形成单一的输入供 LLM 处理，但这种混合可能被恶意利用。LLM 可能将外部数据（如 GitHub 问题中的恶意指令）错误地解释为命令，而非单纯的信息。文中详细描述了三个主要漏洞：`fetch_webpage` 工具因 URL 解析缺陷绕过信任检查导致的数据泄露；`simpleBrowser` 工具的类似漏洞，导致本地 GitHub 令牌在未经用户确认的情况下泄露；以及 `editFile` 工具利用立即保存文件行为，修改敏感配置文件实现任意代码执行。作者还讨论了增强攻击可靠性的间接提示注入技术，并概述了 VS Code 的缓解措施，包括对敏感操作更严格的用户确认和限制工作区外的文件修改。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">好的软件设计在于设计阶段主动消除故障模式，而非事后弥补。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 优秀的软件设计并非追求复杂或高级特性，而是通过简洁、直接的方式，从源头减少系统出错的可能性，提升整体稳定性。</span>
+                        <strong style="color: #1e40af">LLM 可能将工具输出误解为指令，从而导致提示注入。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当 VS Code 将用户查询、系统消息和工具输出混合成一个提示时，LLM 可能无法区分预期指令和外部数据，从而允许执行工具输出中的恶意指令。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将非核心或高风险组件移出关键路径或彻底移除，可大幅降低系统复杂性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过解耦和简化，将低效或易错部分隔离，或直接去除不必要的组件，从而消除运行时和运维中潜在的多种故障。</span>
+                        <strong style="color: #1e40af">有缺陷的 URL 解析和自动工具执行导致数据泄露。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `fetch_webpage` 和 `simpleBrowser` 工具存在漏洞（例如，基于正则表达式的 URL 信任验证），这些漏洞允许它们在未经用户确认的情况下将敏感本地数据（如 GitHub 令牌）发送到外部恶意服务器。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">依赖经受实战考验的稳健系统能显著提升软件可靠性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用如 Linux 进程原语或 Unicorn Web 服务器等久经考验的底层技术，可将复杂性下放，借用其固有的高可靠性，减少自定义实现的风险。</span>
+                        <strong style="color: #1e40af">`editFile` 工具的立即文件更改可能导致任意代码执行。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `editFile` 工具在保存更改到磁盘时的立即执行行为，即使在用户确认之前，也可能被利用来修改敏感配置文件（如 `settings.json`），从而触发恶意命令。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">集中化状态管理，确保单一事实来源，是避免数据不一致的关键。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 核心数据的单一来源设计能有效防止数据损坏和不一致问题，减少修复成本，提高系统数据的完整性和可靠性。</span>
+                        <strong style="color: #1e40af">间接提示注入技术提高了针对 LLM 的攻击可靠性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 攻击者可以使用微妙的方法，如条件语句、引用其他提示部分或模仿系统提示，来可靠地欺骗 LLM 执行非预期操作，尤其是在 `temperature: 0` 的情况下。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">好的软件设计，就应该是"过于简单"的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">处理潜在故障模式的第二种方法是，从设计上就让它们消失。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">好的软件设计之所以看起来简单，是因为它在设计阶段就尽可能地消除了故障模式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">好的软件设计，并不意味着你的软件性能超群，而是意味着它非常适合当前的任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">好的软件设计就是枯燥且不酷的。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在这种情况下，模型不仅可能被诱骗给出不正确的答案，还可能通过工具调用秘密地执行敏感操作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在我的测试中，我发现即使是最先进的模型，如 GPT-4.1、Gemini 2.5 Pro 和 Claude Sonnet 4，也可能被工具输出误导，从而做出与用户最初请求完全不同的事情。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">微妙之处在于，当提示用户审查这些更改时，文件已经被编辑到磁盘上，因此“保留”选项不起作用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从我观察到的情况来看，Claude Sonnet 4 似乎是经过最彻底训练以抵抗这些类型攻击的模型，但即使是它也可以被可靠地欺骗。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">VS Code 不再允许代理编辑工作区之外的文件。即将推出更多保护措施（已在 Insiders 版本中提供），这些措施强制用户在编辑敏感文件（例如配置文件）时进行确认。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">宝玉的分享</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">宝玉</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2433</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The GitHub Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Michael Stepankin</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2849</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统可靠性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障模式</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">简化设计</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示注入</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">VS Code</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Copilot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">漏洞研究</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/a6b504" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/99f1c6" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a6b504">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/99f1c6">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
