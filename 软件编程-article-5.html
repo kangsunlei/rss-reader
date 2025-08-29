@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>使用 Redis 缓存 Next.js API 并部署到 Sevalla</title>
+        <title>高分辨率平台可观测性</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>使用 Redis 缓存 Next.js API 并部署到 Sevalla</h2>
-        <p>8/27/2025, 4:00:42 PM</p>
+        <h2>高分辨率平台可观测性</h2>
+        <p>8/28/2025, 2:45:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文演示了如何通过集成 Redis 缓存来增强 Next.js API 的性能和可扩展性，并介绍了使用 Sevalla 部署该解决方案的方法。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了传统可观测性指标的关键缺陷，并提倡使用包括硬件计数器在内的高分辨率数据，以准确评估系统健康状况、利用率等关键参数。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了一个在 Next.js 后端 API 中实现 Redis 缓存的实用指南，解决了随着流量扩展直接数据库访问的性能瓶颈。它建立在一个先前建立的 Next.js API 项目之上，并首先解释了为什么缓存对于高吞吐量 API 至关重要，将 Redis 介绍为针对速度优化的内存键值存储。作者逐步介绍了如何设置这个预先存在的项目，在 Sevalla 上配置 Redis 实例，并将 Redis 集成到 API 的读取操作（GET 请求）中，以从缓存中提供频繁访问的数据。至关重要的是，它还涵盖了写入操作（POST 请求）的缓存失效，以确保数据的新鲜度。文章最后提供了将缓存的 Next.js API 部署到 Sevalla 的分步说明，并强调了结合 Next.js、PostgreSQL 和 Redis 带来的快速、可扩展和易于部署的优势，以及响应时间上的显著提升。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文由 Brian Martin 提出，深入探讨了测量值、计数器和分布（直方图）这三种原始指标类型的局限性和常见误解。通过引人入胜的案例，如“‘悲伤的服务器’（固态硬盘磨损）”和“‘悲伤的交换机’（内核漏洞）”，它强调了不充分的指标覆盖和不正确的聚合级别如何掩盖关键的基础设施问题。文章强调，利用率指标尤其具有欺骗性，采样间隔深刻地改变了系统的感知状态，而聚合视图掩盖了实际的瓶颈。此外，性能指标，尤其是尾部延迟，由于聚合间隔和直方图桶的不准确性，很容易被误解。文章倡导未来的高分辨率平台可观测性，利用硬件性能计数器 (PMU)、能源效率监控 (RAPL， NVML) 来获得更精确和可操作的关于系统行为的见解。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用 Redis 缓存通过减少数据库负载来显著提高 Next.js API 性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将频繁访问的数据存储在 Redis 的内存存储中，API 可以在几毫秒内提供响应，从而减少数百毫秒的延迟并减轻主数据库的压力。</span>
+                        <strong style="color: #1e40af">传统的指标常常由于覆盖不足和不正确的聚合级别而产生误导。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 像“‘悲伤的服务器’（固态硬盘磨损）”和“‘悲伤的交换机’（内核漏洞）”这样的案例表明，缺少指标或未能以正确的失效域聚合它们可能会隐藏关键的系统健康问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">有效的缓存失效对于写入繁重的 API 中的数据一致性至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当数据更新时（例如，创建新用户），清除相关的缓存条目可确保后续读取请求从数据库中获取最新鲜的数据，从而保持准确性。</span>
+                        <strong style="color: #1e40af">利用率指标对采样间隔和聚合高度敏感，可能会掩盖饱和。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 低频率采样可能会完全错过 CPU 饱和的高频率突发。此外，聚合视图可能会隐藏闲置资源，从而导致不正确的容量规划。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">集成 Next.js、Redis 和 PostgreSQL 创建了一个可扩展且强大的后端解决方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种组合利用 Next.js 进行 API 路由，PostgreSQL 进行持久存储，Redis 用于性能，所有这些都可以在 Sevalla 等平台上部署以简化管理。</span>
+                        <strong style="color: #1e40af">性能指标，尤其是来自直方图的尾部延迟，需要小心处理以避免歪曲。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 聚合间隔的选择和直方图桶的固有不精确性可能会消除关键的短暂峰值，因此需要收集完整的分布以确保准确性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">高分辨率可观测性的未来在于利用硬件性能计数器和能源监控。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 PMU 进行 CPU 行为分析，并利用 RAPL/NVML 进行功耗监控，可以提供对系统性能和效率的更深入、更准确的见解，从而超越传统的软件指标。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过将频繁访问的数据保存在内存中，缓存解决了这个问题。API 可以直接从缓存返回数据（如果可用），而无需每次都请求数据库。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用 Redis，由于首次请求会填充缓存，因此仍然需要大约 200 毫秒。但是，之后的每个请求几乎都是即时的，通常在 10 毫秒以内。这是一个 **20 倍的提升**。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">解决方案是在每次写入时更新或清除缓存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过在 Sevalla 上结合使用 Next.js、PostgreSQL 和 Redis，你可以获得一个快速、可扩展且易于部署的堆栈。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缓存不仅仅是一种优化，对于实际的 API 来说，它是一种必需品。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">平台可观测性远不止于传统的三大支柱，更重要的是理解其根本需求。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">覆盖范围至关重要。你需要一盏灯，它会在出现问题时熄灭并告诉你。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你需要能够在正确的级别查看指标。你需要根据你的故障域来划定指标的范围。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们的采样间隔确实改变了我们能够看到的故事。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你需要从每个主机收集完整的分布，将这些直方图合并在一起，然后你才能从中报告。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Manish Shivanandhan</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Brian Martin</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1502</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">26 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6407</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Next.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API 开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis 缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">部署</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">指标</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">监控</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/c239ee" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/386858" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/c239ee">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/386858">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS8SURBVO3BQY4kRxIEQdNA/f/Lun10XgJIpFdzhmsi+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepeQLIjZoJyKTmDSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AfkmIDdAnlAzqdmkZhOQTSdVi06qFp1ULfrky4A8oeYJIDdqJiA3aiYgbwB5Qs0TQJ5Q800nVYtOqhadVC365D9GzY2aCciNmgnIpGYCMqmZgExq/ktOqhadVC06qVr0SV0BmdRMQCY1E5D/JydVi06qFp1ULfrky9T8JiCTmjfUTEAmNTdqboBMap5Q8yc5qVp0UrXopGrRJ8uA/JvUTEAmNU8AmdRMQCY1E5BJzRtA/mQnVYtOqhadVC365CU1fxMgT6iZgDyhZgIyqblR8zc5qVp0UrXopGoR/sgLQCY1E5BNam6ATGomIJOaTUAmNTdAJjUTkE1qvumkatFJ1aKTqkX4I4uA3Ki5ATKpuQHym9RMQCY1N0C+Sc0TQCY1b5xULTqpWnRSteiTPxyQGzVPAJnUPAHkBsikZlIzAblR801qNp1ULTqpWnRSteiTl4BsUnMD5AbIjZoJyBNqngDyBpAbNROQSc0EZFKz6aRq0UnVopOqRfgjXwTkRs0E5EbNJiCTmhsgk5oJyI2abwJyo+abTqoWnVQtOqlahD/yApA31HwTkBs1bwD5TWomIJOaJ4BMat44qVp0UrXopGrRJ1+m5gkgN2o2AblRMwF5Qs0NkEnNDZBJzQTkRs2kZtNJ1aKTqkUnVYs+WabmCSA3ap4A8oSaCcgTap4AsgnIpOYGyKRm00nVopOqRSdViz55Sc0NkEnNpGYCMgH5TWomIJOaGyCTmhs1b6iZgNyo+aaTqkUnVYtOqhZ98hKQJ4BMaiY1vwnIpOYJIG8AmdRMQG6ATGomIDdAJjVvnFQtOqladFK1CH/kBSCTmgnIE2omIJOaJ4B8k5oJyI2aGyCTmgnIpOYGyKTmm06qFp1ULTqpWoQ/8gKQSc1vAnKj5gbIjZoJyI2aCcikZgIyqZmAPKHmBsikZtNJ1aKTqkUnVYs++cMAuVFzo+YNNW8AmdRMQG6AbAJyA2RS88ZJ1aKTqkUnVYvwR/5iQCY1vwnIE2omIJOaJ4BsUvPGSdWik6pFJ1WLPnkJyG9SM6mZgExqJiA3am6ATGpugExAngAyqXlDzTedVC06qVp0UrXok2VqNgG5ATKpmYBMat5Q85vUPKHm33RSteikatFJ1aJPvgzIE2p+E5BJzQ2QN9RMQCYgm4BMar7ppGrRSdWik6pFn/zHqZmATGomIJOaSc0EZJOaGyCTmgnIDZAbNW+cVC06qVp0UrXok/oHNROQN9TcqLkBcgPkDTWbTqoWnVQtOqla9MmXqfkmNTdAJjUTkEnNpGYCMql5A8ikZlIzAZnUTEAmNROQbzqpWnRSteikatEny4D8JiCTmknNBGRScwPkCSCTmgnIpGYCMqm5AXIDZFLzTSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfofijQvK7uk5l0AAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
