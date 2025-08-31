@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>CVE-2025-57752：Next.js 图像优化缓存投毒漏洞</title>
+        <title>如何在物理隔离环境中部署 Elastic Agent</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>CVE-2025-57752：Next.js 图像优化缓存投毒漏洞</h2>
-        <p>8/29/2025, 1:00:00 PM</p>
+        <h2>如何在物理隔离环境中部署 Elastic Agent</h2>
+        <p>8/29/2025, 5:10:09 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Next.js 图像优化中存在一个缓存投毒漏洞 (CVE-2025-57752)，允许未经授权访问敏感图像，造成严重安全风险。Vercel 已在 v15.4.5 和 v14.2.31 版本中修复此漏洞，请尽快升级。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 `artifacts-bundler`（离线制品打包工具），该工具可自动下载、打包和本地提供 Elastic Agent 和安全制品，以便在物理隔离环境中进行部署，从而解决手动操作的难题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 CVE-2025-57752 漏洞。该漏洞为严重的缓存投毒漏洞，影响 Next.js 图像优化 v15.4.5 和 v14.2.31 之前的版本。当 API 路由返回基于请求头的图像内容，并且这些图像由 Next.js 图像优化处理时，就会出现此问题。优化的图像可能在未将这些敏感标头合并到缓存键中的情况下被缓存，这可能导致未经授权的用户访问其不应访问的图像内容，或者通过 CDN 或内部缓存泄露用户数据。此漏洞不需要用户交互或提升的权限，只需要先前的授权请求来填充缓存。解决方案包括阻止请求头转发到代理的图像接口端点，从而确保需要授权数据的图像无法被缓存。强烈建议用户立即升级到 Next.js v15.4.5 或 v14.2.31。本文感谢 'reddounsf' 的负责任披露，并提供了 GitHub Advisory 和修复 PR 的参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文解决了在物理隔离或受限网络环境中部署和更新 Elastic Agent、Endpoint Security、APM Server 和 Fleet Server 的重大挑战。传统上，此过程涉及繁琐的手动下载、通过 USB 驱动器的物理传输以及每次 Elastic 发布时的重复性任务。为了克服这个问题，Elastic 高级工程师开发了 `artifacts-bundler`（离线制品打包工具）。这个开源工具可以自动从 Elastic 官方存储库批量下载 Elastic Stack 组件，将其智能地打包到带有时间戳和版本控制的软件包中，其中包含 manifest 文件，并且可以选择创建一个独立的 NGINX 容器以进行本地分发。本文详细介绍了两种主要的部署方法：用于裸金属服务器的 bundled tarball 和用于容器化环境（包括 Kubernetes）的预构建 NGINX Docker 镜像。它提供了设置本地制品服务器并在 Kibana 中配置 Elastic Fleet 和 Endpoint Security 策略以利用此内部镜像的分步说明，从而确保所有 Agent 二进制文件和安全更新都在本地获取。该解决方案显著简化了政府、医疗、关键基础设施等对安全性要求较高的行业的部署流程，将繁琐易错的手动流程转化为高效、可复用的自动化流程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Next.js 图像优化容易受到通过敏感 API 路由进行的缓存投毒攻击。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用此漏洞，攻击者可以在不考虑授权标头的情况下缓存优化的图像，从而可能导致未经授权的访问和受保护内容的跨用户泄漏。</span>
+                        <strong style="color: #1e40af">`artifacts-bundler` 自动执行物理隔离环境中 Elastic Agent 的部署。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该工具消除了手动下载和打包 Elastic Agent、Endpoint Security、APM 和 Fleet Server 制品的过程，从而将原本耗时且容易出错的任务转化为自动化的单命令操作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">该漏洞允许未经授权披露用户特定或受保护的图像内容。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 API 路由提供并由 Next.js 优化的敏感图像可能被不正确地缓存，然后提供给未经授权的用户，从而损害数据隐私。</span>
+                        <strong style="color: #1e40af">该解决方案为不同的基础设施需求提供了灵活的部署选项。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它为裸金属服务器提供可移植的 tarball，并为容器平台（包括 Kubernetes）提供可部署的独立 Docker 镜像，以满足各种环境的需求。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">该修复程序阻止请求头转发到图像接口端点。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 此修复方案能够确保需要授权数据的图像无法被缓存，从而有效地减轻了敏感内容的缓存投毒风险。</span>
+                        <strong style="color: #1e40af">确保在隔离网络中持续安全地更新 Elastic 组件。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过建立本地制品镜像，该工具允许 Fleet 和 Endpoint Security 在内部获取必要的二进制文件和签名，从而在无需外部网络访问的情况下，维护系统完整性和合规性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">已经解决了一个影响 **Next.js 图像优化** 的漏洞。它影响了 **v15.4.5** 和 **v14.2.31** 之前的版本，并且涉及一个缓存投毒问题，该问题导致来自 API 路由的敏感图像响应被缓存并随后提供给未经授权的用户。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 API 路由用于返回基于标头而变化的图像内容，并且这些图像通过 Next.js 图像优化传递时，优化的图像可能会在不包括这些请求标头作为缓存键的一部分的情况下被缓存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这可能导致：用户特定或受保护的图像内容的**未经授权的披露**；通过 CDN 或内部缓存有条件的内容的**跨用户泄漏**。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该问题通过确保请求标头不转发到代理到图像接口端点的请求来解决。 这确保了图像接口端点不能用于提供需要授权数据因此无法缓存的图像。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">原本简单的 Agent 部署变成了后勤噩梦，需要手动下载 artifact，使用 USB 驱动器，并为每个 Elastic 版本重复操作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">`artifacts-bundler` 工具可以自动完成下载、打包和提供 Elastic Stack 组件以用于离线环境的整个过程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种方法在传输阶段的优势非常明显。您不再需要管理数十个单独的文件（我过去需要手动完成），而是只需管理一个独立的软件包，即可在网络上或通过 USB 驱动器等物理介质在不同环境之间传输。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">重要提示：ETag 头部配置对于 Elastic Endpoint 功能是**强制性的**。如果没有 ETag，Elastic Endpoint 无法确定全局 artifacts 何时更新，并且在有新版本可用时不会下载新版本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">artifacts-bundler 不仅仅代表一种技术解决方案；它还展示了我们在 Elastic 社区中如何识别现实世界的挑战并构建实用的解决方案。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Vercel News</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Aaron Brown, Steven Salat, Zack Tanner</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Elastic Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Pete Ward</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">205</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1875</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全漏洞</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Next.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存投毒</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">图像优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Elastic Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">物理隔离</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">部署</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">制品管理</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/fdde07" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/5bb79d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/fdde07">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/5bb79d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAY6SURBVO3BQY4kyRHAQDLQ//8yNUfXJYFEVc+GVm5mf7DWJQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13khw+p/E0VT1SmiicqU8UbKlPFpPKkYlKZKiaVqeKJyt9U8YnDWhc5rHWRw1oX+eHLKr5J5Y2KSeVJxRsqn6iYVN6omFSmiicV36TyTYe1LnJY6yKHtS7ywy9TeaPiDZWpYqqYVCaVqWJSmSomlScVk8pUMalMKr9J5Y2K33RY6yKHtS5yWOsiP/zLqEwVU8Wk8qTiScUTlanijYonKv8mh7UucljrIoe1LvLDv0zFpPIJlU9UPFF5ojJVTBX/Joe1LnJY6yKHtS7ywy+r+JtU3qh4UvGGyhOVqWJSeaLypOKNipsc1rrIYa2LHNa6yA9fpvJPqphUpopJZaqYVKaKSWWqmFSmikllqphUpopJ5Q2Vmx3WushhrYsc1rrIDx+q+F+iMlX8TSpPVJ6oTBVPKv6XHNa6yGGtixzWuoj9wQdUpopJ5ZsqPqEyVUwqTyqeqEwVk8qTiknljYpJ5ZsqftNhrYsc1rrIYa2L/PDLKr5JZap4ovJE5Tep/KaKT1RMKm+oTBWfOKx1kcNaFzmsdZEfvkxlqphUpoonKk9UnlRMKlPFpPJEZap4UvFE5Y2KSWWqmCqeqEwVk8qkMlV802GtixzWushhrYv88KGKSeVJxROVqeKJyhsVk8qTiknlDZVPVEwqU8UTlaniico/6bDWRQ5rXeSw1kXsD36RylTxhsqTiicqU8UbKlPFpDJVvKHymyomlTcqnqhMFZ84rHWRw1oXOax1EfuDD6hMFZPKk4q/SeVJxROVqeKJylTxRGWqeKIyVUwqU8UbKm9UfOKw1kUOa13ksNZFfvhQxRsVb6hMFZPKGxWTyhOVJypTxVTxRGWq+ITKJ1Smikllqvimw1oXOax1kcNaF7E/+IDKVDGpTBV/k8pvqniiMlU8UXlS8UTlScUTlScVv+mw1kUOa13ksNZFfvgylaniEypPKiaVNyomlaliUnmiMlW8UTGpPFF5UjGpPKl4Q2Wq+MRhrYsc1rrIYa2L2B98QGWqeKLyRsU3qXyiYlKZKiaVm1VMKk8qJpWp4hOHtS5yWOsih7Uu8sOXqUwVn1CZKiaVqWJS+UTFpDJVvFExqTyp+CaVSWWqmFQmlanimw5rXeSw1kUOa13E/uADKlPFpPJGxROVT1S8oTJVfELlmyqeqHxTxW86rHWRw1oXOax1EfuDL1KZKp6ovFHxRGWq+CepPKmYVKaKJypTxRsqTyomlanimw5rXeSw1kUOa13khw+pTBVPVKaKN1S+SeWbKqaKJypPVJ5UTCpvVEwqTyomlaniE4e1LnJY6yKHtS7yw+VU3qh4o+JvUpkqJpUnFW9UPFGZKiaVJxXfdFjrIoe1LnJY6yI//DKVqeKJylQxqUwVT1SmikllqphUpopJZap4Q+VJxROVJypTxROVN1Smik8c1rrIYa2LHNa6yA+/rGJSmSqmiknlExWTym9SmSqeVDxR+SaVJxVvqHzTYa2LHNa6yGGti/zwoYo3Kt6oeKLypOJJxT9JZaqYKiaVJxVvqDxR+ZsOa13ksNZFDmtd5IcPqfxNFVPFE5U3VJ6ofKLiDZVPqEwV31TxTYe1LnJY6yKHtS7yw5dVfJPKE5Wp4knFpDJVvKHyRGWqmFSmiqliUnmj4g2VJxWTylTxicNaFzmsdZHDWhf54ZepvFHxTRV/U8UTlScqTyomlUnlmyqeVHzTYa2LHNa6yGGti/zwf0blicobFU9UpoonKlPFpDJVTCpTxROVJypTxaQyVXzisNZFDmtd5LDWRX5Y/6ViUnmi8qTiicpU8YbKE5UnFZPKGxXfdFjrIoe1LnJY6yI//LKK31TxiYpPVDxRmSqmikllqnhSMalMFU9UpopJ5W86rHWRw1oXOax1kR++TOVvUnlS8YbKJ1Q+UTGpTBWTyhOVJxVPKiaVqeKbDmtd5LDWRQ5rXcT+YK1LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWush/AL+oAYNZma18AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
