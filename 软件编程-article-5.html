@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>常见的开源贡献误区 – 揭穿</title>
+        <title>字段名称对文档大小和性能的影响</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>常见的开源贡献误区 – 揭穿</h2>
-        <p>9/2/2025, 2:49:17 PM</p>
+        <h2>字段名称对文档大小和性能的影响</h2>
+        <p>9/3/2025, 12:56:56 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在揭穿阻止开发者贡献开源的常见误区，提供实用建议，并强调参与开源的职业发展优势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文演示了 MongoDB 文档大小如何受到字段名称和数据结构的影响，直接影响缓存利用率和应用程序性能，并提供了实用的优化策略。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在揭示开源贡献的本质，解决许多开发者感到的犹豫。它定义了开源，并引用了来自 GitHub 和谷歌的数据，说明了影响开发者参与的关键因素，例如项目许可、维护者的响应速度和社区欢迎程度。文章重点揭穿了三个主要的误区：觉得自己像个冒名顶替者（觉得自己不够格），认为贡献总是无偿的，以及日程繁忙。对于冒名顶替综合征，文章建议从初学者友好的任务开始，并强调非代码贡献（如文档和问题分类）的价值。关于报酬，文章强调了赏金计划和重要的非金钱利益，包括技能发展、团队合作经验、社交和简历构建。为了反驳“日程繁忙”的误区，文章建议从小规模、持续性的时间投入开始，强调理解和影响自己所依赖项目的长期优势。文章最后提供了实用步骤和资源，供新的贡献者开启开源贡献之路。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 MongoDB 文档设计决策（特别是字段命名约定和数据结构）对数据库缓存效率和应用程序性能的关键影响。首先解释了 MongoDB 的 BSON 存储格式及其 LRU 缓存，强调较小的文档允许更多数据驻留在内存中，从而减少磁盘 I/O 和网络流量。通过一系列实际的、经过测量的实验，作者阐述了如何将平面文档重组为分层文档，用 null 替换空字符串，删除 null 字段，以及选择 `camelCase` (驼峰命名法) 而不是 `snake_case` (蛇形命名法) 作为字段名称，从而显著减小文档大小。文章最后告诫不要过度缩短字段名称而损害人类可读性，强调性能提升和可维护性之间的平衡。文末提供了一个 MongoDB VS Studio playground，供读者重现实验结果。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">冒名顶替综合征是一个主要障碍，但可以通过从小处着手并理解不同的贡献类型来克服。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 许多开发者觉得自己缺乏专业知识，但贡献并不总是需要深入的代码知识；文档、问题分类和反馈也是至关重要的，并且是初学者友好的任务。</span>
+                        <strong style="color: #1e40af">较小的 MongoDB 文档有助于提高数据库缓存利用率和应用程序性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 减小文档大小允许更多文档放入 MongoDB 的内存缓存中，从而减少磁盘读取、加快查询响应并减少应用程序和数据库之间的网络数据传输。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">开源贡献提供了超越直接金钱报酬的重大职业益处。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然存在赏金，但主要收获包括实践经验、团队合作、技能发展、社交和建立声誉，这对职业发展具有重要价值。</span>
+                        <strong style="color: #1e40af">分层文档结构和简洁的字段名称（如 `camelCase` ）有助于减小 BSON 大小。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将平面文档重组为嵌套对象并使用较短的字段名称（例如，`camelCase` 而不是 `snake_case` ）直接减少了 BSON 中存储的字段名称的字节数，从而显著节省了大小。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">即使日程繁忙，小的、持续的贡献也能带来可观的长期收益。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 每周投入一小段时间可以加深对项目的理解，培养专业关系，并保持技能精进，最终有益于个人的职业生涯并影响项目路线图。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">项目本身的特性会显著影响开发者参与贡献的积极性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 正如行业调查所强调的那样，开源许可、响应迅速的维护者、热情友好的社区、积极的项目开发和清晰的贡献指南等因素对于吸引和留住贡献者至关重要。</span>
+                        <strong style="color: #1e40af">消除空字符串和 null 字段能够进一步优化文档存储。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用 `null` 替换空字符串，然后完全删除 `null` 字段，可以减少元数据和值存储开销，从而在不丢失缺席字段的查询功能的情况下，有助于减小文档大小。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">很多人认为你必须对一个项目了解很多才能参与其中，但这种误解是阻碍开发者贡献开源的最大障碍之一。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">三个最强大的动机是：好奇心、快乐，以及渴望做出令人印象深刻的成就。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你不必总是贡献代码。即使大多数贡献通常是基于代码的，但也有其他领域需要关注，并且经常被忽视。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你能抽出时间来提高你的技能，那么你就可以抽出时间来贡献开源，因为它提供的回报不仅仅是技能的提高。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">没有人能声称自己知道一切——即使是项目的创始人。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个文档的大小越小，可以放入缓存中的文档就越多（内存不是无限的）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">文档缩小的原因是我们在存储较短的字段名称。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">`camelCase` 导致文档更小，因为字段名称更短---我们不再需要浪费缓存空间来存储数千个 _ 字符。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缩短字段名称可以生成较小的文档，从而可以加快应用程序的速度。但是，您需要能够维护您的应用程序，因此走得太远是没有意义的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本文解释了如何设计一个 MongoDB 模式，使其与您的应用程序处理数据的方式相匹配，从而满足您的性能要求，而无需缓存层。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,30 +61,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Orim Dominic Adah</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">MongoDB Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Andrew Morgan</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1795</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2162</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者职业</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">社区贡献</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">冒名顶替综合征</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MongoDB</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">NoSQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据模型设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据建模</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">BSON</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/01ed0c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/0c90cd" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/01ed0c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/0c90cd">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>深度使用 7 年 Notion 之后，我替你总结了这些经验、技巧和建议……</title>
+        <title>【第 3581 期】复杂 React/Next.js 应用的数据获取架构</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>深度使用 7 年 Notion 之后，我替你总结了这些经验、技巧和建议……</h2>
-        <p>9/2/2025, 4:22:00 AM</p>
+        <h2>【第 3581 期】复杂 React/Next.js 应用的数据获取架构</h2>
+        <p>9/3/2025, 12:03:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一位七年 Notion 深度用户分享了其高效使用 Notion 的心得、技巧与系统设计原则，并介绍了其付费模板。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了在复杂 React/Next.js 应用中，如何通过“三层数据架构”模式构建健壮、可扩展的数据获取方案，有效解决传统方法的痛点。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章作者作为 Notion 七年资深用户，深入探讨了 Notion 成为其高频生产力工具的原因，强调了其作为“创造工具的工具”的自由设计流程能力和数据库的强大透视功能。作者结合自身经验和用户痛点，总结了使用 Notion 的九条心得，包括“做建筑师、建小房子、拥抱杂物间”的长期策略，以及“克制的层级数量、有限的元信息类型、有方向感的信息关联”三大承重基座。此外，文章还提出了“别多想先记下来、将下一步动作具体化、围绕行动组织信息”三个关键动作，旨在帮助用户构建稳定、高效且不内耗的 Notion 系统。文章最后介绍了作者设计的 FLO.W 思流模板，强调其是作者所有实践经验的集合，旨在提供易于理解和操作的解决方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了在 React 和 Next.js 应用中，直接在组件内使用 `useEffect()` 和 `fetch()` 进行数据获取所导致的常见问题，如重复请求、状态混乱、内存泄漏、缓存过期、测试困难等，严重影响应用可维护性和性能。为解决这些痛点，文章提出了一种“三层数据架构”模式。该架构将数据获取职责清晰地划分为三个层次：第一层是服务端组件（Server Components），负责初始数据获取以实现快速首屏渲染；第二层是 React Query，用于客户端的数据缓存、管理、更新及错误处理，并从服务端数据进行初始化；第三层是乐观更新（Optimistic Updates），通过即时更新 UI 来提升用户体验，同时处理实际的 API mutation 和缓存失效。这种架构通过分离关注点，有效提升了复杂应用的性能、可维护性和可扩展性，并降低了测试难度。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Notion 并非单纯笔记软件，而是能自由设计自动化工作流的“创造工具的工具”</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Notion 通过功能块同步、数据库视图筛选、自动化模块和函数字段，允许用户搭建形态丰富的自动化工作流，远超传统笔记软件范畴。</span>
+                        <strong style="color: #1e40af">传统数据获取方式的痛点</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 React/Next.js 组件中直接使用 `useEffect()` 和 `fetch()` 进行数据获取会导致重复请求、状态混乱、内存泄漏、缓存过期、测试困难等一系列问题，严重影响应用的开发效率、可维护性和性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">数据库的“视图即透视”能力是 Notion 的杀手锏，能有效规整信息和降低焦虑</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Notion 数据库能从不同维度对数据进行筛选、透视和切片，帮助用户在混乱中找到重点，带来秩序感和安全感。</span>
+                        <strong style="color: #1e40af">“三层数据架构”的核心理念</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章提出通过关注点分离，将数据获取职责明确划分为服务端组件、React Query（客户端缓存与数据更新）和乐观更新（即时 UI 反馈）三个层级，以系统性解决数据获取的复杂性，使应用更容易理解、测试和维护。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">构建 Notion 系统应遵循“做建筑师、建小房子、拥抱杂物间”的长期策略</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 强调关注系统结构而非细节装饰，避免单页臃肿，并允许一定程度的混乱存在，以实现长期稳定运行。</span>
+                        <strong style="color: #1e40af">各层职责与实现</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 第一层服务端组件负责初始数据获取，实现快速首屏渲染；第二层 React Query 接管客户端状态管理，处理数据缓存、重新获取、加载和错误状态；第三层乐观更新通过立即更新 UI 提供即时用户反馈，同时处理实际的 API mutation 和缓存失效机制，提升用户体验。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Notion 系统应基于“克制的层级、有限的元信息、有方向感的信息关联”三大基座</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过三层信息过滤体系、精简的四种元信息类型（任务、项目、领域、笔记）和基于 Relation 的定向关联，构建清晰高效的信息流。</span>
+                        <strong style="color: #1e40af">Context API 辅助集中管理数据</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Context API 可用于集中管理数据访问，有效解决 props 层层传递（prop drilling）的问题，使客户端组件保持简洁，专注于渲染 UI，而数据获取和状态管理则集中在 Context 中处理。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">高效使用 Notion 的关键动作是“快速记录、具体化下一步、围绕行动组织信息”</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 提倡使用速记功能捕捉灵感，将任务具体化以对抗拖延，并通过关联关系将笔记与任务、项目、领域绑定，实现行动驱动的信息组织。</span>
+                        <strong style="color: #1e40af">架构价值与适用性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该架构模式虽对小型应用可能“杀鸡用牛刀”，但对复杂大型应用具有极高的扩展性、可测试性和可维护性，其核心理念可推广至 Vue.js、Svelte 等其他前端框架，是构建健壮前端应用的有效策略。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">严格来讲，Notion 并非是笔记软件，它其实是一个可以用来创造工具的工具。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">透视才能从一片混乱中找到重点。这种从不同维度、不同条件，对同一组数据进行筛选、透视、切片以及自动化响应的能力，是 Notion 的杀手锏。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我难以容忍信息是孤立的、反馈是滞后的、流程是割裂的、生态是隔离的，因此我追求的更多是统一的秩序所能带来的安全感。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个好的系统，不应该把所有信息都平均地铺在你面前，它必须能在正确的时间，以正确的形式，为你呈现恰到好处的信息量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们应当转变思路，围绕行动去组织信息。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">很多时候，我们低估了数据获取的复杂性，等到发现问题时已经太晚了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不知不觉间，你会发现越来越多的错误处理、加载状态、memoization（缓存优化）、缓存逻辑交织在一起，代码成了一团乱麻，调试起来痛苦不堪。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这篇文章会介绍一种更好的方法——至少是我喜欢的方式。通过 '三层数据' 的架构，我们可以让数据获取从最简单的 CRUD 操作扩展到复杂的实时应用，而不用被复杂性拖垮。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">解决方案是构建一个三层架构，把关注点分离，让应用更容易推理。这个架构灵感来自 React Query 的理念，它为应用中管理服务端状态提供了一种强大方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于小型应用来说，这种三层方式可能有些 '杀鸡用牛刀'。但对于大型应用，它的扩展性很好，能避免代码失控。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -68,30 +68,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">少数派</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">少数派</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">40 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9829</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">19 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4750</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Notion</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">个人生产力</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">知识管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">效率工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库设计</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据获取架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">应用架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">React</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Next.js</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/a4fd87" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/88ed53" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/a4fd87">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/88ed53">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
