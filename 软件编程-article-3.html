@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Elastic 针对 Salesloft Drift 安全事件的应对措施</title>
+        <title>Flutter Web 中使用 Firebase 构建文件上传服务</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Elastic 针对 Salesloft Drift 安全事件的应对措施</h2>
-        <p>9/4/2025, 8:10:08 PM</p>
+        <h2>Flutter Web 中使用 Firebase 构建文件上传服务</h2>
+        <p>9/5/2025, 3:22:25 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Elastic 公开回应 Salesloft Drift 安全事件，确认 Salesforce 环境未受影响，但发现一邮件账户存在潜在风险。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了如何使用 Firebase Storage 和依赖注入为 Flutter Web 应用构建可复用的模块化文件上传服务。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Elastic 针对 Salesloft Drift 安全事件的最新情况，该事件已于 2025 年 8 月 26 日公开。尽管未收到直接通知，Elastic 仍立即启动了事件响应协议，利用 Drift 支持部分业务应用。经过全面调查，确认 Elastic 的 Salesforce 环境未受影响。但通过“Drift Email”集成，发现一个电子邮件帐户暴露，可能导致未经授权的访问者读取该邮箱邮件。少量入站邮件包含潜在的有效凭据，受影响的客户已及时收到通知。Elastic 的信息安全团队立即采取了行动，包括全面调查，禁用 Drift 集成，监控开源情报以及与供应商协调。Elastic 重申了其对透明度和客户数据保护的承诺。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了一个全面的指南，用于在 Flutter Web 中实现生产就绪的文件上传服务，利用 Firebase Storage 进行持久化，并使用 `injectable` 实现依赖注入。它涵盖了整个过程，从定义数据模型和服务接口到实现单个和多个文件上传，使用自定义错误类进行强大的错误处理，以及集成 `injectable` 以实现模块化、可测试和可维护的代码。本教程强调了 Web 开发的最佳实践，如通过浏览器 API 处理文件和与后端服务集成，对 Flutter Web 应用开发者具有很高的实用价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Elastic 的核心 Salesforce 环境已确认未受 Salesloft Drift 事件的影响。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Elastic 安全团队进行了一次主动而彻底的内部调查，未发现对其关键 Salesforce 系统产生影响或未经授权访问的证据。</span>
+                        <strong style="color: #1e40af">使用 Firebase Storage 为 Flutter Web 构建可复用的文件上传服务。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 本文演示了如何创建一个模块化服务，该服务抽象了 Firebase Storage 交互，从而为单个或多个文件实现干净且可扩展的文件上传。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">一个电子邮件帐户被暴露，可能导致入站电子邮件中的凭据泄露。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> “Drift Email”集成无意暴露了一个电子邮件收件箱，其中少量传入邮件包含敏感凭据信息，因此 Elastic 及时通知了客户。</span>
+                        <strong style="color: #1e40af">使用结构化的自定义错误类实现强大的错误处理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它强调了使用一致的、可重用的和程序化的错误处理而不是原始打印语句的重要性，从而提高了可维护性和调试能力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Elastic 执行了快速而全面的事件响应策略。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 立即采取的行动包括禁用受影响的集成、审查访问日志、监控入侵指标以及与第三方供应商合作，以有效降低风险。</span>
+                        <strong style="color: #1e40af">通过 `injectable` 实现依赖注入，提高代码的模块化程度。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该指南解释了 `injectable` 如何自动执行依赖管理，通过延迟加载和单例模式使服务更易于测试、交换和维护。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们的调查确认 Elastic 的 Salesforce 环境未受到影响。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但我们发现‘Drift Email’集成暴露了一个邮件账户，可能导致未授权访问。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于我们发现存在潜在凭据泄露的每种情况，我们都通过现有的支持渠道通知了客户。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们立即在我们的环境中禁用了 Drift，以消除任何进一步的风险。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Elastic 仍然致力于透明度和保护我们客户的数据。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">上传文件是现代 Web 应用程序中最常见的需求之一。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">借助 Flutter Web 和 Firebase Storage，您可以以干净且可扩展的方式实现此功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">相比于原始的打印语句，结构化的错误类是更好的选择。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">依赖注入允许你声明一次依赖，然后由框架负责创建并在需要时提供这些依赖。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过使用此服务，你可以抽象出直接的 Firebase 交互，保持代码的整洁，并借助依赖注入在应用程序的任何位置访问该服务。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Elastic Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Mandy Andress</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Atuoha Anthony</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">354</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2491</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全事件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">事件响应</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">供应商安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Flutter Web</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Firebase Storage</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文件上传</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/7857c0" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/c6e0a9" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/7857c0">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c6e0a9">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

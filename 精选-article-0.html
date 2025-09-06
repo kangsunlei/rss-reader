@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>构建 LangGraph：一种面向生产环境的 Agent 运行时设计</title>
+        <title>多模态大模型持续学习系列研究，综述+Benchmark+方法+Codebase 一网打尽！</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>构建 LangGraph：一种面向生产环境的 Agent 运行时设计</h2>
-        <p>9/4/2025, 5:23:46 PM</p>
+        <h2>多模态大模型持续学习系列研究，综述+Benchmark+方法+Codebase 一网打尽！</h2>
+        <p>9/5/2025, 4:59:47 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 LangGraph 的设计原则，旨在构建可用于生产环境的 AI 代理。文章重点关注底层控制、持久性以及解决 LLM 系统固有的挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">中科院自动化所团队系统性研究了多模态大模型持续学习，提出综述、多项创新方法、多个评测基准和开源代码库，以应对灾难性遗忘挑战。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 LangGraph，它是一个底层代理框架，旨在解决 LangChain 在生产环境 AI 代理应用中的不足。它强调了基于 LLM 的代理的三个核心挑战：高延迟、长时间运行任务的可靠性问题以及 LLM 的非确定性。为了应对这些挑战，LangGraph 整合了并行化、流式传输、检查点、人在回路中 (Human-in-the-Loop) 和追踪 (Tracing) 等功能，并将低延迟作为最终的总体要求。作者解释了为什么现有的 DAG 框架和持久执行引擎无法很好地支持循环、低延迟的 Agent 图。LangGraph 的设计理念优先考虑灵活性和贴近原生代码的开发体验，将运行时 (PregelLoop) 与开发者 SDK 分离开来。它利用结构化代理和受 BSP/Pregel 启发的执行算法来实现安全并行化、高效流式传输、强大的检查点以及无缝的人工干预，最终旨在为复杂的 AI 代理部署提供高性能、可扩展的解决方案。虽然任务队列被认为是必要的功能，但它由更广泛的 LangGraph 平台处理，而不是 Python 库本身。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了中国科学院自动化研究所联合中国科学院香港院 AI 中心在生成式 AI 和多模态大模型持续学习领域的一系列系统性研究成果。该系列工作旨在解决大模型在动态环境中学习新任务时面临的“灾难性遗忘”问题。研究内容包括：一篇全面综述，涵盖 LLMs、MLLMs、VLA 和扩散模型的持续学习方法；多个创新性方法如 HiDe-LLaVA（分层解耦）、DISCO（联邦持续学习）、ModalPrompt（双模态引导提示）、MR-LoRA（参数隔离）和 LLaVA-c（持续改进视觉指令微调），有效缓解遗忘并提升性能；多个新颖的评测基准（UCIT、FCIT、MLLM-CL），解决了现有基准数据泄露和非 IID 场景评估不足的问题；以及一个开源代码库 MCITlib，集成了主流算法和高质量基准，为研究者提供了统一的开发与评测平台。这些成果为推动多模态大模型持续学习的理论与实践发展提供了全面支持。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">LLM 代理引入了独特的挑战，需要专门的框架设计才能用于生产环境。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 高延迟、非确定性和长时间运行的任务需要并行化、流式传输、检查点和人在回路中等功能，以确保生产环境中的可靠性和用户体验。</span>
+                        <strong style="color: #1e40af">系统性综述生成式 AI 持续学习，涵盖多种模型和方法</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 全面梳理了 LLMs、MLLMs、VLA 和扩散模型在持续学习中的挑战与解决方案，为领域研究提供了宏观指导和技术路线图。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">LangGraph 的设计强调底层控制和使用受 BSP/Pregel 启发算法的结构化代理。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方法实现了确定性并发、对循环的完全支持，以及高效实现关键功能（如安全并行化、流式传输和强大的检查点），这对于 Agent 的可扩展性和调试至关重要。</span>
+                        <strong style="color: #1e40af">提出多个创新评测基准，解决现有持续学习评估痛点</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> UCIT、FCIT、MLLM-CL 等基准通过严格的数据筛选和多场景设置，克服了数据重叠、非 IID 评估不足等问题，提升了评估的准确性和实用性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">该框架的架构将运行时与 SDK 分离开来，从而可以独立发展和构建功能模块。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种模块化确保了未来的适应性、无需 API 更改的性能优化，并使开发人员能够根据需要选择性地采用功能，从而避免采用过于死板的高级抽象。</span>
+                        <strong style="color: #1e40af">开发系列高效持续学习方法，有效缓解灾难性遗忘</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> HiDe-LLaVA、DISCO、ModalPrompt、MR-LoRA、LLaVA-c 等方法通过架构优化、参数隔离、多模态监督等策略，显著提升了模型在增量学习中的知识保留能力。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">发布开源代码库 MCITlib，促进研究社区协作与发展</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MCITlib 集成了主流算法和高质量基准，为研究者提供了标准化、公平的实验环境，降低了持续学习研究的门槛，加速技术迭代。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们听到的最主要的事情是 `langchain` 很容易上手，但很难定制和扩展。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 具有延迟高、稳定性差和输入输出开放等特点。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">任何代码框架的最大竞争对手始终是没有框架。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们最终构建在 BSP/Pregel 算法之上，因为它提供了确定性并发，并完全支持循环。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">同样的检查点机制不仅实现了容错，还可以支持 Agent 的“预期中断”，即 Agent 可以在继续执行之前暂停并请求用户或开发者的输入。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大模型如何在此背景下实现持续学习成为了重要挑战。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本文系统性地综述了生成式 AI 的持续学习方法，涵盖大语言模型（LLMs）、多模态大语言模型（MLLMs）、视觉语言动作模型（VLA）和扩散模型（Diffusion Models）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本文认为当前的多模态大模型的持续学习面临两大关键挑战：一是现有评测基准普遍存在与预训练数据重叠的问题，导致评估结果失真；二是传统方法难以平衡新任务学习与旧任务遗忘之间的矛盾。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">赋予以多模态大模型为代表的生成式 AI 持续学习的能力是迈向人工智能通用化的重要一步。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们希望通过系统的综述、完善的 Benchmark、前沿的方法和开源的工具，能够为这一领域的研究者和应用开发者提供更多支持。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,32 +63,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">LangChain Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">LangChain</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">机器之心</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">机器之心</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4038</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4250</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 代理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LangGraph</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">框架设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">生产环境 AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 架构</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">持续学习</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多模态大模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">灾难性遗忘</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">评测基准</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源代码</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/447545" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/690e03" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/447545">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATgSURBVO3BQY4bSRAEwfAC//9lXx3zVECjk6PRIszwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAvKEmhsgk5o3gDyhZgLyk9S8cVK16KRq0UnVok+WqdkE5Ak1TwB5A8gTaiYgT6jZBGTTSdWik6pFJ1WLPvkyIE+oeULNBGRSMwGZ1ExAJiCTmknN3wTkCTXfdFK16KRq0UnVok/+cUAmNTdqbtTcAJnUTEAmNROQSc3/yUnVopOqRSdViz75x6mZgExqJiA3ap4A8gaQSc2/7KRq0UnVopOqRZ98mZq/CcgTQCY1k5oJyKRmAvJNan6Tk6pFJ1WLTqoWfbIMyE8CMqmZgExqJiCTmgnIpOYNNROQJ4D8ZidVi06qFp1ULfrkJTW/CZBJzQTkm4DcAHlCzb/kpGrRSdWik6pFn7wEZFIzAblRMwF5Qs0E5Ak1E5BJzQTkJwGZ1NwAmdRMQG7UvHFSteikatFJ1SL8I4uATGomIJOaJ4A8oeYGyBNqJiCTmhsg36TmCSCTmjdOqhadVC06qVr0yTI1N2omIE+omYDcAJnUTGpugLwBZFLzBpAngNyo2XRSteikatFJ1aJPXgIyqZmATGpu1NwAmdRMQCY1E5AbNTdAnlBzA2RSs0nNDZBJzRsnVYtOqhadVC365CU1m4D8TUAmNROQSc0E5EbNpOYJNTdAbtRMajadVC06qVp0UrUI/8gPAjKpeQPIpGYCMqmZgNyomYDcqLkBMqm5AXKj5gbIE2reOKladFK16KRqEf6RF4BMaiYgT6iZgNyomYC8oWYCMqm5AfI3qZmAPKHmjZOqRSdVi06qFn3yl6mZgExqboBsAnIDZFIzqbkBcqPmBsgTaiYgk5pNJ1WLTqoWnVQtwj/yiwGZ1DwBZFLzBJAbNTdA3lBzA+RGzQRkUrPppGrRSdWik6pFnywDcqPmCTUTkCfUvKFmAnID5EbNBOQJIJOaCcgE5CedVC06qVp0UrXok5eATGomIBOQSc0E5EbNDZAngExqfpKaCcgbaiYgk5pvOqladFK16KRq0ScvqblRMwGZgNyomYDcqNkEZFIzAblR8waQSc1vdlK16KRq0UnVok+WAblRMwGZ1ExAbtRsAvKEmgnIBGRSMwF5AshvdlK16KRq0UnVok+WqXlCzY2aGyA3ap5Q8wSQTWqeAPIEkBs1b5xULTqpWnRSteiTl4D8JDU3aiYgk5ongExqJjUTkEnNBOQJIJOaJ9RMQCY1m06qFp1ULTqpWvTJMjWbgPwkIJOaCciNmhs1E5AbNd8EZFLzxknVopOqRSdViz75MiBPqHlCzQRkUjMBuVHzBpAbNTdA3lAzAZnUfNNJ1aKTqkUnVYs++ccBuQEyqXkCyBNqnlAzAZnU3ACZgExqboBMat44qVp0UrXopGrRJ/8zap4AMqm5UXMD5Ak1TwCZ1NwAmdR800nVopOqRSdViz75MjXfpOYJIG8AmdRMap4AMql5A8ikZgIyqdl0UrXopGrRSdWiT5YB+UlAJjU3ap5Q8waQTWp+s5OqRSdVi06qFuEfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoPm+RBPaFQLqwAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/690e03">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYOSURBVO3BQW4ky5LAQDKg+1+Z00tfJZCokib+g5vZP6x1icNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhf54UMqf6niDZVvqnii8qRiUnmj4g2Vv1TxicNaFzmsdZHDWhf54csqvknlicpU8UbFJ1SmiknljYo3VKaKJxXfpPJNh7UucljrIoe1LvLDL1N5o+IvqUwVk8pU8UbFpDJVTCp/SeWNit90WOsih7UucljrIj/8x6hMFd+k8obKVDGpTBWTylQxqfyXHNa6yGGtixzWusgP/+Mqnqg8qfgmlaniDZU3Kv5LDmtd5LDWRQ5rXeSHX1ZxM5WpYqqYVKaKSeWJylTxRGVSeVLxRsVNDmtd5LDWRQ5rXeSHL1P5SypTxZOKSeWJylQxqUwVk8pUMalMFU8qJpU3VG52WOsih7UucljrIj98qOImKk9UPqHyCZVPqEwVTyr+lxzWushhrYsc1rrIDx9SmSq+SWWqeFLxCZUnFU9UpopJ5ZtU3qh4ovJGxTcd1rrIYa2LHNa6yA+/TOWNiqliUnmiMlVMKm9UTCpvqDypmFSmikllqviEyhsVv+mw1kUOa13ksNZF7B++SGWqmFSeVEwqv6liUnmjYlKZKp6oTBWTylQxqUwVk8pUMalMFZPKk4pvOqx1kcNaFzmsdZEfPqTyiYonFU9U3qiYVJ5UfELlDZWpYlKZKiaVqWJSeaLy/+mw1kUOa13ksNZFfvhjFW+oTBVTxaQyVUwqU8Wk8k0Vk8pUMak8qZhUnqhMFZ9Q+U2HtS5yWOsih7Uu8sMvU5kqnqhMFZ9QeaPiExWTylTxpOImKk9UpopPHNa6yGGtixzWuoj9wy9SeVLxRGWqeKLypOINlTcq3lCZKj6h8k0Vk8pU8U2HtS5yWOsih7Uu8sOHVKaKN1SmiqniicqTiknljYonKk9UpopPqLxRMam8oTJVTCpTxScOa13ksNZFDmtd5IcvU5kqPqHypGJSmVSeVEwqT1SmikllqnhS8URlqphUvqni/9NhrYsc1rrIYa2L/PBlFZ9QmSo+UTGpTCpTxaTyRGWqmFTeqHii8obKVPFE5UnFbzqsdZHDWhc5rHWRH36ZypOKJypPKqaKJxWTyjepvFExqbxRMak8UZkqbnJY6yKHtS5yWOsi9g9fpPKk4onKVDGpPKn4hMobFW+oPKmYVJ5UfELljYrfdFjrIoe1LnJY6yI//LKKSeVJxaQyVUwqk8qTik9UvKHypGJSmSreUJkqPlExqUwV33RY6yKHtS5yWOsiP3xI5ZtUpopJZap4ovJE5UnFJyreqHii8qTiN1X8psNaFzmsdZHDWhf54csq3qh4ojJVvFHxRsVvUpkqJpUnFZPKpDJVvFExqTyp+KbDWhc5rHWRw1oX+eEyKlPFpDJVTCrfpPJGxRsqU8U3qbyh8obKVPGJw1oXOax1kcNaF7F/+IDKX6qYVKaKSWWqmFSeVPwmlaniicpfqphUpopvOqx1kcNaFzmsdRH7h/9hKk8qJpWp4onKJyomlTcqJpUnFW+oTBWTyhsVnzisdZHDWhc5rHWRHz6k8pcqpoonKm+o/KaKN1Q+oTJVfFPFNx3WushhrYsc1rrID19W8U0qb6g8qZhUpoonKlPFpDKpTBVPVL6p4g2VJxW/6bDWRQ5rXeSw1kV++GUqb1R8U8UbKk8qJpWp4onKJyomlUnlmyr+0mGtixzWushhrYv88B+n8qRiUnmj4onKVPEJlaliUpkqJpU3VKaKSWWq+MRhrYsc1rrIYa2L/PAfUzGpTBWTypOKSWWqeFIxqUwVT1SmikllqvhExaQyqfymw1oXOax1kcNaF/nhl1X8JZWp4knFE5Wp4g2VqeKNikllqphUpopvqvhNh7UucljrIoe1LvLDl6n8JZVvUnmiMlVMKt+kMlVMKp+oeFIxqUwV33RY6yKHtS5yWOsi9g9rXeKw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZF/g93mtWIE7j8/QAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
