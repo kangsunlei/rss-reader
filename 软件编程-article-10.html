@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>使用 AutoRoute 轻松实现 Flutter 导航</title>
+        <title>IntelliJ 平台 UI 冻结问题分析 | JetBrains 平台博客</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>使用 AutoRoute 轻松实现 Flutter 导航</h2>
-        <p>9/8/2025, 2:03:37 PM</p>
+        <h2>IntelliJ 平台 UI 冻结问题分析 | JetBrains 平台博客</h2>
+        <p>9/9/2025, 12:26:47 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文逐步指导如何在 Flutter 应用中集成 AutoRoute，实现精简且类型安全的导航。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在诊断和解决 IntelliJ 平台 IDE 中的 UI 冻结问题。主要方法是通过分析线程转储和常见的阻塞场景。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文指出在大型 Flutter 应用中使用内置 `Navigator` 进行导航管理的复杂性，并介绍 AutoRoute 作为解决方案。本文细致地指导读者完成 Flutter 项目的设置，组织项目结构。同时，讲解如何使用 AutoRoute 的注解定义路由并生成路由文件。最后，它提出了一个控制界面来管理不同页面之间的导航，并总结了使用 AutoRoute 的最佳实践，强调类型安全和可维护性。内容非常实用，包含代码示例和对每个步骤的清晰解释。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 JetBrains IDE 中 UI 冻结的常见原因。这些 IDE 构建于单线程的事件分发线程 (EDT) 之上。文章解释说，当 EDT 被阻塞时，会发生冻结，从而阻止用户交互。本文的核心概述了各种冻结场景和详细的调查方法，包括使用线程转储，以及在适用的情况下使用协程转储。讨论的具体原因包括读写锁争用、导致获取写锁意图失败的后台写入操作、Kotlin 协程中 `Dispatchers.Default` 和 `Dispatchers.IO` 调度器的线程池中的线程饥饿、服务初始化期间的死锁，以及由阻碍取消的 `runBlocking` 调用引起的问题。文章还指出，`SuvorovProgress` 只是紧急模式的表象，并非根本原因。对于每种情况，文章都提供了说明性的堆栈跟踪示例和可操作的建议，例如确保频繁调用 `ProgressManager.checkCanceled`，将阻塞操作从 `Default` 调度器移出，以及在服务初始化期间仔细管理读取/写入操作以防止死锁。总体目标是使插件开发人员能够提高 IDE 的响应能力。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AutoRoute 通过生成强类型路由，显著简化复杂的 Flutter 导航流程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它通过自动化路由管理来减少样板代码，增强类型安全性和提高可维护性，这对于可扩展的应用程序至关重要。</span>
+                        <strong style="color: #1e40af">IntelliJ 平台 UI 冻结的主要原因是单线程 EDT 被长时间运行的操作阻塞。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 事件分发线程 (EDT) 处理所有 UI 绘制和用户输入。任何长时间阻塞 EDT 的操作都可能导致 UI 无响应。例如，长时间的写锁获取或无法取消的读取操作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">结构化的项目设置是有效实施 AutoRoute 的关键。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将屏幕和路由逻辑组织到专用文件夹（例如 `screens`、`route_config`）中，可以提高模块化程度，并使应用程序更易于管理和扩展。</span>
+                        <strong style="color: #1e40af">有效诊断 UI 冻结依赖于对线程转储和协程转储的细致分析。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过分析堆栈跟踪中的特定模式，例如写锁获取时的 `TIMED_WAITING` 或 `SUSPENDED` 协程，可以找到根本原因，从而定位确切的阻塞代码或线程饥饿问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用 `@AutoRouterConfig()` 尽早定义路由可以建立清晰的导航蓝图。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方法允许开发人员在屏幕完全实现之前将应用程序路径映射到特定屏幕，从而创建逻辑和结构化的开发流程。</span>
+                        <strong style="color: #1e40af">解决 UI 冻结需要仔细管理可取消操作，并确保线程和锁的正确同步。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 解决方案包括确保频繁调用 `ProgressManager.checkCanceled`，从关键调度器卸载阻塞任务，以及通过正确排序服务初始化期间的读取和写入操作来防止死锁。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Flutter 内置的 `Navigator` 提供了导航功能，但在大型应用中管理路由会变得复杂。AutoRoute 等路由包应运而生。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过尽早定义路由，您可以为您的应用程序设置清晰的导航蓝图。稍后创建屏幕时，只需使用 `@RoutePage` 将它们集成到此结构中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AutoRoute 扫描您的项目并查找 `@RoutePage` 注解。然后，它生成强类型导航类，因此您可以编写 `context.router.push(const Screen2())`，而不是手动键入路由字符串，如 `'/screen2'`。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AutoRoute 通过生成样板代码、确保类型安全，并提供嵌套导航和守卫等高级功能，简化了 Flutter 应用程序中的导航。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 IDE 无法在 EDT 上执行操作时，就会发生 UI 冻结，从而阻止与 IDE 的交互。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在绝大多数情况下，只需查看**线程转储**即可获得有关 UI 冻结所需的信息。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">EDT 被写锁阻塞，表明有线程正在持有读锁运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">要解决线程饥饿问题，需要将阻塞操作移出 `Default` 调度器。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通常，冻结是由插件代码与 IntelliJ 平台之间的合作不足引起的。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Atuoha Anthony</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Jakub Chrzanowski</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1732</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1859</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Flutter</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">导航</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AutoRoute</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">移动应用开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码生成</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IntelliJ 平台</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">UI 阻塞</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">线程控制</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/5b55f1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/277c06" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/5b55f1">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/277c06">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
