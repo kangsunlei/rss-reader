@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>【实践】NotebookLM 操盘手 Raiza Martin：如何做出一个不那么丑的产品</title>
+        <title>一次缓存引发的文件系统数据不一致问题排查与深度解析</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>【实践】NotebookLM 操盘手 Raiza Martin：如何做出一个不那么丑的产品</h2>
-        <p>9/6/2025, 1:01:00 PM</p>
+        <h2>一次缓存引发的文件系统数据不一致问题排查与深度解析</h2>
+        <p>9/10/2025, 12:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">NotebookLM 前 PM Raiza Martin 分享 AI 产品设计原则，强调聚焦用户任务、建立信任和保持克制，以应对 AI 产品‘笨拙尴尬年代’的挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度剖析了分布式文件系统客户端 EFC 在引入缓存后，因数据版本回退和内核 PageCache 交互问题导致的文件系统数据不一致故障，并提供了详细的排查与修复方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了当前 AI 产品面临的“笨拙尴尬年代”及用户期望与现有产品体验之间的巨大鸿沟。前 Google NotebookLM 产品负责人 Raiza Martin 提出了七项核心原则，旨在指导产品经理打造卓越的 AI 产品。这些原则包括强调“个人清晰度”（愿景、目标、品味）的重要性，主张从用户要完成的“任务”出发进行产品设计，警惕“AI 演示病”的危害，强调建立信任（主动暴露模型局限性、保障确定性体验），以及提倡克制与专注，将核心任务做到极致，避免功能臃肿的“厨房水槽式产品”，以实现更高的审美和长久的价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细记录了一次阿里 EFC 分布式文件系统客户端在 CTO 测试中遇到的数据不一致问题。起初，作者误判为缓存读取旧数据，但通过 NFS 挂载对比，发现是文件系统数据本身被破坏，表现为正常字符被空字符替换，且错误数据集中在单个 4K 页内。经过日志分析和行为推测，作者定位到核心问题是：在一次追加写操作中，文件系统扩容后填充了 NULL，而另一个客户端在分布式缓存中读取并缓存了这些 NULL 数据。随后，由于网络慢请求导致数据版本（dv）回退，当客户端进行“先读后写”的 Buffer Write 操作时，从缓存中读到了旧版本的 NULL 数据到 PageCache，再与新数据一同刷回文件系统，最终导致了数据损坏。文章不仅详细复原了问题流程，提出了通过维护本地递增缓存版本号并丢弃回退版本来解决的方案，并通过测试验证了修复效果。此外，文章还深入揭示了 Linux 内核对 POSIX 文件操作（如 pwrite， ftruncate， fsync， close）的底层优化行为，以及这些行为与缓存机制结合时可能引发的复杂问题，为读者提供了宝贵的系统级调试经验和先验知识。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“个人清晰度”是 AI 产品成功的基石，需明确愿景、目标和品味。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在充满不确定性的 AI 领域，产品负责人对产品愿景、目标和品味的坚定认知，是团队的灯塔和压舱石，能顶住压力将想法变为现实。</span>
+                        <strong style="color: #1e40af">分布式缓存中数据版本（dv）回退是文件系统数据不一致的根本原因</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 慢网络请求可能导致客户端记录的数据版本被旧版本覆盖，进而从缓存中读取到过期数据，特别是在 Buffer Write 的“先读后写”机制下，会污染 PageCache 并最终写坏文件系统。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 产品设计应从用户要完成的“任务”出发，而非技术或界面。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 聚焦于用户单一、明确的核心任务，并力求极致，是打造伟大产品的基石。先定义“目的”，再反向设计技术和交互界面。</span>
+                        <strong style="color: #1e40af">Linux 内核对 POSIX 文件操作的优化行为可能与分布式缓存机制冲突</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 内核对 pwrite、ftruncate 等操作的延迟提交、合并处理及“先读后写”逻辑，在分布式缓存场景下，若版本管理不当，极易导致数据不一致。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">警惕“AI 演示病”，产品价值应建立在解决用户意图而非技术奇观之上。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 产品不应为技术而生，而应为用户意图服务。用户关心的是产品能否可靠、高效地完成任务，而非其是否使用了酷炫的 AI 技术。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">信任是 AI 产品的生命线，必须主动暴露模型的局限性并保障确定性体验。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过透明化模型边界、标注信息来源，并确保基础功能的确定性，才能赢得用户信任，进而在此基础上创造恰到好处的惊喜感。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">克制与专注是 AI 产品设计的最高审美，避免功能臃肿。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 抵抗“既要又要”的诱惑，为产品划定清晰狭窄的边界，将全部资源倾注于解决一个核心用户任务，才能打造出真正优雅、有用的产品。</span>
+                        <strong style="color: #1e40af">深入理解系统底层机制是解决复杂数据一致性问题的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Hexdump 分析、日志定位和对 PageCache、文件系统 RPC 交互的深刻理解，才能从表象的“读缓存旧数据”深入到“写坏文件系统”的本质问题。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当前的产品，很大程度上是在前 AI 时代创造的，它们是我眼中'最丑陋的样子'，因为它们没有充分利用 AI 可能带来的丰富交互。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">个人清晰度对于推动产品开发至关重要，它包含了愿景、目标和品味的清晰。这是你带给产品的最宝贵的东西。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与用户建立信任至关重要，产品应该'暴露边缘'或模型的局限性，而不是试图隐藏它们。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">专注于把'一件事情做得极其合理地好'。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CTO：Close-to-Open，指当一个文件被关闭后，再次 open 时，文件系统必须保证之前所有通过 close 操作提交的数据已经持久化到文件系统，并且读取时能获取到最新的、一致的状态。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">文件系统数据被破坏掉了，也宣告着读到缓存中的旧数据的想法破产。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">错误的根本原因在于：版本号发生回退，客户端使用了旧版本号从缓存中读到了旧数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">若在此期间读取文件，可能读取到未填充的空洞数据（本文 bug 读取到缓存的数据就发生在这次 setattr 和下一次 write 之间）</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个错误从发现到最后解决耗时了半个多月，从开始时发现文件系统错误时的迷茫，到发现空字符的错误数据以及位于一个 page 内，提供了 pagecache 写坏刷到文件系统的想法，之后不断根据日志分析可能存在的写坏文件系统操作，并验证猜想。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +60,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">AI炼金术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">AI炼金术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3189</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4134</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI产品设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户体验</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品策略</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">克制设计</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文件系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据一致性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排查</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux内核</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/e543fa" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/2d512f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/e543fa">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/2d512f">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

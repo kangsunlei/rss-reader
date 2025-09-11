@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>IntelliJ 平台 UI 冻结问题分析 | JetBrains 平台博客</title>
+        <title>聚焦结构化注意力，探索提升多模态大模型文档问答性能</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>IntelliJ 平台 UI 冻结问题分析 | JetBrains 平台博客</h2>
-        <p>9/9/2025, 12:26:47 PM</p>
+        <h2>聚焦结构化注意力，探索提升多模态大模型文档问答性能</h2>
+        <p>9/10/2025, 12:01:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在诊断和解决 IntelliJ 平台 IDE 中的 UI 冻结问题。主要方法是通过分析线程转储和常见的阻塞场景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章提出了一种无需修改模型架构或额外训练的结构化输入方法，通过保留文档层次结构与空间关系，显著提升了多模态大模型在文档问答任务中的性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 JetBrains IDE 中 UI 冻结的常见原因。这些 IDE 构建于单线程的事件分发线程 (EDT) 之上。文章解释说，当 EDT 被阻塞时，会发生冻结，从而阻止用户交互。本文的核心概述了各种冻结场景和详细的调查方法，包括使用线程转储，以及在适用的情况下使用协程转储。讨论的具体原因包括读写锁争用、导致获取写锁意图失败的后台写入操作、Kotlin 协程中 `Dispatchers.Default` 和 `Dispatchers.IO` 调度器的线程池中的线程饥饿、服务初始化期间的死锁，以及由阻碍取消的 `runBlocking` 调用引起的问题。文章还指出，`SuvorovProgress` 只是紧急模式的表象，并非根本原因。对于每种情况，文章都提供了说明性的堆栈跟踪示例和可操作的建议，例如确保频繁调用 `ProgressManager.checkCanceled`，将阻塞操作从 `Default` 调度器移出，以及在服务初始化期间仔细管理读取/写入操作以防止死锁。总体目标是使插件开发人员能够提高 IDE 的响应能力。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了多模态大语言模型（MLLMs）在文档问答（DocQA）任务中面临的挑战，特别是传统无结构 OCR 输入导致注意力分散和性能下降的问题。作者提出了一种创新的“结构化输入”方法，即通过 LaTeX 范式保留文档的层次结构和空间关系（如标题、表格、图像位置），从而为 MLLMs 提供更清晰的语义引导。研究通过注意力机制分析，揭示了结构化输入能够诱导模型形成“结构化注意力”，减少对无关区域的关注，更精准地聚焦于文档核心语义内容。实验在 MMLongBench、PaperTab 等四个基准数据集上，使用 QWEN2.5-VL-7B-INSTRUCT 等多种 MLLMs 进行了验证，结果表明该方法在所有数据集上均显著提升了模型性能，尤其在处理复杂图表任务时效果更佳。该研究为智能文档处理和自动问答提供了一种高效且无需额外训练的实用解决方案，并提供了配套代码，具有很高的实践参考价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">IntelliJ 平台 UI 冻结的主要原因是单线程 EDT 被长时间运行的操作阻塞。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 事件分发线程 (EDT) 处理所有 UI 绘制和用户输入。任何长时间阻塞 EDT 的操作都可能导致 UI 无响应。例如，长时间的写锁获取或无法取消的读取操作。</span>
+                        <strong style="color: #1e40af">传统无结构 OCR 输入导致 MLLMs 注意力分散，阻碍文档理解性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 现有 MLLMs 在处理文档时，若仅输入无结构 OCR 文本，模型注意力会散布于无关区域，导致对文档核心语义理解不足，甚至降低问答准确率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">有效诊断 UI 冻结依赖于对线程转储和协程转储的细致分析。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过分析堆栈跟踪中的特定模式，例如写锁获取时的 `TIMED_WAITING` 或 `SUSPENDED` 协程，可以找到根本原因，从而定位确切的阻塞代码或线程饥饿问题。</span>
+                        <strong style="color: #1e40af">基于 LaTeX 范式的结构化输入可显著提升 MLLMs 的文档问答性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将文档内容编码为保留层次结构和空间关系的 LaTeX 格式，再与原始图像联合输入，能为模型提供清晰的语义引导，使其更高效地理解文档信息。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">解决 UI 冻结需要仔细管理可取消操作，并确保线程和锁的正确同步。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 解决方案包括确保频繁调用 `ProgressManager.checkCanceled`，从关键调度器卸载阻塞任务，以及通过正确排序服务初始化期间的读取和写入操作来防止死锁。</span>
+                        <strong style="color: #1e40af">结构化输入通过诱导“结构化注意力”机制，聚焦模型对核心内容的关注。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 注意力分析表明，结构化输入能有效减少模型对图像边缘或无关文本的注意力分散，促使模型将注意力集中于图表、关键文本块等语义核心区域，从而提高问答准确性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 IDE 无法在 EDT 上执行操作时，就会发生 UI 冻结，从而阻止与 IDE 的交互。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在绝大多数情况下，只需查看**线程转储**即可获得有关 UI 冻结所需的信息。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">EDT 被写锁阻塞，表明有线程正在持有读锁运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">要解决线程饥饿问题，需要将阻塞操作移出 `Default` 调度器。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通常，冻结是由插件代码与 IntelliJ 平台之间的合作不足引起的。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本文聚焦多模态大语言模型（MLLMs）在文档问答（DocQA）任务中的性能提升，提出无需改动模型架构或额外训练的结构化输入方法，通过保留文档层次结构与空间关系（如标题、表格、图像位置）优化理解能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">研究发现，传统无结构 OCR 文本输入在某些 case 下未提升模型性能，反而因注意力分散和结构丢失导致性能下降。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为解决这一问题，提出了一种基于 LaTeX 范式的结构保留方法。该方法通过保留文档的层次结构和空间关系（如标题、表格、图像的位置），从而为模型提供更清晰的语义引导。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">注意力分析揭示其诱导"结构化注意力"，减少无关区域干扰，聚焦语义核心。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在没有额外训练和架构修改的前提下，通过简单的结构化文本输入，可以提升现有多模态大模型在文档理解任务中的表现。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Jakub Chrzanowski</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1859</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2423</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IntelliJ 平台</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">UI 阻塞</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">线程控制</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多模态大模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文档问答</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">结构化输入</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">注意力机制</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LaTeX</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/277c06" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/908535" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/277c06">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/908535">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS6SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIE2reAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCfUTEDeAPKEmknNJjWbgGw6qVp0UrXopGrRJ18G5Ak1TwCZ1Exq3gDyBpAn1DwB5Ak133RSteikatFJ1aJP/nFAnlAzqZmATGomIJOaCcik5l9yUrXopGrRSdWiT/5xaiYgTwCZ1ExAJjUTkP8nJ1WLTqoWnVQt+uTL1PyXgExqJiA3aiYgk5obNTdAJjVPqPmTnFQtOqladFK16JNlQP4lQCY1E5BJzQRkUvMGkD/ZSdWik6pFJ1WLPnlJzd9MzY2aCcgTaiYgk5obNX+Tk6pFJ1WLTqoW4Y+8AGRSMwHZpOYNIDdq3gAyqbkBMqmZgGxS800nVYtOqhadVC365CU1b6iZgExqJiA3aiYgN2omIDdqJiCTmhsgN0DeUPMEkEnNGydVi06qFp1ULcIfeQHIjZoJyKTmBsik5g0gT6iZgDyh5gbIjZq/yUnVopOqRSdVi/BH/kNAJjU3QG7UTEAmNTdAbtQ8AeSb1ExAJjUTkEnNppOqRSdVi06qFn3yZUDeAHKj5gkgk5pJzQ2QSc0E5EbNbwIyqfmmk6pFJ1WLTqoW4Y+8AGRS8wSQSc0TQJ5QMwG5UXMD5DepmYBMap4AMql546Rq0UnVopOqRZ98GZA3gExqbtRMQCYgk5obIG+ouQEyqbkBMqmZgNyomdRsOqladFK16KRq0ScvqZmATGpugNyomYBsAnKjZgIyqXkCyCYgk5obIJOaTSdVi06qFp1ULfrkJSCTmjeAbFKzSc0NkEnNjZo31ExAbtR800nVopOqRSdViz75w6mZgGwCMql5AsgbQCY1E5AbIJOaCcgNkEnNGydVi06qFp1ULfrky4DcqLkBMqmZgExAbtRMam6A3KiZgExAJjU3QCY1E5BJzRtqNp1ULTqpWnRSteiTP5yaGzVPAJnUTECeADKpmYDcAJnUTEBugExqJjUTkEnNppOqRSdVi06qFuGPvABkUvMGkCfUvAFkUjMBeUPNBOSb1ExAnlDzxknVopOqRSdVi/BH/mJAJjUTkCfUPAHkCTUTkEnNE0A2qXnjpGrRSdWik6pFn7wE5DepmdTcqNkEZFJzA2QC8gSQSc0bar7ppGrRSdWik6pFnyxTswnIDZBJzTep+U1qnlDzXzqpWnRSteikatEnXwbkCTW/Ccik5gbIG2omIBOQTUAmNd90UrXopGrRSdWiT+oRNROQTWpugExqJiA3QG7UvHFSteikatFJ1aJP/jFAJjUTkEnNBGSTmhs1N0BugLyhZtNJ1aKTqkUnVYs++TI136RmAvIEkBs1E5BJzRtAJjWTmgnIpGYCMqmZgHzTSdWik6pFJ1WLPlkG5DcBmdTcqLkB8gaQSc0EZFIzAZnU3AC5ATKp+aaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9Dz3IKDiav10bAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
