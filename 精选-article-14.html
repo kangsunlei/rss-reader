@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Meta 超级智能实验室首篇论文：重新定义 RAG</title>
+        <title>一次缓存引发的文件系统数据不一致问题排查与深度解析</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Meta 超级智能实验室首篇论文：重新定义 RAG</h2>
-        <p>9/8/2025, 8:46:27 AM</p>
+        <h2>一次缓存引发的文件系统数据不一致问题排查与深度解析</h2>
+        <p>9/10/2025, 12:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Meta 超级智能实验室提出 REFRAG 框架，通过“压缩、感知、扩展”策略优化 RAG，显著加速首字生成延迟（最高 30 倍）并有效扩展上下文，同时保持模型性能，重新定义了 RAG 的效率边界。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度剖析了分布式文件系统客户端 EFC 在引入缓存后，因数据版本回退和内核 PageCache 交互问题导致的文件系统数据不一致故障，并提供了详细的排查与修复方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了 Meta 超级智能实验室首篇论文提出的 REFRAG（Retrieval-Enhanced Generation）高效解码框架，旨在解决 RAG 在大上下文处理中推理效率低下的核心问题。传统 RAG 在处理大量检索信息时，由于 LLM 计算复杂度与上下文长度呈平方关系，导致首字生成延迟（TTFT）显著增加，严重影响用户体验和系统部署。研究人员通过观察到 LLM 注意力机制在处理多个检索文档时存在大量冗余（块对角稀疏模式），提出 REFRAG 框架。该框架通过“压缩、感知、扩展”三步流程优化 LLM 处理外部知识的方式：首先，引入轻量级编码器将长篇参考资料压缩为“块嵌入”，大幅缩短输入序列长度；其次，训练基于强化学习的策略网络智能判断并保留最关键的原始文本块；最后，LLM 处理由块嵌入和关键原始文本组成的混合序列。实验结果表明，REFRAG 在 TTFT 上实现最高 30.85 倍的加速，并等效扩大上下文窗口 16 倍，同时在困惑度及下游任务准确率上无性能损失。该方法不仅适用于 RAG，还可应用于多轮对话、长文档摘要等长上下文任务，为开发更高效、经济、可扩展的 AI 应用提供了重要解决方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细记录了一次阿里 EFC 分布式文件系统客户端在 CTO 测试中遇到的数据不一致问题。起初，作者误判为缓存读取旧数据，但通过 NFS 挂载对比，发现是文件系统数据本身被破坏，表现为正常字符被空字符替换，且错误数据集中在单个 4K 页内。经过日志分析和行为推测，作者定位到核心问题是：在一次追加写操作中，文件系统扩容后填充了 NULL，而另一个客户端在分布式缓存中读取并缓存了这些 NULL 数据。随后，由于网络慢请求导致数据版本（dv）回退，当客户端进行“先读后写”的 Buffer Write 操作时，从缓存中读到了旧版本的 NULL 数据到 PageCache，再与新数据一同刷回文件系统，最终导致了数据损坏。文章不仅详细复原了问题流程，提出了通过维护本地递增缓存版本号并丢弃回退版本来解决的方案，并通过测试验证了修复效果。此外，文章还深入揭示了 Linux 内核对 POSIX 文件操作（如 pwrite， ftruncate， fsync， close）的底层优化行为，以及这些行为与缓存机制结合时可能引发的复杂问题，为读者提供了宝贵的系统级调试经验和先验知识。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">RAG 长上下文处理挑战与 Meta 的冗余计算发现</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统 RAG 在处理大量检索信息时面临推理效率低下、首字生成延迟（TTFT）显著增加的问题。Meta 研究发现，LLM 在处理多个检索文档时存在大量冗余计算，注意力机制呈现“块对角”稀疏模式，即模型注意力主要集中在文档内部和文档与问题之间，而不同文档片段间的交叉关联性较弱，导致资源浪费。</span>
+                        <strong style="color: #1e40af">分布式缓存中数据版本（dv）回退是文件系统数据不一致的根本原因</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 慢网络请求可能导致客户端记录的数据版本被旧版本覆盖，进而从缓存中读取到过期数据，特别是在 Buffer Write 的“先读后写”机制下，会污染 PageCache 并最终写坏文件系统。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">REFRAG 框架的核心机制——“压缩、感知、扩展”</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> REFRAG 通过三步流程优化 LLM 对外部知识的处理：首先，'压缩'环节使用轻量级编码器将长篇参考资料转换为紧凑的“块嵌入”；其次，'感知'环节利用强化学习策略网络智能判断并保留最关键的原始文本块；最后，'扩展'环节让 LLM 处理由块嵌入和关键原始文本组成的混合序列，从而有效降低计算负担。</span>
+                        <strong style="color: #1e40af">Linux 内核对 POSIX 文件操作的优化行为可能与分布式缓存机制冲突</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 内核对 pwrite、ftruncate 等操作的延迟提交、合并处理及“先读后写”逻辑，在分布式缓存场景下，若版本管理不当，极易导致数据不一致。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">REFRAG 在性能上的显著提升与效率突破</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该框架实现了首字生成延迟（TTFT）最高 30.85 倍的加速，比现有先进方法提升 3.75 倍，并等效扩大上下文窗口 16 倍。同时，REFRAG 在困惑度及多种下游任务（如问答、摘要）的准确率上，与使用完整上下文的基线模型相比没有性能损失，甚至在某些任务上带来性能增益。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">REFRAG 的广泛适用性及对 AI 应用的深远影响</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> REFRAG 的设计不仅适用于 RAG，还可应用于多轮对话、长文档摘要等其他需要处理长上下文信息的任务。这项研究为开发更高效、更经济、更具扩展性的 AI 应用提供了重要的解决方案，重新定义了 RAG 的效率边界。</span>
+                        <strong style="color: #1e40af">深入理解系统底层机制是解决复杂数据一致性问题的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Hexdump 分析、日志定位和对 PageCache、文件系统 RPC 交互的深刻理解，才能从表象的“读缓存旧数据”深入到“写坏文件系统”的本质问题。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">提出了一个名为 REFRAG 的高效解码框架，重新定义了 RAG（检索增强生成），最高可将首字生成延迟（TTFT）加速 30 倍。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">RAG 解码过程中的大部分注意力计算对于最终结果的贡献有限，可以在不显著影响性能的前提下被优化或移除。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在获得显著加速的同时，REFRAG 在困惑度（Perplexity）以及多种下游任务（如问答、摘要）的准确率上，与使用完整上下文的基线模型相比没有性能损失。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CTO：Close-to-Open，指当一个文件被关闭后，再次 open 时，文件系统必须保证之前所有通过 close 操作提交的数据已经持久化到文件系统，并且读取时能获取到最新的、一致的状态。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">文件系统数据被破坏掉了，也宣告着读到缓存中的旧数据的想法破产。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">错误的根本原因在于：版本号发生回退，客户端使用了旧版本号从缓存中读到了旧数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">若在此期间读取文件，可能读取到未填充的空洞数据（本文 bug 读取到缓存的数据就发生在这次 setattr 和下一次 write 之间）</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个错误从发现到最后解决耗时了半个多月，从开始时发现文件系统错误时的迷茫，到发现空字符的错误数据以及位于一个 page 内，提供了 pagecache 写坏刷到文件系统的想法，之后不断根据日志分析可能存在的写坏文件系统操作，并验证猜想。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,32 +60,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">量子位</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">十三</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2097</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4134</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推理优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">REFRAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Meta</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文件系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据一致性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排查</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux内核</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/24078e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/2d512f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/24078e">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/2d512f">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYKSURBVO3BQY4cSRLAQDLQ//8yV0c/JZCoail24Gb2B2td4rDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kV++JDK31QxqfxNFU9UnlRMKm9UvKHyN1V84rDWRQ5rXeSw1kV++LKKb1J5o+KJylQxqbyhMlVMKpPKVPEJlaniScU3qXzTYa2LHNa6yGGti/zwy1TeqPibVD5R8aTiDZWpYlL5JpU3Kn7TYa2LHNa6yGGti/zwf65iUpkqpopJZaqYVCaVJxWTylQxqUwVk8pUMan8lxzWushhrYsc1rrID//nVKaKSWWqmCqeVEwqb1Q8qZhUnqhMFf8lh7UucljrIoe1LvLDL6v4TRVPKiaVqeJvUpkqpoo3VKaKNypucljrIoe1LnJY6yI/fJnK36QyVUwqU8WkMlVMKlPFpPJEZaqYVKaKSWWq+ITKzQ5rXeSw1kUOa13E/uA/ROWNikllqphUnlRMKlPFGypPKv5LDmtd5LDWRQ5rXcT+4AMqU8UTld9UMalMFW+oTBWTypOKJypTxROVNyqeqEwVk8obFZ84rHWRw1oXOax1kR9+mcobFU9UnqhMFZPKGxWTyhsqTyomlaniScU3qTyp+E2HtS5yWOsih7Uu8sOHKj5RMam8UfFEZap4ovJGxTdVTCpPVN6o+ITKk4pPHNa6yGGtixzWuoj9wQdUpoonKk8q3lCZKiaVT1Q8UZkqJpVvqviEylTxROVJxTcd1rrIYa2LHNa6yA9fpjJVTBVvqEwVb1RMKt9UMalMFZPKVDGpTBVPVH5TxaTymw5rXeSw1kUOa13kh8tVTCpPVKaKT6hMFU8qJpUnKlPFJyqeqLyhMlX8psNaFzmsdZHDWhf54UMVk8obKlPFpPJNFU9UnqhMFU8qJpU3VKaKN1TeUJkq/qbDWhc5rHWRw1oX+eFDKlPFE5U3KiaVqWJSeaIyVTypeKIyVUwqU8Wk8qRiUpkqJpWp4onKE5WpYlKZKj5xWOsih7UucljrIvYHH1B5o+KJypOKSeWNiicqb1R8QmWqmFT+pYq/6bDWRQ5rXeSw1kV++FDFJ1SmijcqJpU3VL5J5Zsqnqi8UTGpTBWTylQxqUwVnzisdZHDWhc5rHWRHz6k8k0qb1RMFZ+omFSeqHyiYlJ5o+KJyqQyVUwq/9JhrYsc1rrIYa2L/PDLKp6oTBV/U8WTikllqvimiknlmyomlTdUftNhrYsc1rrIYa2L2B98kcpU8UTlExWTypOKSWWqeENlqphUpoonKk8qJpUnFW+oTBV/02GtixzWushhrYv88CGVqWJSeaPiicqTiicqU8Wk8qRiqnhS8UbFE5WpYlJ5Q+Umh7UucljrIoe1LvLDP1YxqfxLFZPKGypTxaTyTSpPVKaKN1TeqPjEYa2LHNa6yGGti/zwyyqeqEwVT1SeqEwVT1SmiicqU8U3VUwqU8Wk8obKVPFE5W86rHWRw1oXOax1EfuDD6jcpGJSmSomlScVv0llqnii8jdVTCpTxTcd1rrIYa2LHNa6yA8fqviXVJ5UTCpTxRsqb1Q8qZhUpoo3Kt5QmSomlaniNx3WushhrYsc1rrIDx9S+Zsqnqj8TRWTyhOVqWKq+CaVqeJmh7UucljrIoe1LvLDl1V8k8onKp6oPKn4hMpU8UTlmyreUPmXDmtd5LDWRQ5rXeSHX6byRsUnKp6oTBWTyqQyVUwqTyomlanim1Q+UfGGylTxicNaFzmsdZHDWhf54T9GZar4RMUnVKaKJxWTylTxRGWqmFSmiicqU8VvOqx1kcNaFzmsdZEf/s9VPFF5ovKGylTxhspU8QmVqeINlaniicpvOqx1kcNaFzmsdZEfflnF36QyVbyh8qTiDZUnKlPFVDGpTBWTyv+zw1oXOax1kcNaF7E/+IDK31QxqbxR8YbKb6r4hMpU8UTlScW/dFjrIoe1LnJY6yL2B2td4rDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kX+B36W42XhVx4DAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

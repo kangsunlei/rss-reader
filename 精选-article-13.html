@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>万字长文详解腾讯优图 RAG 技术的架构设计与创新实践</title>
+        <title>分布式事务：共识之外，分布式系统状态管理的另一大基石</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>万字长文详解腾讯优图 RAG 技术的架构设计与创新实践</h2>
-        <p>9/8/2025, 9:36:00 AM</p>
+        <h2>分布式事务：共识之外，分布式系统状态管理的另一大基石</h2>
+        <p>9/10/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">腾讯优图详解 RAG 架构与创新实践，涵盖多阶段 Embedding、分层 Reranker、Text2SQL 及自研 GraphRAG，提升智能问答与知识检索。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入阐述了分布式系统中“共识”与“事务”两大基石的区别与协同，并详细解析了分布式事务的 ACID 特性、隔离级别及其基于 MVCC 的实现机制。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度解析了腾讯优图实验室在 RAG（检索增强生成）技术上的全栈解决方案与创新实践。文章首先介绍了语义检索环节，通过多阶段训练管线、精细化数据工程和多任务均衡配置，打造了在中文 IR 和 STS 任务上均达到 SOTA 水平的 2B 级 Embedding 模型。接着，详细阐述了基于 LLM 的 Reranker 模型，引入分层知识蒸馏损失和自动化高质量业务数据构造流程，显著提升了重排序准确性。在结构化信息检索方面，文章提出了融合 Text2SQL 技术，构建了基于 Agent 的多智能体协作框架（MAC-SQL），并通过自动化数据合成、智能结构化解析和双引擎 SQL 查询，有效解决了非技术人员访问和分析结构化数据的难题。最后，介绍了自研的 GraphRAG 框架，通过构建 Knowledge Tree、S2Dual-perception 社区检测和 AgenticGraphQ 模块，大幅优化了图谱构图成本、检索效率和复杂查询的理解与推理能力。优图 RAG 技术已成功应用于多个产品和领域，并计划进一步发展 Agentic RAG 与低成本精细化方向。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文作为一篇高质量的技术深度分析文章，首先明确了分布式系统中“共识”与“事务”的核心差异：共识关注副本间状态一致性及容错，而事务旨在协调不同逻辑实体间的操作，确保操作的原子性和可序列化。文章详细介绍了事务的 ACID 特性，并以银行转账为例生动阐释了隔离性（Isolation）的重要性，以及脏写、脏读、不可重复读、幻读和写偏斜等并发问题。接着，文章深入讲解了分布式事务的经典实现范式——两阶段提交（2PC），并详细剖析了读已提交（Read Committed）、可重复读（Repeatable Read）、可串行化（Serializable）三大隔离级别，以及更优的 Snapshot Isolation，阐述了它们在解决并发问题上的能力与局限。最后，文章重点介绍了多版本并发控制（MVCC）作为实现高性能事务的关键技术，并详细对比了 MVTO、MVOCC、MV2PL 等基于 MVCC 的并发控制协议，以及版本存储和索引管理机制。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">多阶段 Embedding 模型训练与优化显著提升中文检索性能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过弱监督/有监督对比学习、精细化数据工程及多任务均衡配置，优图 2B 级 Embedding 模型在 C-MTEB 中文 IR 和 STS 任务上均取得 SOTA 表现，超越参数量更大的竞品。</span>
+                        <strong style="color: #1e40af">共识与事务是分布式系统状态管理的两大独立基石。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 共识解决副本间数据一致性和容错，事务解决不同逻辑实体间操作的原子性和可序列化，二者作用域和目标不同但协同工作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">基于 LLM 的分层知识蒸馏 Reranker 提升文档重排序准确性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 Reranker 模型升级为 LLM，引入分层知识蒸馏损失强化模型层级输出能力，结合自动化高质量业务数据构造流程，有效捕捉深层语义关联，提高检索结果的准确性。</span>
+                        <strong style="color: #1e40af">隔离性是事务的核心，用于维护系统状态不变量。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 事务的隔离性保证并发操作互不影响，避免脏读、幻读、写偏斜等问题，是构建可靠分布式系统的关键。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">融合 Text2SQL 与 Agent 框架高效处理结构化数据问答</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 提出 MAC-SQL 多智能体协作框架，结合自动化数据合成、智能结构化解析非标准表格，以及双引擎 SQL 查询，实现了自然语言到精准结构化数据查询的高效转化。</span>
+                        <strong style="color: #1e40af">2PC 是分布式事务的经典实现，但隔离级别需权衡并发与一致性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 两阶段提交协议是实现分布式事务的通用范式，但其“加锁”粒度直接决定了事务的隔离级别，需要在严格一致性和并发效率间做出选择。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">自研 GraphRAG 框架通过创新构图与推理优化复杂查询</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 构建 Knowledge Tree、S2Dual-perception 社区检测算法和 AgenticGraphQ 模块，有效解决了现有 GraphRAG 在构图成本、检索效率和复杂多跳 Query 理解上的难题，大幅提升了推理能力。</span>
+                        <strong style="color: #1e40af">MVCC 是提升事务并发性能的主流机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 多版本并发控制通过维护数据多个物理版本，允许对同一逻辑对象的并行操作，有效提升了事务的并发读写效率和隔离性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">MVCC 并发控制协议有 MVTO、MVOCC、MV2PL 等多种实现方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 不同的 MVCC 协议在时间戳排序、乐观/悲观锁策略上各有侧重，以适应不同的业务场景和性能要求，各有优缺点。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在信息爆炸的时代，如何从海量数据中精准获取知识并生成智能回答，已成为 AI 落地的核心挑战。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">优图实验室自研的 RAG 技术已应用在多个领域和产品，未来，我们更将着力于迈向 Agentic RAG 与低成本精细化方向，推动产业智能化升级。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了提升 Reranker 模型在实际复杂场景中的表现，使用 LLM 训练 Reranker 模型成为必要方案。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们提出基于大语言模型的多智能体（Multi-Agent）协作框架，该框架由三个 Agent 组成：筛选器、分解器、优化器。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过融入两类方法的优点，每个节点类型都有特定的功能和角色：实体和关系节点用于连接语义单元；属性节点用于表示实体的特征；社区节点用于总结社区的核心信息。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">共识是同一个培训班出来的几个人，做的是同一件事情，互为容灾备份；事务则是来自五湖四海的一群人，各司其职，组合在一起，干一票大的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分布式系统中的系统状态不变量 - invariants ，同样也不能够被打破，否则我们开发一个分布式程序将无所依循。而分布式系统正是依赖的事务，依赖事务的隔离性来维护系统状态的不变量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">2 PC 是一种实现分布式事务的指导思路，具体实现时面临着种种权衡，究竟是追求最严格的事务隔离性，还是兼顾并发读写效率，这实在是一个丰俭由人的选择。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有了 Snapshot Isolation，新的破坏系统 invariants 的现象也浮出了水面 - write skew，写偏斜。没办法，MVCC 机制的出现很大程度是因为要提升并发读写的吞吐...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MVCC 的想法非常朴实：数据库中维护的是一个一个逻辑对象，每个逻辑对象均维护了多个物理版本，这样就能够允许对同一对象的并行操作在不同的物理版本上进行。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +68,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">44 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">10768</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">116 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">28855</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Embedding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Reranker</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式事务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">共识协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ACID</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">隔离级别</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MVCC</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/1aed42" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/c9b8cd" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/1aed42">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c9b8cd">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

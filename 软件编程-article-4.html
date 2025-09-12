@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>突破 CRUD 限制：构建更贴合业务的工作流 API</title>
+        <title>一致性哈希 101：现代系统如何处理增长和故障</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>突破 CRUD 限制：构建更贴合业务的工作流 API</h2>
-        <p>9/10/2025, 3:39:44 PM</p>
+        <h2>一致性哈希 101：现代系统如何处理增长和故障</h2>
+        <p>9/11/2025, 3:30:46 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文指出，CRUD 对于复杂业务应用是一种反模式。建议采用以领域动作为中心的工作流 API 设计，以提高清晰度和安全性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍一致性哈希，作为扩展分布式系统的基础技术，它通过有效地管理跨服务器的数据分发，并最大限度地减少集群中的扰动。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文 критически рассматривает CRUD 操作（创建、读取、更新、删除）在实际、可扩展应用程序中的局限性。文章解释说，CRUD 是基本数据交互的优秀教学工具，并通过 Node.js、Express 和 SQL 示例进行了说明，但对于复杂的系统来说，它变成了一种反模式，隐藏了业务意图并造成了授权问题。作者展示了诸如“upsert”和“archive”等常见扩展如何已经扩展了 CRUD 模型，以及特定于域的操作（例如，“提交应用程序”、“批准贷款”）如何从根本上破坏了它。通过使 API 与业务流程和显式领域操作保持一致，本文展示了系统如何实现更清晰的意图、内置授权、改进的审计和受控的副作用，最终导致创建更可靠和易于维护的软件。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文重点介绍了分布式系统中的一个关键挑战：如何有效地确定数据在大量服务器上的数据分布策略。文章介绍了一致性哈希作为解决此问题的优雅方案，并将其与传统的哈希方法进行对比，后者需要在服务器数量发生变化时进行大量的数据重排。一致性哈希的关键优势在于“最小化扰动”，确保仅有一小部分可预测的键需要在添加或删除服务器时重新定位，使其对动态环境非常有效。文章强调了其在主要科技公司的广泛采用，以及它在支持诸如 memcached、Apache Cassandra、Riak 和 Amazon Dynamo 等系统中的作用，从而确保各种在线服务中的流畅用户体验。本文为进一步深入探讨一致性哈希及其虚拟节点等增强功能奠定了基础。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在复杂的系统中，CRUD 通过将业务意图隐藏在通用操作背后而成为一种反模式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通用 CRUD 动词（如“更新”）无法准确表达特定的业务操作（如“批准”或“拒绝”贷款），导致歧义，造成技术实现与业务逻辑脱节。</span>
+                        <strong style="color: #1e40af">分布式系统面临着在众多服务器上高效分发和定位数据的挑战。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着系统扩展到数十或数千台服务器，确定数据应驻留的位置变得复杂，从而影响系统性能和可靠性，例如降低访问速度或增加故障风险。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">围绕特定于领域的动作设计 API 可以明确意图并简化授权。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对特定操作（如“/applications/{id}/approve”）的 API 端点能够清晰地表达操作意图，并支持基于角色的授权规则，从而提高安全性和代码可读性。</span>
+                        <strong style="color: #1e40af">当从集群中添加或删除服务器时，一致性哈希可最大限度地减少数据迁移。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与传统哈希不同，它确保只有一小部分可预测的键需要重新映射，从而实现“最小化扰动”并提高系统稳定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">API 与业务流程对齐，有助于提高可审计性，并强制执行状态转换。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过镜像资源的顺序状态（例如，草稿 → 已提交 → 已批准），API 可以自然地防止无效转换并提供已采取措施的清晰审计跟踪。</span>
+                        <strong style="color: #1e40af">一致性哈希是被领先的分布式系统和科技公司采用的基础概念。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它在扩展方面的有效性使其成为 memcached、Apache Cassandra、Riak 和 Amazon Dynamo 等系统的核心组件，从而实现强大而高性能的服务。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真实系统不仅仅是“更新”或“删除”。它们不是通用 CRUD 操作，而是具有重要意义的**领域特定操作**。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心问题在于，CRUD 用通用的技术语言掩盖了真实意图。实际的业务流程应通过领域特定操作来表达，而非通用的更新或删除。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过对领域动作建模（而非 CRUD 操作），意图和权限更加清晰，从而降低错误和安全风险。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">摆脱 CRUD，对领域动作建模，能使 API 与实际业务流程保持一致，清晰传达意图，并自然地执行规则和权限控制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">到最后，您会看到 CRUD 的真正面目——一种教学工具，而不是一种设计理念。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一致性哈希的出现是解决此问题的一个巧妙方案，并迅速成为扩展分布式系统的基础思想之一。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">传统哈希方法会随机分散键，并在每次集群大小更改时进行重组。相比之下，一致性哈希确保只有一小部分可预测的键需要在创建或销毁服务器时移动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">此属性通常被称为“最小化扰动”，这就是使该技术如此强大的原因。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一致性哈希已被一些最大的技术公司采用。它支持诸如 memcached 之类的分布式缓存系统，并为诸如 Apache Cassandra 和 Riak 之类的数据库提供支持。此外，它也是诸如 Amazon Dynamo 之类的大规模体系结构的核心。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Tim Kleier</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1016</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">235</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API 设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">业务流程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">领域驱动设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RESTful API</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">一致性哈希</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可扩展性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据分发</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/2a7120" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/8b8f3c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/2a7120">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BQW4ERxIEwfDC/P/LvjzmqYBG53ApKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2RS8wSQSc0bQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gaQSc0E5AbIE2omNZvUbAKy6aRq0UnVopOqRZ98GZAn1DwBZJOaCcgbQJ5Q8wSQJ9R800nVopOqRSdViz75l1MzAbkBMqmZgExqJiCTmgnIpObf5KRq0UnVopOqRZ/8x6m5ATKpmYBMaiYg/yUnVYtOqhadVC365MvU/CY1E5AbIDdqJiCTmhs1N0AmNU+o+UtOqhadVC06qVr0yTIgf5maCcikZgIyqZmATGomIJOaN4D8ZSdVi06qFp1ULfrkJTV/mZoJyBNqJiBPqJmATGpu1PyTnFQtOqladFK1CH/kBSCTmgnIJjU3QCY1N0CeUHMDZFJzA2RSMwHZpOabTqoWnVQtOqlahD/yfwTkRs0E5EbNDZAbNU8AmdTcAPkmNU8AmdS8cVK16KRq0UnVIvyRPwzIjZobIE+ouQHyhJobIDdq/klOqhadVC06qVqEP7IIyKRmAjKp2QRkUvMGkEnNE0C+Sc0EZFIzAZnUbDqpWnRSteikahH+yBcB+UvUTEAmNTdAJjUTkBs13wTkRs03nVQtOqladFK1CH/kBSCTmieATGqeADKpmYA8oWYCMqmZgPwmNROQSc0TQCY1b5xULTqpWnRStQh/5AUgN2omIG+ouQFyo2YCMqm5AfKEmhsgk5obIJOaCciNmm86qVp0UrXopGrRJ8vU3Ki5ATKp2QRkk5ongGwCMqm5ATKp2XRSteikatFJ1aJPXlLzBJAngLyhZpOaGyCTmhs1b6iZgNyo+aaTqkUnVYtOqhZ98hKQSc0E5EbNE0AmNROQCcgTaiYgk5oJyBtAJjUTkBsgk5oJyA2QSc0bJ1WLTqoWnVQt+uSPAzKpeULNBOQGyKRmAjKpmYBMQCY1N0AmNROQSc0bajadVC06qVp0UrXoky9TMwGZgNyomYBMap5QMwF5A8ikZgJyA2RSMwG5ATKpmdRMQCY1m06qFp1ULTqpWvTJ/5maCcgEZFLzBpBJzQ2QJ4BMaiYgN0A2AbkBMql546Rq0UnVopOqRfgj/2BAJjUTkDfU3AB5Qs0EZFLzBJBNat44qVp0UrXopGrRJy8B+U1qJjWb1NwAmdTcAJmAPAFkUvOGmm86qVp0UrXopGrRJ8vUbAJyA2RSM6m5AfKEmt+k5gk1TwCZ1LxxUrXopGrRSdWiT74MyBNq3gAyqZmATGqeAPKGmgnIBGQTkEnNpGbTSdWik6pFJ1WLPvmPAzKpuVEzAdmk5gbIpGYCcgPkRs0bJ1WLTqoWnVQt+uRfDsik5g0gT6i5UXMD5AbIG2o2nVQtOqladFK16JMvU/NNaiYgk5oJyKRmAjKpuVHzBpBJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5TUAmNTdqbtRMQJ4AMqmZgExqJiCTmhsgN0AmNd90UrXopGrRSdUi/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWi/wF63z8zvB1tsgAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/8b8f3c">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
