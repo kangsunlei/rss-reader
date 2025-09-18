@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>MySQL 单表为何别超 2000 万行？揭秘 B+树与 16KB 页的生死博弈｜得物技术</title>
+        <title>【第 3588 期】基于 AI 的规范驱动开发：使用全新开源工具包快速上手</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>MySQL 单表为何别超 2000 万行？揭秘 B+树与 16KB 页的生死博弈｜得物技术</h2>
-        <p>9/15/2025, 10:30:00 AM</p>
+        <h2>【第 3588 期】基于 AI 的规范驱动开发：使用全新开源工具包快速上手</h2>
+        <p>9/16/2025, 12:01:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">深入剖析 MySQL 单表建议不超过 2000 万行的技术原理，揭示 B+树与 16KB 数据页如何影响数据库性能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章介绍了 GitHub 新开源工具包 Spec Kit，通过规范驱动开发模式，结合 AI 智能体提升软件开发效率和质量。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细解释了 MySQL 单表数据量不宜超过 2000 万行的业界经验法则背后的技术原理。首先介绍了 InnoDB 存储引擎中数据页（16KB）的结构及其在磁盘 I/O 优化中的作用。接着阐述了 B+树索引的构建方式，包括聚簇索引和二级索引，并以具体示例演示了 MySQL 如何利用 B+树进行数据查询，强调了 B+树“矮胖”特性（高扇出值）对查询效率的重要性。文章核心部分通过计算非叶子节点指针数量和单页行数，推导出三层 B+树能够承载约 2500 万行数据，从而解释了 2000 万这一经验值的由来。同时指出，单行数据大小是影响实际上限的关键因素。最后，文章对比了 B 树与 B+树在相同数据量下的性能差异，并提供了控制单行大小、分库分表、冷热分离等优化建议，强调了 MySQL 在磁盘 I/O 和内存效率之间的平衡。文章最后还解答了 16KB 页设计、字符串索引、中文字符串索引及索引长度限制等拓展问题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了在 AI 编程时代，开发者面临的“凭感觉写代码”导致代码不可靠的问题。针对此痛点，文章推出了 GitHub 开源工具包 Spec Kit，倡导“规范驱动开发”（Spec-driven Development）。这种模式颠覆了传统先编码后文档的习惯，强调先编写可执行的“活文档”——规范，作为 AI 智能体生成、测试和验证代码的唯一“真相来源”。文章详细阐述了 Spec Kit 的四个核心阶段：Specify（规范）、Plan（规划）、Tasks（任务）和 Implement（实现），以及开发者在其中扮演的“掌舵者”和“验证者”角色。Spec Kit 可与 GitHub Copilot、Claude Code 等 AI 工具配合使用，并通过结构化流程将模糊提示转化为清晰意图，从而提升 AI 生成代码的准确率和可靠性。该方法尤其适用于新项目开发、现有系统新功能开发及旧系统现代化改造，核心优势在于将“做什么”与“怎么做”分离，促进迭代和实验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MySQL 单表 2000 万行上限源于 B+树层高与 16KB 数据页的承载能力</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章通过计算非叶子节点扇出值和叶子节点单页行数，得出三层 B+树在典型配置下可承载约 2500 万行数据，解释了这一业界经验值的技术依据。</span>
+                        <strong style="color: #1e40af">传统 AI 编程因缺乏明确规范导致代码可靠性不足。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 仅凭模糊提示让 AI 生成代码常出现编译错误、不满足需求或技术栈不符等问题，AI 作为“字面化结对程序员”需明确指令。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">B+树的高扇出特性是 MySQL 高效查询的关键，有效减少磁盘 I/O</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> B+树通过在非叶子节点存储主键和页指针，实现极高的扇出值，使得数千万级数据仅需 2-3 次磁盘 I/O 即可定位，显著提升查询性能。</span>
+                        <strong style="color: #1e40af">Spec Kit 提供结构化的规范驱动 AI 开发流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该工具包将开发分为规范、规划、任务、实现四阶段，以规范为核心驱动 AI 生成代码，确保意图清晰、产物可靠。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">单行数据大小是影响单表实际容量上限的核心因素</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 2000 万并非绝对上限，若单行数据较小，三层 B+树可支持更多行；反之，若单行数据较大，则可能在更少行数时即达到性能瓶颈，需根据实际情况评估。</span>
+                        <strong style="color: #1e40af">规范驱动开发通过分离“做什么”与“怎么做”，显著提升了项目迭代效率和适应性，尤其适用于大型团队协作和系统现代化。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方法将稳定的业务意图（规范）与灵活的技术实现（方案）解耦，使得安全、合规和设计等要求能前置融入，有效减少技术债，并支持新项目、新功能开发及旧系统重构的快速迭代和高质量交付，允许轻松尝试不同版本和实验。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本文核心介绍，为何业界会有这样的说法？------ "MySQL 单表存储数据量最好别超过千万级别"</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">B+树矮胖特性 ：3 层即可支撑千万级数据（接下来分析），是高效查询的基础。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个 2.5kw，就是我们常说的单表建议最大行数 2kw 的由来。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本质：通过页大小和 B+树结构，MySQL 在磁盘 I/O 和内存效率之间取得平衡。超出平衡点时，性能从"平缓下降"变为"断崖下跌"。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">B+树比 B 树更适合成为 MySQL 的索引。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">问题不在于智能体的编码能力，而在于我们的使用方式。我们把它当搜索引擎在用，而它更适合作为思维非常字面化的结对程序员。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">和 "先写代码、再补文档" 的传统做法不同，基于规范的开发是从规范开始。规范就像一份契约，明确代码应该如何表现，它成为工具和 AI 智能体用来生成、测试和验证代码的唯一 '真相来源'。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">流程设计了明确的检查点，确保你在推进前能发现问题并修正方向。AI 负责生成产物，而你确保它们正确无误。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们正在从 '代码是唯一真相'，转向 '意图才是唯一真相'。在 AI 时代，规范就是唯一真相，它决定了最终会构建什么。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -62,30 +62,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6582</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">14 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3462</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MySQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">B+树</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">InnoDB</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库索引</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">规范驱动开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spec Kit</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/04af50" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/c6ccd1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/04af50">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c6ccd1">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
