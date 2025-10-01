@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>📢 Claude Sonnet 4.5，Anthropic 最先进的编码和真实世界代理模型，现已在 GitHub Copilot 中向 Copilot Pro、Pro+、Business 和 Enterprise 用户发布 ⬇️ https://t.co/iJyz9EKAPu</title>
+        <title>Go 中常见的 Slice 错误及避免方法</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,88 @@
         </style>
     </head>
     <body>
-        <h2>📢 Claude Sonnet 4.5，Anthropic 最先进的编码和真实世界代理模型，现已在 GitHub Copilot 中向 Copilot Pro、Pro+、Business 和 Enterprise 用户发布 ⬇️ https://t.co/iJyz9EKAPu</h2>
-        <p>9/29/2025, 5:20:08 PM</p>
+        <h2>Go 中常见的 Slice 错误及避免方法</h2>
+        <p>9/30/2025, 4:53:46 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Anthropic 最新的 Claude Sonnet 4.5 模型专为编码和真实世界代理设计，现已在 GitHub Copilot 的 Pro、Pro+、Business 和 Enterprise 版本中上线。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详述了 Go Slice 使用中常见的七个错误，如头信息共享、内存泄漏和迭代问题，并提供代码示例和解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 宣布将 Anthropic 的 Claude Sonnet 4.5 集成到 GitHub Copilot 中。该模型是 Anthropic 目前最先进的模型，拥有强大的编码和真实世界代理能力，是对 AI 驱动的开发者辅助功能的重大升级。新功能将向 GitHub Copilot 的 Pro、Pro+、Business 和 Enterprise 订阅用户开放，旨在提升广大开发者的 AI 使用体验。此举也反映了将更复杂的大型语言模型整合到开发者工具中，以提高生产力和代码质量的行业趋势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是 Go 开发者的实用指南，重点介绍了使用 Slice 时常见的七个陷阱。文章强调，虽然 Slice 功能强大，但其底层机制可能导致难以调试的微妙问题。讨论涵盖了关键的误解，例如通过值传递 Slice 期望结构发生变化，由于共享底层数组导致的意外突变，以及因保留从大型 Slice 派生的小型 Slice 而导致的内存泄漏。此外，还讨论了指针 Slice 中不正确的循环变量使用、在 range 迭代期间修改 Slice 的复杂性、nil（空值） Slice 和空 Slice 之间的区别，以及验证 Slice 边界以防止运行时 panic 的重要性。对于每个错误，文章都提供了清晰的代码示例来演示问题，并提供了具体的、符合 Go 语言习惯的解决方案，使其成为编写更健壮和高效的 Go 应用程序的宝贵资源。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">在函数内部修改 Slice 的结构（长度/容量）需要返回修改后的 Slice 或使用指针。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Go 通过值传递 Slice 的头信息，这意味着函数内部的直接 `append` 操作不会改变调用者的 Slice 结构，除非显式返回新的 Slice 或使用指向 Slice 的指针。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">从同一底层数组派生的 Slice 共享数据，如果不小心处理，会导致意外的突变。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 创建子 Slice 时，原始 Slice 和新 Slice 都指向同一个底层数组。为防止意外修改，应使用 `copy()` 函数创建独立的 Slice 副本。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">保留来自大型 Slice 的小型 Slice 可能会导致内存泄漏，从而阻止垃圾回收器释放大型底层数组。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 如果将大数组的一小部分作为 Slice 返回，则整个原始数组仍保留在内存中。仅将必要的数据复制到新的、较小的 Slice 中，可以使垃圾回收器回收大型数组。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">指针 Slice 中循环变量的不正确使用会导致所有指针引用相同的最终值。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Go 在整个 `for...range` 迭代中重用同一个循环变量。当获取其地址 (`&amp;i`) 时，所有追加的指针都将指向同一内存位置。为防止这种情况，请在每次迭代中创建一个新变量或使用 Slice 索引。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">在 `range` 迭代期间修改 Slice 可能会导致意外的行为，例如跳过元素或不正确的处理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `range` 循环在开始时评估 Slice 的长度。迭代期间的修改（例如，删除）会移动索引，导致元素被跳过。解决方案包括反向迭代、构建新的结果 Slice 或首先收集索引。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">nil Slice 和空 Slice 之间的混淆可能会导致不一致的行为，尤其是在 JSON 序列化中。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> nil（空值）Slice 没有底层数组，而空 Slice 具有零长度的底层数组。最好检查 `len(s) == 0` 是否为空，这适用于两者，并且如果需要非 nil 的空 Slice 以保持一致性，则显式初始化 nil Slice。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">在访问元素之前未能验证 Slice 边界可能会导致运行时 panic 和应用程序崩溃。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Go 不为 Slice 操作提供自动边界检查。开发人员必须显式验证索引 (`index &lt; 0 || index &gt;= len(s)`) 和子 Slice 范围 (`start &lt; 0 || end &gt; len(s) || start &gt; end`) 以防止越界错误，或使用安全助手函数。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Slice 是 Go 中最基本和最强大的数据结构之一。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">您的代码在开发中使用小型数据集时可能运行完美，但在生产中使用较大数据或在并发访问下会神秘地失败。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然可以通过函数参数修改 Slice 元素（因为 Slice 包含指向底层数据的指针），但 Slice 头信息本身（包含长度和容量）是通过值传递的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">保留对从大型 Slice 派生的小型 Slice 的引用被认为是轻微但严重的错误。这是因为它阻止垃圾回收器释放大型底层数组，从而导致内存泄漏。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">掌握这些概念将帮助您充分利用 Go Slice 的强大功能，同时避免可能导致应用程序出现错误和性能问题的常见陷阱。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHub(@github)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHub</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Temitope Oyedele</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">198</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2521</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Copilot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Sonnet 4.5</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Anthropic</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编码</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工具</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Go</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Golang</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Slice</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据结构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">常见错误</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/status/1972713014361989436" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/zh/article/7c7e02ea" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/status/1972713014361989436">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/7c7e02ea">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

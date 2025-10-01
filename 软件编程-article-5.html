@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Grab 通过从 Go 迁移到 Rust 降低了 70% 的成本</title>
+        <title>在 Workers 上运行的 Payload CMS：一个功能完备的 CMS，完全运行在 Cloudflare 的技术栈上</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Grab 通过从 Go 迁移到 Rust 降低了 70% 的成本</h2>
-        <p>9/29/2025, 3:30:36 PM</p>
+        <h2>在 Workers 上运行的 Payload CMS：一个功能完备的 CMS，完全运行在 Cloudflare 的技术栈上</h2>
+        <p>9/30/2025, 4:50:01 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Grab 成功地将其高吞吐量的计数器服务从 Go 迁移到 Rust，通过显著提高 CPU 效率，实现了 70% 的基础设施成本降低。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了如何使用新的模板将 Payload CMS 完全部署在 Cloudflare 的 Serverless 架构（Workers、D1、R2）上，从而带来显著的运营和性能优势。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Grab 将其核心计数器服务从 Golang 迁移到 Rust 的战略决策。最初，Go 因其开发速度而受到青睐，但 Rust 的内存安全、无垃圾回收以及类似 C 的性能为提高效率提供了机会。该团队为选择服务建立了明确的标准：功能简单、流量大以及工程师愿意学习 Rust。计数器服务对于欺诈检测和机器学习至关重要，由于其高 QPS（每秒查询数）和直接的计数逻辑，非常符合这些标准。此次重写采用了“黑盒”方法，侧重于 GRPC 接口，而不是直接的代码翻译，从而可以实现符合 Rust 编程规范的实现，并仔细选择开源库。关键的技术挑战包括掌握 Rust 的借用检查器和异步并发模型，这与 Go 的 Goroutines 存在显著差异。尽管最初存在障碍，但迁移带来了相似的延迟，但 CPU 效率提高了近五倍，从而使基础设施成本降低了 70%。经验表明，Rust 并不总是比 Go 快。但对于高流量、对成本敏感的服务来说，其效率非常宝贵。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文宣布了一个新的模板，该模板支持将流行的开源 CMS Payload 完全部署在 Cloudflare 的 Serverless 平台上。它强调了在 Cloudflare Workers 上运行 CMS 的好处，例如由于其“按使用付费”模式而降低的运营开销和成本效益，这与传统的基于服务器的 CMS 部署形成对比。技术部分深入探讨了如何使用 OpenNext 适配器。该适配器可以将最初的 Node/Express.js 应用程序 Payload 适配为在 Workers 上运行。解决的关键技术挑战包括通过自定义适配器将 Payload 与 Cloudflare D1（一种 Serverless 数据库）和 R2（兼容 S3 的对象存储）集成，从而克服了连接池等限制。本文还详细介绍了性能优化，特别是使用 Cloudflare Hyperdrive 进行 Postgres 连接以及使用 D1 的全局只读复制来显著降低延迟。文章展示了 Cloudflare TV 成功迁移到 Workers 上的 Payload，这是一个实际的应用案例，并简要提及了其他与 Workers 兼容的 CMS 项目，如 SonicJs 和 microfeed。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Grab 的 Go 到 Rust 迁移策略优先选择简单且流量大的服务，以最大限度地提高影响并最大限度地降低风险。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 计数器服务因其高 QPS（每秒查询数）和简单的计数逻辑，成为理想的候选服务，可确保有意义的效率提升并降低重写的复杂性。</span>
+                        <strong style="color: #1e40af">Payload CMS 在 Cloudflare Workers 上的 Serverless 部署</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 本文介绍了一个新的模板，该模板使功能完备的 Payload CMS 能够完全在 Cloudflare 的 Serverless 架构上运行。这无需始终在线的服务器，减少运营开销，并通过“按使用付费”模式优化成本。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">此次迁移采用了“黑盒”重写方法，侧重于 GRPC 接口以实现更地道的 Rust 实现。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该策略使团队能够更好地发挥 Rust 的优势，仔细选择成熟的开源库，并避免直接翻译 Go 代码可能导致的问题。</span>
+                        <strong style="color: #1e40af">与 Cloudflare 的数据服务（D1 和 R2）的无缝集成</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Payload CMS 经过适配，可利用 Cloudflare D1 满足 Serverless 数据库需求，并利用 Cloudflare R2 满足兼容 S3 的对象存储需求。这主要通过自定义适配器来实现，这些适配器利用 Workers Bindings 进行直接的、无令牌的访问，从而确保原生和高效的交互。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">克服 Rust 的借用检查器和异步并发模型对于成功实施和性能至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工程师们通过使用临时解决方法（如数据克隆）并深入了解 Rust 的协作式调度来适应，从而解决了异步上下文中阻塞调用引起的初始性能问题。</span>
+                        <strong style="color: #1e40af">通过 Hyperdrive 和 D1 只读副本实现的性能优化</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用 Cloudflare Hyperdrive 管理 Postgres 连接池和实施 D1 的全局只读复制，实现了显著的性能提升。全局只读复制在全球范围内分发读取操作，并将 P50 响应时间延迟降低了 60%。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">由于 Rust 出色的 CPU 效率，此次迁移使成本降低了 70%，尽管延迟与 Go 相似。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这一结果证明了 Rust 对于高流量、资源密集型服务的重大价值，在这些服务中，效率的提高直接转化为显著的基础设施成本节省，即使原始速度提升不明显。</span>
+                        <strong style="color: #1e40af">OpenNext 适配器促进了 Next.js 在 Workers 上的集成</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cloudflare 的 OpenNext 适配器在将 Payload（现在支持 Next.js）移植到 Workers 上无缝运行方面发挥着关键作用，这证明了 Cloudflare 作为复杂应用程序的 Next.js 托管平台的能力日益增强。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Cloudflare TV 的真实场景验证</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cloudflare TV 是一个拥有庞大内容库的 24/7 视频平台，它是 Workers 上 Payload 的一个成功的试验平台，证明了其在高需求生产环境中的可扩展性、功能丰富性和稳健性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Rust 通常因其强大的内存安全性、无垃圾回收以及接近 C 的性能而受到称赞。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了谨慎地对待这一决定，Grab 工程团队为选择要重写的服务设定了明确的标准。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">相反，他们将现有服务视为黑盒。这意味着他们只关注服务 GRPC 接口定义的输入和输出。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Rust 的一个关键特性是借用检查器，它严格控制内存访问方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这转化为近五倍的效率提升，并且在相同工作负载下，基础设施成本降低了约 70%。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Cloudflare Workers 的优势之一是，您的应用程序和数据可以 24/7 全天候访问，而无需服务器始终运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过在 Workers 上运行 Payload，您可以获得传统 CMS 的最佳功能——完全可配置的资产管理、自定义 Webhooks、社区插件库、版本历史——所有这些都以无服务器形态提供。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">感谢此适配器，使用官方 OpenNext Get Started 指南将 Payload 移植到 OpenNext 相对简单。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">因此，我们决定也为 R2 构建一个自定义存储适配器。这个非常简单，因为绑定机制已经处理了大部分工作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">经过这个简单的更改后，我们立即看到了延迟改进，当连接到位于北美东部的数据库时，来自全球的请求的 P50 响应时间降低了 60%。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Jason Kincaid</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2093</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1871</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Rust</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Go</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Microservices</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Performance Optimization</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cost Reduction</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Serverless</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CMS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare Workers</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare D1</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare R2</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/fbdc0f25" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/5c06e9fe" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/fbdc0f25">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/5c06e9fe">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYXSURBVO3BQW4ky5LAQDKg+1+Z00tfJZCokibeh5vZP6x1icNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhf54UMqf6liUnmjYlJ5o+KJypOKSeWNijdU/lLFJw5rXeSw1kUOa13khy+r+CaVNyomlScVk8obKlPFpDKpTBVPVJ6oTBVPKr5J5ZsOa13ksNZFDmtd5IdfpvJGxW9S+aaKJxVvqEwVk8o3qbxR8ZsOa13ksNZFDmtd5If/uIpJZar4hMqk8qRiUpkqJpWpYlKZKiaV/yWHtS5yWOsih7Uu8sN/nMpUMalMFZPKVDFVTCpvVDypmFSmiicV/0sOa13ksNZFDmtd5IdfVvGbKiaVJypTxV9SmSqmiicqTyreqLjJYa2LHNa6yGGti/zwZSp/SWWqmFSmikllqphUpopJ5YnKVDGpTBWTylQxqbyhcrPDWhc5rHWRw1oXsX/4H6byiYpJ5UnFpDJVvKHypOJ/yWGtixzWushhrYvYP3xAZap4ovKXKp6oTBWTylQxqTypeKIyVbyh8qTiicpUMam8UfGJw1oXOax1kcNaF7F/+CKVNyreUJkqJpWpYlJ5o2JS+aaKSWWqmFSmik+ovFHxmw5rXeSw1kUOa13kh8upPFGZKiaVqeKJyhsV31QxqTxRmSomlaniEypPKj5xWOsih7UucljrIvYPH1CZKiaVNyqeqEwVk8qTiknlScUTlaliUvmmiicqb1Q8UXlS8U2HtS5yWOsih7Uu8sOXqTypeEPlExW/qWJSmSomlaliUpkqnqj8popJ5Tcd1rrIYa2LHNa6iP3DF6lMFU9Upoo3VKaKJypTxaTypOINlTcqnqhMFW+oTBVPVKaK33RY6yKHtS5yWOsiP/wylScVT1S+qWJSmSqeqEwVTyomlTdUpoo3VKaKSeVJxV86rHWRw1oXOax1EfuHD6hMFZPKVDGpTBWfUHlS8URlqniiMlVMKlPFpDJVvKHypGJS+UTFpDJVfOKw1kUOa13ksNZFfvhlFU8qnqhMFU8qnqhMFW+oTBVPKj6hMlW8ofKJiicV33RY6yKHtS5yWOsiP/wxlTcqPqEyVbyh8obKN1V8U8WkMlVMKlPFpDJVfOKw1kUOa13ksNZFfvhlKlPFpDJVTCpPKiaVqWJSmSo+ofKJiknljYpJ5YnKVDGp/H86rHWRw1oXOax1kR8+VPFNKlPFGxWTylTxpOKJylTxTRWTyjdVTCpvqPymw1oXOax1kcNaF/nhy1SmijcqJpUnFW+oPKmYVKaKSWWqmFSmiicqTyreqHhSMalMFX/psNZFDmtd5LDWRX74kMpUMak8qZhUpoo3VJ5UTCqTyhsVTyreqHii8k0qNzmsdZHDWhc5rHWRH/5YxRsqb1Q8UflNKlPFpPJNFZPKpDJVvKHyRsUnDmtd5LDWRQ5rXeSH/2cqU8UbKpPKk4pJZap4ojJVfFPFpPJNKlPFE5UnFd90WOsih7UucljrIvYPH1B5UjGpfKJiUnlS8QmVqeKbVKaKJyp/qeIvHda6yGGtixzWuoj9w3+Yyicq3lB5o+INlaliUnlS8YbKVDGpTBW/6bDWRQ5rXeSw1kV++JDKX6p4UjGpTBVPVN6omFSeqEwVU8U3qUwVNzusdZHDWhc5rHWRH76s4ptUPlExqUwVTyomlTdUpoonKt9U8YbK/6fDWhc5rHWRw1oX+eGXqbxR8U0qT1SmiicVk8qTikllqvgmlU9UvKEyVXzisNZFDmtd5LDWRX74H6PyRsUTlaniDZWp4knFpDJVPFGZKiaVqeKJylTxmw5rXeSw1kUOa13kh/+4iknlScUTlScqU8UbKlPFJ1SmijdUpoonKr/psNZFDmtd5LDWRX74ZRV/qeKJylQxVXyTyhOVqWKqeFLxROW/5LDWRQ5rXeSw1kV++DKVv6TypOINlaliUvmmijdU/lLFXzqsdZHDWhc5rHUR+4e1LnFY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsi/wez8fZVuzdQpwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
