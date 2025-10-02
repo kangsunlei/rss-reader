@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>高性能全闪并行文件系统的设计和实践</title>
+        <title>为什么有些依赖必须 import *引入使用？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>高性能全闪并行文件系统的设计和实践</h2>
-        <p>9/30/2025, 8:48:00 AM</p>
+        <h2>为什么有些依赖必须 import *引入使用？</h2>
+        <p>10/1/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入阐述了焱融科技高性能全闪并行文件系统 YRCloudFile 的设计理念与实践，旨在解决大模型时代 AI 训练和推理面临的存储挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 ECharts 等库为何必须使用`import * as`进行导入，并详细解析了 ESM、CommonJS 模块规范差异及 ECharts 背后的兼容性与 API 设计考量。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章由焱融科技 CTO 张文涛在 QCon 大会上分享，深入探讨了在大模型时代 AI 训练和推理场景中，数据量和算力需求激增对存储系统带来的挑战。YRCloudFile 作为一个高性能全闪并行文件系统，通过简化 I/O 路径、Multi-Channel 技术、NUMA 亲和性、RDMA 单边编程等优化措施，显著提升了存储性能。针对海量小文件访问慢的问题，文章介绍了基于 Dentry Hash 的分布式元数据架构及缓存优化。同时，YRCloudFile 还提供了智能数据分层、数据加载、多租户管理、数据安全和弹性数据网络等高级运维特性，以实现性能与成本的平衡。文章详细阐述了 YRCloudFile 如何针对 AI 训练和推理场景提供端到端解决方案，包括 KVCache 优化和 DataInsight 知识库数据检索，从而提升大模型应用的效率和成本效益。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文以 ECharts 为例，解决了前端开发中常见的`import * as`导入方式的疑惑。文章首先介绍了 ES Module 中默认导入、具名导入和命名空间导入的几种常见用法。接着，通过分析 ECharts 的入口文件，揭示了其采用具名导出和`export =`（CommonJS 风格）而非`export default`的原因，主要是为了兼容 ESM、CommonJS 和 UMD 多种模块规范，以及遵循其“命名空间式 API”的设计思路。文章还列举了 lodash-es 和 Node.js `path`模块等其他需要`import *`的场景。最后，提供了判断模块导入方式的实用方法，包括查阅官方文档、检查`.d.ts`类型定义文件以及利用 AI 编译器智能提示。整体而言，文章对 JavaScript 模块化原理的讲解深入浅出，具有很强的实践指导意义。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">YRCloudFile 通过优化 I/O 路径和网络技术实现极致高性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采用静态数据路由、Multi-Channel 网卡聚合、NUMA 亲和性及 RDMA 单边编程等技术，显著提升单节点及集群吞吐和 IOPS，有效降低数据访问延迟。</span>
+                        <strong style="color: #1e40af">某些库（如 ECharts）要求使用 `import * as` 导入，是因为它们采用具名导出而非默认导出。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ECharts 等库为了兼容 ESM、CommonJS 和 UMD 多种模块规范，并维持其命名空间式 API 设计，通常不提供`export default`，而是通过具名导出或`export =`方式，导致在 ESM 环境下需要`import * as`来导入所有成员。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">分布式元数据架构和缓存优化有效解决海量小文件访问瓶颈。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基于 Dentry Hash 的元数据分布式设计确保元数据操作的线性扩展，结合元数据缓存和 POSIX 语义弱化，大幅提升小文件场景性能，尤其适用于 AI 训练。</span>
+                        <strong style="color: #1e40af">ECharts 采用 `export =` 导出而非 `export default` 是出于历史兼容性和 API 设计考量。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ECharts 早期基于 UMD 发布，后迁移至 TypeScript 时延续了`export =`以更好地兼容 CJS/UMD，同时保持其"命名空间式 API"的调用习惯，避免了`export default`可能带来的兼容性问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">智能数据分层与加载功能平衡性能与成本，优化数据生命周期管理。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过冷热数据自动分层、对象存储数据按需加载及变更订阅，实现高效数据流转，降低存储成本，并支持混合云场景下的数据管理。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">提供多租户管理、数据安全及弹性网络等多维度高级运维特性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实现空间、流量、访问隔离，结合日志审计、回收站及多网络平面访问一套存储的能力，确保系统在高并发场景下的稳定、安全与灵活。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">针对 AI 训练和推理场景提供端到端解决方案，赋能大模型应用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在训练侧提供高带宽低延迟支持，推理侧通过 KVCache 优化提升效率，并提供 DataInsight 知识库数据检索方案，全面支持 AI 工作流。</span>
+                        <strong style="color: #1e40af">开发者可通过查阅文档、源码或利用 AI 工具智能提示来判断正确的模块导入方式。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 面对不确定的模块导入方式时，最直接的方法是参考官方文档，或检查库的`.d.ts`类型定义文件，此外，现代 AI 编译器也能提供准确的导入建议，提高开发效率。</span>
                     </li>
             </ol>
         </div>
@@ -58,39 +52,41 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在深度学习领域中，数据是基石，算力是引擎。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于一个 AI 系统而言，模型的能力随着模型尺寸和训练数据的增加而显著提升，但随着数据集和模型规模不断增加，训练任务载入训练数据所消耗的时间越来越长，进而影响了训练效率，缓慢的 IO 严重拖累 GPU 的强大算力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">存储领域没有一种架构能够解决所有问题，只有场景适用与不适用之分。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们的设计理念是先确保性能达到要求，然后再通过各种手段降低成本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在智算中心的整体存储架构中，对象存储作为数据底座，而 YRCloudFile 则作为训练存储的加速层，为训练阶段提供高效支持。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本文将以 ECharts 为例，深入探讨这一问题的根源，并顺带梳理 ES Module（ESM）与 CommonJS（CJS）模块规范的差异，帮助你从底层理解 import * 背后的原因。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ECharts 的所有导出都是具名导出，并没有 export default。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ECharts 是一个全球用户量非常大的可视化库，既要兼容 ESM，又要兼容 CommonJS，还要兼容 UMD（通过 <script> 引入时挂到 window.echarts 上）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ECharts 官方的定位是 '命名空间式 API'，也就是说，用户习惯通过 echarts.xxx() 方式调用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你不确定一个库该怎么导入，可以采用以下几种方式：看文档示例、查看源码或 d.ts 文件、Trae/Cursor 智能提示。</li>
             </ul>
         </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+<div style="margin: 30px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: #1e40af; margin: 0 0 12px 0; font-size: 16px; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">57 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">14085</span></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1301</span></div>
             </div>
             
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高性能存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并行文件系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">全闪存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI训练</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模块化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TypeScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ES Module</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CommonJS</span>
                     </span>
                 </div>
             
         </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/e34107ee" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+<div style="margin: 30px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
+        <a href="https://www.bestblogs.dev/zh/article/7d2fe4ef" 
+           style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;"
+           target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
-    </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/e34107ee">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+    </div></script></li></ul></div></div></p>
+        <a href="https://www.bestblogs.dev/zh/article/7d2fe4ef">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

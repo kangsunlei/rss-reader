@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nuqs：防抖、标准模式集成与键隔离，提升 React 应用性能</title>
+        <title>Databricks 如何利用智能 Kubernetes 负载均衡优化服务通信</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Nuqs：防抖、标准模式集成与键隔离，提升 React 应用性能</h2>
-        <p>9/30/2025, 7:30:00 AM</p>
+        <h2>Databricks 如何利用智能 Kubernetes 负载均衡优化服务通信</h2>
+        <p>10/1/2025, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Nuqs，React 类型安全的 URL 状态管理器，引入了关键更新，包括 URL 更新的防抖、标准模式集成以及通过键隔离实现更精细的重新渲染控制。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Databricks 通过客户端负载均衡系统和自定义 xDS 控制平面，优化 Kubernetes 服务通信，显著降低尾部延迟。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这篇 InfoQ 文章重点介绍了 Nuqs 的最新重大增强功能。Nuqs 是 React 应用程序的类型安全 URL 状态管理器，它提供 `useQueryState` 钩子（`useQueryState hook`）来管理 URL 查询参数作为一等状态。主要新功能包括防抖 URL 更新，用灵活的 `limitUrlUpdates` 属性（`limitUrlUpdates attribute`）替换了旧的 `throttleMs`，从而防止快速输入变化时产生过多请求。2.5 版本还引入了标准模式生成，允许与 tRPC 等工具集成以进行验证和解析。一项主要的性能改进来自键隔离，确保组件仅在其特定查询键更改时才重新渲染；但是，Next.js 因其内部 URLSearchParams 上下文而被指出是一个例外。此外，对 TanStack Router 的实验性支持有助于在 React 框架之间实现更好的互操作性。文章还提到了质量改进更新、零运行时依赖以及较小的库大小。它简要提到了 2.6 版本中的增强功能，例如用于拦截 URLSearchParams 的 `processUrlSearchParams` 钩子（`processUrlSearchParams hook`）以及在使用防抖时对 `shallow:true`（浅层更新）的新警告。这巩固了 Nuqs 作为一流 URL 查询参数管理工具的地位。它功能强大且易于使用。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍 Databricks 如何克服 Kubernetes 默认负载均衡的局限性，特别是在使用持久 HTTP/2 连接的高吞吐量、延迟敏感型 gRPC 服务中。默认的四层负载均衡常因连接保持导致流量倾斜和高尾部延迟。Databricks 的解决方案是：一个由自定义 xDS 控制平面支持的无代理、客户端驱动的七层负载均衡系统，代表着架构上的重大转变。此系统提供实时服务发现，并支持 Power of Two Choices (P2C) 和区域亲和性路由等高级策略，直接集成到其内部 RPC 客户端框架中，确保客户端拥有服务拓扑的准确实时视图，从而通过 Envoy 集成改善内部和外部流量的分配、资源效率和一致性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Nuqs 引入了对 URL 更新的防抖支持，增强了对历史 API 调用的控制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `limitUrlUpdates` 属性取代了 `throttleMs`，允许开发者对 URL 更改进行防抖处理。这可以防止快速用户输入期间的过度请求，从而提高应用程序效率。</span>
+                        <strong style="color: #1e40af">Kubernetes 的默认四层负载均衡导致 gRPC 流量倾斜和高尾部延迟。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Kube-proxy 的四层路由在每个 HTTP/2 连接上选择一个后端 Pod，导致高吞吐量 gRPC 服务流量分配不均，增加延迟。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">标准模式集成可实现与外部验证工具更好的互操作性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Nuqs 现在可以从搜索参数定义中派生验证/解析器模式。这有助于与 tRPC 或路由模式等工具的无缝集成，从而增强数据一致性和类型安全。</span>
+                        <strong style="color: #1e40af">Databricks 实施了一个无代理、客户端驱动的七层负载均衡系统。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该解决方案使用自定义 xDS 控制平面进行实时服务发现，使客户端可以做出智能的、按请求的路由决策，从而绕过 DNS 和 Kube-proxy。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">键隔离通过减少不必要的组件重新渲染来显著提高性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 `useQueryState` 的组件现在仅在其特定键更改时才重新渲染，而不是在任何 URL 修改时重新渲染。这种细粒度的控制优化了 React 应用程序中的渲染性能。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实验性的 TanStack Router 支持扩展了 Nuqs 与路由库的兼容性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新的适配器允许 Nuqs 与 TanStack Router 的逻辑一起管理 URL 状态，为在单体仓库和共享逻辑环境中实现更轻松的集成奠定了基础。</span>
+                        <strong style="color: #1e40af">该系统支持高级负载均衡策略，从而提高性能和资源利用率。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 动态端点元数据允许客户端使用 P2C 和区域亲和性等高级算法，优化流量分配，减少延迟并提高资源效率。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">URL 更新的防抖支持是一项显著的特性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Nuqs 现在允许您从搜索参数定义中派生验证/解析器模式，从而可以与 tRPC 或路由模式等工具集成。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 v2.5 中，Nuqs 避免了组件在非必要情况下重新渲染的问题——现在只有当组件的特定键发生变化时，才会触发重新渲染。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Nuqs 是一个开源项目，专注于使 React 应用程序中的 URL 查询参数成为一等状态。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尽管有新功能，但它的大小仍小于 5.5kb。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但是，当性能和可靠性至关重要时，这些默认设置的局限性便会显现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于 Kubernetes 负载均衡发生在四层负载均衡，因此每个连接仅选择一次后端 Pod。这导致流量倾斜，某些 Pod 接收的负载明显高于其他 Pod。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了解决 Kubernetes 中 Kube-proxy 和默认服务路由的局限性，我们构建了一个由自定义服务发现控制平面支持的无代理、完全客户端驱动的负载均衡系统。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">RPC 客户端使用以下策略执行请求感知负载均衡：Power of Two Choices (P2C)... 基于区域亲和性... 可插拔支持。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">此架构使我们可以精细地控制路由行为，同时将服务发现与 DNS 和 Kube-proxy 的局限性分离。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,30 +61,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Daniel Curtis</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">483</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1344</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">URL 状态管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">React 库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">防抖</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">负载均衡</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">gRPC</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/0430bdd0" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/c16aea44" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/0430bdd0">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c16aea44">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
