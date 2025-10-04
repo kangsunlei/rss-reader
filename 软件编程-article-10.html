@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>GitHub Copilot 五小时实现可访问性合规自动化</title>
+        <title>基于 ONNX 在 Java 中实现 AI 推理：企业架构师实践指南</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>GitHub Copilot 五小时实现可访问性合规自动化</h2>
-        <p>10/2/2025, 12:19:14 PM</p>
+        <h2>基于 ONNX 在 Java 中实现 AI 推理：企业架构师实践指南</h2>
+        <p>10/3/2025, 9:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 通过使用 GitHub Copilot 在五小时内快速开发内部工具，实现了可访问性合规自动化，将手动流程转变为高效且可审计的闭环。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文为企业架构师提供实践指南，介绍如何利用 ONNX 将 AI 推理集成到 Java 生产系统，消除 Python 依赖。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 GitHub 如何利用 GitHub Copilot 自动化其内部可访问性合规工作流程，在短短五个小时内从缓慢的手动流程转变为可扩展、可审计的系统。 之前，当可访问性等级未达标时，会触发繁琐的手动补救流程，包括问题创建、受让人猜测和单独的状态跟踪，从而导致反应时间缓慢和后续行动不一致。 通过使用 Copilot，GitHub 开发了一个自动化工作流程，该工作流程可以自动创建/更新 GitHub Issues，与 CRM 交叉引用，同步受让人，并在合规后自动关闭问题。 关键的创新在于 Copilot 能够实现快速原型设计和迭代； 领域专家就能用通俗易懂的语言定义规则，并借助 AI 生成代码，从而与传统方法相比大大缩短了开发时间。 这种迭代过程涉及小型合成装置和防护措施，无需正式的项目计划即可生成可用于生产的代码。 其影响包括及时的问题修复、集中的所有权和状态管理、减少重复沟通，以及将治理工作转移到更高价值的分析。 Copilot 还使领域专家能够构建解决方案，从而使工程师可以专注于路线图工作，并降低了未来开发合规工具的难度。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在解决将主要在 Python 中训练的 AI 模型部署到企业 Java 环境的挑战，并规避由此带来的架构复杂性和运行时不一致性。它提出了开放神经网络交换 (ONNX) 标准作为一种强大的解决方案，使基于 Transformer 的 AI 推理（如 NER、分类等）能够在 JVM 中原生运行。ONNX 为企业架构师提供了诸多优势，如语言一致性、简化部署、基础设施复用以及 GPU 加速带来的可扩展性，从而可以将 AI 推理视为标准的 Java 模块。本文概述了关键的设计目标，包括从生产中消除 Python、支持可插拔的分词和推理、确保 CPU-GPU 灵活性、优化可预测的延迟以及为可重用性而设计。它详细介绍了一个模块化系统架构，该架构包括输入适配器、基于 Java 的分词器（使用 `tokenizer.json`）、ONNX 推理引擎（利用 `OrtSession` 和 ONNX Runtime 的 Java API）和一个后处理器。模型生命周期强调将 ONNX 模型和 `tokenizer.json` 文件视为版本化的、一流的部署工件。最后，它将 ONNX 的进程内、确定性方法与通过 Spring AI 等框架进行的远程 LLM 调用区分开来，突出了 ONNX 在合规性至关重要的、供应商中立的 AI 工作负载中的作用。文章最后还概述了未来扩展和保护此架构的方向，展现了其更广阔的企业 AI 应用前景。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">GitHub 的手动可访问性合规流程效率低下且不可扩展。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 之前的系统涉及手动问题创建、不明确的责任人分配和分散的跟踪，导致修复缓慢、缺乏可见性以及无法随着不断增长的服务进行扩展。</span>
+                        <strong style="color: #1e40af">ONNX 在 Java 中实现原生 AI 推理，消除 Python 生产依赖。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过标准化模型交换，ONNX 允许在 Python 中训练的模型直接在 JVM 中运行，从而简化部署，减少延迟，并为可观察性和安全性保留 Java 的强大生态系统。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">GitHub Copilot 能够在数小时内快速开发自动化合规工作流程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过利用 Copilot，领域专家可以快速地对自动化进行原型设计和迭代，用简单的语言构建规则并使用 AI 生成代码，从而与传统方法相比大大缩短了开发时间。</span>
+                        <strong style="color: #1e40af">分词器是关键架构组件，需进行版本控制，并与模型保持严格对齐。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 准确的 AI 推理在很大程度上取决于分词器与模型的一致性。架构师必须将 `tokenizer.json` 视为版本化的工件，以防止细微但重要的推理错误。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">自动化系统显著提高了合规效率和治理水平。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 自动化可确保及时的问题创建/更新、集中状态、减少因重复沟通造成的干扰，并将治理重点转移到系统分析，从而加强协作和责任感。</span>
+                        <strong style="color: #1e40af">该架构确保 CPU-GPU 灵活性和无缝扩展，无需修改代码。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ONNX Runtime 支持 CPU 和 CUDA 执行提供程序，允许同一 Java 应用程序从开发笔记本电脑扩展到生产 GPU 集群，从而提高部署可移植性和资源效率。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">模块化的、无状态的组件自然地集成到现有的 Java 企业架构中。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将分词器和推理引擎设计为可插拔、线程安全的 Java 模块，确保了可重用性、可测试性，并符合清晰的架构原则，从而使 AI 的应用更具可持续性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">相反，我们与 Copilot 进行了五到六个小时的直接交流，快速进行原型设计和验证。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">因为每次迭代都限定于单个行为，所以 Copilot 的建议始终保持相关性，并且我们避免了大型重构。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">影响来自两个层面：我们引入的自动化以及 Copilot 改变了谁可以构建和迭代它。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">领域专家构建了原型，使工程师能够专注于关键路线图任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最重要的是，我们从“手动提交工单”转变为“提供可工作的代码，并能量化其对修复速度和可见性的影响”。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">企业系统现在可以使用开放神经网络交换 (ONNX) 直接在 JVM 中运行 Transformer 类模型，从而解锁 AI 功能，且不中断基于 Java 的管道，也无需引入 Python 依赖。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">准确的推理取决于分词器和模型的高度对齐。架构师必须将分词器视为版本化的、一等公民组件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ONNX 改变了现状。它提供了一种标准化格式，可以将 Python 中训练的模型导出并在 Java 内部运行，原生支持 GPU 加速，且不依赖外部运行时。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">消除训练与部署间的运行时差异后，即可将 ONNX AI 推理视为可复用的 Java 模块：模块化、可观测、生产就绪。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ONNX 推理采用版本化的工件 model.onnx 和 tokenizer.json，在各种环境中（从开发者的笔记本电脑到生产 GPU 集群）表现一致。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The GitHub Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Janice Rimmer</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Syed Danish Ali</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1092</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2465</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可访问性合规</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Copilot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI辅助开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 推理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ONNX</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">企业架构师</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">机器学习部署</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/6bbc042d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/c487697e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/6bbc042d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c487697e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
