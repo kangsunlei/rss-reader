@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Anthropic 预训练负责人教你如何训练大语言模型</title>
+        <title>FAANG 系统设计面试：设计一个聊天系统 (WhatsApp， Facebook Messenger， Discord， Slack)</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Anthropic 预训练负责人教你如何训练大语言模型</h2>
-        <p>9/30/2025, 2:00:57 PM</p>
+        <h2>FAANG 系统设计面试：设计一个聊天系统 (WhatsApp， Facebook Messenger， Discord， Slack)</h2>
+        <p>9/30/2025, 4:06:43 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Anthropic 预训练负责人深度解析大模型训练的工程挑战：规模定律、基础设施、数据与对齐</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本视频详细介绍了如何设计一个可扩展的实时聊天系统，涵盖通信协议、多层架构、离线消息处理、多服务器路由、群聊和在线状态等。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本视频由 Ankit Gupta (Y Combinator) 采访了 Nick Joseph (Anthropic 的预训练负责人)，探讨了训练 Claude 等先进人工智能模型的工程复杂性。Joseph 分享了他从 Vicarious 到 OpenAI 再到 Anthropic 的职业生涯，并阐述了他对人工智能安全认识的转变。对话深入探讨了预训练的核心原则，强调“下一个词预测”和经验性的“规模定律”是人工智能进步的根本驱动力。Joseph 详细阐述了 Anthropic 最初面临的基础设施挑战，包括如何在数千个图形处理器上最大化硬件利用率，定制分布式框架的必要性，以及解决新硬件上的调试难题。他还谈到了团队向专业化方向发展的必然趋势，预训练和后训练（人类反馈强化学习）之间的战略平衡，未来数据质量和可用性的趋势，以及人工智能对齐对于实现通用人工智能至关重要的作用。采访总结了对未来挑战的看法，特别是大规模机器学习中普遍存在的调试难题，以及人工智能领域对扎实工程技能的需求日益增长。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了可扩展的实时聊天系统的设计。设计借鉴了 WhatsApp 等平台的思路。它涵盖了从通信协议选择（倾向于使用混合 HTTP 进行发送，WebSocket 进行接收）到包括无状态、有状态和第三方服务的多层系统架构等基本方面。一个关键的关注点是通过“收件箱”模式以及确认机制来实现可靠的离线消息传递。讨论扩展到使用在线状态服务 (Presence Service) 和直接 RPC 调用在多个服务器之间进行高效的消息路由，以及通过扇出模型（Fan-out），即将一条消息分发给多个接收者的模式，实现群聊。在线状态跟踪是通过心跳机制实现的。本文还解决了可扩展性挑战，例如管理大量 WebSocket 连接和数据库分片，并简要介绍了消息排序、安全性、媒体处理和滥用预防等高级功能，为构建大规模聊天应用程序提供了强大的基础。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">大语言模型预训练利用‘下一个词预测’和规模定律来提高性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方法提供密集的训练信号，通过增加计算资源、数据和模型规模，实现可预测的性能提升，从而推动人工智能产品创新和投资。</span>
+                        <strong style="color: #1e40af">混合通信，实现高效和实时传递</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 HTTP 发送消息、WebSocket 接收消息，有助于优化系统的可扩展性和消息的即时推送，从而有效平衡资源利用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">大规模人工智能训练离不开定制的分布式基础设施和对硬件的深入理解。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 管理数千个图形处理器、处理硬件故障以及优化超出市售工具的能力是关键的工程挑战，需要定制框架和底层调试。</span>
+                        <strong style="color: #1e40af">分层架构，实现可扩展性和弹性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 系统采用分层架构，包括无状态层、有状态层和第三方集成层。这种架构允许独立扩展各个组件，并能利用外部服务来执行推送通知等特定任务。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">人工智能领域对专业工程知识的需求日益增长，以应对复杂挑战。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着模型和基础设施的扩展，团队专注于诸如注意力优化或并行化等领域，因此需要通才和专才的平衡以及强大的管理能力。</span>
+                        <strong style="color: #1e40af">收件箱模式，实现可靠的离线消息传递</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 离线用户的消息存储在专用的收件箱队列中。用户重新连接后，系统会传递这些消息，并结合确认机制，保证消息的持久性和可靠性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">人工智能对齐对于实现通用人工智能至关重要，它能确保模型的目标与人类价值观相符。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然对齐主要是为了更快迭代的后训练问题，但对齐旨在控制模型的“个性”和价值观，未来有可能整合到预训练中以提高鲁棒性。</span>
+                        <strong style="color: #1e40af">服务发现和直接 RPC，实现多服务器路由</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在线状态服务跟踪用户与服务器的映射关系。这使得大规模分布式系统中，聊天服务器之间能够进行高效的直接通信，从而实现低延迟的消息转发。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">心跳机制，实现准确的在线状态跟踪</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 客户端定期发送 ping 帧。服务器通过记录时间戳来判断用户在线状态，从而有效过滤临时网络中断。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们从 GPT-1 和 GPT-2 的研究中发现，投入更多计算资源、更多数据以及更大的模型，可以获得更智能的模型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我认为从最初的规模定律论文中可以预见到，一旦掌握了规模定律，就会形成一个正向反馈循环：训练模型，利用它创造有用的产品并出售，获得更多资金，再用这些资金购买更多计算资源，从而训练出更好的模型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">令人惊讶的是，我今天优化的指标与我最初优化的指标几乎完全一致，即损失函数，目标都是降低损失。可以用相同的指标来衡量我训练的第一个模型和当前的模型，并绘制团队进展曲线。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个值得关注的问题是，人工智能的目标是什么？我们之前讨论了‘下一个词预测’，但这显然不是我们最终想要实现的目标。对齐旨在确保模型的目标与人类的目标保持一致，尤其是在模型比人类更聪明的情况下。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我最担心的是那些极其难以解决的 bug，一个 bug 可能会导致数月的工作付诸东流。模型训练需要数月时间，一个细微且难以察觉的错误就可能毁掉一代模型。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">WebSocket 提供了更优化的解决方案。在 HTTP 握手之后，连接升级为持久的双向通道，从而使服务器可以随时将消息推送到客户端。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个用户都有一个专用的收件箱队列，用于存储待处理的消息。当用户离线时，发送给他们的消息会暂时存储在其收件箱中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最具可扩展性的方法是将服务发现与直接服务器到服务器的通信相结合。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于在线成员，服务器使用 RPC 调用立即将消息扇出到其各自连接的服务器；对于离线成员，该消息存储在其各自的收件箱中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果服务器在 60 秒内未收到任何 ping，则会将用户标记为离线。此方法有效地过滤掉了由网络波动引起的临时断开连接。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +68,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Y Combinator</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Y Combinator</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">51 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">12745</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2812</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型训练</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">预训练</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人类反馈强化学习</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人工智能基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">规模定律</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">实时聊天</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">WebSocket</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/video/c513695" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/video/6420127" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             播放完整视频
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/video/c513695">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATWSURBVO3BSY4jSRAEQdMA//9lnT76KYBEOquXMRH8JVVLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkJ6mZgExqJiCTmgnIjZo3gExqngDyk9S8cVK16KRq0UnVok+WqdkE5EbNjZoJyBNAJjUTkEnNpGYCcqPmRs0mIJtOqhadVC06qVr0yZcBeULNG0AmNU+oeQPIpOabgDyh5ptOqhadVC06qVr0yV8OyKRmArIJyI2aCciNmn/JSdWik6pFJ1WLPvmfU/OT1ExAJjV/s5OqRSdVi06qFn3yZWp+EpBJzQTkCSCTmgnIjZoJyKTmDTV/kpOqRSdVi06qFn2yDMjvpGYCMqmZgExqNgGZ1ExAJjU3QP5kJ1WLTqoWnVQt+uQlNf8yNTdqJiA3QCY1N2r+JidVi06qFp1ULfrkJSCTmieATGomIE8AeQPIE2pu1ExAboBsUnMDZFLzxknVopOqRSdVi/CXfBGQSc0E5EbNDZBJzQ2QSc0E5Ak13wTkJ6l546Rq0UnVopOqRZ+8BORGzQTkRs0EZFIzqZmA3Ki5UXMD5Akgk5oJyCY1TwDZdFK16KRq0UnVok+WqblRMwGZgExqboBsAnKj5gbIpGYC8oSaGyATkEnNBOSbTqoWnVQtOqla9MkPAzKpmYBMQCY1k5oJyKRmAnKjZgIyAZnU3AD5JjVvqNl0UrXopGrRSdUi/CWLgNyomYDcqLkBMql5AsikZgKySc0TQCY1E5BNat44qVp0UrXopGrRJ1+mZgIyqZmATEAmNTdAJjU3at5QcwPkBsik5pvUTEA2nVQtOqladFK16JOXgExqJiBPqHlDzRtA3gByA2STmieAfNNJ1aKTqkUnVYs+eUnNE2omIJOaCcik5iepeUPNDZAJyKRmAjKpeUPNppOqRSdVi06qFn3yEpAbNW+omYC8AWRScwPkm9RMQCYgN0Bu1NwAmdS8cVK16KRq0UnVok9eUnMDZFIzqbkBMqnZBGRScwPkRs03qZmATGomIJOaCcimk6pFJ1WLTqoWffJlam6ATGomNROQJ9TcqHlDzQRkUnMDZFLzhJobNROQbzqpWnRSteikatEnLwG5UTMBmdTcAJnUTEAmNW8AuVHzTUA2qZnUTEA2nVQtOqladFK16JOX1Dyh5gk1bwCZ1ExAJjUTkAnIE0CeUPMEkEnN73RSteikatFJ1aJPXgLyk9Q8oWYCcgPkCTUTkEnNBOQJIJOaGyA3ar7ppGrRSdWik6pFnyxTswnIjZobIDdqJiCTmgnIBOSb1Dyh5gbIN51ULTqpWnRSteiTLwPyhJongNyouQHyhpoJyATkCSBvAJnU3KjZdFK16KRq0UnVok/+cmomIDdAngByA+QNNROQSc0EZFLzhJoJyKTmjZOqRSdVi06qFn3yjwMyqXkCyBNqJiCTmhs1N2pugPxOJ1WLTqoWnVQt+uTL1PxJgLyh5gbIE0AmNROQSc0E5EbNBOSbTqoWnVQtOqla9MkyID8JyKTmBsiNmieA3Kh5Q80E5EbNE2o2nVQtOqladFK1CH9J1ZKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0X8JHDNODacS9QAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/video/6420127">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATVSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJAbNROQJ9TcAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBtqJiC/Sc0mNZuAbDqpWnRSteikatEnXwbkCTVPALlR84aaCcgTQJ5Q8wSQJ9R800nVopOqRSdViz75y6iZgExqJiCTmieA3KiZgExq/iYnVYtOqhadVC365C8D5AbIpOYNNTdA/k9OqhadVC06qVr0yZep+ZOouQEyqbkBMqmZ1NwAmdQ8oeZPclK16KRq0UnVok+WAfk3qZmA3ACZ1ExAJjUTkBsgk5o3gPzJTqoWnVQtOqla9MlLav5kaiYgT6h5Q80EZFJzo+a/5KRq0UnVopOqRfgjLwCZ1ExANql5A8ikZhOQSc0NkEnNBGSTmm86qVp0UrXopGoR/sgiIDdqJiCTmhsgk5oJyKTmTwLkm9Q8AWRS88ZJ1aKTqkUnVYvwR14AcqNmAjKpmYC8oWYCMqmZgNyomYA8oeYGyI2a/5KTqkUnVYtOqhZ9skzNG2pugExqbtRMQG7UTEAmNROQSc0E5A0gN2omIJOaCcikZtNJ1aKTqkUnVYvwR/5FQCY1E5AbNW8AmdS8AeRGzTcBuVHzTSdVi06qFp1ULcIfeQHIpOYGyKTmCSCTmk1AbtRMQH6TmgnIpOYJIJOaN06qFp1ULTqpWoQ/sgjIpOYNIE+o2QTkDTU3QCY1N0AmNROQGzXfdFK16KRq0UnVIvyRF4BMap4AMql5AsgTaiYgk5obIDdqboDcqLkBcqPmBsikZtNJ1aKTqkUnVYs+WQZkE5BJzaRmAnIDZFLzhpoJyKTmRs0baiYgN2q+6aRq0UnVopOqRZ/84dRMQCY1N2omIDdAJjWTmgnIG0AmNROQGyCTmgnIDZBJzRsnVYtOqhadVC36ZJmaGyA3QG7UTEAmNZuA3KiZgExAJjU3QCY1E5BJzRtqNp1ULTqpWnRSteiTLwPyhpobNROQGzUTkBs1E5AJyKRmAnIDZFIzAbkBMqmZ1ExAJjWbTqoWnVQtOqla9MkvUzMBmdRMQCY1N2pugExqboDcqJmATGomIDdANgG5ATKpeeOkatFJ1aKTqkX4I/9hQG7UfBOQJ9RMQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+kZlLzBJBJzRNAbtRMQCYgTwCZ1Lyh5ptOqhadVC06qVr0yTI1m4DcAJnUbAJyo+ab1Dyh5gkgk5o3TqoWnVQtOqla9MmXAXlCzSYgk5oJyKRmUvMEkBs1E5AJyCYgN2o2nVQtOqladFK16JP/GSA3QG7UTEA2qbkBMqmZgDwBZFLzxknVopOqRSdViz75y6m5AfIEkEnNBGRSc6PmBsgNkDfUbDqpWnRSteikatEnX6bmm9RMQG7UTGreADKpeQLIpGZSMwGZ1ExAJjUTkG86qVp0UrXopGoR/sgLQH6TmgnIpGYC8oaaCcgTaiYgk5oJyKRmAvKGmm86qVp0UrXopGoR/kjVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRP3pXTB1B4dtKAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
