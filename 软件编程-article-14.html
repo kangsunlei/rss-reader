@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何使用 Redis 和 Python 构建速率限制器以扩展应用规模</title>
+        <title>Canvas 高性能 K 线图的架构方案</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何使用 Redis 和 Python 构建速率限制器以扩展应用规模</h2>
-        <p>10/3/2025, 3:08:16 PM</p>
+        <h2>Canvas 高性能 K 线图的架构方案</h2>
+        <p>10/3/2025, 8:42:34 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了如何使用 Python、Redis 以及 Terraform、Proxmox、Docker 和 Nginx 等基础设施构建分布式速率限制器，并演示了滑动窗口日志算法的应用。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细阐述了基于纯 Canvas 实现高性能 K 线图的架构方案，涵盖像素优化、分层渲染、数据缓冲区和交互解耦等关键技术。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了一个全面且实践性的指南，用于构建分布式速率限制器，这是保护 Web 应用免受流量过载和潜在的拒绝服务（DoS）攻击的关键组件。文章概述了一个完整的系统架构，集成了 Python Flask 应用程序、用于集中式请求跟踪的 Redis、作为负载均衡器的 Nginx、用于数据存储的 PostgreSQL 以及用于一致部署的 Docker。文章还重点介绍了使用 Terraform 和 Proxmox 进行基础设施即代码的实践，以便模拟真实数据中心环境。核心速率限制逻辑使用 Python 实现，并利用 Redis 有序集合和滑动窗口日志算法，通过 Redis 流水线优化，保证原子性和性能。最后，文章演示了如何使用 k6 进行负载测试，验证速率限制器的有效性和应用程序在高流量下的弹性。这使其成为开发人员部署可扩展且健壮的应用程序的实用资源。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了如何利用纯 Canvas 构建高性能 K 线图的架构方案。作者作为证券行业的前端从业者，分享了其项目经验，旨在实现支持无限滑动、样式定制且不依赖第三方库的 K 线图。文章首先介绍了 Canvas 绘图中的常见像素模糊问题及其解决方案，如 `cxt.translate(0.5， 0.5)` 应对整数坐标模糊，以及高像素比 (DPR) 设备的适配。随后，详细阐述了 K 线图的样式配置、均线计算逻辑（包括优化计算方法），并重点介绍了通过“不动层、变动层、交互层”三层 Canvas 实现分层渲染以提升性能的策略。文章还涵盖了网格线、均线、蜡烛柱体和文字的基础几何绘制技巧，以及移动端触摸事件（快速拖拽与长按滑动）的解耦设计，并引入了“数据缓冲区”（类似虚拟列表）机制来控制数据量和优化加载体验。最后，总结了分层渲染、离屏渲染、数据缓冲区和节流防抖等性能优化手段，并提供了部署到 GitHub Pages 的简要指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">分布式速率限制对于可扩展的 Web 应用至关重要，以防止过载和 DoS 攻击。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用像 Redis 这样的集中式数据存储可确保跨多个应用程序实例的全局速率限制，这对于在高流量、分布式环境中维持稳定性至关重要。</span>
+                        <strong style="color: #1e40af">Canvas 像素级优化是高性能绘图的基础</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 解释了 Canvas 绘制直线时整数坐标导致的模糊问题，并通过 `cxt.translate(0.5， 0.5)` 偏移半像素进行修正。同时，强调了高像素比 (DPR) 设备下 Canvas 尺寸设置的正确方法，避免拉伸模糊。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">滑动窗口日志算法通过 Redis 有序集合实现，提供高效且准确的速率限制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在有序集合中存储请求时间戳并使用 Redis 流水线，系统可以原子地添加新请求、删除过期的请求，并计算定义的时间窗口内的活动请求。</span>
+                        <strong style="color: #1e40af">分层渲染和数据缓冲区是提升复杂图表性能的关键</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将 K 线图拆分为“不动层、变动层、交互层”三个 Canvas 进行分层渲染，显著减少了重绘开销。结合类似虚拟列表的“数据缓冲区”机制，有效管理了海量数据，提升了滑动流畅度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">基础设施即代码 (Terraform) 和容器化 (Docker) 简化了复杂分布式系统的部署和管理。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Terraform 自动化了在 Proxmox 等平台上配置虚拟机，而 Docker 确保了跨各种服务器的一致且可移植的应用程序部署，从而简化了设置和扩展。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用像 k6 这样的工具进行负载测试对于验证速率限制的有效性和整体系统弹性至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模拟高流量允许开发人员确认速率限制器正确阻止过多的请求，并且应用程序在压力下按预期运行，从而确保系统稳定性。</span>
+                        <strong style="color: #1e40af">精细的交互解耦设计保障了用户体验</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对移动端触摸事件，文章提出了通过定时器判断“快速拖拽”与“长按滑动”的解耦方案，使得 K 线图的左右滑动和十字交叉浮层显示能够平滑切换，优化了用户交互体验。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你曾经构建过 Web 应用，你就会知道，如果没有适当的机制来控制流量，你的应用程序可能会不堪重负，导致响应时间缓慢、服务器崩溃和糟糕的用户体验。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">解决方案是使用一个所有应用程序节点都可以访问的集中式数据存储。这就是 Redis 的用武之地。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们正在使用一种复杂且内存高效的算法，称为滑动窗口日志。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">网络延迟可能是一个瓶颈。Redis 流水线将多个命令捆绑到单个请求 - 响应周期中。这比一个一个地发送它们效率高得多。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用 k6 进行负载测试对于验证速率限制器是否真正有效至关重要。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">canvas 默认线条会与整数对齐，从而横线的粗度看起来不是 1px，而是 2px。并且由于粗度被拉伸，颜色也会被淡化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">处理方式也很简单， 通过 cxt.translate(0.5， 0.5) 将坐标往下移动 0.5 个像素，然后接下来的所有点， 都保证是整数即可， 这样就能保证不会被拉伸。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不要随便通过 css 去设置 canvas 的宽高， 容易被拉伸变形或者导致模糊。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了减少重绘，提高性能，可以将 K 线图做分层渲染。那分几层合适？我认为是三层。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">总体思想是， 从 startIndex 开始渲染屏幕的第一条柱体， 当前屏幕的左右两边， 都预留 2 屏数据，防止用户拖拽频繁调用接口， 导致卡顿； 同时也控制了 arraylist 的长度， 这是虚拟列表的变形，这样设计，可以做一个 **高性能** 的 k 线图。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sravan Karuturi</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">掘金本周最热</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">VincentFHR</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">18 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4323</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4413</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">速率限制</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Python</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Flask</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Canvas</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">K线图</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据可视化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/88a0ee29" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/785c5c1f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/88a0ee29">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYOSURBVO3BQY4cSRLAQDLQ//8yV0c/JZCoak1o4Wb2B2td4rDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kV++JDK31QxqUwVk8pUMam8UfFE5UnFpDJVTCpTxRsqf1PFJw5rXeSw1kUOa13khy+r+CaVN1SmiicVk8obKlPFpDKpTBVPKp6oTBVPKr5J5ZsOa13ksNZFDmtd5IdfpvJGxScqJpXfVPGk4g2VqWJS+SaVNyp+02GtixzWushhrYv88I+rmFSmiicqU8WkMqk8qZhUpopJZaqYVKaK/2eHtS5yWOsih7Uu8sM/TmWqeKLyRsWk8kbFk4pJZap4ojJV/MsOa13ksNZFDmtd5IdfVvGbKiaVNyr+JpWpYqp4ovJNFTc5rHWRw1oXOax1kR++TOVvUpkqJpWpYlKZKiaVqWJSeaIyVUwqU8WkMlVMKm+o3Oyw1kUOa13ksNZFfvhQxX+p4g2VqWJSmSomlW+qeEPljYp/yWGtixzWushhrYvYH3xAZap4ovI3VUwqTyomlaliUnlS8URlqnhD5UnFE5WpYlJ5o+ITh7UucljrIoe1LvLDl6l8ouKJylTxTSpTxaTyhsqTikllqphUpopvUnlS8ZsOa13ksNZFDmtd5If/WMUTlScqU8WTiicqb1R8U8Wk8kRlqvhNKk8qPnFY6yKHtS5yWOsiP3xZxaTyROVJxaQyVUwqTyomlTcqJpWpYlL5popPqEwVT1SeVHzTYa2LHNa6yGGti/zwoYo3Kp6oTCpvVEwqv6liUpkqJpWpYlKZKj6hMlW8UTGp/KbDWhc5rHWRw1oXsT/4D6lMFd+kMlU8UXlS8YbKGxVPVN6o+ITKVPGbDmtd5LDWRQ5rXeSHL1N5o+KJylTxRsUTlaniicpU8aRiUnlDZap4Q+UTFX/TYa2LHNa6yGGti9gffEBlqnii8qTiDZU3Kp6oTBVPVKaKSWWqmFSmik+oTBVvqDypmFSmik8c1rrIYa2LHNa6yA9/WcUbKk8q3lCZKt5QmSqeVHxC5RMqn6h4UvFNh7UucljrIoe1LvLDhyreUHmj4g2VJxVPKiaVN1S+qeKJyhsVk8pUMalMFZPKVPGJw1oXOax1kcNaF/nhl6lMFU9UJpUnFU8qJpWp4hMqn6iYVN6omFSeqEwVk8p/6bDWRQ5rXeSw1kXsD36RylQxqTypuInKVPGbVJ5UPFGZKiaVb6r4xGGtixzWushhrYvYH3xA5UnFpPKkYlJ5UvGGypOKN1Smikllqnii8qRiUnlS8YbKVPE3Hda6yGGtixzWusgPv0zlScWkMlVMKk9Upoo3VKaKJxVPKt6oeKIyVUwqb6jc5LDWRQ5rXeSw1kV++LKKJypvqDxRmSq+SWWqeKIyVUwqf5PKVPGGyhsVnzisdZHDWhc5rHWRH/5jKlPFGyqTypOKT6hMFd9UMal8k8pU8UTlScU3Hda6yGGtixzWuoj9wQdUnlRMKp+omFSeVEwqU8UTlanim1Smiicqf1PF33RY6yKHtS5yWOsi9gf/MJVPVLyh8kbFGypTxaTypOINlaliUpkqftNhrYsc1rrIYa2L/PAhlb+p4knFpDJVPFGZKp5UTCpPVKaKqeKbVKaKmx3WushhrYsc1rrID19W8U0qn6iYVKaKJyqfUJkqnqh8U8UbKv+lw1oXOax1kcNaF/nhl6m8UfEJlTdUpoo3VJ5UTCpTxTepfKLiDZWp4hOHtS5yWOsih7Uu8sP/uYpJ5Q2VqeINlaniScWkMlU8UZkqJpWp4onKVPGbDmtd5LDWRQ5rXeSHf1zFpDKpTBVPVJ6oTBVvqEwVn1CZKt5QmSqeqPymw1oXOax1kcNaF/nhl1X8TRWfqPgmlScqU8VU8aRiUvmXHda6yGGtixzWusgPX6byN6k8qZhUpopJZaqYVL6p4g2VNyomlTcq/qbDWhc5rHWRw1oXsT9Y6xKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7Uu8j9MzOZiDIxCxAAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/785c5c1f">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYCSURBVO3BQW4ky5LAQDKg+1+Z00tfJZCokn68gZvZP6x1icNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhf54UMqf6liUpkqJpWpYlJ5o+KJypOKSeWNijdU/lLFJw5rXeSw1kUOa13khy+r+CaVN1SmiicVk8obKlPFpDKpTBWTyhsqU8WTim9S+abDWhc5rHWRw1oX+eGXqbxR8ZtUvqniScU3qXyTyhsVv+mw1kUOa13ksNZFfviPq5hUJpWp4g2VSeVJxaQyVUwqU8WkMlVMKv+fHNa6yGGtixzWusgP/3EqU8Wk8omKSeWNiicVk8pU8aTi/5PDWhc5rHWRw1oX+eGXVfymiknlDZWp4jepTBVTxROVqeITFTc5rHWRw1oXOax1kR++TOUvqUwVk8onVKaKSeWJylQxqUwVk8pUMalMFU9UbnZY6yKHtS5yWOsiP3yo4n+p4ptUpopJ5ZsqflPFf8lhrYsc1rrIYa2L/PAhlaniicpfqnijYlKZKiaVSWWqeKIyVUwVb6hMFU9UpopJ5Y2KTxzWushhrYsc1rqI/cMXqXyi4onKVDGpTBWTyhsVk8o3VUwqU8WkMlV8QuWNit90WOsih7UucljrIvYPv0jlScUTlU9UvKEyVUwqU8VvUnmj4g2Vb6r4xGGtixzWushhrYv88GUqb6hMFVPFpDJVTCpvqLxRMalMFZPKN1V8QmWqeKLypOKbDmtd5LDWRQ5rXeSHL6uYVJ5UTCpvqEwVf6liUpkqJpWpYlKZKt5QeVLxRsWk8psOa13ksNZFDmtdxP7hi1SmiknlScUbKlPFE5VPVLyh8kbFE5UnFd+kMlX8psNaFzmsdZHDWhf54ZepTBVvqEwVn6j4hMpU8aRiUnlDZap4Q2WqeKIyVfylw1oXOax1kcNaF7F/+IDKVDGpTBWTylTxRGWqmFSeVDxRmSqeqEwVk8pUMalMFU9U3qiYVD5RMalMFZ84rHWRw1oXOax1kR/+xyqeqLxR8ZtUpoonFZ9Q+YTKJyqeVHzTYa2LHNa6yGGti9g//CGVqWJSmSreUHlS8YbKk4pJ5RMVb6i8UTGpTBWTylQxqUwVnzisdZHDWhc5rHWRH36ZylTxpGJSeVLxpGJSmSomlTdUPlExqbxR8URlUpkqJpX/pcNaFzmsdZHDWhf54ctU3lCZKqaKT6hMFd9U8U0Vk8o3VUwqb6j8psNaFzmsdZHDWhexf7iYyhsVk8qTiicqU8WkMlVMKlPFE5UnFZPKVPEJlaniLx3WushhrYsc1rqI/cMHVKaKJypTxaQyVTxReVLxhsqTiv8llaniEypPKv7SYa2LHNa6yGGti/zwy1SmijdUnlS8oTJVfJPKVDGp/CaVJxVvqLxR8YnDWhc5rHWRw1oX+eGXVUwqTyreUPmEylTxRGWq+KaKSeWbVKaKJypPKr7psNZFDmtd5LDWRewfPqDypGJS+UTFpPKkYlKZKp6oTBXfpDJVPFH5SxV/6bDWRQ5rXeSw1kV++FDFGxW/qWJSeUNlqphU3qh4UjGpTBVvVLyhMlVMKlPFbzqsdZHDWhc5rHWRHz6k8pcqnqhMFW9UTCpPKiaVJypTxVTxTSpTxc0Oa13ksNZFDmtd5Icvq/gmlW9SmSp+k8pU8UTlmyreUPlfOqx1kcNaFzmsdZEffpnKGxWfqHhD5Y2KSeVJxaQyVXyTyicq3lCZKj5xWOsih7UucljrIj/8P6MyVUwVf0llqnhSMalMFU9UpopJZap4ojJV/KbDWhc5rHWRw1oX+eE/rmJSmVSmiknlExVvqEwVn1CZKt5QmSqeqPymw1oXOax1kcNaF/nhl1X8pYo3Kn6TyhOVqWKqmFSmiknlv+yw1kUOa13ksNZFfvgylb+k8qRiUpkqJpWpYlL5poo3KiaVqWJS+UTFXzqsdZHDWhc5rHUR+4e1LnFY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsi/we5lepJbhxQPQAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
