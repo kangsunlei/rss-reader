@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Vercel Fluid vs. Cloudflare Workers：性能与技术差异</title>
+        <title>基于 Transformer 的实时手势识别</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,76 @@
         </style>
     </head>
     <body>
-        <h2>Vercel Fluid vs. Cloudflare Workers：性能与技术差异</h2>
-        <p>10/4/2025, 4:13:45 PM</p>
+        <h2>基于 Transformer 的实时手势识别</h2>
+        <p>10/6/2025, 1:39:30 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Guillermo Rauch 详细介绍了 Vercel 迁移出 Cloudflare Workers 的技术原因，并强调了 Vercel Fluid 的卓越性能、开放运行时以及到云服务的低延迟。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本教程演示如何使用 Transformer 主干网络构建轻量级实时手势识别系统，该系统针对小型数据集和网络摄像头部署进行了优化。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Vercel 首席执行官 Guillermo Rauch 提供了 Vercel Fluid 和 Cloudflare Workers 之间的详细技术比较，声称 Fluid 在服务器渲染方面的速度是 Cloudflare Workers 的 1.2 倍到 5 倍。他解释说，Vercel 试图使用 Workers，但由于 CPU (中央处理器) 性能差、容量低、延迟不规则、单一供应商运行时（不是真正的 Node.js）以及到其他云服务的高延迟（10 毫秒到 100 毫秒）等问题而迁移。相比之下，Fluid 提供基于 CPU (中央处理器) 的定价、高效的并发、可定制的函数大小、像 Node.js 和 Python 这样的完整开放运行时以及到云服务的 1 毫秒延迟。他还参考了 @theo 进行的基准测试。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了一个利用 Transformer 模型开发实时手势识别系统的综合教程。首先，它解释了为什么 Transformers 适用于时间序列手势数据，强调了它们捕获运动随时间演变的能力。教程涵盖了整个开发流程：设置项目环境，生成合成数据集以进行快速原型设计和流程验证，微调具有时序池化的预训练视觉 Transformer (ViT)，将模型导出到 ONNX 以进行优化的实时推理，以及构建基于 Gradio 的 Web 应用程序以进行实时网络摄像头分类。此外，教程还详细介绍了如何评估模型的准确性，如何使用混淆矩阵可视化性能，以及如何进行基准测试以评估推理延迟。本教程强调实用性，可以在使用小型数据集的普通笔记本电脑上进行部署。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Transformers 擅长捕获时序动态，是优于静态图像模型的理想手势识别方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与处理孤立帧的 CNN 不同，Transformers 利用自注意力机制建模序列，学习运动随时间的变化，这对于手势区分至关重要。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">可以有效地构建一个轻量级的基于 Transformer 的流程，在适度的硬件上使用小型数据集进行实时手势识别。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 本教程演示了如何在笔记本电脑上进行实际部署，包括使用具有时序池化的预训练 ViT，利用 ONNX 导出进行优化，以及使用 Gradio 应用程序进行实时网络摄像头推理。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">从合成数据生成到模型评估的整个开发过程，都提供了实用且可直接运行的代码示例。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 本文提供了数据集生成、模型训练、ONNX 导出和实时演示应用程序的脚本，为开发人员提供了一份高度可执行的指南。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了构建更强大的实时系统，我们需要能够捕获空间细节和时序上下文的模型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Transformers 非常强大，因为它们使用自注意力来建模序列中的关系。对于手势，这意味着模型不仅可以看到孤立的帧，还可以学习运动如何随时间演变。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">结合 Hugging Face 的预训练模型和用于优化的 ONNX Runtime，Transformers 使得可以在适度的数据集上进行训练，并且仍然可以实现流畅的实时识别。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ONNX，即开放神经网络交换（Open Neural Network Exchange），是一种开源格式，旨在促进不同框架之间深度学习模型的互换。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">关键是证明 Transformer 方案有效。您可以通过以下方式稍后提高结果：增加每个类别的剪辑数量；训练更多迭代次数；切换到真实录制的手势。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch(@rauchg)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">OMOTAYO OMOYEMI</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1270</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4153</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vercel Fluid</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare Workers</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Edge Computing</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Serverless</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Performance Benchmarks</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">手势识别</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Transformers</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">视觉Transformer (ViT)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">实时人工智能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ONNX</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/status/1974508248687632740" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/zh/article/45e25dd1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/status/1974508248687632740">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/45e25dd1">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

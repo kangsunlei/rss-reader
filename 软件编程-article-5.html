@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>云连接对边缘计算延迟的关键影响</title>
+        <title>Uber 通过 CacheFront 改进实现每秒 1.5 亿次读取</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,76 @@
         </style>
     </head>
     <body>
-        <h2>云连接对边缘计算延迟的关键影响</h2>
-        <p>10/4/2025, 4:49:03 PM</p>
+        <h2>Uber 通过 CacheFront 改进实现每秒 1.5 亿次读取</h2>
+        <p>10/6/2025, 2:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Guillermo Rauch 进一步解释说，当函数连接到外部云数据库或服务时，Vercel Fluid 的延迟优势变得更加显着，强调了边缘的缺陷...</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Uber 增强了其 CacheFront 架构，通过更强的 一致性实现了超过每秒 1.5 亿次的读取，通过新的写直达协议和更紧密的集成解决了过期数据问题...</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这条推文是一个重要的后续，详细阐述了前一条推文中确定的第三个技术问题：云连接性较差。Rauch 解释说，当无服务器函数与外部云服务交互时，例如数据库（Supabase、PlanetScale、Neon）或 API (Stripe)，Vercel Fluid 相对于 Cloudflare Workers 等边缘平台的云内延迟优势会更加明显。他认为，将核心应用程序逻辑定位在“边缘”不仅在运行时方面是一个错误，而且在计算位置方面也是一个错误，这主要是由于累积的 I/O (输入/输出) 瀑布和 CPU (中央处理器) 性能限制。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Uber 对其 CacheFront 架构的重大升级。通过此次升级，系统能够处理超过每秒 1.5 亿次的读取，同时保证更强的数据一致性。先前的 CacheFront 设计虽然可扩展到每秒 4000 万次读取，但由于生存时间（TTL）和变更数据捕获（CDC）的缓存失效机制，存在最终一致性问题，导致过期读取和不一致，如“读己之写”和“负缓存”。新的实现引入了强大的写直达一致性协议。这涉及位于查询引擎和 Uber 的 Flux 流式系统（Flux streaming system）之间的去重层，其中每个 CacheFront 节点现在直接使用 Docstore 验证数据新鲜度。存储引擎层包含已删除行的墓碑标记（tombstone markers），用于标记已删除的行，以及 MySQL 会话分配的严格单调时间戳，确保在提交之前有效地识别和读取所有修改的键，从而防止即使在极端负载下也提供过期数据。事务完成后，存储引擎返回提交时间戳和受影响的行键，注册的回调函数会使用这些时间戳，立即将失效标记（invalidation markers）写入 Redis，从而使相应的缓存条目失效。Flux 继续通过跟踪 MySQL 二进制日志（binlogs）进行异步缓存填充。这种协同方法——结合直接查询引擎更新、立即失效标记和异步 Flux 跟踪——保持了强大的数据一致性，同时支持极高的读取吞吐量。这些改进还导致专用 API 的弃用、降低的运营复杂性、增强的可观察性以及缓存命中率的提高，超过 99.9% 并具有延长的 TTL。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">先前的 CacheFront 设计在大规模应用中面临着严重的最终一致性问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 依赖 TTL 和 CDC 进行失效导致过期读取、读己之写和负缓存不一致，这对于需要最新数据的延迟敏感服务来说是不可接受的。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">一种新的写直达一致性协议可确保实时数据的新鲜度和完整性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 此协议将 Docstore 验证、单调时间戳和墓碑标记集成到存储引擎中，从而保证即使在高事务负载下也不会提供过期数据。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">多种缓存填充和失效机制协同工作以实现强大的性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 直接查询更新、通过回调立即进行 Redis 失效标记以及异步 Flux 二进制日志跟踪共同实现了强大的数据一致性、高缓存命中率和出色的读取吞吐量。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Uber 工程师已经更新了 CacheFront 架构，以每秒 1.5 亿次的读取提供服务，同时确保更强的一致性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用 TTL 和 CDC 进行缓存失效的最终一致性在某些用例中成为限制因素。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个 CacheFront 节点现在都使用 Docstore 验证数据新鲜度，然后再提供响应。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">总之，这三种缓存填充机制：直接查询引擎更新、失效标记和 TTL 过期，以及 Flux 跟踪，协同工作以保持强大的数据一致性，同时支持极高的读取吞吐量。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch(@rauchg)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Leela Kumili</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">360</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">490</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Edge Computing</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Latency</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloud Connectivity</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Serverless Functions</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Databases</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">强一致性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存失效</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高吞吐量</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务架构</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/status/1974517130591867215" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/zh/article/4a34eb0d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/status/1974517130591867215">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/4a34eb0d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

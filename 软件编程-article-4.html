@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>身份验证反向代理：基于 OAuth2 的安全认证解决方案 | 开源日报 No.749</title>
+        <title>Go 指针使用指南 – 附示例代码</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>身份验证反向代理：基于 OAuth2 的安全认证解决方案 | 开源日报 No.749</h2>
-        <p>10/5/2025, 1:00:00 AM</p>
+        <h2>Go 指针使用指南 – 附示例代码</h2>
+        <p>10/6/2025, 3:04:41 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文作为开源日报，精选并简要介绍了五款开源项目，涵盖身份认证代理、量化交易系统、游戏模拟器、Linux 内核漏洞及开发者写作工具。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是一份综合指南，旨在帮助读者理解和有效使用 Go 中的指针。内容涵盖指针的声明、用法、常见陷阱、方法接收者以及 Go 1.24+ 引入的高级弱指针。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">《开源日报 No.749》汇集了五个不同领域的开源项目。首先，文章详细介绍了 `oauth2-proxy`，一款基于 OAuth2 和 OIDC 的反向代理身份认证工具，支持多身份提供商，可保护 Web 应用并传递用户信息。其次，介绍了 `c-binance-futures-quant`，一个为币安合约交易设计的低成本、高效率量化交易系统。接着，`joamag/boytacean` 作为一款用 Rust 编写的 Game Boy 模拟器被提及，其特点包括对 DMG 和 CGB 的良好支持及准确的音频处理。随后，文章聚焦于 `lrh2000/StackRot`，一个影响 Linux 内核 6.1 至 6.4 版本的特权提升漏洞（CVE-2023-3269）。最后，`oncework/kuaixieya` 被推荐为一款专为开发者设计的一站式写作、管理和多平台发布效率工具。文章为每个项目提供了关键特性和 GitHub 链接。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是一份关于 Go 指针的全面易懂的指南。指针是编程中的基本概念之一。文章首先阐释指针的概念，解释内存组织（栈与堆）以及指针如何存储内存地址。然后，详细介绍了如何使用 `&amp;` 和 `*` 运算符来声明、初始化和解引用指针，包括基本类型、结构体和用户自定义类型。作者还阐明了使用指针的原因：避免大型数据复制的开销，实现共享和可变状态，以及在方法接收者和底层应用程序编程接口交互中的关键作用。文章还明确指出了常见陷阱，如 nil 指针，以及指针与引用类型（如切片、映射和通道）的区别。专门讨论了指针接收者与值接收者，强调它们在 Go 惯用编程中的重要性。最后，文章提供了带有解决方案的实践练习，以及关于 Go 1.24+ 弱指针的高级内存管理章节，并总结了最佳实践。内容配有清晰的代码示例和图表，对 Go 开发者极具实用价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">oauth2-proxy 为 Web 应用提供灵活安全的身份认证方案</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该工具基于 OAuth2 和 OIDC，支持多种身份提供商，能作为独立代理或中间件集成，有效增强 Web 应用安全性并简化用户管理。</span>
+                        <strong style="color: #1e40af">指针存储内存地址，从而实现高效的数据共享和修改。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 指针使变量能够引用相同的底层数据，避免大型数据结构的复制开销，并促进程序不同部分之间的数据共享和修改，这对性能和状态管理至关重要。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">c-binance-futures-quant 实现低成本高效能的币安量化交易</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该系统架构经过实盘验证，利用分布式处理和多进程技术，能以极低成本支撑高频交易对扫描，具备企业级风控能力。</span>
+                        <strong style="color: #1e40af">Go 的指针接收者对于修改结构体状态或处理大型结构体的方法至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用指针接收者可确保方法在原始结构体实例上运行，防止不必要的复制，并允许有效的状态修改，这是 Go 中一种惯用的高效实践。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">StackRot 揭示 Linux 内核特权提升漏洞的严重性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该漏洞利用堆栈扩展处理缺陷，可能导致使用后释放问题，对 Linux 内核 6.1-6.4 版本构成威胁，凸显了内核安全的重要性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">快写鸭简化开发者写作与多平台发布流程</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该工具为开发者提供一站式写作、管理和发布功能，支持一键发布至多个平台，并本地存储账户信息，提升效率和安全性。</span>
+                        <strong style="color: #1e40af">Go 1.24+ 引入了弱指针，为缓存等特定场景提供高级内存管理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 弱指针提供了一种机制来保持对对象的引用，而不会阻止垃圾回收器回收它们。这对于优化缓存或辅助结构中的内存使用非常有用，因为在这些结构中，不应延长对象的生命周期。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">oauth2-proxy 是一个开源的反向代理工具，提供基于 OAuth2 和 OpenID Connect（OIDC）的身份认证功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">c-binance-futures-quant 是一个用于币安合约交易的低成本、高效率、易于实现的系统架构。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">boytacean 是一个用 Rust 编写的 Game Boy 模拟器。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">StackRot 是一个针对 Linux 内核的特权提升漏洞（CVE-2023-3269）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">快写鸭是一款专为开发者设计的一站式写作、管理和发布的效率工具，旨在简化繁琐的配置过程，同时提供丰富且可自定义的功能。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">指针只是一个**存储另一个变量的内存地址**的变量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">`*` 的这种双重用途是造成混淆的常见来源，因此让我们澄清一下：1. 在 *类型声明*（如 `var p *int32`）中，`*` 表示 `p` 是一个指向 `int32` 的指针。2. 在 *表达式*（如 `*p`）中，`*` 解引用指针，使您可以访问它指向的值。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">指针接收者可以说是 Go 中最常见和最实用的指针用法。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果对对象的唯一引用是弱引用，则垃圾回收器仍然可以释放它。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然不如 C/C++ 等语言强大，但 Go 指针是安全且易于使用的。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">开源服务指南</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">开源服务指南</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Gabor Koos</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4244</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2710</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">身份认证</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">反向代理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OAuth2</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">量化交易</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Go 编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">指针</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">结构体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">方法接收者</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/d294f81d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/b1535864" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/d294f81d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/b1535864">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
