@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>“开发 Linux 是业余爱好”？内核开发者：这是 Linus 唯一的错话，曾被忽视、嘲笑的 OS 打破“未来全是 Windows”的幻想！</title>
+        <title>血泪教训复盘：10 条不可违背的缓存军规</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>“开发 Linux 是业余爱好”？内核开发者：这是 Linus 唯一的错话，曾被忽视、嘲笑的 OS 打破“未来全是 Windows”的幻想！</h2>
-        <p>10/7/2025, 7:34:00 AM</p>
+        <h2>血泪教训复盘：10 条不可违背的缓存军规</h2>
+        <p>10/8/2025, 12:03:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">资深内核开发者 Jonathan Corbet 回顾了 Linux 从“业余爱好”到全球主导操作系统的 34 年发展历程，并展望了未来挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章基于实战经验，总结了 10 条不可违背的缓存使用军规，涵盖设计、失效、一致性及异常处理等多个方面，旨在提升系统性能与稳定性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章整理了 Linux 资深内核开发者 Jonathan Corbet 在欧洲开源峰会上的演讲内容，深度回顾了 Linux 内核从 1991 年诞生至今的非凡发展。文章将 Linux 的成长分为“被无视”、“被嘲笑”、“战斗与抗争”和“赢得胜利”四个阶段，详细阐述了每个阶段的关键事件和从中汲取的经验教训。初期 Linux 因被视为“玩具”而遭忽视，但其独特的开放开发流程、GPL 许可证和内核与用户空间分离的模块化设计，使其建立了强大的社区并迅速成长。面对微软的嘲笑和 SCO 的法律诉讼，Linux 社区展现出惊人的韧性，并通过 BitKeeper 事件催生了 Git。文章还强调了开发工具、尽早集成变更、以及“上游优先”原则的重要性。最后，Corbet 指出了 Linux 未来面临的挑战，包括社区多元性不足、维护者支持、开发工具现代化（特别是 AI 工具的整合）以及编程语言的选择（转向 Rust）等，呼吁社区持续改进以应对未来的发展。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文以一次生产事故为引，深入探讨了缓存使用中的 10 条“军规”。内容从避免大 Key、合理设置过期时间（TTL 及随机抖动防雪崩）、引入熔断降级机制，到解决缓存穿透（空值缓存）、缓存击穿（分布式锁 Redisson），以及数据一致性（延迟双删、Binlog 最终一致性）等常见问题。文章还强调了热点数据预加载和根据场景选择 Redis 数据结构的重要性。通过详尽的代码示例和图示，为开发者提供了实用且可操作的缓存设计与优化指南，最后总结了缓存治理的黄金法则，并提醒读者谨慎使用缓存。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Linux 的持续成功源于其独特的开放开发流程和强大的社区协作模式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过接受任何补丁、GPL 许可证避免碎片化、内核与用户空间分离的模块化设计，Linux 构建了一个强大且独立于任何公司的社区，是其长期发展的基石。</span>
+                        <strong style="color: #1e40af">缓存设计需避免大 Key，通过拆分提升性能与可维护性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将复杂对象拆分为多个小缓存，可有效减少 GC 开销和内存碎片，提高缓存命中效率和系统稳定性，避免因大对象导致的全量 GC 问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Linux 在面对外部挑战和商业化冲击时展现出惊人的韧性与适应能力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 面对微软的嘲讽、SCO 的诉讼、互联网泡沫破裂以及 BitKeeper 的许可证撤销，Linux 社区通过坚守原则、创新工具（如 Git）和专业化管理基础设施，克服了重重困难，并从中吸取教训。</span>
+                        <strong style="color: #1e40af">合理设置缓存过期时间并增加随机抖动，以防缓存雪崩。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过动态 TTL 策略分散缓存失效时间，结合熔断降级机制，能有效避免大量缓存同时失效对数据库造成瞬时冲击，增强系统韧性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">未来的 Linux 开发需要关注多元性、维护者支持、工具革新和编程语言现代化。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 社区需解决多样性不足和维护者倦怠问题，并积极探索 AI 工具的整合和向 Rust 等更安全编程语言的过渡，以吸引新一代开发者并保障长期发展。</span>
+                        <strong style="color: #1e40af">针对缓存穿透、击穿、雪崩等问题，需采用组合方案应对。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 空值缓存、分布式锁、热点预加载、熔断降级等策略应组合使用，构建健壮的缓存防护体系，全面提升系统在高并发下的可用性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">在数据库与缓存双写场景下，应采用延迟双删或基于 Binlog 的最终一致性方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些策略能有效解决数据库与缓存之间的数据一致性问题，避免因并发写入导致的数据错乱，确保业务逻辑的正确性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">根据数据特性和访问模式选择合适的 Redis 数据结构。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> String、Hash、List、Set、ZSet 等 Redis 数据结构各有所长，合理利用可大幅优化存储效率、操作性能和功能实现。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我想我们可以得出一个结论：林纳斯·托瓦兹说错了，而且这恐怕是有史以来唯一一次。Linux 确实变得既庞大又专业。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你的开发流程决定了项目的成长潜力。你如何组织项目、如何接受他人的贡献，将直接影响项目的成功与否。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Linux 的生命力在很大程度上独立于任何公司。它不被任何公司拥有，也不受任何公司控制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">专有软件是不稳定的基础。如果依赖别人的平台，就会受制于他们的意愿，他们迟早可能利用这一点对付你。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我相信，如果不改变这一点（C 语言选择），将越来越难吸引新一代开发者加入。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不会用缓存的程序员，就像不会刹车的赛车手。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缓存不是存储数据的垃圾桶，需要根据数据访问频率、读写比例、数据一致性要求进行分级管理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最优 TTL = 平均数据变更周期 × 0.3</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缓存是把双刃剑，用得好是性能利器，用不好就是定时炸弹。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当你准备引入缓存时，先问自己三个问题：真的需要缓存吗？缓存方案是否完整？有没有兜底措施？</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +66,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">CSDN</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">CSDN</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">36 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8884</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2305</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源软件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">操作系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内核开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件开发流程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/0a138cae" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/97d9de0e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/0a138cae">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/97d9de0e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
