@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>利用 Docker 和 Redis 实现时间序列模型的持久化状态</title>
+        <title>谷歌 DeepMind 发布 Gemini 2.5 计算机使用模型，赋能 UI 控制 AI 代理</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>利用 Docker 和 Redis 实现时间序列模型的持久化状态</h2>
-        <p>10/9/2025, 1:18:59 AM</p>
+        <h2>谷歌 DeepMind 发布 Gemini 2.5 计算机使用模型，赋能 UI 控制 AI 代理</h2>
+        <p>10/9/2025, 5:45:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本指南提供在 Docker 容器中部署时间序列模型时，利用 Redis 和 Docker 卷实现状态持久化的实用方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">谷歌 DeepMind 的 Gemini 2.5 计算机使用模型通过感知屏幕上下文并执行操作，使 AI 代理能够直接控制图形用户界面。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在解决开发人员在 Docker 中部署时间序列模型时面临的常见挑战：时间序列模型对历史上下文（内存）的需求与 Docker 容器的无状态、临时设计之间的固有冲突。文章详细阐述了 Docker 容器如何在重启时重置状态，导致“模型失忆”，进而使预测失效。为此，提出了将模型状态外部化至 Redis 的解决方案，使 Redis 成为能够记住历史数据的“外部大脑”。实践部分演示了如何通过 Docker 卷确保 Redis 数据在重启后持久存在，从而将系统从“非持久化”转变为“持久化”设置。此外，文章还简要探讨了使用 Redis 集群和 Sentinel 实现高可用性的扩展方案，并针对常见问题（如忽略卷验证、Redis 内存限制和监控）提出了建议。该方法实现了 API 容器的无状态化，同时保证了整个系统历史上下文的完整性，从而构建智能且可靠的预测服务。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">谷歌 DeepMind 推出了 Gemini 2.5 计算机使用模型，它是 Gemini 2.5 Pro 系统的一个专门变体，旨在使 AI 代理能够直接与图形用户界面交互。该模型使开发人员能够创建 AI 代理，这些代理可以点击、键入、滚动和操作网页，甚至潜在的移动应用上的交互元素。该系统通过迭代循环运行。开发人员提供环境截图、任务描述和历史操作记录，模型返回结构化的函数调用，由客户端执行这些调用，实现 UI 操作。早期评估表明，该模型在界面控制基准测试中表现出色，在 Online-Mind2Web 上实现了约 70%的准确率，并且响应时间优于其他系统。但是，一位高级数据科学顾问对该模型是否已准备好投入生产表示担忧，理由是当前实现可能存在速度瓶颈，并且可能被标准的 API 调用所取代。DeepMind 强调集成强大的安全防护措施，包括每个步骤的安全评估和敏感操作的用户确认要求，以降低与 UI 控制 AI 代理相关的风险。该模型目前通过谷歌 AI Studio 和 Vertex AI 中的 Gemini API 提供预览。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">时间序列模型对历史数据的依赖与 Docker 容器的临时、无状态设计从根本上存在冲突。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Docker 容器被设计为无状态且易忘，重启时会清除内存，这导致时间序列模型丢失了准确预测未来所需的关键上下文。</span>
+                        <strong style="color: #1e40af">Gemini 2.5 计算机使用模型使 AI 代理能够直接与图形用户界面进行交互。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种专用模型使 AI 能够感知屏幕上的上下文并执行诸如单击、键入和滚动之类的操作，从而显著提高 Web 和移动环境的自主智能体能力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 Redis 作为带有 Docker 卷的外部状态存储，为状态持久化提供了一个强大的解决方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将状态移至容器外部的 Redis，并使用 Docker 卷确保 Redis 数据的持久性，系统可以在重启后保持记忆，从而实现可靠的预测。</span>
+                        <strong style="color: #1e40af">该模型通过迭代循环运行，将视觉输入转换为结构化的 UI 操作以供执行。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发人员将屏幕截图和任务馈送到模型，该模型会生成可执行的操作，从而可以与 Web 和移动环境进行动态和自适应的交互，并重复执行直到任务完成。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">正确配置 Docker 卷对于确保数据独立于容器生命周期而持久存在至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Docker 卷在主机上创建一个独立的存储区域，允许 Redis 写入数据，即使容器停止、移除或重启，数据依然存在。</span>
+                        <strong style="color: #1e40af">尽管基准测试性能强劲，但实际的生产部署面临着速度和替代集成方法等挑战。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管该模型具有创新性，但专家反馈表明，当前实现可能存在速度瓶颈，对于某些任务，直接 API 调用或应用集成可能更为高效。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">集成了强大的安全措施，以防止恶意使用并确保 AI 代理的安全可靠部署。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> DeepMind 已通过每个步骤的操作评估和敏感操作的用户确认要求来优先考虑安全性，从而解决了 UI 控制 AI 的关键问题。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">时间序列模型完全依赖于内存。它们需要记住过去才能预测未来。但是，Docker 容器的设计理念是无状态且易忘，每次重启都会清除内存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与其将状态保存在容器内部，不如将其移至外部。Redis 成为模型的记忆。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将 Docker 卷视为容器的专用外部硬盘驱动器。默认情况下，当容器写入数据时，它会写入到临时层，该临时层在容器被移除时会被销毁。卷提供了一种永久保存数据的途径。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我再怎么强调也不为过：在部署到生产环境之前，请务必测试持久性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有效的最简单解决方案通常是最佳方案。并非总是需要 Kubernetes 和 StatefulSets，有时 Docker Compose 和卷就已足够。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">新模型使开发人员能够构建可以单击、键入、滚动和操作网页上的交互元素的代理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实际上，该模型通过 Gemini API 公开的新 *computer_use* 工具在一个循环中运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种类型的解决方案很有前途，但我认为它尚未准备好投入生产。当前的实现非常慢，并且通常可以用标准的 API 调用或直接的应用程序集成来代替。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Gemini 2.5 计算机使用模型集成了针对 Web 环境中恶意提示、不安全操作和诈骗的保护措施。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -61,30 +64,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Chirag Agrawal</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Robert Krzaczyński</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1727</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">441</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">时间序列模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">状态持久化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Docker</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Docker Compose</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI代理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">UI自动化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Gemini 2.5</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多模态AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">浏览器自动化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/299cce4d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/9b951b1b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/299cce4d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/9b951b1b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
