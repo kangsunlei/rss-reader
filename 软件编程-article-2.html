@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>vivo HDFS EC 大规模落地实践</title>
+        <title>Sapling：Monorepo 中的创新分支方案</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>vivo HDFS EC 大规模落地实践</h2>
-        <p>10/15/2025, 12:01:00 PM</p>
+        <h2>Sapling：Monorepo 中的创新分支方案</h2>
+        <p>10/16/2025, 5:10:43 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">vivo 在大规模 HDFS 集群中成功落地 Erasure Coding (EC)技术，通过详细的实践方案实现了数百 PB 存储空间的显著节省。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Meta 详细介绍了 Sapling 创新的单代码库目录分支解决方案。该方案支持可扩展的合并，同时保持线性提交图并增强开发者体验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了 vivo HDFS 集群在万台节点、EB 级数据规模下，如何通过引入 Erasure Coding (EC)技术替代传统三副本，有效缓解存储压力并降低成本。详细介绍了 EC 编码的原理（如 Reed-Soloman 码）、存储布局的改变（条带存储），并对比了 EC 与三副本的优劣。实践部分重点阐述了 vivo 在 EC 落地过程中遇到的兼容性问题（服务端 HDFS 2.x 到 3.x 升级、客户端 Spark2 到 Spark3 迁移）、异步转换策略（冷热数据分层、用户自主设置）、数据校验方案（MD5MD5CRC 到 Composite CRC 的切换及目录校验）、文件损坏与修复（社区补丁、补块结果校验、定制化批量校验工具及 ORC 文件修复方法），以及如何结合机器异构和存储策略进一步优化成本。最终，EC-RS6-3-1024k 策略为 vivo 节省了数百 PB 存储空间，取得了显著收益，并展望了未来性能优化和更精细化冷热分层等方向。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">这篇来自 Meta 工程部的文章介绍了 Sapling 的开源单代码库分支解决方案，解决了大型单代码库面临的可扩展性和开发者体验挑战。文章解释说，传统的全代码库分支会导致非线性提交图和性能问题，尤其是在需要合并时。其核心创新是“目录分支”，它允许团队管理特定目录的版本，就像它们是传统的代码库分支一样，支持它们之间的代码挑选和合并。关键的是，在单代码库级别，这些操作显示为线性提交，从而保持性能。文章详细介绍了使用 `sl subtree` 命令的实现，讨论了与 Meta 构建系统 (Buck2) 的集成，并分享了来自各个工程团队的积极用户反馈。它强调了目录分支的常见用例，例如隔离开发与生产环境、管理大规模实验性功能以及简化从 Git 的迁移，同时还概述了轻量级 Git 代码库集成的未来工作。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">EC 编码是大数据存储降本增效的关键技术，能大幅降低 HDFS 存储冗余度。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将传统三副本替换为 EC 编码，在保证数据可靠性的前提下，vivo 实现了 50%的存储冗余度降低，节省了数百 PB 存储空间，效益显著。</span>
+                        <strong style="color: #1e40af">大型单代码库中的全代码库分支会导致可扩展性问题和非线性提交图。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统的代码库分支，当应用于单代码库时，会在合并时创建宽度过大且非线性的提交图，从而显著降低 `sl log` 和 `sl blame` 等操作的性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">大规模 HDFS EC 落地需解决多方面复杂挑战，包括兼容性、数据校验与文件修复。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> vivo 通过 HDFS 3.x 升级、客户端迁移、切换校验和方式、打补丁、引入补块校验及定制化修复工具，系统性解决了 EC 实践中的核心难题，确保了数据一致性和可靠性。</span>
+                        <strong style="color: #1e40af">目录分支支持可扩展的合并，同时保持线性的单代码库提交历史。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Sapling 的目录分支允许团队管理和合并特定目录中的更改，在单代码库级别显示为线性提交，从而解决可扩展性挑战并保持性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">结合冷热数据分层与异构存储策略能进一步提升 EC 的存储效益和 TCO。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章提出将访问频率低的 EC 数据存储到大存储机器的 archive 介质上，并设置 cold 存储策略，从而实现单位存储成本的持续降低。</span>
+                        <strong style="color: #1e40af">目录分支支持单代码库中版本管理的多样化用例。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Meta 团队采用它来处理诸如隔离开发与生产环境、管理大规模实验性功能以及简化从 Git 的迁移等场景，从而在不牺牲单代码库优势的情况下提供灵活性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用 EC 编码的方式替代原来的三副本存储，保证数据可靠性的同时可以节约存储。相应地，付出的代价是读取性能的下降，对于访问频率不高的数据，使用 EC 编码很合适。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们没有对 Client2.x 客户端访问 EC 文件做兼容性的开发，更多是通过推动用户升级客户端来访问 EC 文件，例如 Spark2 任务切换至 Spark3 任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">EC 编码会带来存储布局的改变，相同的文件三副本与 EC 数据存储的块大小，块数量都不一致，这让 HDFS 默认的 MD5MD5CRC 的方式变得不再适用。需要将校验方式改为 COMPOSITE CRC。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如何避免文件损坏，如何对补块的结果进行校验，如何修复损坏文件是三个重要的需要解决的问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">vivo 的 HDFS 集群已存有几百 PB 的数据采用 EC-RS6-3-1024k 策略存储，相比三副本 EC-RS6-3-1024k 方式能带来 50%的存储收益，节省了数百 PB 的存储空间，为公司带来了巨大的收益。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">关键的技术洞察是，两种工作流程 --- **不可合并的全代码库分支** 和 **可合并的目录分支** --- 解决了 Meta 构建的大量不同产品的与分支相关的所有问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">维护一个线性提交图，其中大多数提交只有一个父级，对于所有单代码库用户（而不仅仅是那些使用分支的用户）来说，对于保持这些操作的快速至关重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">至关重要的是，虽然目录分支支持目录之间的合并，但在单代码库的提交图级别，它们显示为线性提交。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">值得注意的是，拥有单一版本的代码仍然是单代码库的默认假设。但是，如果上述三个原因中的任何一个适用，则可以使用目录分支作为解决方案，从而提供分支工作流程，而不会牺牲单代码库的优势。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Engineering at Meta</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Engineering at Meta</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">39 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9609</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1575</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">HDFS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Erasure Coding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大数据</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">存储优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Monorepo</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源码控制</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Sapling</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分支策略</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式版本控制</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/216c8d74" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/f74ca67d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/216c8d74">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/f74ca67d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
