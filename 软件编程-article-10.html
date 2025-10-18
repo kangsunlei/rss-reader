@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何优化 React 图形界面代码库：优化 d3-zoom 和 dnd-kit 代码</title>
+        <title>被偷家了！崩溃！！Element-plus 组件测试的后续~</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何优化 React 图形界面代码库：优化 d3-zoom 和 dnd-kit 代码</h2>
-        <p>10/16/2025, 12:40:20 PM</p>
+        <h2>被偷家了！崩溃！！Element-plus 组件测试的后续~</h2>
+        <p>10/17/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了如何通过高级 React 性能优化，提升使用 d3-zoom 和 dnd-kit 构建的图形化应用性能。这些优化措施能够显著改善大量交互元素的处理效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章纠正了 Element-plus 组件内存泄漏的误判，揭示了 Devtools 动画面板和 Vue slot 的潜在问题，并列出调整后仍存在泄漏的组件。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文旨在解决 React 图形应用（如 Miro 或 Figma）中存在的性能瓶颈，这些应用通常依赖 D3 Zoom 实现平移/缩放，以及 dnd-kit 实现拖拽功能。文章指出，诸如 `useCallback` 和 `memo` 等常见的 React 优化手段往往效果不佳，因为浏览器布局和渲染时间占据了主导。作者建议使用 JavaScript 性能 API 进行精确测量。关键优化包括调整用于画布缩放的 CSS 转换，以避免在平移/缩放过程中子元素的重复渲染。在拖拽方面，文章介绍了一种精妙的组件重构方案：使用经过 memo 优化的 `AllCards` 组件，其中包含 `NonDraggable` 元素，并动态地在顶部渲染一个激活状态的 `Draggable` 组件和一个 `Cover` 组件。此方法能够显著减少重复渲染和 `memo` 的开销，使得拖拽启动速度提升高达 20 倍，即使处理 100，000 张卡片，也能在拖拽完成时获得显著的性能提升。但与此同时，代码复杂度也会相应增加。文章末尾提供了一个详细的性能对比表格。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是对前一篇关于 Element-plus 组件内存泄漏文章的后续与纠正。作者首先对之前文章中的错误表示歉意，并指出导致误判的两个主要原因：一是 Chromium Devtools 的 Animations 面板会保留对动画元素的引用，使得即使 DOM 已移除，也可能在 Devtools 中显示为分离元素；二是 Vue.js 的 slot 机制在父组件销毁时，未能正确销毁其内部填充的元素，导致内存泄漏。文章通过代码示例详细解释了这两个问题，并引用了 Chromium issues 和 Vue.js 的 commit 进行验证。在排除了 Devtools 和 Vue 自身问题后，作者重新测试并列出了 Element-plus 组件中仍然存在内存泄漏的组件列表，包括 el-select、el-popper 等。最后，文章重申了内存泄漏的定义，并将其与渲染跳帧导致的卡顿问题进行了区分，强调了正确理解和排查前端性能问题的必要性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JavaScript 性能 API 对于图形化 React 应用的性能测量至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统的 React 性能分析工具通常会忽略重要的浏览器布局和渲染时间，而这在高度可视化的应用中至关重要。因此，JavaScript 性能 API 对于以用户为中心的性能指标测量更为准确。</span>
+                        <strong style="color: #1e40af">Chromium Devtools 的 Animations 面板可能导致内存泄漏的误判</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Devtools 的 Animations 面板在打开时会保留对动画元素的引用，使得即使 DOM 元素已被移除，在内存快照中仍可能显示为分离元素，误导开发者认为存在内存泄漏。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用 CSS 转换优化画布的平移/缩放，可以减少子组件的重复渲染。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将 `translateX/Y/scale` 应用于画布，子元素能够自动跟随画布进行缩放，从而避免了单独的重新渲染，提升了性能，尤其是在元素数量庞大的情况下。</span>
+                        <strong style="color: #1e40af">Vue.js 的 slot 机制曾存在 bug，导致组件卸载后子元素未释放</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Vue 在处理 slot 内容时，当父组件销毁时，其 slot 内部填充的子元素未能被正确销毁，从而造成实际的内存泄漏，该问题已在 Vue 的更新中得到修复。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过巧妙的组件重构，可以显著提升大量元素的拖拽性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用经过 memo 优化的 `AllCards` 组件（包含 `NonDraggable` 元素），并在顶部动态渲染一个激活状态的 `Draggable` 组件，能够最大限度地减少 `memo` 开销和重复渲染，从而显著提升拖拽速度。</span>
+                        <strong style="color: #1e40af">排除外部因素后，仍有部分 Element-plus 组件存在内存泄漏</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在纠正了 Devtools 和 Vue 自身问题导致的误判后，作者重新测试发现 el-select、el-popper 等部分 Element-plus 组件在特定场景下仍然存在内存泄漏问题，需要持续关注和优化。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">类似 `useCallback` 和 `memo` 的标准优化，在拖动操作中使速度提升约两倍，但对平移和缩放没有明显效果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在这种情况下，浏览器布局和渲染所消耗的时间非常显著，而 React 性能分析工具未能将其纳入考量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我将其修改为使用 `translateX(x) translateY(y) scale(k)`，效果相同，但会缩放子元素。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在少量卡片的情况下，速度大致相同；但在大量卡片的情况下，速度大约快了二十倍。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但这样做的代价是代码复杂度显著增加，使得代码更难理解和修改，特别是对于新手而言。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最新消息，VUE 的 slot 移除产生内存泄漏问题已修复！！！前端佬们嗨起来~</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Devtools 的问题，是通过 Chromium issues 中知道的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Animations （动画） 面板中保留了对动画元素的引用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">看上面的那个 commit，大概思路就是在父组件销毁后，顺道把 slot 销毁掉。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">内存泄漏是指程序在申请使用内存后，无法在程序关闭后正常释放应该释放的内存，导致此内存一直被占据。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Cedd Burge</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">稀土掘金技术社区</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1903</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">29 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7089</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">React 性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">D3.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">dnd-kit</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Web 性能</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存泄漏</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vue.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Element-plus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Devtools</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/5d83a85e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/c1a000a6" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/5d83a85e">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/c1a000a6">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>CodeQL 查询调试指南：快速定位问题</title>
+        <title>如何设计支撑亿级流量的开放平台架构？（大厂珍藏版）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,85 @@
         </style>
     </head>
     <body>
-        <h2>CodeQL 查询调试指南：快速定位问题</h2>
-        <p>10/16/2025, 10:15:01 AM</p>
+        <h2>如何设计支撑亿级流量的开放平台架构？（大厂珍藏版）</h2>
+        <p>10/16/2025, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 分享 CodeQL 查询调试分步指南，利用 ASTs 和部分路径图等内置功能提升效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细阐述了如何通过三层解耦、多级缓存、异步消息队列、数据库分库分表及高可用架构等策略，设计并构建支撑亿级流量的开放平台系统，并结合大厂实践案例。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 这条推文对使用 CodeQL 进行静态代码分析的开发者和安全研究人员来说是个好帮手。它重点介绍了 CodeQL 的集成调试工具，如抽象语法树 (ASTs) 和部分路径图，帮助解决调试查询失败这一常见问题。链接提供详细指南，包含实用、可操作的步骤，助你快速诊断和解决问题，提升漏洞研究和代码安全效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了支撑亿级流量开放平台的架构设计与演进策略。作者从整体架构出发，提出了三层解耦（接入层、能力层、基础层）和流量分治的理念，详细介绍了各层级的关键技术组件及职责。接着，文章阐述了多级缓存体系（L1 本地缓存、L2 分布式缓存、L3 CDN 边缘缓存）在抗高并发读请求中的作用，并结合布隆过滤器等技术进行了热点隔离实践。异步架构部分则强调了消息队列在削峰填谷、服务解耦和容错方面的价值。数据库层面，文章探讨了分库分表、读写分离和热点表治理策略。在分布式事务处理上，介绍了 TCC、Saga、AT 等模式及 Seata 框架的应用。最后，文章详细讲解了容器化弹性伸缩、异地多活容灾和混沌工程等高可用策略，并规划了开放平台从基础建设到生态扩展的三个阶段性实施路径，为读者提供了全面的亿级流量平台架构实战指南。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">开放平台需三层解耦与流量分治以应对高并发</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过接入层（网关）、能力层（微服务）、基础层（存储）的职责分离和流量控制，有效提升系统承压能力、扩展性和可观测性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">多级缓存体系是抗住海量读请求的关键防线</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 构建本地缓存、分布式缓存、CDN 边缘缓存的三级漏斗模型，结合布隆过滤器，大幅提高热点数据访问吞吐并减轻数据库压力。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">异步架构通过消息队列实现削峰填谷与服务解耦</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 引入消息队列将强耦合调用解耦为松耦合事件流，平滑处理瞬时高并发，提升系统鲁棒性，并支持失败重试与容错。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">数据库弹性设计需结合分库分表与热点治理</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过水平拆分、读写分离、全局唯一 ID 策略及热点表缓存预聚合、拆分等手段，实现存储层的弹性扩展和高性能。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">分布式事务处理需谨慎选型，权衡一致性与性能</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在微服务架构下，TCC、Saga、AT 等分布式事务模式各有适用场景，应结合业务特性谨慎选择，并辅以 Seata 等框架及完善的监控补偿机制，以保障数据最终一致性并兼顾性能。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">高可用架构通过容器化、异地多活和混沌工程实现弹性与韧性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Kubernetes 自动伸缩、异地多活部署保障业务连续性，并通过混沌工程主动发现并修复系统脆弱环节，确保系统稳定。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">开放平台不是简单的 API 接口聚合，它是一个需要承载高流量、高并发的系统，是边界清晰的'操作系统'，也是具备持续演进能力的产品级架构体系。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个成熟的开放平台需要经受极高流量和并发的考验。例如淘宝开放平台每日承载百亿级的 API 调用和消息推送，在多年'双 11'洪峰流量的洗礼下依然运行如常。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">完善的多级缓存体系既要'扛得住'流量又要'拿得稳'数据，在保证性能的同时采取必要的隔离和预防手段，构筑热点数据的坚固防线。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过引入消息队列等异步机制，开放平台可以将模块间的强耦合调用解耦为松耦合的事件流，起到'削峰填谷'的效果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">能通过事务拆分、弱一致性、补偿确认等业务手段解决的场景，应尽量避免引入全局分布式事务。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHub(@github)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHub</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">242</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6762</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CodeQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Debugging</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Static Analysis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Code Security</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vulnerability Research</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开放平台</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高并发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/status/1978766622979502348" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/zh/article/b57d2296" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/status/1978766622979502348">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/b57d2296">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

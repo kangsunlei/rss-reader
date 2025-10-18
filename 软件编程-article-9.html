@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何构建端到端机器学习流程追溯</title>
+        <title>【智造】AI 应用实战：6 个 agent 搞定复杂指令和工具膨胀</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何构建端到端机器学习流程追溯</h2>
-        <p>10/16/2025, 1:43:13 PM</p>
+        <h2>【智造】AI 应用实战：6 个 agent 搞定复杂指令和工具膨胀</h2>
+        <p>10/17/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文全面介绍了如何为在 AWS Lambda 上使用 DVC、Evently AI 和 Prefect 的无服务器机器学习应用构建端到端机器学习流程追溯。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细阐述了如何通过多 Agent 系统解决 AI 应用中复杂指令处理和工具膨胀问题，尤其是在联调造数场景下的实践与架构演进。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细阐述了机器学习流程追溯对于可靠的 ML 系统中的可重复性、可审计性和合规性的关键作用。它通过为部署在无服务器 AWS Lambda 上的 ML 应用提供实用的、逐步的集成指南，解决了创建全面追溯方案的复杂性。该解决方案概述了整个 ML 管道的覆盖范围，包括 ETL、使用 Evently AI 进行数据漂移检测、预处理、模型调优，以及风险/公平性评估的介绍，但在详细介绍后续阶段之前内容结束。DVC（数据版本控制）对于跟踪各阶段数据、实验、模型和预测至关重要，并将元数据推送到 AWS S3。Prefect 用于工作流编排，安排每周运行以检测更改并触发追溯流程。本文提供了详细的 DVC 配置（`dvc.yaml`）、Python 脚本和每个阶段的解释，演示了如何设置数据版本控制、实施数据漂移检查（检测到漂移时立即退出）、预处理数据和调整 PyTorch 模型。所提出的架构集成了 GitHub 用于代码追溯，DVC 用于数据和实验追溯，确保只有通过数据漂移和公平性测试的模型才能用于预测。本指南非常实用，为机器学习运维工程师提供了可操作的步骤。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了在联调造数这一典型 AI 应用场景中，如何从单 Agent 模式演进到多 Agent 模式以应对复杂指令和工具膨胀的挑战。单 Agent 模式在工具数量有限、指令相对简单时表现良好，但面对多步骤复杂指令和日益增长的工具库，会遇到“造不准”和“造的慢”的问题。为解决这些痛点，文章提出并详细介绍了多 Agent 架构，将系统拆分为意图识别 Agent、工具引擎（包含工具解析和过滤引擎）、推理执行 Agent 以及总结与交互 Agent。其中，意图识别 Agent 负责解析用户指令并抽象为标准意图模型；工具引擎通过实时过滤将海量工具精简至少量候选；推理执行 Agent 采用“逆向推理、正向执行”策略，有效构建工具链。该方案显著提升了系统在复杂场景下的准确性和响应速度，为构建鲁棒的 AI Agent 应用提供了宝贵的实践经验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">机器学习血缘对于系统的可重复性、可审计性和合规性至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 跟踪数据、代码、实验和模型可确保 ML 应用可以被重新创建、验证并满足 GDPR 和欧盟人工智能法等监管要求。</span>
+                        <strong style="color: #1e40af">多 Agent 架构有效解决了单 Agent 在复杂指令和工具膨胀下的“造不准”和“造的慢”问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将意图识别、工具筛选、推理执行等核心功能拆分给独立 Agent，降低了单个 Agent 的负担，提高了系统处理复杂任务的准确性和效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">DVC 为数据、模型和实验提供强大的版本控制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在 `dvc.yaml` 中定义阶段并使用基于哈希的跟踪，DVC 为工作流程建立了一个有向无环图（DAG），链接每个阶段并确保数据/模型的可重复性。</span>
+                        <strong style="color: #1e40af">意图识别和工具引擎是提升 AI Agent 性能的关键前置环节</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 意图识别 Agent 规范化用户指令，工具引擎通过实时过滤机制将海量工具精简，为后续 LLM 推理提供了高质量、小范围的输入，显著提升了响应速度和推理准确性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">集成数据漂移检测和工作流编排可增强 ML 系统的可靠性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Evently AI 帮助检测数据漂移，防止模型性能下降，而 Prefect 自动化并调度整个血缘过程，确保持续监控和执行。</span>
+                        <strong style="color: #1e40af">“逆向推理、正向执行”策略能有效构建复杂工具链以达成用户指令</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该策略指导 LLM 首先识别最终目标工具，再递归追溯其依赖，形成完整的工具调用链，从而解决了 Agent 在多步骤任务中指令遵循和充分联想的矛盾。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">机器学习血缘在任何可靠的 ML 系统中都至关重要。它允许您跟踪数据和模型版本，确保可重复性、可审计性和合规性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DVC 通过单独的阶段跟踪血缘，从数据提取到公平性测试。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">数据漂移会随着时间推移降低模型的泛化能力，使其在部署后进行检测至关重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只有成功通过数据漂移和公平性测试的模型才能通过 AWS API 网关提供预测。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Prefect 触发 DVC 检查数据和脚本中的更新，并在检测到更改时执行完整的血缘过程。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">联调造数是一个非常典型的 AI 应用场景，其背后是用户丰富的语言表达、复杂的业务场景、精准的指令执行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智造 1.0 已经可以完成基本的造数需求，并支持了多轮的对话。但是，其上面也飘着两朵乌云：1.造不准。2.造的慢。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">多 agent 方案适用于人员多、工具多，平台更为开放式的场景。但是方案过于复杂，需谨慎采用。每个 agent 都会引入不确定性，在层层重叠之下，问题会放大，排查难度也会放大。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI"墨菲定律"：所有我们自己理解模糊的地方，最终 LLM 都一定会出现摇摆。所以，核心的原则、规范、流程，需要我们去定义清楚，并清晰地告知 LLM。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Kuriko Iwai</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">96</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">23 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5674</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">124 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">30955</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">机器学习血缘</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MLOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DVC</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS Lambda</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据漂移</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多Agent系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM应用开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">意图识别</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/81874083" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/a2fe4f99" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/81874083">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATZSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6NdKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1KzCciNmjeAPKFmAvKb1LxxUrXopGrRSdWiT5ap2QTkDSBvAHlCzaRmk5pNQDadVC06qVp0UrXoky8D8oSaJ4BMaiY1E5BJzQ2QN4A8oeYJIE+o+aaTqkUnVYtOqhZ98j8HZFIzqZmATGomIJOaCcik5r/kpGrRSdWik6pFn/zHALlR8wSQSc0EZFIzAfk/OaladFK16KRq0SdfpuY3qbkBMqm5UTMBmdTcqLkBMql5Qs2f5KRq0UnVopOqRZ8sA/InATKpmYBMaiYgk5oJyKRmAjKpeQPIn+ykatFJ1aKTqkWfvKTmTwJkUvOGmgnIE2omIJOaGzV/k5OqRSdVi06qFuGPvABkUjMB2aTmBsikZgLyhJongExqboBMaiYgm9R800nVopOqRSdVi/BHfhGQSc0EZFIzAZnUPAFkUvMGkEnNDZBvUvMEkEnNGydVi06qFp1ULcIfeQHIpGYCMqm5AXKj5gbIpOYGyI2aCcgTam6A3Kj5m5xULTqpWnRSteiTl9RMQN5QcwNkUnMDZFJzo2YCMql5AsgbQG7UTEAmNROQSc2mk6pFJ1WLTqoWffISkBs1E5BNQCY1bwCZ1ExAJjUTkBs1vwnIpOabTqoWnVQtOqla9MkyNU+o+TepuQEyqZmAPAHkDTUTkEnNE0AmNW+cVC06qVp0UrXok5fU3AB5A8iNmhsgN2omIJOaCcgTam6ATGpugExqJiA3aiY1m06qFp1ULTqpWvTJMiCTmgnIBGRSM6mZgLyhZgLyhpongGwCMqm5ATKp2XRSteikatFJ1aJPlqmZgExqJiATkBs1N0CeUDMBuVFzA2RSc6PmDTUTkBs133RSteikatFJ1aJPXgLyTWomIJOaGzU3QG6ATGomIG8AmdRMQG6ATGomIDdAJjVvnFQtOqladFK16JNlaiYgbwB5A8ik5kbNDZBJzQRkAjKpuQEyqZmATGreULPppGrRSdWik6pFn/wyIJOaJ4DcqHlCzQ2QGyCTmgnIDZBJzQTkBsikZlIzAZnUbDqpWnRSteikatEnfxggTwC5UTMBeULNBOQGyKRmAnIDZBOQGyCTmjdOqhadVC06qVqEP/IXAzKpmYC8oeYGyBNqJiCTmieAbFLzxknVopOqRSdViz55CchvUjOpuVEzAblRcwNkUnMDZALyBJBJzRtqvumkatFJ1aKTqkWfLFOzCcgNkBs1TwC5UfOb1Dyh5t90UrXopGrRSdWiT74MyBNq3lDzhJongLyhZgIyAdkEZFLzTSdVi06qFp1ULfqkHlEzAdmk5gbIpGYCcgPkRs0bJ1WLTqoWnVQt+uQ/DsgNkG9Sc6PmBsgNkDfUbDqpWnRSteikatEnX6bmm9S8oWYCMqmZgExq3gAyqZnUTEAmNROQSc0E5JtOqhadVC06qVr0yTIgvwnIjZobIJOaCcgTQCY1E5BJzQRkUnMD5AbIpOabTqoWnVQtOqlahD9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9A+IRTVShqOFkQAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/a2fe4f99">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
