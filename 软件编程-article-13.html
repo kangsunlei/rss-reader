@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>何时应该考虑使用状态机？</title>
+        <title>LitmusKt：提升 Kotlin 编译器可靠性的并发测试工具 | The Research Blog</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,76 @@
         </style>
     </head>
     <body>
-        <h2>何时应该考虑使用状态机？</h2>
-        <p>10/25/2025, 5:58:40 PM</p>
+        <h2>LitmusKt：提升 Kotlin 编译器可靠性的并发测试工具 | The Research Blog</h2>
+        <p>10/29/2025, 12:12:14 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Guillermo Rauch 概述了在软件系统中，为了提高异步可靠性和管理复杂工作流，实施状态机模式的几个关键场景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">JetBrains 研究院开发了 LitmusKt，这是一种用于 Kotlin 的新型多平台并发测试工具，它可以系统地发现细微的、特定于平台的并发错误，并且已经集成到 Kotlin 的 CI/CD (持续集成/持续交付) 流程中，用于持续测试。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Guillermo Rauch 的这条推文深刻地指出了在软件架构中何时应该采用“状态机”模式。他列举了常见的开发挑战，这些挑战都预示着需要使用状态机：API 端点执行大量副作用、数据库中存在不一致的状态（例如，待处理的未完成任务）、与不可靠的第三方服务进行交互、尝试在带内执行过多的同步工作（这通常应该异步处理，否则会导致 500 错误，而更合适的响应是 202 Accepted），以及缺乏管理和版本控制的临时工作流。总而言之，这条推文强调了“状态机”对于在复杂的应用中实现健壮的异步可靠性和结构化的工作流管理至关重要。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 LitmusKt，这是一种由 JetBrains 研究院专门为 Kotlin 的多平台环境（JVM、Native、JavaScript）开发的新型并发测试工具。首先解释了并发编程固有的复杂性和挑战，例如由编译器优化和 CPU 重新排序导致的弱行为，这些行为会导致无法重现的“海森堡 Bug”。文章强调了传统测试方法在解决这些细微问题上的局限性，并强调了对 litmus 测试等专用工具的需求。LitmusKt 通过提供自定义的 DSL (领域特定语言) 来编写 litmus 测试一次，并在 Kotlin/JVM 和 Kotlin/Native 上运行它们，从而弥补了这一差距。它详细介绍了 LitmusKt 的设计，包括其自定义的 Kotlin/Native 测试运行器以及与 Kotlin/JVM 的 JCStress 集成，以及它将结果标记为可接受、有趣（弱但可容忍）或禁止（错误）的能力。至关重要的是，LitmusKt 成功地发现了一个 Kotlin/Native 中的关键“不安全发布”错误，其中可能读取未初始化的内存，从而导致其集成到 Kotlin 的 CI/CD (持续集成/持续交付) 流程中。该工具是开源的，促进了更可靠的多平台 Kotlin 开发，并为结合编译器模糊测试和并发分析的混合测试方法开辟了可能性。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">并发编程本质上是复杂的，由于编译器和 CPU 优化，导致“弱行为”和“海森堡 Bug”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 现代编译器和 CPU 为了提高性能会重新排序操作。这会在并发程序中产生难以察觉的结果，而这些结果很难用传统的测试方法进行诊断。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">LitmusKt 是一种用于 Kotlin 的新型多平台并发测试工具，旨在系统地查找细微的、特定于平台的错误。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它提供了一个自定义 DSL (领域特定语言)，开发者可以使用该 DSL (领域特定语言) 为 Kotlin/JVM 和 Kotlin/Native 编写一次测试，定义共享状态、线程行为以及预期和禁止的结果。这降低了复杂并发测试的门槛。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">LitmusKt 成功识别并帮助修复了 Kotlin 编译器中的关键错误，证明了它的实际价值。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该工具在 Kotlin/Native 中发现了一个“不安全发布”错误，该错误允许访问未初始化的内存。这一发现促使 LitmusKt 被集成到 Kotlin 的 CI/CD (持续集成/持续交付) 流程中，从而显著提高了编译器的可靠性。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了给这种混乱带来秩序，在 JetBrains 研究院，我们构建了 LitmusKt --- 一种用于 Kotlin 的多平台并发的新型测试工具。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实际上，编译器和 CPU 优化改变了程序的行为，使得并发编程比乍看起来更加难以捉摸和不可预测。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与其他语言不同，Kotlin 的一个关键特性是它可以编译为 JVM、Native、JavaScript 和 WebAssembly，并且每个平台都有自己独特的并发语义和内存模型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Kotlin 是一种内存安全语言，但即使在这样的语言中，内存不安全的行为也可能会悄悄发生。这表明了为什么系统性的并发测试至关重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们不仅仅是构建了一个工具；我们建立了一种新的方式来思考多平台语言的并发测试。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch(@rauchg)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Katie Fraser</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">819</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3128</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">State Machine</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Software Architecture</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API Design</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Asynchronous Programming</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">System Reliability</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发测试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kotlin</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多平台开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LitmusKt</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编译器缺陷</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/status/1982144794727227463" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/zh/article/56a1d7dd" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/status/1982144794727227463">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/56a1d7dd">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

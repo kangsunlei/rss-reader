@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Anthropic 推出用于自定义 Claude 任务的技能</title>
+        <title>Redis key 消失之谜</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Anthropic 推出用于自定义 Claude 任务的技能</h2>
-        <p>10/25/2025, 10:05:00 AM</p>
+        <h2>Redis key 消失之谜</h2>
+        <p>10/29/2025, 12:01:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Anthropic 为 Claude 引入了“技能 (Skills)”，使开发者能够使用模块化、可重用的任务组件来扩展人工智能，强调透明性、可审计性和精细控制，以实现专门化应用。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细分析了生产环境中 Redis key 消失的问题，定位到是由于请求积压导致内存飙升触发淘汰，并提供了从紧急修复到根本解决的方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Anthropic 推出了“技能 (Skills)”，一项允许开发者使用独立的、可重用的任务组件增强 Claude 能力的新功能。这些技能可以在对话期间被 Claude 调用，执行诸如总结文档、检索应用程序编程接口 (API) 数据或执行特定领域计算等操作。该功能可以通过 Claude 的 Web 应用程序、代码环境和 API 访问，并提供一个新的 `/v1/skills` 端点，用于创作和管理版本。技能在安全的代码运行环境 (Code Execution Tool) 中运行，并由模式 (Schema) 定义，从而实现动态调用和与外部系统的无缝集成。虽然类似于 OpenAI 的 GPT 模型中的函数调用和微软的 Copilot 生态系统，但 Anthropic 强调了一种更透明和可审计的方法，这与其对模型安全性和可解释性的关注相一致。这种架构提供了对数据访问和操作执行的精细控制，吸引了那些优先考虑灵活性和合规性的企业。早期采用者对专业化和代理潜力表示出极大的热情，Anthropic 计划提供进一步的文档和社区支持。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文从生产环境业务服务报错 Redis key 获取不到的现象入手，通过监控日志、Redis 指标和抓包分析，逐步排除了 key 正常过期、内存告警失效等初步怀疑。最终定位到问题根源在于业务集中请求 Redis（特别是通过 Pipeline 方式），导致客户端输出缓冲区（client-output-buffer）数据量激增，进而使 Redis 实例的内存使用量超出`maxmemory`限制，触发`volatile-lru`淘汰策略驱逐了大量 key。文章详细阐述了 Redis 内存构成，并强调了客户端输出缓冲区积压在内存管理中的重要性。针对此问题，提供了包括临时扩大内存、限制缓冲区大小、业务限流削峰及增加 MySQL 兜底机制等紧急修复措施，以及业务逻辑优化、打散请求等根本性解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Anthropic 的“技能 (Skills)”使开发者能够使用模块化、可重用的任务组件来扩展 Claude。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 技能允许 Claude 动态地执行特定的功能，如数据检索、总结或外部操作，从而显著增强了其多功能性和适应性，以满足专业的业务和研究需求。</span>
+                        <strong style="color: #1e40af">Redis 内存限制不仅包含业务数据，还包括客户端缓冲区，积压可能导致淘汰。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Redis 的`maxmemory`参数限制的是实例总内存，其中包括客户端输入/输出缓冲区。当大量请求导致客户端输出缓冲区积压时，会迅速消耗内存，进而触发淘汰策略。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">技能 (Skills) 功能优先考虑透明性、可审计性和精细的开发者控制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与竞争对手的产品不同，技能由模式 (Schema) 定义，并在明确的边界内运行，确保 Claude 只访问允许的数据和操作，使其对专注于安全和合规性的企业极具吸引力。</span>
+                        <strong style="color: #1e40af">大量集中请求（特别是 Pipeline）可能导致客户端输出缓冲区激增，进而引发内存问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使是 GET 请求，通过 Pipeline 批量执行时，如果结果不能及时发送，其回包会暂存在客户端输出缓冲区，导致`client_longest_output_list`指标飙升，耗尽内存。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">技能 (Skills) 代表着人工智能应用朝着更加专业化和代理化的未来迈出了一步。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过允许 Claude 动态地调用特定能力并与外部系统集成，技能促进了复杂人工智能代理的开发，这些代理能够执行复杂的自动化工作流程和适应性智能。</span>
+                        <strong style="color: #1e40af">生产环境问题解决应结合紧急止损与根本优化，并增加兜底机制提升系统韧性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对此类内存溢出导致的数据丢失问题，应采取临时扩容、限流等紧急措施，同时从业务层面优化请求模式，并建立数据回源的兜底机制，确保业务连续性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个技能 (Skill) 都是一个独立的能力，Claude 可以在对话期间调用它，例如总结长文档、从应用程序编程接口 (API) 检索数据或执行特定领域的计算。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种架构与 OpenAI 的 GPT 模型和微软的 Copilot 生态系统已经采用的函数调用范例相似，但 Anthropic 强调了一种更透明和可审计的方法，这与其对模型安全性和可解释性的关注相一致。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个技能 (Skill) 都在明确定义的边界内运行，确保 Claude 只访问开发者明确允许的数据和执行操作。这种精细的控制可以使该系统对寻求灵活性和合规性的企业更具吸引力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Claude 不仅仅变得更聪明，它还变得专业化了。自动化的未来是个性化的、持久的和自由的。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Redis 的 maxmemory 参数限制的是 Redis 实例可以使用的最大内存，这部分内存主要包括以下几个部分：业务数据占用的内存、客户端连接的输入/输出缓冲区、复制积压缓冲区、AOF 缓冲区以及其他一些内部开销。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这里有个经常被忽略的场景，就是 Redis 其实支持 pipeline 命令执行方式的，简单来说就是 Redis 支持一次性接收一个客户端的多个指令，具体执行过程中会把这些指令的结果不断暂存，然后在后续流程中集中回包，如果这时候不能及时地把数据通过网络发出去，就有可能出现 reply 链表长度激增的现象，进而导致客户端占用内存激增，这正是我们本次遇到的场景。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本次问题是由于业务集中请求 Redis，导致缓存积压内存增长达到最大内存限制，触发 Redis 淘汰策略对 key 进行驱逐。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">同时，对于 Redis 淘汰策略，对于数据比较重要的集群，可以考虑使用不驱逐的方式。合理设置 TTL 保留时间，把 Redis 的内存使用率保持在安全的区域。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Daniel Dominguez</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">454</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">32 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7929</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人工智能开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大型语言模型 (LLM) 代理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">函数调用 (Function Calling)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude 技能 (Skills)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Anthropic</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排查</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存淘汰</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Pipeline</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/f6985cf5" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/9b7f1cba" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/f6985cf5">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/9b7f1cba">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

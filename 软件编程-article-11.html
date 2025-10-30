@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>让 AI 更懂上下文，透析 MCP 的原理及实践</title>
+        <title>突破 Linux 网络协议栈的限制：Cloudflare 的软单播 IP 转发实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>让 AI 更懂上下文，透析 MCP 的原理及实践</h2>
-        <p>10/26/2025, 12:03:00 AM</p>
+        <h2>突破 Linux 网络协议栈的限制：Cloudflare 的软单播 IP 转发实践</h2>
+        <p>10/29/2025, 1:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度解析了 Anthropic 主导的 MCP 协议，旨在通过统一标准解决 AI 模型与外部工具和数据交互的碎片化问题，并提供了详细的开发实践指南。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 克服 Linux 网络协议栈限制实现软单播 IP 转发的详细过程，揭示了深层内核行为和解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 MCP (Model Context Protocol) 这一由 Anthropic 主导的开放、通用协议标准。MCP 旨在为 AI 大模型提供一个“万能接口”，使其能够与各种数据源和工具无缝交互，从而替换当前碎片化的 Agent 代码集成，提升 AI 系统的可靠性和效率。文章阐述了 MCP 的五大核心架构部分（主机、客户端、服务器、本地资源、远程资源），并深入分析了其必要性，通过具体示例说明了 MCP 如何让 AI 更“懂”上下文，实现安全高效的本地数据处理和跨应用任务执行。在原理层面，文章对比了 MCP 与传统 Function Call 的优势，强调了 MCP 在生态系统和兼容性方面的突破，并揭示了模型如何通过 Prompt Engineering 智能选择和执行工具。最后，文章提供了详细的 MCP Server 开发实践教程，包括环境配置、Prompt 构造、Python 代码实现及接入 Claude Desktop 进行测试的完整流程，为开发者提供了实用的指导。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 Cloudflare 在 Linux 网络协议栈内实现软单播 IP 地址共享时面临的挑战。文章着重介绍了 Netfilter/连接追踪与套接字子系统之间交互所产生的复杂性，特别是在数据包重写与本地套接字使用相结合时出现的五元组冲突。作者详细阐述了规避这些问题的多种尝试，首先是管理 iptables 规则，然后是自定义代理服务 ("fish")，之后尝试使用 Netlink 进行连接追踪操作，但效率低下。一种更具创新性的方法是巧妙运用内核特性，如 `TCP_REPAIR` 或 `TCP 快速打开`，以创建“已连接”的套接字来保留五元组。这导致了一个新问题：本地路由规则优先考虑本地套接字，导致转发的数据包被丢弃。解决方案涉及 `ip rule` 操作，但 Linux 的“早期分用”功能使情况进一步复杂化，因为该功能会在存在本地套接字时绕过路由查找。最终的解决方案是禁用 `net.ipv4.tcp_early_demux`，其性能影响被评估为最小。最终，Cloudflare 选择在服务器上终止 TCP 连接，他们发现对于其特定用例而言，与纯 IP 转发相比，这种方法更简单且性能更好，尽管他们现在也了解了如何实现纯 IP 转发。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MCP 作为开放协议标准，解决了 AI 模型与外部工具和数据交互的碎片化问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它为 AI 模型提供统一的“万能接口”，避免了为不同应用重复开发接口的困境，显著提升了 AI 系统与多样化数据源和工具的集成效率和可靠性。</span>
+                        <strong style="color: #1e40af">Linux 网络协议栈给软单播等高级 IP 共享技术带来了诸多挑战。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当尝试将数据包转发与本地套接字使用相结合时，内核组件（套接字、Netfilter、连接追踪）之间的交互可能导致意外行为，例如五元组冲突和静默端口重写。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MCP 通过结构化 Prompt Engineering 实现模型智能选择和执行工具，增强 AI 自主性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章详细阐述了模型如何根据工具的文本描述和 Prompt 指令，智能地调用外部工具并处理结果，这比传统 Function Call 更具通用性和灵活性，同时保障了数据安全。</span>
+                        <strong style="color: #1e40af">利用内核功能（如 `TCP 快速打开`）可以为数据包转发保留五元组。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过创建没有实际连接的“已连接”套接字，进程可以有效地声明特定的 IP/端口组合，从而防止与其他套接字绑定或 Netfilter 的连接追踪表发生冲突。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">文章提供了 MCP Server 的详细开发实践，降低了 AI 应用与外部系统集成的门槛。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过具体的 Python 代码示例、环境配置和测试流程，为开发者提供了构建 MCP 工具的实用指南，加速了 AI 应用生态的构建和能力扩展。</span>
+                        <strong style="color: #1e40af">“早期分用”等深层内核机制会覆盖路由规则，增加了自定义数据包转发的复杂性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为提高性能而设计的“早期分用”功能可以在找到本地套接字时绕过路由查找，导致转发的数据包被丢弃，即使进行了显式路由表修改，因此需要禁用它以用于特定的高级用例。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 是一个标准协议，就像给 AI 大模型装了一个 "万能接口"，让 AI 模型能够与不同的数据源和工具进行无缝交互。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 旨在替换碎片化的 Agent 代码集成，从而使 AI 系统更可靠，更有效。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 会让 AI 更 "懂" 上下文，比如你让 AI "总结上周班会的重点"，它能自动调取会议录音、聊天记录、笔记文档，综合这些信息给你答案，而不是凭空编造。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 的诞生标志着 prompt engineering 进入了一个新的发展阶段，它通过提供更结构化的上下文信息，显著提升了模型的能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型依赖于工具描述文本来理解和选择适用的工具，这意味着精心编写的工具名称、文档字符串（docstring）以及参数说明显得尤为重要。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有这样一种说法：一旦有人彻底理解了 Linux 网络协议栈的原理，它就会立刻消失，取而代之的是更加复杂难懂的东西。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于软单播至关重要的是，这意味着连接追踪可能会重写我们的连接，使其源端口位于分配给我们的机器的端口切片之外。这将悄悄地中断连接，导致不必要的延迟和错误的连接超时报告。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">绑定一个“已连接”的套接字，但该套接字实际上不对应于任何实际套接字，具有一个重要特征：如果其他进程尝试绑定到与该套接字相同的地址，它们将无法这样做。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">发往本地地址的数据包会被视为输入而非转发，不受常规路由规则影响。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">预计收到的大多数数据包都是用于本地套接字的，而不是未知数据包或需要转发到某处的数据包。在这种情况下，为什么不直接在此处查找套接字并节省额外的路由查找呢？</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6559</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Chris Branch</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2658</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">协议标准</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具调用</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux 网络协议栈</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内核黑客</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软单播 IP 转发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据包转发</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/4920b517" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/000095f8" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/4920b517">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/000095f8">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
