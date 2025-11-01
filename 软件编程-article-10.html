@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>QUIC 防御基于确认的 DDoS 攻击</title>
+        <title>MySQL 8 的老大难问题，从 5.7 延续至今，有这么难？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>QUIC 防御基于确认的 DDoS 攻击</h2>
-        <p>10/29/2025, 1:00:00 PM</p>
+        <h2>MySQL 8 的老大难问题，从 5.7 延续至今，有这么难？</h2>
+        <p>10/30/2025, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 通过动态 CWND 感知的数据包跳过技术，缓解了 QUIC 中两个基于 ACK 的 DDoS 漏洞（乐观 ACK 和 ACK 范围验证）。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了 MySQL 8 及 5.7 中`prefer_ordering_index`优化参数在数据分布不均时可能导致的性能问题，并建议在多数情况下将其关闭以避免错误索引选择。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Cloudflare 的开源 QUIC 实现`quiche`中发现的两个关键 DDoS 漏洞：CVE-2025-4820 和 CVE-2025-4821。这些漏洞与 QUIC 处理数据包确认（ACK）的方式有关，数据包确认对于网络公平性和拥塞控制至关重要。CVE-2025-4821 源于缺少 ACK 范围验证，允许客户端确认未发送的数据包。CVE-2025-4820，即“乐观 ACK 攻击”，使攻击者能够预测并抢先发送 ACK，迫使服务器人为抬高发送速率，可能导致 DDoS。Cloudflare 迅速解决了这些问题。乐观 ACK 攻击的核心缓解措施是一种新颖的动态 CWND 感知数据包跳过频率，该频率随连接的发送速率而变化，使攻击者难以预测数据包编号，从而确保在协议层面的强大防御。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细探讨了 MySQL 优化器参数`prefer_ordering_index`（默认 ON）在特定场景下可能引发的性能问题。该参数旨在优化包含`ORDER BY`或`GROUP BY`与`LIMIT`的查询，通过优先选择有序索引来避免`filesort`。然而，当数据分布不均匀且索引选择性极低（如性别、状态字段）时，优化器可能错误地选择该索引，导致大量的随机回表 IO，其开销远超全表扫描后的`Filesort`。文章通过具体 SQL 示例和`EXPLAIN`结果对比，直观展示了`prefer_ordering_index`开启和关闭时查询计划的差异。作者指出，由于 MySQL 尚未智能化解决此问题，对于业务和 DBA 而言，大部分情况建议关闭此选项，以规避潜在的性能风险。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">识别并缓解了两个关键的基于 QUIC ACK 的 DDoS 漏洞。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CVE-2025-4820（乐观 ACK 攻击）和 CVE-2025-4821（ACK 范围验证）允许恶意客户端篡改 ACK 信号，从而抬高服务器的发送速率。</span>
+                        <strong style="color: #1e40af">`prefer_ordering_index`参数在特定场景下可能导致 MySQL 性能下降</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该参数在数据分布不均匀或索引选择性极低时，可能促使优化器选择效率低下的有序索引，而非更优的全表扫描加`Filesort`方案。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">ACK 范围验证对于防止基本的 ACK 操纵和协议违规至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 强制 ACK 范围验证确保客户端仅确认服务器已发送的数据包。违反此规则将按照 RFC 建议关闭连接。</span>
+                        <strong style="color: #1e40af">优化器错误选择索引导致大量随机回表 IO，远超全表扫描开销</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当查询命中绝大部分数据行时，如果优化器仍选择低选择性索引进行逐行扫描和回表，将产生巨大的随机 IO 开销，严重影响查询性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">动态的 CWND 感知数据包跳过策略有效地缓解了乐观 ACK 攻击。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 服务器通过基于 CWND 随机跳过数据包编号来检测并阻止客户端的抢先 ACK 行为，从而保证网络使用的公平性。</span>
+                        <strong style="color: #1e40af">在 MySQL 未智能化解决前，建议多数情况关闭`prefer_ordering_index`</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于该问题在当前 MySQL 版本中尚未得到智能化的解决，DBA 和开发者通常选择关闭此选项，以避免因优化器误判导致的性能问题。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Cloudflare 的调查显示，没有证据表明这些漏洞正在被利用或有任何客户受到影响。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ACK 是互联网协议的重要信号来源，因此必须进行验证，以确保恶意节点不会破坏这些信号。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">确认其未收到的数据包的端点可能导致拥塞控制器允许以超出网络支持的速率发送数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过允许数据包跳过，QUIC 能够在协议层阻止此类攻击，并更有效地确保在不受信任的网络上的正确性和公平性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种 CWND 感知的跳过频率允许所有连接，无论当前的发送速率如何，都能有效地缓解乐观 ACK 攻击。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MySQL 推出这个参数本来是好意，但容易好心办坏事......</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个问题主要发生在你的数据分布的不均匀，优化器在选择这个索引进行数据排序的时候，这个索引中包含，如性别，状态，等被包含在 group by order by 中，而这些数据根本不具备索引扫描的优势，属于通篇都是女，然后就导致 index scan ，然后排序毫无用处，还需要回表。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">写到这里，MySQL 推出这个参数本来是好意，但是截至到目前，尚未得到在任何版本，智能化此问题的方案，对于业务和 DBA 来说，大部分情况选择的是关闭此选项，因为我们不能完全杜绝无可选择性下的数据和索引建立后，在遇到 GROUP BY ORDER BY 情况下的错误索引的在这类语句上得使用。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Apoorv Kothari</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">83</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2214</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1081</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DDoS缓解</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">QUIC协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">拥塞控制</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据包确认</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MySQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SQL性能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">索引</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">优化器</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/68382457" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/159d0b2d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/68382457">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATCSURBVO3BQQ4bSRIEwfAC//9lXx3zVECjkxxpEWb4R6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIL6mZgExqJiBvqHkDyBNqJiC/pOaNk6pFJ1WLTqoWfbJMzSYgTwCZ1DwB5AkgT6iZgDyhZhOQTSdVi06qFp1ULfrky4A8oeYJNROQGyBPAJnUTGr+S0CeUPNNJ1WLTqoWnVQt+uQfB+QNNU8AmdRMQCY1E5BJzf+Tk6pFJ1WLTqoWffKPUzMBmYDcAJnUPAHkDSCTmn/ZSdWik6pFJ1WLPvkyNf8lNROQGyCTmknNBGRSMwH5JjV/k5OqRSdVi06qFn2yDMgvAZnUTEAmNROQSc0EZFLzhpoJyBNA/mYnVYtOqhadVC365CU1fxMgT6jZBOQGyBNq/iUnVYtOqhadVC365CUgk5oJyI2aCcgTam6A3ACZ1ExqJiC/BGRScwNkUjMBuVHzxknVopOqRSdVi/CPLAIyqdkE5EbNLwGZ1NwA+SY1TwCZ1LxxUrXopGrRSdWiT14CsgnIG0AmNROQN9Q8AWRS8waQJ4DcqNl0UrXopGrRSdWiT74MyI2aSc0NkBs1E5An1NwAeULNDZBJzSY1N0AmNW+cVC06qVp0UrUI/8giIE+ouQEyqbkBMqmZgExqJiCTmgnIpGYCcqPmm4DcqPmmk6pFJ1WLTqoWffJjam6ATGomIL8E5AbIpOYGyKTmBsiNmknNBGQCcqPmjZOqRSdVi06qFn3yZWomIJOaGyCTmgnIpOZGzQRkUvMGkCeAvAFkUvNfOqladFK16KRq0Sc/puZGzQ2QJ4A8AeQJNZOaGyA3am6APKFmAjKp2XRSteikatFJ1aJP/mNAJjUTkG9S8wSQJ4A8AWRSM6mZgExAJjW/dFK16KRq0UnVok+WqZmAvKFmAjKpmYDcqPkmIDdqJiBPAJnUTEAmIL90UrXopGrRSdWiT14CMql5Qs0E5AkgN2omIJOaCcgvqZmAvKFmAjKp+aaTqkUnVYtOqhZ98pKab1LzBJAJyKTmRs0EZFIzAblR8waQSc3f7KRq0UnVopOqRfhHFgGZ1ExAfknNDZAbNU8AuVEzAfklNd90UrXopGrRSdUi/CP/MCBPqJmAPKFmAvKEmgnIpOYJIJvUvHFSteikatFJ1aJPXgLyS2qeUDMBuVHzhJoJyKRmAvIEkEnNE2omIJOaTSdVi06qFp1ULfpkmZpNQJ5Q84SaJ4DcqLlRMwG5UfNNQCY1b5xULTqpWnRSteiTLwPyhJon1NwAmdR8E5AbNTdA3lAzAZnUfNNJ1aKTqkUnVYs++ccBmdRMam6ATGomIE+oeULNBGRScwNkAjKpuQEyqXnjpGrRSdWik6pFn/yfATKpuVEzAZnUPAHkCTVPAJnU3ACZ1HzTSdWik6pFJ1WLPvkyNd+kZgIyAZnU3Ki5ATKpmdQ8AWRS8waQSc0EZFKz6aRq0UnVopOqRZ8sA/JLQCY1E5AngNyoeQLIJjV/s5OqRSdVi06qFuEfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfofS88aWHX2+PgAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/159d0b2d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

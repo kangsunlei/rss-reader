@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>突破 Linux 网络协议栈的限制：Cloudflare 的软单播 IP 转发实践</title>
+        <title>TypeScript & JavaScript：驱动 AI 工程的引擎</title>
         <style>
             body {
                 padding: 12px;
@@ -15,76 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>突破 Linux 网络协议栈的限制：Cloudflare 的软单播 IP 转发实践</h2>
-        <p>10/29/2025, 1:00:00 PM</p>
+        <h2>TypeScript & JavaScript：驱动 AI 工程的引擎</h2>
+        <p>10/30/2025, 6:41:29 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 克服 Linux 网络协议栈限制实现软单播 IP 转发的详细过程，揭示了深层内核行为和解决方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Vercel CEO Guillermo Rauch 指出，AI SDK 下载量激增，预示 TypeScript/JavaScript 将主导 AI 工程领域。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 Cloudflare 在 Linux 网络协议栈内实现软单播 IP 地址共享时面临的挑战。文章着重介绍了 Netfilter/连接追踪与套接字子系统之间交互所产生的复杂性，特别是在数据包重写与本地套接字使用相结合时出现的五元组冲突。作者详细阐述了规避这些问题的多种尝试，首先是管理 iptables 规则，然后是自定义代理服务 ("fish")，之后尝试使用 Netlink 进行连接追踪操作，但效率低下。一种更具创新性的方法是巧妙运用内核特性，如 `TCP_REPAIR` 或 `TCP 快速打开`，以创建“已连接”的套接字来保留五元组。这导致了一个新问题：本地路由规则优先考虑本地套接字，导致转发的数据包被丢弃。解决方案涉及 `ip rule` 操作，但 Linux 的“早期分用”功能使情况进一步复杂化，因为该功能会在存在本地套接字时绕过路由查找。最终的解决方案是禁用 `net.ipv4.tcp_early_demux`，其性能影响被评估为最小。最终，Cloudflare 选择在服务器上终止 TCP 连接，他们发现对于其特定用例而言，与纯 IP 转发相比，这种方法更简单且性能更好，尽管他们现在也了解了如何实现纯 IP 转发。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Linux 网络协议栈给软单播等高级 IP 共享技术带来了诸多挑战。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当尝试将数据包转发与本地套接字使用相结合时，内核组件（套接字、Netfilter、连接追踪）之间的交互可能导致意外行为，例如五元组冲突和静默端口重写。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用内核功能（如 `TCP 快速打开`）可以为数据包转发保留五元组。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过创建没有实际连接的“已连接”套接字，进程可以有效地声明特定的 IP/端口组合，从而防止与其他套接字绑定或 Netfilter 的连接追踪表发生冲突。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“早期分用”等深层内核机制会覆盖路由规则，增加了自定义数据包转发的复杂性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为提高性能而设计的“早期分用”功能可以在找到本地套接字时绕过路由查找，导致转发的数据包被丢弃，即使进行了显式路由表修改，因此需要禁用它以用于特定的高级用例。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有这样一种说法：一旦有人彻底理解了 Linux 网络协议栈的原理，它就会立刻消失，取而代之的是更加复杂难懂的东西。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于软单播至关重要的是，这意味着连接追踪可能会重写我们的连接，使其源端口位于分配给我们的机器的端口切片之外。这将悄悄地中断连接，导致不必要的延迟和错误的连接超时报告。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">绑定一个“已连接”的套接字，但该套接字实际上不对应于任何实际套接字，具有一个重要特征：如果其他进程尝试绑定到与该套接字相同的地址，它们将无法这样做。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">发往本地地址的数据包会被视为输入而非转发，不受常规路由规则影响。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">预计收到的大多数数据包都是用于本地套接字的，而不是未知数据包或需要转发到某处的数据包。在这种情况下，为什么不直接在此处查找套接字并节省额外的路由查找呢？</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Vercel CEO Guillermo Rauch 的这条推文强调了一个重要趋势：AI 工程领域对 TypeScript 和 JavaScript 的采用正在加速。正如这两种语言在通用软件开发中占据主导地位一样，他认为它们也将成为 AI 领域的行业标准。作为例证，他指出 AI SDK 的每周下载量在短短几周内从 340 万跃升至 410 万，表明 AI 应用的开发工具正快速向 Web 原生和 JavaScript 生态靠拢。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Chris Branch</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch(@rauchg)</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2658</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">295</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux 网络协议栈</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内核黑客</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软单播 IP 转发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据包转发</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TypeScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI SDK</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vercel</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/000095f8" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/zh/status/1983967510467633327" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/000095f8">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/status/1983967510467633327">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
