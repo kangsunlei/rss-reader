@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>从指挥家到编排者：AI 编程的未来 [译]</title>
+        <title>利用自定义评估器实现 GenAI 项目从试点到生产的飞跃</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>从指挥家到编排者：AI 编程的未来 [译]</h2>
-        <p>11/2/2025, 12:00:00 AM</p>
+        <h2>利用自定义评估器实现 GenAI 项目从试点到生产的飞跃</h2>
+        <p>11/4/2025, 8:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">AI 编程正从单一助手“指挥家”模式演变为多智能体协作“编排者”模式，开发者将更多聚焦于定义意图与把控质量。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文概述了一种构建和部署用于 GenAI 项目的自定义 LLM 评估器的系统方法，旨在确保项目质量，并支持从试点到生产环境的平稳过渡和迭代。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 AI 编程中开发者角色的演变，从与单个 AI 助手协作的“指挥家”模式，转向管理多个自主编码智能体团队的“编排者”模式。指挥家模式是同步、微观的，如 IDE 内 AI 结对编程；编排者模式则是异步、宏观的，智能体能自主完成多步骤任务并提交 PR。这种转变预示着编程生产力的巨大飞跃，开发者将更多地从编写代码转向高层设计、任务拆解和成果审查。文章还列举了 GitHub Copilot、Jules 等典型编排者工具，并讨论了质量控制、协调、提示词定义等挑战，强调人类的判断力、创造力与对真实世界需求的理解仍不可替代。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">许多团队在 GenAI 项目从试点到生产环境的过渡中面临挑战，主要原因是难以衡量和满足质量要求。Databricks 通过 Judge Builder 等系统评估基础设施来解决这一问题。本文重点介绍了其运营优势（例如通过量化性能变化加速部署）和战略优势（例如将可重用的评估数据用于未来模型训练）。它将挑战分解为三个维度：设计评估器组合、准确地编纂领域专业知识和技术执行。关键策略包括使用自上而下的需求和自下而上的故障分析来定义精确的、分解的评估器。它强调通过迭代注释和与领域专家 (SME) 的评分者一致性检查来仔细构建和校准评估器。最后，它讨论了技术方面，如提示优化（手动与使用 DSPy/MLflow 等工具自动优化）以及评估器的版本控制和强大的部署基础设施的重要性。核心要点是将评估器视为与系统一起不断发展的“活的工件”。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 编程使开发者从“指挥家”演变为“编排者”，实现工作方式的深刻变革</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 指挥家模式侧重与单个 AI 同步协作，提升个人执行力；编排者模式则通过管理多智能体团队，实现任务并行处理，打破个人注意力瓶颈。</span>
+                        <strong style="color: #1e40af">系统评估基础设施对于将 GenAI 项目从试点扩展到生产环境至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过强大的评估系统量化性能变化并持续监控质量，可以更快、更安全地进行部署，并确保合规性和客户满意度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">编排者模式通过自主智能体团队提升开发效率，将 AI 辅助从前台移至后台</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 智能体能自主规划、执行多步骤编码任务，并以 PR 形式提交成果，使开发者专注于高层协调、质量控制和整合，大幅提高吞吐量。</span>
+                        <strong style="color: #1e40af">设计“评估器组合”需要将自上而下的需求与自下而上的故障分析相结合。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将评估器分解为精确的质量维度，并通过代理跟踪识别真实的故障模式，从而创建一个可操作的、全面的评估系统。该系统可以随着应用程序的发展而发展。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">人类价值回归定义意图与施加判断，而非代码编写量</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当 AI 处理大部分代码实现后，开发者的核心价值在于思考“做什么”、“为什么做”，以及审查“做得好不好”，确保最终成果的质量和方向。</span>
+                        <strong style="color: #1e40af">将领域专业知识编码为可靠的评估器需要仔细的构建和迭代校准。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过集中的错误分析和针对 SME 的清晰注释指南，可以将主观领域知识准确地编码到评估器中。通过评分者一致性检查进行的迭代批量注释，可以进一步提高编码的准确性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">技术执行涉及评估器的提示优化、版本控制和强大的部署。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用手动或自动提示优化器（如 MLflow），可确保评估器与不断变化的需求保持一致。将评估器视为活的工件，有助于它们在生产环境中保持一致的性能。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 智能体，只是这一趋势的最新、也是最激进的体现。当「如何做」被 AI 大规模处理后，开发者的核心价值就清晰地回归到两个最不可替代的要素：定义意图，即思考和提出「做什么」和「为什么做」；施加判断，即对结果负责，审查「做得好不好」。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">编排者设定高层目标、定义任务，然后让自主编码智能体团队独立完成实现细节。人类不再微观管理每个函数或 Bug 修复，而是专注于智能体工作成果的协调、质量控制和整合。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这不仅是工具的升级，更是工作方式的革命：我们的焦点从'如何编写这段代码'转向了'如何让正确的代码被高效构建出来'。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">专家们认为，向编排者的转变可能是我们见证过的编程生产力最大飞跃之一。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">编码的未来不是 AI 或人类二选一，而是 AI 与人类的协作。由人类作为指挥家和编排者掌舵，指挥这支强大的团队，去实现我们的软件愿景。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">许多团队都在努力将 GenAI 项目从试点阶段推向生产环境。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 评估器不仅仅是衡量标准，它既可以作为产品规范，又可以在团队针对其进行优化时，从根本上塑造模型在实践中的行为。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最有效的方法是将自上而下和自下而上的见解相结合，确保评估器既全面又与应用程序的实际性能相关。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即使是 20-30 个精心挑选的例子也可以产生一个强大的评估器。挑战不在于数量，而在于拥有一个系统的流程，从组织内的领域专家那里捕获边缘案例和决策边界。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们观察到的最常见的陷阱是将评估器开发视为纯粹的技术。成功的团队是那些在技术实施和领域专业知识之间建立桥梁的团队，从而创建轻量级但系统的流程来捕获和维护 SME 知识。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Gino Notes</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Gino</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6604</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1943</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Copilot</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 评估</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">生成式人工智能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">机器学习运维</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人工智能质量</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自定义评估器</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/891fe944" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/213d3743" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/891fe944">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/213d3743">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
