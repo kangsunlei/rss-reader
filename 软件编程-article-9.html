@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>保护性重路由 (PRR) 如何提升网络可靠性</title>
+        <title>DynamoDB DNS 系统中的竞态条件：分析 AWS US-EAST-1 (美国东部-1) 区域的中断事件</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>保护性重路由 (PRR) 如何提升网络可靠性</h2>
-        <p>11/15/2025, 12:00:00 AM</p>
+        <h2>DynamoDB DNS 系统中的竞态条件：分析 AWS US-EAST-1 (美国东部-1) 区域的中断事件</h2>
+        <p>11/15/2025, 10:46:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">谷歌的保护性重路由 (PRR) 通过主机侧的快速路由中断恢复能力，显著增强网络可靠性，对 AI/ML 和实时工作负载至关重要。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">分析由 DynamoDB 的 DNS 管理系统中潜在的竞态条件引起的 AWS US-EAST-1 (美国东部-1) 区域重大中断事件，详细说明了其广泛影响以及 AWS 计划的补救措施。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍保护性重路由 (PRR)，这是 Google 开发的一种开创性的主机侧机制，旨在解决行星级网络中因网络路由中断导致的恢复缓慢或失败问题。传统的路由协议难以在大型拓扑结构中快速完成重汇聚，导致实时应用和大规模 AI/ML 训练作业产生高昂的代价。PRR 将故障恢复的责任从集中式网络核心转移到分布式端点。主机可以检测故障（例如通过 TCP RTO），并立即通过修改数据包头部（例如 IPv6 流标签）将流量重新导向到健康的并行路径。这从根本上将网络可靠性从串行系统转变为高度并行系统。PRR 部署超过五年，已将慢收敛导致的数据中心间中断减少高达 84%，显著提升了恢复速度。它对 AI/ML 训练、数据完整性、实时应用和频繁的短连接至关重要。Google Cloud 客户可以在虚拟机监控程序或客户机模式下利用 PRR 来处理对性能敏感的关键应用，这些应用需要现代 Linux 内核、TCP 和 IPv6（或者 IPv4 的 gVNIC）。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 US-EAST-1 (美国东部-1) 区域发生的重大 AWS 中断事件，该事件主要是由 Amazon DynamoDB 的自动化 DNS 管理系统中的潜在竞态条件触发的。这个缺陷导致 DynamoDB 区域端点出现不正确的空 DNS 记录，随后导致端点解析失败，并对关键的依赖服务（如新的 EC2 实例启动、Lambda 调用和 Fargate 任务）产生连锁影响。分析表明，DNS 故障是一种表象，而内部 DynamoDB 微服务中的底层竞态条件才是真正的根本原因。AWS 的官方事后分析报告承认了对客户的严重影响，并概述了立即采取的行动，包括在全球范围内禁用有问题的 DNS 自动化，以及修复竞态条件的长期计划。此外，还将增强 EC2 数据传播中的限流机制。本文还包含了专家的观点，他们提倡采用数据驱动的方法来评估云可靠性，敦促从业者考虑 AWS 一贯的长期可用性，而不是对罕见的、备受瞩目的事件过度解读。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">对于现代实时 AI/ML 工作负载，传统的网络路由中断恢复速度太慢。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 大型网络在路由器发生故障时，会遭受“慢收敛”或“收敛失败”的影响，导致数秒甚至数分钟的延迟。这会对延迟敏感的应用以及高成本的 AI/ML 训练任务造成严重影响，导致巨大的经济损失。</span>
+                        <strong style="color: #1e40af">DynamoDB 自动化 DNS 管理系统中的潜在竞态条件是 AWS US-EAST-1 (美国东部-1) 区域中断的根本原因。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该缺陷导致 DynamoDB 区域端点生成不正确的空 DNS 记录，导致服务解析失败，并对依赖的 AWS 服务造成广泛中断。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">保护性重路由 (PRR) 将快速故障恢复从集中式网络核心转移到分布式端点。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PRR 使主机能够检测丢包或高延迟，并使用数据包头部修改立即将流量重新导向到健康的并行路径，从而有效地绕过缓慢的全网络重汇聚过程。</span>
+                        <strong style="color: #1e40af">由于复杂的相互依赖关系和网络配置问题，中断的影响波及到各种 AWS 服务。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新的 EC2 实例网络配置失败以及新启动实例的网络状态传播延迟产生了多米诺骨牌效应，影响了网络负载均衡器和其他服务。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">PRR 从根本上将网络可靠性思维从串行模式转变为高度并行模式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使主机能够选择备用路径，PRR 将网络视为一个系统，在该系统中，可靠性随着路径多样性的增加而呈指数级增长，从而避免了慢速网络收敛的序列化效应。</span>
+                        <strong style="color: #1e40af">AWS 正在实施短期和长期解决方案，以解决中断的根本原因并增强系统弹性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采取的措施包括禁用错误的 DNS 自动化、修复竞态条件、增加保护措施以及改进 EC2 数据传播系统中的限流，以更好地处理高负载。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">PRR 显著减少了网络停机时间，Google Cloud 客户可以利用它来处理关键工作负载。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> PRR 已将慢收敛导致的数据中心间中断减少高达 84%，显著提升了恢复速度。客户可以在虚拟机监控程序或客户机模式下启用 PRR，尤其适用于 AI/ML 工作负载和实时服务。</span>
+                        <strong style="color: #1e40af">在讨论云可靠性时，应更重视长期数据，避免受罕见重大事件造成的“认知偏差 (Memory Bias) ”的影响。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 专家建议采取平衡的观点，承认 AWS 多年来总体上的高可用性，而不是让罕见的中断事件过度影响对云弹性的看法。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这些短暂但代价高昂的中断（我们称之为**慢收敛**或**收敛失败**）会对丢包容忍度低的实时应用，以及当今大规模的敏感 AI/ML 训练任务造成严重影响，一次短暂的网络故障就可能导致数百万美元的计算资源浪费。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">保护性重路由是一个简单而有效的概念：**让通信端点（即主机）能够检测故障，并将流量智能地重新导向到健康的并行路径。**</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过在网络边缘部署 PRR，我们将整个网络看作是一个**高度并行的路径系统，每个路径都像一个独立的阶段**。这样，网络的整体可靠性会随着可用路径数量的增加而指数级增长，从而有效避免大型网络中因慢速收敛带来的问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">事实证明，PRR 可以将由慢收敛和收敛失败引起的网络停机时间减少高达 **84%**。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于具有关键工作负载的云客户：评估并启用客户机模式下的 PRR，以应用于对丢包敏感且需要最快恢复时间的应用，例如大规模 AI/ML 作业或实时服务。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">此问题的根本原因是 DynamoDB DNS 管理系统中的潜在竞态条件，该条件导致该服务的区域端点 (dynamodb.us-east-1.amazonaws.com) 出现不正确的空 DNS 记录，而自动化未能修复该记录。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DNS 故障是第一个症状，而不是最近 AWS 中断的根本原因。根本原因是内部 DynamoDB 微服务中的竞态条件，该微服务可自动执行 DynamoDB 区域单元的 DNS 记录管理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们已经在全球范围内禁用了 DynamoDB DNS 规划器 (DNS Planner) 和 DNS 执行器 (DNS Enactor) 自动化。在重新启用此自动化之前，我们将修复竞态条件场景并添加其他保护措施，以防止应用不正确的 DNS 计划。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在可靠性工程中，认知偏差 (Memory Bias) 通常超过数据。团队对罕见事件反应过度，但对保持正常运行时间逐年稳定的缓慢而无形的工作投资不足。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Google Cloud Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Victor Moreno, Yaogong Wang</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Renato Losio</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1310</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">618</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络可靠性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">主机侧恢复</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云服务中断</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">竞态条件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云可靠性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">事件分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/3c287c8d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/4cf4c298" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/3c287c8d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/4cf4c298">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAY1SURBVO3BQW4kwZEAQfcE//9l3znGqYBCN6mUNszsH9a6xGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYsc1rrIYa2LHNa6yGGtixzWushhrYv88CGVv1TxhsobFW+oTBWTypOKN1Smiicqf6niE4e1LnJY6yKHtS7yw5dVfJPKGypvVLyh8omKSWWqeFIxqUwVTyq+SeWbDmtd5LDWRQ5rXeSHX6byRsUbKk8qJpVJZaqYVKaKSeVJxaQyVUwqU8Wk8k0qb1T8psNaFzmsdZHDWhf54X9MxZOKSeVJxZOKJypTxScqJpX/JYe1LnJY6yKHtS7yw/8YlScVU8UTlU9UPFF5Q+V/2WGtixzWushhrYv88Msq/lLFE5UnFVPFGypPVKaKSWVSmSq+qeImh7UucljrIoe1LvLDl6ncRGWqmFSeqEwVk8pUMalMFZPKVDGpPFGZKp6o3Oyw1kUOa13ksNZFfvhQxX8TlaniL6k8UXmj4knFf5PDWhc5rHWRw1oXsX/4gMpUMal8U8UTlScVT1SeVDxRmSomlScVk8obFZPKN1X8psNaFzmsdZHDWhf54Y9VPFGZKiaVJxWTyhOV36Tymyo+UTGpvKEyVXzisNZFDmtd5LDWRX74YypPKiaVqeKNiicVk8oTlaniScUTlTcqJpWpYqp4ojJVTCqTylTxTYe1LnJY6yKHtS7yw5epTBWTylTxpOITKlPFGxWTyhsqn6iYVKaKSeVJxROV/6TDWhc5rHWRw1oXsX/4IpU3KiaVJxVvqEwVb6hMFZPKVPGGym+qmFTeqHiiMlV84rDWRQ5rXeSw1kV++JDKJ1Smiicqb1Q8UXlSMalMFU9UpoqpYlKZKp6oTBWTylTxhspfOqx1kcNaFzmsdZEfvqziDZUnKlPFE5U3KiaVN1SmiqniicpU8QmVJypTxaQyVUwqU8U3Hda6yGGtixzWuoj9wxepfFPFpPKkYlL5TRVPVKaKJypPKiaVNyqeqDyp+E2HtS5yWOsih7Uu8sOXVTxReUNlqvhExROVT6hMFW9UTCqfqJhUnlS8oTJVfOKw1kUOa13ksNZF7B8+oDJVvKEyVTxRmSo+oTJVvKEyVUwqN6uYVJ5UTCpTxScOa13ksNZFDmtd5IcvU3lS8UTlEypPKqaKSeWNijcqJpUnFW+oTBWTyqQyVUwqk8pU8U2HtS5yWOsih7UuYv/wRSpTxV9SeaNiUpkqvknlmyqeqHxTxW86rHWRw1oXOax1kR++rGJSeVIxqTypeKPiicpvUnlSMalMFZ+oeKLypGJSmSq+6bDWRQ5rXeSw1kXsHz6gMlW8oTJVvKHypOINlaliUnlS8YbKGxWTyicqJpWp4onKVPGJw1oXOax1kcNaF/nhl6lMFVPFpPJGxROVqeJJxZOKT6hMFZPKGxWTylTxRGWqmFSeVHzTYa2LHNa6yGGti/zwyyomlTcqJpVvUnmjYlKZKt5QeVIxqbyhMlU8UXlSMalMFZ84rHWRw1oXOax1kR9+mcpUMalMFZPKE5UnFU8qnqi8oTJVPKl4ojJVTCpvqDyp+E86rHWRw1oXOax1EfuH/2Iq31TxhsqTiknlScUTlScVb6hMFZPKGxWfOKx1kcNaFzmsdZEfPqTylyqmiicqU8Wk8kTlmyreUPmEylTxTRXfdFjrIoe1LnJY6yI/fFnFN6k8UZkqvqniicoTlaliUpkqpopJ5Y2KN1SeVEwqU8UnDmtd5LDWRQ5rXeSHX6byRsUnVJ6oTBWTypOKJxVPVJ6oPKmYVCaVb6p4UvFNh7UucljrIoe1LvLD/zMVk8pUMalMKlPFE5Wp4onKVDGpTBWTylTxROWJylQxqUwVnzisdZHDWhc5rHWRH9ajikllUnlS8URlqnhD5YnKk4pJ5Y2KbzqsdZHDWhc5rHWRH35ZxW+qmFT+UsUTlaliqphUpoqp4onKVPFEZaqYVP7SYa2LHNa6yGGti/zwZSp/SeVJxZOKb1L5RMWk8kbFE5Wp4knFpDJVfNNhrYsc1rrIYa2L2D+sdYnDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oX+T8Igwdxnz0JowAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
