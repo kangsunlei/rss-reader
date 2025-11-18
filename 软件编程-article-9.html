@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>DynamoDB DNS 系统中的竞态条件：分析 AWS US-EAST-1 (美国东部-1) 区域的中断事件</title>
+        <title>Shopify 如何利用单体架构每分钟处理 30TB 数据？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>DynamoDB DNS 系统中的竞态条件：分析 AWS US-EAST-1 (美国东部-1) 区域的中断事件</h2>
-        <p>11/15/2025, 10:46:00 AM</p>
+        <h2>Shopify 如何利用单体架构每分钟处理 30TB 数据？</h2>
+        <p>11/16/2025, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">分析由 DynamoDB 的 DNS 管理系统中潜在的竞态条件引起的 AWS US-EAST-1 (美国东部-1) 区域重大中断事件，详细说明了其广泛影响以及 AWS 计划的补救措施。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细阐述了 Shopify 如何通过模块化单体架构、六边形设计和 Pods 隔离，在高并发下实现了每分钟处理 30TB 数据的卓越扩展性与稳定性，挑战了微服务至上的主流观念。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 US-EAST-1 (美国东部-1) 区域发生的重大 AWS 中断事件，该事件主要是由 Amazon DynamoDB 的自动化 DNS 管理系统中的潜在竞态条件触发的。这个缺陷导致 DynamoDB 区域端点出现不正确的空 DNS 记录，随后导致端点解析失败，并对关键的依赖服务（如新的 EC2 实例启动、Lambda 调用和 Fargate 任务）产生连锁影响。分析表明，DNS 故障是一种表象，而内部 DynamoDB 微服务中的底层竞态条件才是真正的根本原因。AWS 的官方事后分析报告承认了对客户的严重影响，并概述了立即采取的行动，包括在全球范围内禁用有问题的 DNS 自动化，以及修复竞态条件的长期计划。此外，还将增强 EC2 数据传播中的限流机制。本文还包含了专家的观点，他们提倡采用数据驱动的方法来评估云可靠性，敦促从业者考虑 AWS 一贯的长期可用性，而不是对罕见的、备受瞩目的事件过度解读。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了全球电商巨头 Shopify 如何凭借其精心设计的模块化单体架构，而非数百个微服务，应对每分钟处理高达 30TB 数据和数千万次请求的巨大挑战。文章首先通过黑色星期五的数据峰值展示了 Shopify 系统的强大稳定性。接着，详细介绍了其核心架构：一个基于 Ruby on Rails 的模块化单体，通过内部工具 Packwerk 严格强制执行逻辑边界，实现各业务领域（如结账、支付）的独立性。随后，阐述了六边形架构（端口与适配器模式）如何将核心业务逻辑与外部 I/O（数据库、API）解耦，提升系统灵活性和可演进性。为实现水平扩展和故障隔离，Shopify 创新性地引入了“Pods”机制，将单体拆分为独立的集群。此外，文章还介绍了其从批量处理到 Debezium+Kafka 的实时数据流演进、通过多级缓存与优雅降级应对流量峰值，以及将 MySQL 扩展到极致的实践。最后，总结了六条可借鉴的经验教训，强调了简洁、纪律严明的架构在互联网规模下的卓越价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">DynamoDB 自动化 DNS 管理系统中的潜在竞态条件是 AWS US-EAST-1 (美国东部-1) 区域中断的根本原因。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该缺陷导致 DynamoDB 区域端点生成不正确的空 DNS 记录，导致服务解析失败，并对依赖的 AWS 服务造成广泛中断。</span>
+                        <strong style="color: #1e40af">模块化单体架构通过内部工具 Packwerk 实现逻辑隔离，提升代码可维护性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Shopify 的单体架构并非传统巨石，而是通过 Packwerk 工具强制执行逻辑边界，使得各个业务模块（如结账、库存）拥有独立的数据所有权和 API，降低了系统耦合度，提高了开发效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">由于复杂的相互依赖关系和网络配置问题，中断的影响波及到各种 AWS 服务。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新的 EC2 实例网络配置失败以及新启动实例的网络状态传播延迟产生了多米诺骨牌效应，影响了网络负载均衡器和其他服务。</span>
+                        <strong style="color: #1e40af">六边形架构将核心业务逻辑与外部 I/O 解耦，增强系统灵活性与可演进性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过端口与适配器模式，Shopify 的核心业务逻辑不依赖于具体的数据库、API 或消息队列，使得技术栈可以独立演进，而无需频繁改动业务核心。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AWS 正在实施短期和长期解决方案，以解决中断的根本原因并增强系统弹性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采取的措施包括禁用错误的 DNS 自动化、修复竞态条件、增加保护措施以及改进 EC2 数据传播系统中的限流，以更好地处理高负载。</span>
+                        <strong style="color: #1e40af">Pods 机制将单体架构水平扩展并隔离故障，确保高并发下的系统稳定性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 每个 Pod 是独立的单体实例，包含自己的数据库分片、缓存和任务队列，通过智能路由将请求分发，实现了故障隔离和高扩展性，避免了单一故障影响整个平台。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在讨论云可靠性时，应更重视长期数据，避免受罕见重大事件造成的“认知偏差 (Memory Bias) ”的影响。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 专家建议采取平衡的观点，承认 AWS 多年来总体上的高可用性，而不是让罕见的中断事件过度影响对云弹性的看法。</span>
+                        <strong style="color: #1e40af">采用 Debezium+Kafka 构建实时数据流，支持实时分析和业务决策。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Shopify 从旧的批量数据复制转向基于 Debezium 和 Kafka 的实时变更数据捕获（CDC），使得所有数据库变更能即时流入 Kafka，赋能实时仪表板、欺诈检测和实时分析。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">结合缓存、队列和优雅降级策略，有效应对流量峰值冲击。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过边缘 CDN、Redis/Memcached 进行多级缓存，利用后台队列卸载高成本任务，并在极端流量下自动暂停非核心功能，保障了核心业务的持续可用性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">此问题的根本原因是 DynamoDB DNS 管理系统中的潜在竞态条件，该条件导致该服务的区域端点 (dynamodb.us-east-1.amazonaws.com) 出现不正确的空 DNS 记录，而自动化未能修复该记录。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DNS 故障是第一个症状，而不是最近 AWS 中断的根本原因。根本原因是内部 DynamoDB 微服务中的竞态条件，该微服务可自动执行 DynamoDB 区域单元的 DNS 记录管理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们已经在全球范围内禁用了 DynamoDB DNS 规划器 (DNS Planner) 和 DNS 执行器 (DNS Enactor) 自动化。在重新启用此自动化之前，我们将修复竞态条件场景并添加其他保护措施，以防止应用不正确的 DNS 计划。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在可靠性工程中，认知偏差 (Memory Bias) 通常超过数据。团队对罕见事件反应过度，但对保持正常运行时间逐年稳定的缓慢而无形的工作投资不足。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这是一个真实的故事，讲述 Shopify 如何每分钟处理超过 20 TB 的数据，如何运营着全球最大的电子商务平台之一，同时仍能保持其架构的简洁、可扩展且出人意料地人性化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Shopify 的架构围绕一个模块化单体构建------这是一个主要用 Ruby on Rails 编写的单一代码库，但被精心地构建成具有逻辑边界。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心逻辑从不知晓也无需关心数据是来自 GraphQL、REST 还是一个 CLI 任务。这种隔离意味着 Shopify 可以在不触及业务逻辑的情况下，演进技术------更换队列、重构 API 或切换数据库。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 Kylie Jenner 的新产品发布导致 Pod A 崩溃，Pod B（服务于其他 10 万家商店）甚至不会察觉到。这就是 Shopify 在全球范围内扩展的方式，而无需碎片化成数百个微服务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的架构是那种让人觉得平淡无奇的架构。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Renato Losio</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">618</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2829</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云服务中断</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">竞态条件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云可靠性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">事件分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">单体架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模块化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">六边形架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/article/4cf4c298" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/zh/article/6bcbc441" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/article/4cf4c298">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/6bcbc441">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
