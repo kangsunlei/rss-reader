@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Andrej Karpathy 论人工智能作为软件 2.0 及可验证性在自动化中的标准</title>
+        <title>Agent 全面爆发！一文搞懂 Agent 开发核心链路</title>
         <style>
             body {
                 padding: 12px;
@@ -15,52 +15,83 @@
         </style>
     </head>
     <body>
-        <h2>Andrej Karpathy 论人工智能作为软件 2.0 及可验证性在自动化中的标准</h2>
-        <p>11/16/2025, 5:56:02 PM</p>
+        <h2>Agent 全面爆发！一文搞懂 Agent 开发核心链路</h2>
+        <p>11/18/2025, 12:46:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Andrej Karpathy 认为人工智能代表了一种新的计算范式，软件 2.0，它基于任务的“可验证性”实现自动化，这是确定人工智能经济影响和自动化程度的关键因素 ...</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了 AI Agent 的开发核心链路，涵盖其概念、演变、核心模块（规划、记忆、工具调度）、开发实践及评估方法，并分享了腾讯云 Dola 的实战经验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Andrej Karpathy 讨论了人工智能的经济影响，将人工智能与传统计算的出现进行了有力的类比，将人工智能定义为“软件 2.0”。他解释说，虽然以前的计算（软件 1.0）自动化了可以明确指定的任务，但人工智能现在自动化了“可验证的”任务。这意味着人工智能可以在可重置、高效和可奖励的环境中“练习”的任务（例如，分类准确率、奖励函数）。Karpathy 认为，“可验证性”是识别适合人工智能自动化的工作或任务的最具预测性的特征，解释了为什么像数学和编码这样的某些领域看到人工智能的快速发展，而创造性或依赖常识的任务因其可验证性较低而发展滞后。这条推文提供了一个理解人工智能的能力及其“锯齿状”进步前沿的基本框架。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章全面介绍了 AI Agent（智能体）从概念到开发的完整路径。首先，阐述了 Agent 的定义、四大核心能力及其基础框架（LLM、记忆、工具、规划），并对 Agent 的四种主要分类（反思、工具调用、规划、多智能体协作）进行了详细解析。接着，文章追溯了 Agent 开发框架的演变，从早期探索到框架成熟（如 AutoGen）再到应用深化阶段，并对比了主流多 Agent 框架（AutoGen、LangGraph、Crew AI）的优劣。在开发实践部分，作者从开发视角深入探讨了影响 Agent 效果的关键因素，特别是上下文工程的 12 个核心优化点，如 KV-Cache 优化、动态约束行为、文件系统作为扩展上下文等。此外，还详细讲解了记忆系统（短期、中期、长期）和基于 Function Call/MCP 协议的 Agent 应用搭建方法。最后，文章分享了 Agent 评估的现有基准和挑战，并结合腾讯 PCG 大数据平台部 Dola 的实际案例，为读者提供了宝贵的架构认知与实践心得。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Agent 的核心能力由大模型、记忆、工具使用和规划构成，并可分为反思、工具调用、规划和多智能体协作四种形态。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 理解 Agent 的本质是掌握其感知、决策、执行和进化的能力，以及其在不同复杂任务场景下的分类，这为构建智能系统奠定了理论基础。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">上下文工程是提升 Agent 效果的关键，通过优化 KV-Cache、动态约束行为、文件系统扩展等可显著增强模型性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章详细阐述了 12 个上下文工程的核心实践，这些策略能有效解决大模型长文本处理、成本、一致性等问题，是 Agent 开发中的宝贵经验。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">MCP 协议为工具调度提供了标准化规范，但其在日志排查、连接稳定性、性能和出参约束方面仍存在挑战。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 深入分析 MCP 协议的优劣能帮助开发者权衡利弊，决定是否在实际项目中采用，并了解其与 Function Call 的协同关系，避免开发误区。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">记忆系统需分层构建，通过短期、中期、长期记忆结合 RAG 等技术，解决大模型上下文窗口限制导致的“失忆”问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 有效的记忆系统是 Agent 实现连贯对话和知识持久化的基础，分层架构能够模拟人类记忆，提升 Agent 在复杂多轮任务中的表现。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Agent 评估仍是挑战，目前主要依赖特定场景的 Benchmark 数据集，复杂场景下仍需人工介入以确保准确性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 认识到当前 Agent 评估的局限性，有助于开发者在产品落地时，结合业务特性和人工验证，建立更全面可靠的评估体系。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI Agent=大脑（LLM）+ 记忆 + 工具使用 + 规划。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">workflow 和 Agent 的区别：workflow 更多是指开发人员预定好工作的步骤流程，系统内按照预定好的步骤进行行动。而 Agent 更多是指自主定义和自主探索。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">记忆系统通过分层存储（短期/长期记忆）和动态检索（如向量数据库），将历史信息压缩后注入当前上下文，确保对话连贯性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Function Call 是大模型返回调用工具指令的能力，MCP 是 Agent 在工程侧的程序具体执行调用工具的手段，一个是指挥者，一个是执行者。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent 应用关键点还有：LLM 调用（含 function call、prompt 工程），记忆系统（RAG，上下文管理），思考和计划系统等。如果想要做好一个 Agent 系统应用，还需要仔细打磨前面提到的模块。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Andrej Karpathy(@karpathy)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Andrej Karpathy</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2418</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">55 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">13524</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人工智能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件 2.0</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">经济影响</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可验证性</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大模型应用</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多智能体</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/zh/status/1990116666194456651" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/zh/article/e73c897b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/zh/status/1990116666194456651">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/zh/article/e73c897b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
