@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>企业中的混合云原生网络 - 需略加整合</title>
+        <title>大模型开发实战从入门到入坑：动手写一个 MCP Server 去理解 MCP 背后的技术原理</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>企业中的混合云原生网络 - 需略加整合</h2>
-        <p>12/5/2025, 9:17:00 AM</p>
+        <h2>大模型开发实战从入门到入坑：动手写一个 MCP Server 去理解 MCP 背后的技术原理</h2>
+        <p>12/8/2025, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文倡导企业网络进行根本性变革，强调以应用为中心的设计，具备可验证的身份、可组合的策略以及可重复的基础设施，以适应混合云环境。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章通过剖析 MCP 协议的技术原理（SSE 和 JSON-RPC 2.0），并提供一个基于 Spring Boot 的 MCP Server 实战开发教程，帮助读者从零到一理解并实现大模型工具调用。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是 Louis Ryan（一位应用程序和 API 专家，而非传统的网络工程师）的演讲稿，旨在批判当前的企业网络状态，尤其是在混合云原生环境中。Ryan 认为，网络过于基础，应“增强”其功能，以便更好地服务于应用程序，从以 IP 为中心的视角转变为以每个服务的可验证身份为基础的视角。他以“罗密欧与朱丽叶”为例，强调传统防火墙规则的局限性，以及对基于身份的安全的需求。演讲随后探讨了网络应如何“组合”以构建更高级别的系统，分析了集中式代理和策略存储的常见“发夹模式”，指出了其优势和重大缺陷，例如单点故障和组织摩擦。在此基础上，Ryan 强调了“可重复性”的重要性，即通过通用基础设施和与组织结构（而非基础设施细节）对齐的面向身份的策略，在所有环境（本地、多云）中实现一致的功能和控制。核心信息是呼吁企业从根本上转变设计和管理网络的方式，从而更好地支持现代分布式应用程序。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了大模型开发中的核心协议 MCP（Model Context Protocol），旨在解决大模型与业务系统交互的标准化问题。文章首先解释了 MCP 的定义、运作机制及其与 MCP Host、Client、Server 的关系，强调了其在 Agent 开发与工具开发解耦中的重要性。接着，深入解析了 MCP 背后的两大技术支柱：利用 SSE 实现服务端向客户端的单向实时数据流，和基于 JSON-RPC 2.0 定义无状态消息格式。最后，通过一个 Spring Boot WebFlux 实现的 MCP Server 代码示例，从项目准备、核心组件构建到通信接口实现，手把手指导读者动手实践，帮助读者彻底理解 MCP 协议的工作原理和实现细节。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">网络必须增强功能以服务于应用程序，超越原始的以 IP 为中心的模型。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当前的网络过度关注 IP 地址，导致配置复杂且不稳定。应用程序关注的是服务和 API，而非 IP 地址，因此需要一种能够抽象基础设施并为应用程序层提供实用功能的网络。</span>
+                        <strong style="color: #1e40af">MCP 协议标准化大模型与外部工具的交互，简化 Agent 开发。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MCP 协议定义了 AI 客户端与 MCP Server 之间获取上下文的标准流程，促进了 Agent 开发与业务工具开发的解耦，使得模型调用外部工具的流程更加简单和统一。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">每个网络实体的可验证身份对于现代安全和策略执行至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 IP 地址频繁变更和缺乏对等身份验证，传统防火墙会失效。普遍实施 PKI、mTLS 或类似的身份验证机制将彻底改变安全性，并支持更强大、可审计的策略执行。</span>
+                        <strong style="color: #1e40af">SSE 和 JSON-RPC 2.0 是 MCP 协议的底层技术基石。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> SSE 负责 MCP Server 向 Client 的单向实时数据推送，实现了长连接的伪装推送；JSON-RPC 2.0 则定义了 Client 与 Server 之间无状态、轻量级的消息交换格式，确保了消息解析的统一性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用大型代理的常见“发夹模式”会引入显著的单点故障和组织摩擦。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过单个代理集中所有流量可以提供控制，但会造成单点故障、不成比例的成本以及工单驱动的运维模式，从而阻碍敏捷性，并导致开发者倾向于寻找变通方案。</span>
+                        <strong style="color: #1e40af">MCP Server 可基于任何语言/框架实现，且需遵循“两通道四步骤”的通信生命周期。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 任何编程语言或框架（如 Java）都可以用来实现 MCP Server，关键在于建立 SSE 端点和 HTTP POST 端点，并严格遵循连接建立、获取端点、握手初始化和工具调用的四个标准步骤，确保协议的正确执行和通用性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">策略必须可组合，并在混合环境中可重复执行，并植根于组织结构。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 策略应根据组织角色和关系（而非基础设施细节）来定义。这种方法可以减少工单驱动的运维模式和组织摩擦，支持在不同环境中保持应用程序一致性，并提高灵活性和可审计性。</span>
+                        <strong style="color: #1e40af">通过实战开发 MCP Server 可加深对协议的理解。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章提供了基于 Spring Boot WebFlux 的 MCP Server 详细实现，代码示例和测试步骤直观展示了协议的运作机制，帮助开发者彻底掌握 MCP 的原理与实践。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">应用程序并不关心这些。他们为什么要关心？我真的不在乎你的电话号码是多少，我关心的是我正在与人通信。应用程序调用服务和 API。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">想象一下，如果网络上运行的所有组件都拥有可验证的身份，并且可以被与之通信的所有其他组件验证和证明，反之亦然，那么网络和网络安全将会是什么样子。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">组织迁移的最大障碍是其在策略方面的投入，这代表着巨大的商业价值。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">策略必须可组合。这意味着什么？我是一名管理员，我编写了一条策略：蒙太古家族的成员不能与凯普莱特家族的成员交谈，反之亦然。很好，这是一条非常宽泛的策略。我还希望各个团队能够编写比这更具体的策略。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP（Model Context Protocol，模型上下文协议）是规范应用程序向大语言模型提供上下文的开放协议。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 本质上是 MCP Client 和 MCP Server 之间的通信协议，实现了 Agent 开发与工具开发的解耦。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 MCP 体系里，SSE 就是'用一次超长时间的 HTTP 下载'来伪装成服务器主动推送；规范极简（4 个固定字段），浏览器原生支持，Spring 既可用同步阻塞的 SseEmitter，也可用响应式的 Flux<serversentevent>实现。</serversentevent></li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 协议就是'客户端先拉一条 SSE 长连接收通知，再用普通 HTTP POST 发请求到服务端；Client 和 Server 之间必须先发 initialize 打招呼，才能调工具，最后 Client 关 SSE 就通信结束了'。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Louis Ryan</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">24 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5863</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6751</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生网络</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">混合云</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">服务网格</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大模型开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SSE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JSON-RPC</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/732fd1ae" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/4bf7d624" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/732fd1ae">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kppfCcik5gkgT6iZgPxKat44qVp0UrXopGrRJ8vUbALyBpA31ExAbtRMajap2QRk00nVopOqRSdViz75MiBPqHkCyKTmCTVPqHkCyBNqngDyhJpvOqladFK16KRq0Sf/ODVPANmkZgIyqfmXnFQtOqladFK16JN/DJAn1ExqNgH5PzmpWnRSteikatEnX6bmbwLkDTWTmhsgk5on1PxJTqoWnVQtOqla9MkyIL+TmgnIpGYCMqmZgExqJiA3QCY1bwD5k51ULTqpWnRSteiTl9T8zdTcqHlDzQRkUnOj5m9yUrXopGrRSdWiT14CMqmZgGxSM6l5A8gmIJOaSc0EZFIzAdmk5ptOqhadVC06qVr0yW+m5gkgT6h5Qs03AbkB8oaaJ4BMat44qVp0UrXopGoR/sgiIG+omYA8oWYCMqmZgExqJiBvqLkBcqPmb3JSteikatFJ1aJPXgLyhpobNb+Tmhsgk5oJyBtAbtRMQCY1E5BJzaaTqkUnVYtOqhbhjywCMql5A8ikZgJyo+YJIJOaJ4DcqPkmIDdqvumkatFJ1aKTqkWffBmQGzUTkEnNE2omIDdqJjUTkEnNG0DeUDMBmdQ8AWRS88ZJ1aKTqkUnVYvwR14A8oSaGyA3at4AMql5AsgTam6ATGpugExqJiA3ar7ppGrRSdWik6pFn7ykZgLyBJBJzQ2QN9RMQCY1E5An1NwA2QRkUnMDZFKz6aRq0UnVopOqRZ+8BORGzQRkUnMDZFIzAXkCyA2QJ9RMQCY1N2reUDMBuVHzTSdVi06qFp1ULcIfeQHIpOYJIJOaGyCTmhsgT6h5AsikZgLyhJoJyBNqJiCTmgnIpOaNk6pFJ1WLTqoWffKHAfIEkEnNjZoJyBNAJjVPqLkBMqmZgExq3lCz6aRq0UnVopOqRZ/8YdTcAJnU3KiZgDwB5AbIpGZScwNkUjMBuQEyqZnUTEAmNZtOqhadVC06qVr0yZcBmdTcALlR8wSQSc0NkBs1N0AmNROQGyCbgNwAmdS8cVK16KRq0UnVIvyRvxiQGzUTkEnNG0AmNU8AmdQ8AWSTmjdOqhadVC06qVr0yUtAfiU1k5oJyI2aCcikZgLyBJBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAJjUTkEnNpOYJNU8AeUPNE2pugNyoeeOkatFJ1aKTqkWffBmQJ9S8AWRSMwG5UTOpmYBMaiYgk5obIBOQTUB+pZOqRSdVi06qFn3yjwMyqXlDzQRkUvOGmhsgk5oJyO90UrXopGrRSdWiT/5xaiYgk5obIN+k5gbIDZA31Gw6qVp0UrXopGrRJ1+m5pvUTEBu1ExAJjVPqLkBMqmZgExqJjUTkEnNBGRSMwH5ppOqRSdVi06qFn2yDMivBGRSMwG5UTMBmdQ8AWRSMwGZ1ExAJjU3QG6ATGq+6aRq0UnVopOqRfgjVUtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRf8Biow5JCyDDOIAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/4bf7d624">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATUSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4BMat4AMqmZgDyhZgLym9S8cVK16KRq0UnVok+WqdkE5Akgk5pJzQ2QJ9TcqNmkZhOQTSdVi06qFp1ULfrky4A8oeYJIJOaCcikZgIyqdkE5Ak1TwB5Qs03nVQtOqladFK16JN/DJBJzQRkUjMBmdRMQCY1E5BJzQRkUvMvOaladFK16KRq0Sf/GDU3aiYgk5oJyKRmAjKpmYD8PzmpWnRSteikatEnX6bmvwRkUnMD5AbIpOZGzQ2QSc0Tav4kJ1WLTqoWnVQt+mQZkL+ZmgnIpGYCMqmZgExq3gDyJzupWnRSteikatEnL6n5m6l5AsgTaiYgk5obNX+Tk6pFJ1WLTqoW4Y+8AGRSMwHZpOYNIL9JzQ2QSc0EZJOabzqpWnRSteikatEnL6mZgDyhZgIyqZmAPKHmCTXfBOQGyBtqngAyqXnjpGrRSdWik6pF+CMvAJnUbAIyqZmATGo2AXlDzQ2QGzV/k5OqRSdVi06qFuGPLALyhJongExq/ktAJjUTkG9SMwGZ1ExAJjWbTqoWnVQtOqla9MmXqXkDyBtAbtS8oWYCcqPmNwGZ1HzTSdWik6pFJ1WLPnkJyKRmAnKj5kbNG2omIE8AmdS8AeQNNROQSc0TQCY1b5xULTqpWnRSteiTZUA2AXlCzQRkUvOEmgnIE2pugExqboBMaiYgN2omNZtOqhadVC06qVr0yUtqngAyAblR8wSQGyA3at5QcwNkE5BJzQ2QSc2mk6pFJ1WLTqoWffLL1ExAJjUTkEnNBGRSMwG5UfOGmgnIpOZGzRtqJiA3ar7ppGrRSdWik6pFn7wEZFIzAZnU3ACZ1ExA3lBzA2RSM6mZgExqJiA3QCY1E5AbIJOaCcgNkEnNGydVi06qFp1ULfrklwGZ1NwAmdTcANkE5EbNE2pugExqJiCTmjfUbDqpWnRSteikatEnfzg1E5BJzY2aJ9TcAJmATGomNTdAJjUTkBsgk5pJzQRkUrPppGrRSdWik6pFn3yZmgnIDZBNQCY1N0Bu1NwAmdRMQG6AbAJyA2RS88ZJ1aKTqkUnVYvwR/5iQG7U3ACZ1ExAJjUTkEnNE0AmNU8A2aTmjZOqRSdVi06qFuGPvADkN6n5LwH5JjUTkEnNBOQJNd90UrXopGrRSdWiT5ap2QTkBsgbap5Q8wSQN9Q8oeYJIJOaN06qFp1ULTqpWvTJlwF5Qs0baiYgm4BMaiYgk5obIBOQTUAmNZOaTSdVi06qFp1ULfrkHwNkUjMBmYDcqJnUTEAmNW+ouQEyqZmA3AC5UfPGSdWik6pFJ1WLPvnHqLlR8waQTWpugNwAeUPNppOqRSdVi06qFn3yZWq+Sc0EZFLzBJAn1NwAmdRMQCY1k5oJyKRmAjKpmYB800nVopOqRSdViz5ZBuQ3AZnU3AC5UTMBmdTcAJnUTEAmNROQSc0NkBsgk5pvOqladFK16KRqEf5I1ZKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0f8AZEBFKubxKc8AAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
