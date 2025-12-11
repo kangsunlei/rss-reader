@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>运维大规模反向代理的教训</title>
+        <title>支撑 10 倍流量冲击：B 站消息新架构平稳升级实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>运维大规模反向代理的教训</h2>
-        <p>12/8/2025, 5:30:00 AM</p>
+        <h2>支撑 10 倍流量冲击：B 站消息新架构平稳升级实践</h2>
+        <p>12/9/2025, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章总结了运维大规模反向代理的实战经验，揭示了性能优化、常规变更和异常处理中的常见陷阱，并强调了在生产环境中保持客观分析和为运维人员设计的重要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">B 站在面对 10 倍流量增长的消息业务挑战时，通过消息新架构的升级实践，实现了性能、稳定性和业务解耦的显著提升，同时保障了用户体验。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了运维大规模反向代理系统时遇到的挑战和从中汲取的教训。作者通过多个实际案例，详细阐述了在系统规模扩大后，看似合理的优化可能适得其反，例如 Freelist 争用和无锁设计的隐藏成本；同时，文章还揭示了因默认配置、输入错误和例行任务导致系统崩溃的平凡故障。此外，文章强调了在“热路径”中验证假设的重要性，以及异常情况不应污染主线逻辑的原则。最后，作者提出在设计和运维反向代理时，必须考虑到极端情况下的运维人员需求，确保在监控系统失效时，基础工具仍能支持故障排查和恢复。这些教训对于构建高弹性、可维护的大规模系统具有重要的指导意义。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了 B 站消息系统为应对未来 10 倍流量增长所进行的新架构升级实践。文章首先阐述了 B 站消息业务的现状及其面临的“会话慢查询”、“私信内容存储和写入性能瓶颈”以及“服务端代码耦合严重”等核心技术难题。为解决这些问题，B 站提出并实施了一套分层消息域架构，包括接入层、业务层、平台层和触达层。核心升级路径涉及 BFF 架构调整、服务端可用性提升（如冷热数据分离、读写分离、多级缓存）、单聊会话缓存预热与一致性保证、收件箱增量解耦以及私信内容存储优化（异步写入、月度分库分表）等。通过这些措施，B 站消息系统有效提升了高并发下的稳定性、扩展性和服务解耦度，为业务平稳运行提供了坚实保障。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">小规模下的优化在实际大规模环境中可能适得其反。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章通过 Freelist 争用和无锁设计案例说明，在多核、高 QPS 场景下，原先有效的优化可能因资源冲突变成性能瓶颈，导致吞吐量下降、延迟增加。</span>
+                        <strong style="color: #1e40af">四层消息域架构有效应对复杂业务场景和性能挑战</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将消息系统划分为接入层、业务层、平台层和触达层，实现了职责分离和模块化，使得系统在面对不同的业务需求和流量冲击时，能更灵活地进行扩展和优化。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">最致命的故障往往源于看似平凡的默认设置和日常操作。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 例如 YAMl 中的逗号错误、文件描述符限制，以及误杀无权限用户进程等，这些看似微小的疏忽在大规模系统下能引发连锁崩溃，凸显了对细节和默认值的严谨性要求。</span>
+                        <strong style="color: #1e40af">多级缓存、冷热分离和读写分离提升系统可用性和性能</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 运用 Redis、泰山（内部存储）和 MySQL 构建多级数据存储体系，实现核心数据高速访问、冷数据高效存储，并通过读写分离减轻数据库压力，确保高并发下的系统响应速度和稳定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在热路径中，看似简单的库调用也可能隐藏着巨大的性能成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 以随机数生成和 Go 语言的字符串分割为例，强调了在大规模、高并发场景下，不加验证的简单操作会因隐藏的锁或内存分配，成为系统瓶颈。</span>
+                        <strong style="color: #1e40af">业务域解耦和存储优化提升系统扩展性和可维护性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 BFF（Backend For Frontend）层上移业务逻辑，实现服务端微服务化，并针对单聊、群聊等不同类型消息进行存储结构解耦和异步写入改造，显著提升了系统的可维护性和未来业务的扩展潜力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">设计系统时应将异常情况与常态路径隔离处理。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章指出，为支持少数异常情况而泛化系统逻辑，或盲目提高限制参数，会污染主线逻辑，增加复杂度并降低整体性能，应明确处理异常而非让其决定常态。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">高压下的运维设计需确保基础工具的可用性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在监控系统失效时，运维人员需依赖 SSH、grep、awk 等基础工具进行故障排查，因此系统应保留本地日志路径，并提供简化的故障恢复机制。</span>
+                        <strong style="color: #1e40af">一致性保障机制确保数据准确性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过订阅 MySQL binlog 并结合 Redis Lua 脚本进行 Compare And Swap 操作，解决了多版本数据同步的一致性问题，确保了新老架构并存过渡期间数据的可靠性。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">要想取得成功，就需要在目标硬件上进行分析，客观地监视无聊的细节，保持热门路径精简，相信工具胜过理论。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">生产教训：在小规模下"工作正常"的代码可能仍然隐藏着 O(N²) 或更糟的行为。在数百或数千个节点上，这些成本不再是理论上的，而是真正开始破坏生产环境。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">生产教训：最具破坏性的故障往往并不引人注目。它们来自默认设置、不良输入和每个人都视为理所当然的日常清理任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">生产教训：永远不要让异常情况决定常态。明确地处理它们，将其隔离在特定路径或层中，而不是污染主线逻辑。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">生产教训：运维人员不会在完美条件下使用完美的仪表盘进行调试。他们会使用即便其他一切都在宕机时仍然有效的工具进行调试。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们需要优化的是一个数据密集型 &gt;&gt; 计算密集型，读多写少（首页未读数）、读少写多（会话）场景兼具的系统，同时需要拥有热门 C 端产品的稳定性、扩展性和好的业务域解耦。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">服务端基于业务领域的能力边界，抽象出单聊、群聊、系统通知、互动通知和消息设置共五个新服务，提升微服务健康度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">技术升级不是一蹴而就的，一个逐步优化的过程；设计技术方案前设立合适和有一些挑战的目标，但这个目标要控制成本，做好可行性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 Mysql 一条会话记录在短时间内（秒级）多次更新，要保证 binlog 处理器不会逆时间序消费同一个会话的 binlog，即跳过较早版本的 binlog。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -67,30 +64,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">23 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5516</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">53 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">13119</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">反向代理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大规模系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">运维实践</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排查</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">消息系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/a7f0ff32" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/bd8cd86d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/a7f0ff32">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATISURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ0fSIszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEBu1LwBZFIzAXlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBNAJjUTkBsgk5ongNyomYA8oWYTkE0nVYtOqhadVC365MuAPKHmCTUTkBs1E5AngExq/iQgT6j5ppOqRSdVi06qFn3yjwMyqZmA3KiZgDwB5EbNBGRS839yUrXopGrRSdWiT/5xaiYgk5on1DyhZgLyBJBJzb/spGrRSdWik6pFn3yZmt+kZgLyhppJzY2aCcg3qfmbnFQtOqladFK16JNlQH4TkEnNjZoJyKRmAjKpmYBMam7UTECeAPI3O6ladFK16KRqEf7IPwzIG2pugExqboC8oeZfdlK16KRq0UnVok9eAjKpmYDcqJmAPKHmCSATkEnNE0C+Ccik5gbIpGYCcqPmjZOqRSdVi06qFn3ykpoJyCY1E5AJyI2aN9Q8oeYGyA2QGyA3am7UTEA2nVQtOqladFK16JOXgExqJiCTmgnIDZAbNROQN4BMat4AMql5A8gTQG7UbDqpWnRSteikahH+yCIgm9TcAJnUPAHkRs0EZFLzBpBJzQ2QGzVPAJnUvHFSteikatFJ1SL8kT8IyBNqngAyqbkBcqPmBsiNmm8CcqPmm06qFp1ULTqpWoQ/8gKQN9RMQCY1E5BvUjMBuVHzBJBJzQ2QGzU3QJ5Q88ZJ1aKTqkUnVYs+eUnNE0AmIDdAJjU3QG7UTECeUHMD5AkgbwCZ1PxJJ1WLTqoWnVQt+uQvo+YGyKRmUnMD5Ak1E5AbNTdAbtTcAHlCzQRkUrPppGrRSdWik6pF+COLgExq3gCySc0NkBs1TwB5Q80NkBs1E5BJzaaTqkUnVYtOqhZ9skzNBGRSMwGZ1ExqngDyTUAmNTdqboA8AWRSMwGZgPymk6pFJ1WLTqoWffISkEnNJiB/kpoJyBNAJjWTmgnIG2omIJOabzqpWnRSteikatEnL6m5UfMEkEnNBGRSMwGZ1ExAbtTcqJmAfBOQSc3f7KRq0UnVopOqRZ8sAzKpmYDcqJmATGomIL8JyCYgTwD5m51ULTqpWnRSteiTZWpu1Dyh5gk1T6i5ATKpmYBMat5Q8wSQJ4DcqHnjpGrRSdWik6pFn7wE5Dep+SYg3wTkCSCTmifUTEAmNZtOqhadVC06qVr0yTI1m4C8AWRSMwG5UTMBeUPNBORGzSY133RSteikatFJ1aJPvgzIE2qeUDMBmdRMQG7UPKFmAjKpeQLIG2omIE+oeeOkatFJ1aKTqkWf/OOATGomIJOaCcgE5AkgN0AmNZOaCcik5gbIBGRScwNk00nVopOqRSdViz75nwEyqZmA3KjZBGQCMql5Asik5gbIpOabTqoWnVQtOqla9MmXqfkmNTdA3gByo+YJNROQSc0bQCY1E5BJzaaTqkUnVYtOqhZ9sgzIbwJyo+YNNROQN4C8oeZvdlK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8AXOQbYJnUxg0AAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/bd8cd86d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS/SURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6tZKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIn6TmCSCTmhsgN2qeAPKEmgnIn6TmjZOqRSdVi06qFn2yTM0mIJuA3Ki5ATKpuVGzSc0mIJtOqhadVC06qVr0yZcBeULNE0AmNZOabwIyqZmAPKHmCSBPqPmmk6pFJ1WLTqoWffI/A2STmgnIpGYCMqn5LzmpWnRSteikatEn/3FAbtS8AWRSMwH5PzmpWnRSteikatEnX6bm36TmBsiNmgnIpOZGzQ2QSc0Tan6Tk6pFJ1WLTqoWfbIMyG8CZFJzo2YCMqmZgExqJiCTmjeA/GYnVYtOqhadVC365CU1v5maCcik5g01N2omIJOaGzV/k5OqRSdVi06qFuGPvABkUjMB2aTmm4A8oWYCMqm5ATKpmYBsUvNNJ1WLTqoWnVQt+uTL1ExAJjVvAJnUTEAmNROQSc0TQCY1N0BugLyh5gkgk5o3TqoWnVQtOqlahD+yCMik5g0gk5obIJOaGyCTmgnIG2pugNyo+ZucVC06qVp0UrUIf+QFIJOabwLyhppNQCY1E5BvUjMBmdRMQCY1m06qFp1ULTqpWoQ/8kVAJjUTkE1qboA8oeYJIDdqvgnIjZpvOqladFK16KRq0SfLgGxSMwF5Q80E5AbIpOYNIG+omYBMap4AMql546Rq0UnVopOqRfgjvxiQSc0EZFJzA2RS8wSQJ9TcAJnU3ACZ1ExAbtR800nVopOqRSdViz75lwGZ1ExqJiBPALkBMql5Q80NkE1AJjU3QCY1m06qFp1ULTqpWvTJMiCTmgnIDZAn1ExAJjU3QCYgk5obNROQSc2NmjfUTEBu1HzTSdWik6pFJ1WLPnkJyKRmAjKpmYDcqNkE5EbNBGRSMwGZ1ExAboBMaiYgN0AmNROQGyCTmjdOqhadVC06qVr0yS8H5EbNDZAngNwAmdQ8oeYGyKRmAjKpeUPNppOqRSdVi06qFn3yy6m5AfKEmjeATEAmNZOaGyCTmgnIDZBJzaRmAjKp2XRSteikatFJ1SL8kReATGomIDdqJiA3ap4AsknNDZBJzQTkm9RMQJ5Q88ZJ1aKTqkUnVYvwR/5iQG7U3ACZ1DwBZFLzBJBJzRNANql546Rq0UnVopOqRZ+8BORPUjOpmYBMQG7U3AB5AsgmIJOaN9R800nVopOqRSdViz5ZpmYTkBsg36TmDSBvqHlCzQ2QGzVvnFQtOqladFK16JMvA/KEmjfU3AB5A8ikZgIyqbkBMgHZBORPOqladFK16KRq0Sf/c0AmNTdqJiCTmjfU3ACZ1ExA/k0nVYtOqhadVC365D8GyKTmRs0TQDapuQFyA+QNNZtOqhadVC06qVr0yZep+SY1N0AmNZvU3ACZ1ExAJjWTmgnIpGYCMqmZgHzTSdWik6pFJ1WLPlkG5E8CMqmZ1ExAJjUTkBs1N0AmNROQSc0EZFJzA+QGyKTmm06qFp1ULTqpWoQ/UrXkpGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWvQPnNIvNGYa5KMAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
