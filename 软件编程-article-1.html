@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>大模型训练的高效内存解决方案：流水线感知的细粒度激活卸载，实现显存开销与吞吐性能的联合最优</title>
+        <title>在 Kotlin 中构建 AI Agent – 第 3 部分：持续观察 | JetBrains AI 博客</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>大模型训练的高效内存解决方案：流水线感知的细粒度激活卸载，实现显存开销与吞吐性能的联合最优</h2>
-        <p>12/11/2025, 10:04:00 AM</p>
+        <h2>在 Kotlin 中构建 AI Agent – 第 3 部分：持续观察 | JetBrains AI 博客</h2>
+        <p>12/12/2025, 11:58:45 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">小红书提出的细粒度激活卸载方案，通过模块级卸载、计算-传输重叠和兼容多种并行策略，显著降低大模型训练的显存开销并保持高吞吐性能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了如何使用 Langfuse 将可观察性集成到 Kotlin AI Agent 中，提供逐步跟踪、成本分析和调试功能，以了解 Agent 行为并辅助优化。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">随着大模型参数和上下文长度的增长，激活值的显存开销已成为训练瓶颈。本文详细介绍了小红书技术团队在 Megatron-Core 框架中实现的“细粒度激活卸载（Fine-grained Activation Offloading）”方案。该方案通过以模块而非层为单位卸载激活值、将卸载/重载操作与计算并行执行、并全面兼容流水线并行（PP/VPP）及细粒度重计算等现有优化，有效地平衡了内存占用与训练效率。实验结果表明，该方案在 DeepSeek-V3 等大型模型上实现了显著的内存节省（10%-35%）和吞吐性能提升（7%-10%），为超大规模模型和长序列训练提供了高效的内存解决方案，并给出了详细的最佳实践指南和未来优化方向。文章在技术深度上表现出色，但若能补充更多基础背景知识并评估不同硬件配置下的性能，将进一步提升其普适性和参考价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是关于使用 Koog 框架构建基于 Kotlin 的 AI Agent 系列文章的一部分，旨在解决调试和理解日益强大的 Agent 所面临的关键挑战。文章指出，传统的日志记录和通用 API 仪表盘不足以提供详细的运行时洞察和细粒度的成本分析。作者介绍了专门为 LLM 应用程序设计的可观察性工具概念，重点推荐 Langfuse，因为它具有开源性、自托管选项、免费云服务等级以及直观的用户界面。文中演示了 Koog 和 Langfuse 的 OpenTelemetry 导出器在 Kotlin 中的简洁四行集成，实现了对 Agent 行为的详细跟踪，包括提示、响应、工具参数和每个操作的成本细分。这种增强的可观察性帮助团队发现了一个先前未知的错误，并有效分析了评估运行的成本，从而将 Agent 从一个黑盒转变为一个可检查的系统。文章最后强调了可观察性对于调试、深入了解 Agent 行为以及为未来的优化（如子 Agent 委托）做出明智决策的重要性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">细粒度激活卸载能有效解决大模型训练中激活值显存开销瓶颈。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 面对长序列和 MoE 模型训练中激活值显存的剧增，该方案通过模块级粒度的卸载，显著降低 GPU 内存占用，避免了训练中断或效率低下。</span>
+                        <strong style="color: #1e40af">调试复杂的 Kotlin AI Agent 需要强大的可观察性，而不仅仅是简单的日志记录。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着使用 Koog 等框架构建的 AI Agent 变得越来越复杂，传统的日志记录变得冗杂且不足以调试故障、理解 Agent 运行路径及分析成本，因此需要高级的可观察性解决方案。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">方案核心设计包括粒度精细化、计算-卸载重叠和全场景兼容。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 精细到模块的卸载、异步传输隐藏数据搬运开销、以及对 PP/VPP、多种精度和复杂模型结构的广泛兼容性，是实现性能与显存联合最优的关键。</span>
+                        <strong style="color: #1e40af">Langfuse 为 Kotlin AI 应用提供全面的可观察性解决方案，可通过 OpenTelemetry 轻松集成。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Langfuse 提供详细的跟踪、成本分析和用户友好的界面，使其成为检查 Agent 行为的有效工具。它与 Kotlin 中的 Koog 集成，通过 OpenTelemetry 促进，只需四行代码即可实现。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">细粒度激活卸载与重计算可互补，实现更极致的内存释放。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过为不同计算复杂度的模块选择合适的优化策略（轻量算子重计算，高计算量算子卸载），可实现单模块甚至单个 Transformer 层的 memory-free，超越传统 Full Recomputation 的优化潜力。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实践指南详细介绍了内存瓶颈诊断、卸载配置和迭代优化方法。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 提供了从诊断工具、带宽计算、参数配置到结果验证和并行度适配的完整流程，指导开发者高效落地该方案并进行持续优化。</span>
+                        <strong style="color: #1e40af">可观察性有助于发现和解决隐藏的错误，优化 Agent 性能，并评估运营成本。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过跟踪 Agent 的行为和成本，开发人员可以查明意外的工具故障等问题，了解资源消耗，并做出数据驱动的决策，以提高 Agent 效率并降低运营开支，从而将黑盒转变为可检查的系统。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">细粒度激活卸载（Fine-grained Activation Offloading）通过"模块级粒度、计算-内存传输重叠、全并行兼容"的设计，实现峰值内存+吞吐性能的联合最优，在主流大模型上获取显著性能收益和显存收益。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为兼顾内存占用与训练效率，技术团队提出细粒度激活卸载方案（Fine-grained Activation Offloading），在 Megatron-Core 框架中实现模块 / 算子级别的激活卸载，并兼容流水线并行（PP）、虚拟流水线并行（VPP）及细粒度重计算，最终在内存节省与性能损失间取得最优平衡。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Megatron Core 中的细粒度激活卸载方案，通过 "模块级粒度、计算 - 传输重叠、全并行兼容" 的设计，在长上下文训练中实现了 "峰值内存收益 + 吞吐性能收益" 的联合最优。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实验表明，该方案可使 DeepSeek-V3、Dots2.llm 等模型以吞吐损失 1%-2% 的代价换取峰值内存开销 10%-35% 的收益，或在保证极致内存收益的同时获取 7%-10% 的吞吐收益，为千亿级模型、长序列训练提供高效的内存解决方案。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">随着 Agent 能力的增强，调试变得更具挑战性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你无法观察，你就无法改进。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">可观察性不仅仅是为了调试。它也是你了解 Agent 行为的方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过几行代码，我们把 Agent 从一个黑盒变成了一个可以检查的东西。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,30 +61,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">小红书技术REDtech</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">小红书技术REDtech</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Denis Domanskii</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">25 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6150</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1822</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大模型训练</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">显存优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">激活卸载</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Megatron-LM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">细粒度重计算</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kotlin</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观察性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Langfuse</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/c103c279" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/0d72e89b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/c103c279">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATRSURBVO3BQY4kRxIEQdNA/f/Lun10XgJIpNdsD2ki+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5E9ScwPkDTUTkEnNE0CeUDMB+ZPUvHFSteikatFJ1aJPlqnZBOQJNROQSc0TaiYgN2omNZvUbAKy6aRq0UnVopOqRZ98GZAn1DwB5EbNBORGzRNqboA8oeYJIE+o+aaTqkUnVYtOqhZ9Uv8AZFJzA+RGzQRkUvNvclK16KRq0UnVok/+ZdS8oWYCMql5Ash/yUnVopOqRSdViz75MjW/mZoJyKRmAnKjZlJzA2RS84Sa3+SkatFJ1aKTqkWfLAPymwCZ1ExAJjUTkEnNBOQGyKTmDSC/2UnVopOqRSdVi/BH/mJA3lBzA2RS8waQSc2/yUnVopOqRSdVi/BHXgAyqZmAbFLzBJBvUjMBmdTcAJnUTEA2qfmmk6pFJ1WLTqoWfbIMyBtqboBMaiYgk5pvAjKpuQFyA+QNNU8AmdS8cVK16KRq0UnVIvyRLwIyqZmAvKHmBsgbaiYgT6i5AXKj5m9yUrXopGrRSdWiT14CMql5Qs1vomYCMqmZgExqJiBvALlRMwGZ1ExAJjWbTqoWnVQtOqlahD+yCMikZgIyqbkB8oaaCciNmjeA3Kj5JiA3ar7ppGrRSdWik6pFn/xham6ATGomIJOaCcgTam6ATGreAPKGmgnIpOYJIJOaN06qFp1ULTqpWoQ/8kVAnlAzAXlDzSYgT6i5ATKpuQEyqZmA3Kj5ppOqRSdVi06qFn3yEpAbNW+ouQHym6i5AbIJyKTmBsikZtNJ1aKTqkUnVYs+eUnNBGQCMqmZgDyhZlIzAZmATGomIJOaJ9RMQCY1N2reUDMBuVHzTSdVi06qFp1ULcIfeQHIpGYC8oSaJ4BMaiYgk5oJyI2aGyCTmgnIE2omIE+omYBMaiYgk5o3TqoWnVQtOqla9MmXqbkBMgG5UTOpmYBMam7U3AC5UfOEmhsgk5oJyKTmDTWbTqoWnVQtOqla9MmXAZnUPKFmAvIGkBs1TwCZ1ExqboBMaiYgN0AmNZOaCcikZtNJ1aKTqkUnVYs++cOA3KiZgExqngByo+ZGzRNAJjUTkBsgm4DcAJnUvHFSteikatFJ1SL8kb8YkBs1N0AmNROQSc0EZFLzBJBJzRNANql546Rq0UnVopOqRfgjLwD5k9R8E5D/JzUTkEnNBOQJNd90UrXopGrRSdWiT5ap2QTkBsik5g01E5BJzRNA3lDzhJongExq3jipWnRSteikatEnXwbkCTVvAJnUTEAmNTdqJiCTmgnIpOYGyARkE5BJzaRm00nVopOqRSdViz75j1EzAblRM6mZgExq3lBzA2RSMwG5AXKj5o2TqkUnVYtOqhZ9Uv+g5gbIJjU3QG6AvKFm00nVopOqRSdViz75MjXfpOYJIE8AuVFzA2RSMwGZ1ExqJiCTmgnIpGYC8k0nVYtOqhadVC36ZBmQPwnIpGYC8oaaJ4BMaiYgk5oJyKTmBsgNkEnNN51ULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteh/RyRODxS22LIAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/0d72e89b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATSSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ0fSIszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEDeUDMBmdTcAJnUPAHkN6l546Rq0UnVopOqRZ8sU7MJyI2aTWpu1DyhZgJyo+ZGzSYgm06qFp1ULTqpWvTJlwF5Qs0bQCY1N0BugNyomYBMar4JyBNqvumkatFJ1aKTqkWf/OOATGomIJOaGyCTmgnIBGRSMwG5UfN/clK16KRq0UnVok/+Z4DcAPmT1ExAJjX/spOqRSdVi06qFn3yZWr+JDUTkBs1E5BJzRNqJiCTmjfU/E1OqhadVC06qVr0yTIgf5KaCcikZgLyBpBJzQRkUjMBmdTcAPmbnVQtOqladFK1CH/kHwZkUjMBeULNDZBNav5PTqoWnVQtOqla9MlLQCY1TwCZ1ExAngAyqZmAvKFmAnKjZgJyA2STmhsgk5o3TqoWnVQtOqlahD/yRUBu1ExAJjUTkCfUPAHkCTXfBOQ3qXnjpGrRSdWik6pFn7wEZFIzqZmAPAHkRs0NkCfUTEDeADKpmYBsUvMEkE0nVYtOqhadVC36ZBmQJ4DcqHkCyKRmAjKpeULNDZBJzQTkCTU3QCYgk5oJyDedVC06qVp0UrUIf+SLgNyouQFyo+abgNyomYBsUrMJyKRm00nVopOqRSdViz5ZBmRS8wSQSc0E5AbIE2pu1ExA3lDzBJBJzQTkDSCTmjdOqhadVC06qVr0yUtAJjUTkEnNBGRSMwGZ1ExAbtT8JjUTkBsgk5pvUjMB2XRSteikatFJ1aJPfhmQGyCTmhs1E5AJyKRmAjKpeQPIDZBNap4A8k0nVYtOqhadVC365MvU3AC5AfKEmifU3ACZ1Dyh5gbIBGRSMwGZ1LyhZtNJ1aKTqkUnVYvwR14AcqNmAjKpeQLIpGYCMqm5ATKpuQFyo2YCMqm5AbJJzQTkRs0bJ1WLTqoWnVQt+uQlNTdAboBMaiYgk5oJyA2QGzWbgExqNqmZgExqJiCTmgnIppOqRSdVi06qFuGPfBGQGzW/Ccik5gbIjZoJyI2aCcik5puA3Kh546Rq0UnVopOqRZ+8BORGzRNAnlAzAXkCyKRmUjMBeULNE0A2qZnUTEA2nVQtOqladFK16JOX1GxS8wSQSc0NkEnNBOQJIJOaGyA3ap4AMqn5k06qFp1ULTqpWvTJS0B+k5obIDdqnlAzAZnUfBOQSc0NkBs133RSteikatFJ1aJPlqnZBORGzRNAJjWTmhs1E5AbNW+oeULNDZBJzaaTqkUnVYtOqhZ98mVAnlDzBJAbNTdAnlAzqZmAvAHkDSCTmknNBGRS88ZJ1aKTqkUnVYs++cepmYB8E5AbNU+omYBMaiYgk5q/yUnVopOqRSdViz75n1EzAfkmNROQGzU3am7U3AD5k06qFp1ULTqpWvTJl6n5m6l5AsgE5EbNDZBJzQRkUjMBuVEzAfmmk6pFJ1WLTqoWfbIMyG8C8oSaTWomIJvUTEBu1DyhZtNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+A5Y8M0Vlo3WFAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
