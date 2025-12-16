@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>同事查日志慢到不行，用这套 grep 组合拳明明能快 10 倍！</title>
+        <title>SQLite3 如果突发断电、关机，数据到底会不会丢？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>同事查日志慢到不行，用这套 grep 组合拳明明能快 10 倍！</h2>
-        <p>12/13/2025, 12:02:00 AM</p>
+        <h2>SQLite3 如果突发断电、关机，数据到底会不会丢？</h2>
+        <p>12/14/2025, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过实际案例，系统性地介绍了如何利用 grep 及其组合命令高效排查日志，涵盖完整堆栈捕获、实时监控、压缩日志分析及高级统计等多种实用场景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细阐述了 SQLite3 在突发断电情况下如何通过合理配置 PRAGMA 参数来确保数据不丢失，并对 Linux 和 Windows 平台差异进行了对比。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章以一个新同事低效查日志的场景引入，引出了基于 grep 的一系列高效日志排查方法。首先指出传统 tail -f | grep 和 vi 搜索的局限性，例如丢失堆栈信息、视觉疲劳和处理压缩文件困难等。随后，文章详细介绍了 grep 组合拳的四类实战场景，包括利用 -A 参数捕获完整异常堆栈、实时监控与上下文保留、使用 zgrep 直接分析压缩日志，以及结合管道进行异常趋势统计。文章还进一步分享了 grep 的高级参数应用、多维度日志关联分析、性能敏感场景优化和正则表达式调优技巧。最后，扩展了工具链，介绍了 wc、awk、sed 等常用命令及其组合，展示了在统计错误、字段提取、文本清洗等方面的强大功能，旨在帮助开发者大幅提升日志分析效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 SQLite3 数据库在断电或关机等异常情况下的数据安全问题，核心是利用 PRAGMA 命令进行数据库操作和内部数据查询的配置。作者首先介绍了 PRAGMA 命令的特性及可能遇到的问题，并通过表格详细对比了不同`synchronous`模式下性能与数据安全性的权衡。接着，文章强调了 WAL 日志刷新和`wal_autocheckpoint`的重要性，并给出了推荐配置。文章还详细区分了 PRAGMA 命令的持久化与会话级特性，并针对新库初始化给出了 6 项关键配置建议，最后对比了这些配置在 Linux 和 Windows 环境下的异同，为确保 SQLite 数据安全提供了全面的实践指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">传统 `tail -f | grep` 无法捕获完整的异常堆栈信息，导致问题定位困难。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方式只能匹配单行异常，无法显示异常的上下 N 行上下文，使得开发人员难以获取故障发生的完整背景信息和调用链，增加了排查难度。</span>
+                        <strong style="color: #1e40af">PRAGMA `synchronous`模式是平衡 SQLite 性能与数据安全性的关键配置。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章通过表格清晰展示了 OFF、NORMAL、FULL、EXTRA 四种模式在性能和安全性上的取舍，建议关键业务采用 FULL 模式以确保数据不丢失，这对于保证业务稳定性至关重要。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 `grep -A N` 可有效捕获完整异常堆栈，提高故障排查效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `grep` 的 `-A` 参数能够显示匹配行后的 N 行，对于日志中的异常堆栈信息捕获至关重要，能帮助开发者快速获取完整的错误上下文，加速问题定位。</span>
+                        <strong style="color: #1e40af">WAL 日志模式和`wal_autocheckpoint`能有效管理数据刷新频率，优化恢复时间。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 明确指出 WAL 模式结合合适的`wal_autocheckpoint`间隔，可以在断电后缩短数据库恢复时间，对于需要快速恢复线上服务的场景具有指导意义。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">`zgrep` 命令允许直接分析压缩日志文件，无需手动解压，显著提升效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在生产环境中，日志常以压缩格式存储。`zgrep` 内置支持 `.gz` 格式，避免了冗余的解压步骤，保持了工作流的连贯性，节省了宝贵的排查时间。</span>
+                        <strong style="color: #1e40af">区分 PRAGMA 命令的持久化和会话级特性对 SQLite 配置至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章总结了哪些 PRAGMA 命令会永久写入数据库文件（如`journal_mode`），哪些只影响当前连接（如`synchronous`），这帮助开发者理解何时需要固化配置以及何时在每次启动时重新设置。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过组合 `grep`、`awk`、`sed` 等命令，可实现高级日志分析和统计功能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些命令的灵活组合，可以实现按时间窗口过滤、字段提取、错误频率统计等复杂任务，将日志数据转化为有价值的洞察，辅助进行系统性能优化和模式发现。</span>
+                        <strong style="color: #1e40af">跨平台使用 SQLite 需注意操作系统对 PRAGMA 行为的影响。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章对比了 Linux 和 Windows 环境下`encoding`、`page_size`、`journal_mode`等配置的异同，特别是 WAL 模式下文件锁实现的差异，提醒开发者在多平台部署时需关注这些细节以避免潜在问题。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">tail -f | grep 只能捕获异常片段，丢失关键堆栈信息。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">zgrep -H -A50 "OutOfMemoryError" *.gz  # 跳过解压步骤，直击问题核心</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">grep -v "健康检查|心跳" app.log | grep -A30 "异常" # 排除干扰信息，聚焦核心问题</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">awk '$9 != 200 {print $1}' access.log | sort | uniq -c | sort -nr | head -20 # 分析 Nginx 日志，找出返回码非 200 的请求 IP</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">做好这些配置，根本就不担心这个问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">PRAGMA 语句是特定于 SQLite 的 SQL 扩展，用于修改 SQLite 库的操作或查询 SQLite 库的内部（非表）数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这里在进入 SQLite 的时候需要考虑你的 SQLite 适用于哪种模型：关键业务我们推荐 FULL 模式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">同时需要注意每次启动数据库都需要带有一个配置的文件的脚本，来加载配置否则 SQLite 是不会加载正确的预设配置给你。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">学到这里，那就出现一个问题，一个库或者一个 SQLite 的数据库要进行哪些初始化设置。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1709</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2550</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">日志分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">grep</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">命令行工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障排查</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SQLite</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库运维</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PRAGMA</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库配置</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/a03bb999" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/bdb8df5a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/a03bb999">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQY4bSRAEwfAC//9lXx3zVECjk6PRIszwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAjKpmYBMap4AMql5AsgTaiYgP0nNGydVi06qFp1ULfpkmZpNQDYB+SYgN2omIE+o2QRk00nVopOqRSdViz75MiBPqHlCzRNqboA8AWRS85OAPKHmm06qFp1ULTqpWvTJPw7IE0AmNU8AuQEyqZmATGr+T06qFp1ULTqpWvTJP07NBOQNNROQGzUTkCeATGr+ZSdVi06qFp1ULfrky9T8JDWb1DyhZgLyTWp+k5OqRSdVi06qFn2yDMhPAjKpmYBMaiYgk5oJyKRmAjKpuVEzAXkCyG92UrXopGrRSdWiT15S85sAmdRMQDapmYDcAHlCzb/kpGrRSdWik6pFn7wEZFIzAblRMwF5Qs0E5EbNBOQNIN8EZFJzA2RSMwG5UfPGSdWik6pFJ1WLPvlhap5QMwF5Asik5gk1T6i5AXID5AbIjZobNROQTSdVi06qFp1ULfrkLwMyqZmATGqeUDMBmdRMQG7UPAFkUvMGkCeA3KjZdFK16KRq0UnVok9eUjMBmdRMQCY1E5BJzQ2QSc0EZFLzhJoJyKTmRs0NkEnNJjU3QCY1b5xULTqpWnRStQj/yA8CMqmZgDyh5jcBcqPmm4DcqPmmk6pFJ1WLTqoW4R95Acik5g0gk5rfBMik5gkgk5obIDdqboA8oeaNk6pFJ1WLTqoWffKXAbkBMql5AsgbaiY1N0CeAPIGkEnN33RSteikatFJ1aJPfhiQSc0TQJ5QMwG5UXMD5EbNDZAbNTdAnlAzAZnUbDqpWnRSteikahH+kUVAbtRMQCY1E5BJzQ2QN9RMQCY1TwB5Q80NkBs1E5BJzaaTqkUnVYtOqhZ9skzNJjUTkDfUTEBu1ExAJjU3am6APAFkUjMBmYD8pJOqRSdVi06qFn3yEpBJzQRkUvMEkCfUTEAmIDdANgGZ1ExqJiBvqJmATGq+6aRq0UnVopOqRZ+8pOYJIE+omYBMaiYgN2pugExqboB8E5BJzW92UrXopGrRSdWiT5YBmdQ8AeRGzQRkUjMBmYBMaiY1E5BvAvIEkN/spGrRSdWik6pFnyxT84aaTWomIE+ouQEyqXlDzRNAngByo+aNk6pFJ1WLTqoWffISkJ+kZhOQGzWbgDwBZFLzhJoJyKRm00nVopOqRSdViz5ZpmYTkCeAbAKySc0E5EbNv+SkatFJ1aKTqkWffBmQJ9Q8oeYnAZnUTEAmNU8AeUPNBGRS800nVYtOqhadVC365B8HZFIzAXlCzQTkBsgNkEnNpGYCMqm5ATIBmdTcAJnUvHFSteikatFJ1aJP/meATGomIDdAbtQ8AWQCMql5Asik5gbIpOabTqoWnVQtOqla9MmXqfkmNTdAbtRMQCY1E5BJzRNqJiCTmjeATGomIJOaTSdVi06qFp1ULfpkGZCfBGRSM6mZgPxNQN5Q85udVC06qVp0UrUI/0jVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRfwgnDW4JkCYvAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/bdb8df5a">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATZSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2RScwNkUvMEkEnNBOQJNROQ36TmjZOqRSdVi06qFn2yTM0mIG8AeQLIpGYCMqm5UbNJzSYgm06qFp1ULTqpWvTJlwF5Qs0TQJ5QMwGZ1DwBZFIzAXlCzRNAnlDzTSdVi06qFp1ULfrkL6PmDSCTmhs1E5BJzQRkUvM3OaladFK16KRq0Sd/GSCTmhs1E5AJyKRmAjKpmYD8n5xULTqpWnRSteiTL1Pzm9RMQCY1N2pugExqbtTcAJnUPKHmv+SkatFJ1aKTqkWfLAPyJwEyqZmATGomIJOaCcik5g0g/2UnVYtOqhadVC3CH/mDAblRMwGZ1PwmIJOav8lJ1aKTqkUnVYvwR14AMqmZgGxS8wSQb1IzAZnU3ACZ1ExANqn5ppOqRSdVi06qFn2yDMik5gbIjZobIJOaGzWbgExqboDcAHlDzRNAJjVvnFQtOqladFK1CH/kBSCTmgnIJjUTkBs1N0AmNROQN9TcALlR8yc5qVp0UrXopGrRJy+peULNDZBJzRNqJiBvqLkBMqmZgLwB5EbNBGRSMwGZ1Gw6qVp0UrXopGoR/sgLQCY1TwB5Qs0E5Ak1E5An1NwAuVHzTUBu1HzTSdWik6pFJ1WL8EdeAHKjZgIyqZmATGqeAPKGmjeAfJOaCcik5gkgk5o3TqoWnVQtOqlahD/yApAn1DwBZJOaCcg3qbkBMqm5ATKpmYDcqPmmk6pFJ1WLTqoWffKSmgnIE0AmNZOaJ4DcALlRcwPkRs0NkE1AJjU3QCY1m06qFp1ULTqpWvTJv0zNBOQJNZOaJ4BMQCY1N2omIJOaGzVvqJmA3Kj5ppOqRSdVi06qFn3yEpBNam6APAFkUjOpuQEyqZmATGomIDdAJjUTkBsgk5oJyA2QSc0bJ1WLTqoWnVQt+mSZmieAPKHmBsg3AZnUPKHmBsikZgIyqXlDzaaTqkUnVYtOqhZ98suA3Kj5JiA3ap4AMqmZ1NwAmdRMQG6ATGomNROQSc2mk6pFJ1WLTqoWffJlQCY1N0Bu1ExAJjUTkEnNDZAbNTdAJjUTkBsgm4DcAJnUvHFSteikatFJ1SL8kT8YkE1qngAyqXkCyKTmCSCb1LxxUrXopGrRSdWiT14C8pvUTGqeADKpeQLIDZBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAbtS8AWRS8wSQN9Q8oeYGyI2aN06qFp1ULTqpWvTJlwF5Qs0mIJOaJ9RMQCY1E5BJzQ2QCcgmIL/ppGrRSdWik6pFn/zPAJnUPKFmAjKpeUPNDZBJzQTk33RSteikatFJ1aJP/jJqJiCTmhsgk5oJyCY1N0BugLyhZtNJ1aKTqkUnVYs++TI136RmAnID5EbNBORGzQ2QSc0EZFIzqZmATGomIJOaCcg3nVQtOqladFK16JNlQH4TkEnNBORGzQTkRs0NkEnNBGRSMwGZ1NwAuQEyqfmmk6pFJ1WLTqoW4Y9ULTmpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoW/QOOIUE3aOQAzQAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
