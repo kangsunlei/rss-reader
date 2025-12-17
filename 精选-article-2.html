@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>JustHTML：一场生动的“氛围工程”实践</title>
+        <title>解码 Milvus 数据库的向量索引，传统 DBA 也能轻松上手</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>JustHTML：一场生动的“氛围工程”实践</h2>
-        <p>12/14/2025, 3:59:23 PM</p>
+        <h2>解码 Milvus 数据库的向量索引，传统 DBA 也能轻松上手</h2>
+        <p>12/15/2025, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文以 JustHTML（一个 Python HTML 解析库）为例，阐述了“氛围工程”（vibe engineering）：一种先进的 AI 辅助编程方法，其中人类工程师指导大型语言模型进行代码生成，以产出高质量成果。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了向量数据库 Milvus 的索引技术，包括其 Data Structure、Quantization 以及特殊场景索引，尤其对传统 DBA 深入理解向量索引原理提供了详尽指导。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 JustHTML 这个全新的 Python HTML 解析库，并将其定位为“氛围工程”（vibe engineering）的典范。作者最初被 JustHTML 吸引，源于其诸多出色特性：纯 Python 实现、100%测试覆盖率、通过全部 9，200 多项 html5lib 测试，以及对 CSS 选择器的支持。深入研究后发现，该库几乎完全是在多种大型语言模型（包括 Claude Code、Claude Sonnet 3.7、Gemini 3 Pro 和 Claude Opus）的协助下构建的，所有这些都在工程师 Emil Stenström 的精心指导下完成。作者将这种方法与“氛围编码”（vibe coding）区分开来，强调“氛围工程”涉及专家程序员在专业监督下有效利用 AI 编码代理。Stenström 有条不紊的流程包括：早期集成全面的测试套件、自主设计的 API、性能基准测试、迭代优化、代码重构、自定义性能分析和模糊测试——所有这些都展示了精密的软件工程实践，尽管具体“敲代码”的工作由 LLM 完成。文章总结认为，这种劳动分工模式，即人类工程师提供“思考”和方向，代表了一种更有价值且高效的时间利用方式。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章由浅入深地揭示了 Milvus 向量数据库丰富的索引类型和算法。首先阐述了索引在数据库中的核心地位以及向量数据库索引与传统数据库索引的异同。然后详细分解了 Milvus 索引的组成，包括 Data Structure（数据存储结构）和 Quantization（数据量化算法），并对 IVF、HNSW、DISKANN 等主流 Data Structure 索引，以及 FLAT、SQ8、PQ、RABITQ、PRQ、SCANN 等 Quantization 量化算法进行了深入讲解，包括其工作原理、构建流程和关键参数。此外，文章还介绍了 AISAQ 和 MINHASH_LSH 等特殊场景索引。作者作为资深 DBA，以传统数据库视角切入，降低了向量索引的理解门槛，最后对向量数据库索引的未来发展趋势进行了展望。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JustHTML 是“氛围工程”的典范，这是一种精细化的 AI 辅助软件开发方法。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方法与“氛围编码”形成对比，它通过专家级的人工监督、严格测试以及对生成式 AI 模型（如 Claude Code、Claude Sonnet 3.7、Gemini 3 Pro 和 Claude Opus）的战略指导，从而产出高质量、可用于生产环境的代码。</span>
+                        <strong style="color: #1e40af">向量数据库索引的核心在于高效的内存计算，区别于传统数据库侧重削减磁盘 I/O，且索引选择可能改变查询结果。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Milvus 等向量数据库的索引主要加速内存中的相似性计算，通过避免不必要的实体计算或加速必要实体的计算来优化查询。与传统数据库不同，向量数据库中开发者需要显式指定索引类型，且不同的索引选择不仅影响查询效率，还可能直接改变最终的查询结果，这要求开发者深入理解索引原理。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">即使在大型语言模型生成大部分代码时，精密的软件工程实践依然至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Emil Stenström 为 JustHTML 制定的流程涵盖了关键的设计决策、广泛的测试、性能优化及代码重构，凸显了人类专业知识在现代开发工作流中不可或缺的核心作用。</span>
+                        <strong style="color: #1e40af">Milvus 索引由数据结构（Data Structure）和量化（Quantization）两部分组成，各自承担不同的优化逻辑。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Data Structure 如 IVF、HNSW、DISKANN 用于缩小需要访问的数据范围，而 Quantization 如 SQ8、PQ 等通过编码压缩，减少计算所需的空间和资源，两者结合以优化查询效率和存储。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在开发生命周期早期集成全面的测试套件和基准测试对于 AI 辅助项目至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在开发初期就集成如 html5lib 测试套件和定制基准测试，能为大型语言模型提供必要的约束机制和反馈，确保所生成代码符合严格的质量和性能标准。</span>
+                        <strong style="color: #1e40af">RABITQ 等新型量化算法利用高维空间特性，在理论精度和查询效率上取得突破。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> RABITQ 通过标准化、随机旋转和利用高维集中现象（测度集中现象），例如在高维空间中向量分量倾向于集中在 0 附近，在不增加额外开销的前提下，显著提升了二进制或标量数据的量化效率，展现了高维几何与概率在算法优化中的创新应用。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">MINHASH_LSH 算法专注于大规模机器学习数据集的去重和相似性搜索，尤其适用于 LLM 训练语料清理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该算法通过 MinHash 生成高效的压缩签名（指纹），结合 LSH（Locality-Sensitive Hashing）实现快速近似搜索，解决大规模数据集（如大语言模型训练语料）中 Jaccard 相似性计算的高成本问题，实现高效的数据去重和近似匹配。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">编码代理负责敲代码；我负责思考。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我提出“氛围工程”是“氛围编码”的进阶版本，其中专家程序员以专业且负责任的方式使用编码代理，以产出高质量、可靠的成果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">用 html5lib 测试套件来设置编码代理，也是设计一个有效的代理循环（agentic loop）的绝佳范例。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">索引优化的本质是用存储空间效率换查询过程的时间效率。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Milvus 强调了，对于大部分的算法，加载集合是在集合中进行相似性搜索和查询的前提。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">高维空间中，随机性可以出人意料地提升确定性。这个现象又被称之为测度集中现象，是高维几何和概率的一个基本规则。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">RABITQ 就是通过刚才的这个免费的信息的有效利用，从而获得了良好的性能表现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">作为一个学习 AI 的新人和古老 DBA，我猜未来的向量数据库索引或者是量化算法，也大约会从百花齐放，走向极少的几种，最终出现一两种力压群雄的通用算法，或者是数据库产品自己根据场景和查询来选索引和算法。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,32 +63,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Simon Willison's Weblog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Simon Willison</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">848</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">48 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">11943</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI辅助编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">HTML解析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Python库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">神韵工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Milvus</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">索引技术</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量检索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">相似度搜索</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/604be80c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/a473a10c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/604be80c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATPSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GoOuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4DcqJmATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCeA3KiZgDwBZFJzo2aTmk1ANp1ULTqpWnRSteiTLwPyhJongExqJiATkEnNjZoJyBNAnlDzBJAn1HzTSdWik6pFJ1WLPvnHqXkCyBNAbtRMQCY1/5KTqkUnVYtOqhZ98n8GyKRmUrMJyP+Tk6pFJ1WLTqoWffJlav4kIJOaCciNmgnIpOZGzQ2QSc0Tav5LTqoWnVQtOqla9MkyIH8zNROQSc0EZFIzAZnUvAHkv+ykatFJ1aKTqkWfvKTmX6bmDTUTkEnNjZq/yUnVopOqRSdVi/BHXgAyqZmAbFLzBJA/Sc0NkEnNBGSTmm86qVp0UrXopGoR/sgvAjKpeQPIpOYGyI2abwLyTWqeADKpeeOkatFJ1aKTqkX4Iy8AuVHzBJAn1HwTkDfU3AC5UfM3OaladFK16KRq0ScvqZmA3AC5UXMDZALyhJo31ExAJjUTkDeA3KiZgExqJiCTmk0nVYtOqhadVC365CUgk5oJyKRmAjIBuVEzAXkDyI2aGzUTkBs1vwnIpOabTqoWnVQtOqlahD/yApAbNROQGzVvAJnUTEAmNROQGzU3QL5JzQRkUvMEkEnNGydVi06qFp1ULfpkmZon1ExA/iQ1N0CeUHMDZFJzA2RSMwG5UTOp2XRSteikatFJ1aJPXlJzA+QGyI2aCcik5gbIb1JzA2QTkEnNDZBJzaaTqkUnVYtOqhZ9sgzIpGYCMqmZgExA3lAzAZmA3Ki5UTMBmdTcqHlDzQTkRs03nVQtOqladFK16JOXgLwB5EbNBGQCcqPmRs0NkEnNBGRSMwG5ATKpmYDcAJnUTEBugExq3jipWnRSteikatEny9RMQN4AMqm5ATIBuQEyqZnUTEAmNU+ouQEyqZmATGreULPppGrRSdWik6pF+CMvAJnU3AB5Qs0E5EbNBORGzRNAbtQ8AWRSMwF5Qs0NkEnNppOqRSdVi06qFn3yy9RMQCY1E5BNam6A3Ki5ATKpmYDcANkE5AbIpOaNk6pFJ1WLTqoW4Y/8xYDcqLkBMql5Asik5gkgk5ongGxS88ZJ1aKTqkUnVYvwR14A8pvU3AC5UXMDZFIzAfkmNROQSc0E5Ak133RSteikatFJ1aJPlqnZBOQGyI2aGyCTmgnIpOYJIG+oeULNDZAbNW+cVC06qVp0UrXoky8D8oSaN9RsUjMBmdRMQCY1N0AmIJuA/KaTqkUnVYtOqhZ98o8BcqPmBsikZlIzAZnUvKHmBsikZgLyJ51ULTqpWnRSteiTf5yaGzUTkAnIN6m5AXID5A01m06qFp1ULTqpWvTJl6n5JjU3QG7UvKHmBsikZgIyqZnUTEAmNROQSc0E5JtOqhadVC06qVqEP/ICkN+kZgIyqdkEZFJzA2RSMwGZ1ExAJjUTkDfUfNNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+B7lQPDA74FIhAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/a473a10c">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATjSURBVO3BQY4kRxIEQdNA/f/LunP0vQSQSK9mD2ki+EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLPnkJyE9ScwNkUjMBuVEzAZnUPAHkCTUTkJ+k5o2TqkUnVYtOqhZ9skzNJiBvAJnU3AC5ATKpuVGzSc0mIJtOqhadVC06qVr0yZcBeULNE0Bu1DyhZgJyA2RSMwF5Qs0TQJ5Q800nVYtOqhadVC365D8GyBNqJiA3QCY1E5BJzb/JSdWik6pFJ1WLPqn/o2YCMql5Ash/yUnVopOqRSdViz75MjU/Sc0E5EbNBGRSMwG5UTOpuQEyqXlCzW9yUrXopGrRSdWiT5YB+c3UTEAmNROQSc0E5AbIpOYNIL/ZSdWik6pFJ1WLPnlJzW8C5JuATGpu1ExAJjU3av4mJ1WLTqoWnVQt+uQlIJOaCcgmNZOaTUDeADKpmdRMQCY1E5BNar7ppGrRSdWik6pFn/zD1GwCMqmZgExq3gAyqbkBcgPkDTVPAJnUvHFSteikatFJ1SL8Iy8AmdTcAPkmNd8E5Ak1N0Bu1PxNTqoWnVQtOqla9MmXAZnUTEBu1ExAJjUTkBs1E5BJzQRkUjMBmdRMQN4AcqNmAjKpmYBMajadVC06qVp0UrUI/8giIJOaGyCTmgnIE2qeAHKj5gkgN2q+CciNmm86qVp0UrXopGrRJ18G5EbNBGRSMwF5AsikZlJzA2RS8waQN9RMQCY1TwCZ1LxxUrXopGrRSdWiT14CMql5AsikZgIyqdkEZFIzqZmAPKHmBsik5gbIpGYCcqNmUrPppGrRSdWik6pFn7ykZgJyo2ZSMwGZ1ExAnlDzBpAn1NwA2QRkUnMDZFKz6aRq0UnVopOqRZ/8ckAmNTdA3gAyqZmATGomIJOaGzVvqJmA3Kj5ppOqRSdVi06qFn3yEpAbNROQJ9TcAJnUTEBu1NwAmdRMQCY1E5AbIJOaCcgNkEnNBOQGyKTmjZOqRSdVi06qFn2yTM0E5EbNBGQC8oaaCcgEZFIzqZmATGqeUHMDZFIzAZnUvKFm00nVopOqRSdViz755dQ8AWRSc6PmDSCTmknNDZBJzQTkBsikZlIzAZnUbDqpWnRSteikatEnvxyQTWpugNyouQEyqZmA3ADZBOQGyKTmjZOqRSdVi06qFuEf+YsBmdTcALlR8wSQSc0TQCY1TwDZpOaNk6pFJ1WLTqoWffISkJ+kZlIzAXlCzQRkUjMBuQGyCcik5g0133RSteikatFJ1aJPlqnZBOQGyI2aGyCTmgnIpOYJIG+oeULNDZAbNW+cVC06qVp0UrXoky8D8oSaTUBu1NyomYBMaiYgk5obIBOQTUB+0knVopOqRSdViz75l1HzBJAbNZOaCcik5g01N0AmNROQf9JJ1aKTqkUnVYs++ZcDMqmZ1DwBZJOaGyA3QN5Qs+mkatFJ1aKTqkWffJmab1LzBJBJzQTkCTU3QCY1E5BJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5SUAmNTdq3lBzA2RSMwGZ1ExAJjU3QG6ATGq+6aRq0UnVopOqRfhHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4HK/ZDR9+wcokAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
