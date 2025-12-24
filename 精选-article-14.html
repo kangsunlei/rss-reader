@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>视觉生成的隐藏天花板｜VTP：MiniMax 海螺视频首次开源 · 技术解读</title>
+        <title>别再造 Agent 了！关于 Agent Skills 的详细总结来了</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>视觉生成的隐藏天花板｜VTP：MiniMax 海螺视频首次开源 · 技术解读</h2>
-        <p>12/19/2025, 1:43:00 AM</p>
+        <h2>别再造 Agent 了！关于 Agent Skills 的详细总结来了</h2>
+        <p>12/22/2025, 2:16:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入解读了 MiniMax 海螺视频团队开源项目 VTP，揭示了视觉生成中“分词器训练越久，还原能力越强，生成效果反而越差”的预训练缩放问题，并提出了通过图文对比学习、感知空间结构和像素重建联合优化的解决方案，显著提升了视觉分词器的理解力与生成性能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度剖析了 AI Agent 技术栈中的 MCP 与 Agent Skills，阐明了它们在连接性与能力上的分层定位，并提出渐进式披露机制有效解决上下文爆炸问题，为构建高效 Agent 系统提供了理论与实践指导。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细分析了 MiniMax 海螺视频团队首个开源项目 VTP（Visual Tokenizer Pre-training），专注于解决视觉生成领域中一个反直觉的现象：过度训练视觉分词器（Tokenizer）反而会导致生成效果变差，命名为“预训练缩放问题”。文章指出，传统分词器训练侧重像素还原，导致模型过度关注底层信息，而非生成所需的高层语义。VTP 通过结合图文对比学习（借鉴 CLIP 实现图像语义理解）、感知空间结构（借鉴 DINOv2 学习图像本质特征和结构关系）和低权重像素重建三种训练目标，联合优化分词器，使其同时具备理解图像内容、感知空间结构和保留像素细节的能力。此外，VTP 采用 Vision Transformer（ViT）架构提升效率和效果。实验结果表明，VTP 打破了传统方法的性能天花板，在数据、算力和参数缩放下持续提升生成效果，并在理解、重建和生成能力上超越了现有 SOTA 方法，同时大幅提升了收敛速度。这为未来的大模型视觉生成提供了新的优化方向和思路。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细探讨了 AI Agent 领域中 MCP（Model Context Protocol）和 Agent Skills 两种核心概念。文章指出，MCP 主要解决 Agent 与外部工具/资源的连接性问题，而 Agent Skills 则专注于封装领域知识和操作流程，解决 Agent“知道如何使用”工具的能力问题。核心亮点在于 Agent Skills 引入的“渐进式披露”机制，通过三层架构（元数据、技能主体、附加资源）按需加载信息，有效缓解了传统 MCP 因工具 JSON Schema 过大导致的上下文爆炸和成本高昂问题。文章强调 MCP 和 Skills 是互补而非竞争关系，提出了一种结合两者的分层混合架构，能优化成本、提高可维护性和复用性。最后，文章详细介绍了 SKILL.md 规范、编写高质量 Skills 的原则，并展望了行业标准化、生态系统构建和自动化能力发现的未来趋势，同时也警示了安全性和碎片化等潜在风险。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">传统视觉分词器存在“预训练缩放问题”，即过度训练会导致还原能力增强但生成效果变差。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 分词器在像素重建任务中过度关注底层细节，导致其编码的信息缺乏高层语义，从而限制了下游生成模型的学习和表现。这是由于训练任务目标设置不当造成的本质问题。</span>
+                        <strong style="color: #1e40af">Agent Skills 的核心理念是连接性与能力分离，弥补了 MCP 在“如何使用”工具方面的不足。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MCP 提供标准接口让 Agent“够得着”外部工具，而 Skills 提供操作手册和专业知识，指导 Agent“如何正确使用”这些工具，两者职责清晰，架构更优。例如，在代码审查场景中，MCP 提供 GitHub API 访问能力，而 Skills 则指导 Agent 如何基于这些 API 进行代码风格、安全性和测试覆盖率检查。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">VTP 通过联合优化图文对比学习、感知空间结构和像素重建三个任务，显著提升了分词器的理解力与生成性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种多任务联合训练方法使分词器能够同时捕获高层语义信息（通过图文对比学习）和底层像素空间结构（通过自监督学习），并适当保留像素细节，从而更好地支持高质量的视觉生成。</span>
+                        <strong style="color: #1e40af">渐进式披露机制是 Agent Skills 解决上下文爆炸问题的关键创新。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过三层架构（元数据、技能主体、附加资源）按需逐步加载信息，将 Agent 初始上下文消耗从传统方式的 16，000 token 大幅降低到 500 token，显著优化了成本和推理效率。这种机制在处理复杂领域知识和众多工具时尤为重要，确保了 Agent 的高效运作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">VTP 解决了传统方法在算力、参数和数据缩放上的性能瓶颈，实现了持续的性能提升。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实验证明，VTP 模型在增加训练资源投入后，其生成能力、理解能力和重建能力能同步持续优化，打破了此前传统方法存在的性能天花板，具备更好的可扩展性。</span>
+                        <strong style="color: #1e40af">Skills 与 MCP 是互补关系，结合使用能构建高效、可维护的智能体分层架构。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MCP 作为传输层提供标准化接口，Skills 作为应用层封装领域知识和工作流，实现关注点分离、成本优化和高复用性，特别适合企业级 Agent 应用。例如，在医疗领域，MCP 可连接电子病历系统，而 Skills 则封装疾病诊断流程或药物推荐逻辑，共同服务于智能诊疗助手。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MiniMax 开源 VTP 项目，为行业提供了解决视觉生成深层问题的思路和工具，推动了技术进步和生态发展。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作为领军企业，Minimax 此次开源不仅分享了其在视觉生成上的技术突破，也为开发者提供了新的工具和方向，有助于降低行业门槛，加速视觉生成领域的技术创新和应用落地，促进技术普惠。</span>
+                        <strong style="color: #1e40af">未来 Agent 技术将趋向标准化、生态化，并发展出自动化能力发现机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 行业内已出现类似 GPTs 的“知识库”功能及 Google 的“Function Packages”，预示着 Agent 能力描述协议将融合连接性与知识表达。未来可能出现类似 NPM 的 Agent 能力包管理系统，甚至 Agent 能自主学习并安装所需 Skills，这将极大拓展 AI 应用边界。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">尽管 Agent Skills 带来显著优势，仍需警惕安全性、上下文污染和碎片化风险。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Skills 包含可执行脚本可能带来代码注入风险，MCP 接口可能暴露敏感数据，以及不同厂商可能推出不兼容的 Skills 规范。应对策略包括对 Skills 内容进行严格的安全审计，实施细粒度的权限控制，并积极参与行业标准制定，促进互操作性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分词器训练得越久，还原能力越强，生成效果反而越差，论文把这个困境叫做预训练缩放问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">让分词器学会「理解」，比学会「还原」更重要，论文管这叫理解力驱动生成。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">理解力才是驱动生成的关键因素。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在视觉分词器阶段投入更多资源，终于能换来持续的回报了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MiniMax 这次的开源，选了视觉分词器这个方向，去尝试解决一个行业里很多人遇到过、但没人系统解释过的问题。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skill 和 MCP 是两种东西，Skill 是领域知识，告诉模型该如何做，本质上是高级 Prompt；而 MCP 对接外部工具和数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">连接性（Connectivity）与能力（Capability）应该分离。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent Skills 最核心的创新是渐进式披露（Progressive Disclosure）机制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skills 和 MCP 不是竞争关系，而是互补关系。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分层架构是必然趋势：随着智能体系统复杂度增加，'连接层'和'知识层'的分离是不可避免的。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +68,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">赛博禅心</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">赛博禅心</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Datawhale</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Datawhale</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2576</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6693</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">视觉生成</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分词器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vision Transformer</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Minimax</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">预训练缩放问题</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent Skills</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Model Context Protocol</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">渐进式披露</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/7630b91a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/2b8d947b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/7630b91a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS/SURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRScwNkUnMDZFLzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgLwBZFIzAdkE5EbNBOQJNZuAbDqpWnRSteikatEnXwbkCTVPqJmA3ACZ1ExAboBMaiY1vwnIE2q+6aRq0UnVopOqRZ/8cUAmNTdAJiA3aiYgE5AbNROQSc1/yUnVopOqRSdViz7549TcAJnUTEAmNU+omYA8AWRS85edVC06qVp0UrXoky9T8/+kZgJyA2RSM6m5UTMB+SY1/5KTqkUnVYtOqhZ9sgzIbwIyqZmATGomIJOaCcikZgIyqblRMwF5Asi/7KRq0UnVopOqRfgjfxiQSc0NkEnNDZDfpOYvO6ladFK16KRq0ScvAZnUTEBu1ExAnlAzAblRMwGZ1NyouQGyCcik5gbIpGYCcqPmjZOqRSdVi06qFuGPvADkRs0E5Ak1N0AmNU8AmdR8E5BvUvMEkEnNGydVi06qFp1ULfrky4DcqJmATEAmNTdA3gByo2YCMqmZgExq3gDyBJAbNZtOqhadVC06qVr0yUtqJiCTmjfUvKHmCSCTmgnIpOZGzQ2QSc0mNTdAJjVvnFQtOqladFK1CH9kEZBJzQ2Q36RmAnKj5gkgN2q+CciNmm86qVp0UrXopGrRJ8vU3AC5UfMEkN8EZFIzqbkBMqm5AXKjZlIzAZmA3Kh546Rq0UnVopOqRZ/8Y4DcqJnUPAHkDTU3QJ4A8gaQSc3/00nVopOqRSdViz75ZWp+E5BJzRNAnlBzA+RGzQ2QJ9RMQCY1m06qFp1ULTqpWoQ/8gKQGzVvALlRMwH5JjVPAHlDzQ2QGzUTkEnNppOqRSdVi06qFuGPfBGQGzVvAJnUPAHkDTVvALlRMwGZ1ExAnlCz6aRq0UnVopOqRZ+8BGRSc6PmCSA3am6ATGpu1NwAeQLIpGZSMwF5Q80EZFLzTSdVi06qFp1ULfrkJTXfpOYJIJOaTWomIN8EZFLzLzupWnRSteikatEny4A8AWRSMwGZ1DwBZFLzBJBvAvIEkH/ZSdWik6pFJ1WL8Ef+MCCTmgnIE2qeADKpeQLIpOYJIJvUvHFSteikatFJ1aJPXgLym9Q8oeYGyA2QSc0bQJ4AMql5Qs0EZFKz6aRq0UnVopOqRZ8sU7MJyDepmYDcAHlDzQTkRs0mNd90UrXopGrRSdWiT74MyBNqnlBzA2RSc6PmBsikZgIyqXkCyBtqJiBPqHnjpGrRSdWik6pFn/xxQCY1k5obIG8AuQEyqZnUTEAmNTdAJiCTmhsgm06qFp1ULTqpWvTJfwyQGzWTmgnIjZongExAJjVPAJnU3ACZ1HzTSdWik6pFJ1WLPvkyNd+k5gbIE2omIBOQSc0TaiYgk5o3gExqJiCTmk0nVYtOqhadVC36ZBmQ3wRkUjOpmYA8oWYC8gaQN9T8y06qFp1ULTqpWoQ/UrXkpGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWvQ/7VEiRJJz2ZsAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2b8d947b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATBSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBpBJzQTkRs0TQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gaQGyCTmhsgk5obNZvUbAKy6aRq0UnVopOqRZ98GZAn1DwBZFIzqbkB8oSaJ4A8oeYJIE+o+aaTqkUnVYtOqhZ98pcD8gSQJ9RMQCY1E5BJzd/kpGrRSdWik6pFn/zPqJmATGqeADKpmYD8n5xULTqpWnRSteiTL1PzJwNyo+ZGzQ2QSc0Tav5LTqoWnVQtOqla9MkyIH8zNROQSc0EZFLzBpD/spOqRSdVi06qFuGP/MGATGomIDdqfhOQSc3f5KRq0UnVopOqRfgjLwCZ1ExANqm5AXKjZgJyo2YC8oSaGyCTmgnIJjXfdFK16KRq0UnVIvyRRUAmNROQGzWbgExqJiBPqHkDyDepeQLIpOaNk6pFJ1WLTqoW4Y+8AORGzRtAJjVvALlRcwPkCTU3QG7U/ElOqhadVC06qVr0yS8DMqm5UTMBuVFzo+YJIJOaCcikZgLyBpAbNROQSc0EZFKz6aRq0UnVopOqRZ/8xwF5AsiNmhsgk5obNROQGzW/Ccik5ptOqhadVC06qVqEP/JFQCY1bwB5Qs0bQCY1N0C+Sc0EZFLzBJBJzRsnVYtOqhadVC36ZBmQSc0E5JvUfBOQJ9TcAJnU3ACZ1ExAbtRMajadVC06qVp0UrXok5eATGomIJOaN4BMam6APKFmUjMBuVFzA2QTkEnNDZBJzaaTqkUnVYtOqhZ98pKaTUBu1ExAbtQ8AWRSc6NmAjKpuVHzhpoJyI2abzqpWnRSteikatEnLwF5A8ik5gbIpOYGyKTmRs0EZFIzAZnUTEBugExqJiA3QCY1E5AbIJOaN06qFp1ULTqpWvTJMjU3QCY1E5AngExqngDyBJBJzRNqboBMaiYgk5o31Gw6qVp0UrXopGrRJ/8yIDdqJiCTmk1qJiA3QCY1k5obIJOaCcgNkEnNpGYCMqnZdFK16KRq0UnVok++DMik5gkgk5obIJOaJ4DcqLkBMqmZgNwA2QTkBsik5o2TqkUnVYtOqhbhj/zBgExqboBMat4AMql5Asik5gkgm9S8cVK16KRq0UnVok9eAvKb1ExqJiBvAJnUTEBugGwCMql5Q803nVQtOqladFK16JNlajYBuQEyqbkBcqPmRs0TQN5Q84SaGyA3at44qVp0UrXopGrRJ18G5Ak1vwnIpOYGyKRmAjKpuQEyAdkE5DedVC06qVp0UrXok78ckCeATGomNROQSc0bam6ATGomIP+mk6pFJ1WLTqoWffKXUzMBmdRMQCYg36TmBsgNkDfUbDqpWnRSteikatEnX6bmm9S8AWRSMwG5UXMDZFIzAZnUTGomIJOaCcikZgLyTSdVi06qFp1ULfpkGZDfBOQNNROQGzU3QCY1E5BJzQRkUnMD5AbIpOabTqoWnVQtOqlahD9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9A9h1yVKqCbQewAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
