@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>【第 3629 期】2025 版现代 Node.js 开发模式</title>
+        <title>Python Worker 服务再升级：Wasm 快照与原生 uv 工具加持</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>【第 3629 期】2025 版现代 Node.js 开发模式</h2>
-        <p>12/23/2025, 1:02:00 AM</p>
+        <h2>Python Worker 服务再升级：Wasm 快照与原生 uv 工具加持</h2>
+        <p>12/24/2025, 10:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详解了 Node.js 在 2025 年将迎来的现代化开发模式，涵盖模块系统、Web API 集成、内置工具、异步处理、并发、开发体验、安全性能及部署等多个方面的核心更新与实践。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 通过由 WebAssembly 驱动的内存快照显著增强了其 Python Worker 服务，实现了近乎即时的冷启动，并通过 uv 工具扩展了包兼容性，将 Python 定位为边缘计算的核心支持语言。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 Node.js 在未来两年内的发展趋势和现代化开发模式，强调了向 Web 标准靠拢、减少外部依赖的理念。内容涉及 ESM 模块系统和顶层 await、Fetch API 与 AbortController 的内置化、功能完善的内置测试框架与 Watch 模式、Promise 结合 async/await 的异步模式、基于 Web Streams 的流处理、以及 Worker Threads 并行计算的利用。同时，还介绍了通过`--watch`和`--env-file`提升开发体验，以及通过权限模型和内置性能监控加强应用安全与稳定性，并通过单文件打包简化部署。作者提出的关键要点为开发者构建高效、安全、易维护的 Node.js 应用指明了方向，并强调了 Node.js 在保持向后兼容的同时持续演进、支持渐进式现代化改造的特性。文章也提醒，部分功能（如权限模型、单文件打包）在当前的 Node.js 22 中仍处于实验阶段，需注意其稳定性和风险。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 在其 Python Worker 服务方面取得了重大进展，解决了长期存在的冷启动缓慢和包兼容性受限等问题。其核心创新在于利用 WebAssembly (Wasm) 和内存快照，从而实现近乎即时的启动时间。通过在部署时执行一次顶层作用域并捕获 Wasm 线性内存快照，Cloudflare 可以快速恢复 Worker 服务，将 FastAPI 和 Pydantic 等重型包的冷启动时间从 10 秒大幅缩短至约 1 秒。这种方法还绕过了 ASLR（地址空间布局随机化）的复杂性，而 ASLR 通常会使本地内存快照的实现变得复杂且不安全。此外，Cloudflare 通过支持任何 Pyodide 兼容库（包括带有 C 扩展模块的库）扩展了包兼容性，并引入了 `pywrangler` —— 一个与 `uv` 集成的命令行工具 —— 以简化依赖管理。这些更新将 Python 集成到 Cloudflare 的高级功能中，例如 FastAPI 集成、智能代理 AI 和工作流以及持久对象，使 Python 成为边缘、生产级 AI 和数据科学应用的高性能且可行的选择。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">ESM 作为新标准，通过`node:`前缀明确内置模块，结合顶层`await`简化了模块管理和初始化流程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ESM 提供了更好的工具支持和静态分析能力，`node:`前缀区分了内置与外部模块，提升了依赖透明度，而顶层`await`则让异步代码更直观，减少了冗余的异步包装。</span>
+                        <strong style="color: #1e40af">Wasm 驱动的内存快照大幅缩短了 Python Worker 服务的冷启动时间。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cloudflare 利用 WebAssembly 和内存快照几乎即时地初始化 Python Worker 服务，绕过了完全重新初始化，解决了 Python 固有的冷启动延迟问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Node.js 拥抱 Web 标准，内置 Fetch API 与 AbortController，大幅减少外部 HTTP 依赖并提供优雅的取消机制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 内置的 Fetch API 取代了 axios 等第三方库，简化了 HTTP 请求，并自带超时和取消功能，降低了项目依赖，提高了前后端一致性，方便开发者进行统一的错误处理。</span>
+                        <strong style="color: #1e40af">扩展的包兼容性使得 Python Worker 服务能够接入更广泛的生态系统。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过支持 Pyodide 兼容库（包括带有 C 扩展模块的库），Cloudflare 使开发人员能够在其无服务器环境中使用以前无法使用的各种 Python 包（例如 NumPy、Pandas）。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">内置测试框架与 Watch 模式提升开发效率，权限模型和性能监控强化了应用的安全与稳定性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Node.js 自带测试运行器满足大多数测试需求，`--watch`模式和`--env-file`减少了配置和重启，而实验性的权限模型和内置性能监控（非实验性）则为应用提供了更细粒度的控制和早期瓶颈识别。需要注意的是，权限模型目前仍为实验性功能。</span>
+                        <strong style="color: #1e40af">`uv` 集成工具简化了 Python Worker 服务的依赖管理和部署。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 引入 `pywrangler` 和 `uv` 简化了 Python 依赖项的边缘部署管理和打包，提供了更友好的开发人员体验和更快的开发周期。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Worker Threads 提供真正的并行能力，解决 CPU 密集型任务阻塞主线程问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对 JavaScript 单线程的局限性，Worker Threads 允许将耗时计算任务放到独立线程执行，确保主应用保持响应，充分利用多核 CPU 性能，提升应用吞吐量。</span>
+                        <strong style="color: #1e40af">Python 集成 Cloudflare 高级功能，支持复杂的边缘应用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Python Worker 服务现在与 FastAPI、智能代理 AI 和工作流以及持久对象集成，显著扩展了 Python 在边缘直接构建复杂、有状态和 AI 驱动应用程序的能力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">结构化错误处理与诊断通道提升了错误信息的可读性和系统诊断能力，同时 Node.js 支持在保持向后兼容的前提下进行渐进式现代化改造。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过自定义错误类和 diagnostics_channel，应用能够提供更丰富的错误上下文信息，便于日志记录、监控和自动化恢复，增强了系统的健壮性和可观测性。Node.js 的持续演进特性允许开发者循序渐进地引入新功能，逐步现代化现有项目而无需大规模重构。</span>
+                        <strong style="color: #1e40af">Cloudflare 将 Python 定位为边缘计算（尤其是 AI/数据科学）的核心支持语言。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过消除性能障碍并提供强大的工具，Cloudflare 提升了 Python 与 JavaScript 并列的地位，以高性能的无服务器平台面向不断增长的 AI 和数据科学社区。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">还在用旧版的 CommonJS、axios、nodemon？2025 年的 Node.js 已经自带更强大的工具链：原生 Fetch、Watch 模式、内置测试、单文件打包...... 这篇文章帮你用最通俗的方式，快速上手 Node.js 的现代开发新姿态。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现代的 Node.js 拥抱 Web 标准、减少外部依赖，并让开发体验更加直观。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">node: 前缀不仅是一种命名约定，更是一种明确的信号：告诉开发者和工具，这里引入的是 Node.js 内置模块，而非 npm 包，避免冲突，让依赖更透明。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现代 Fetch 不仅替代了 HTTP 库，还内置了超时与取消机制</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Node.js 已从单纯的 JavaScript 运行时，成长为一个完善的现代开发平台。这一转变令人瞩目。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我最主要的抱怨之一就是 Python 缓慢的冷启动时间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过在部署时执行一次顶层作用域并捕获 Wasm 线性内存快照，Cloudflare 实现了快速的 Worker 恢复，从而提高了速度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Python Worker 服务现已与 Cloudflare 工作流（目前处于测试阶段）集成，实现了多步骤、持久的执行，InfoQ 此前报道称，这为数据和 AI 管道带来了显著优势。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Python 的冷启动比 JavaScript 昂贵得多…我们的目标很高，我们正在规划一个零冷启动的未来。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过将 Python 视为与 JavaScript 并列的“核心支持语言”，Cloudflare 正将自己定位为不断壮大的 AI 和数据科学社区的首选平台。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +66,30 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">21 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5218</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Steef-Jan Wiggers</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">561</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Node.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ESM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Fetch API</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">异步编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Worker Threads</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare Workers</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Python</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">WebAssembly</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">无服务器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">冷启动</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/5d43b1af" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/258c4c85" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/5d43b1af">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS+SURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6NdKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJAbNTdAJjVPAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyJ8EyKTmRs0mNZuAbDqpWnRSteikatEnXwbkCTVPALlRcwNkUjOpmYBMQCY1E5An1DwB5Ak133RSteikatFJ1aJP/meATGomIJOaGzUTkEnNBGRS819yUrXopGrRSdWiT/7jgExqJiCTmgnIpGYCMqmZgPyfnFQtOqladFK16JMvU/NvUvMEkEnNBOQJNTdAJjVPqPmTnFQtOqladFK16JNlQP5NaiYgk5obNROQSc0E5AbIpOYNIH+yk6pFJ1WLTqoWffKSmj+ZmgnIpOYJIE+omYBMam7U/E1OqhadVC06qVqEP/ICkEnNBGSTmhsgT6iZgGxScwNkUjMB2aTmm06qFp1ULTqpWvTJL1MzAblRcwNkUjMBmdRMQCY13wTkBsgbap4AMql546Rq0UnVopOqRfgji4BMat4AMql5AsgbaiYgT6i5AXKj5m9yUrXopGrRSdUi/JEXgExqboBMat4AMqmZgDyh5gkgk5oJyDepmYBMaiYgk5pNJ1WLTqoWnVQtwh95AcgTaiYgb6iZgGxS8wSQGzXfBORGzTedVC06qVp0UrXok5fU3ACZgExqngDyhJo3gExq3gDyhpoJyKTmCSCTmjdOqhadVC06qVqEP/JFQCY1E5BNap4AMqm5AfKEmhsgk5obIJOaCciNmm86qVp0UrXopGrRJ1+m5kbNNwGZ1DwB5Ak1N0A2AZnU3ACZ1Gw6qVp0UrXopGrRJy8B+U1qboBMap4A8oSaCcik5kbNG2omIDdqvumkatFJ1aKTqkX4Iy8AeUPNNwGZ1GwCMqmZgDyhZgLyhJoJyKRmAjKpeeOkatFJ1aKTqkWfLFMzAbkB8oaaCcgTQCY1N0AmNU+ouQEyqZmATGreULPppGrRSdWik6pFn/wyNTdAJjUTkCfUTECeAHIDZFIzqbkBMqmZgNwAmdRMaiYgk5pNJ1WLTqoWnVQt+uTL1ExAbtRMQCY1m9RMQG7U3ACZ1ExAboBsAnIDZFLzxknVopOqRSdVi/BH/mJA3lDzBpBJzRNAJjVPANmk5o2TqkUnVYtOqhZ98hKQ36RmUjMBuVFzA+QNIJuATGreUPNNJ1WLTqoWnVQt+mSZmk1AboBMaiYgE5BJzaRmE5A31Dyh5gbIjZo3TqoWnVQtOqla9MmXAXlCzTepeQPIpGYCMqm5ATIB2QTkN51ULTqpWnRSteiTekTNBGRS84aaGyCTmgnIv+mkatFJ1aKTqkWf/MepuQEyqZmAfJOaGyA3QN5Qs+mkatFJ1aKTqkWffJmab1JzA2RS84SaCcik5gbIpGYCMqmZ1ExAJjUTkEnNBOSbTqoWnVQtOqlahD/yApDfpGYCMqnZBGRScwNkUjMBmdRMQCY1E5A31HzTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gGc2TkbvAYm+AAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/258c4c85">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQW4ERxIEQY/C/P/LvjzmqYBG53BFKcziD6qWHKoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWfXgpCb9J5Ykk3KhMSbhReSIJT6hMSfhNKm8cqhYdqhYdqhZ9WKayKQlPJGFSeULlJgk3KpPKJpVNSdh0qFp0qFp0qFr04cuS8ITKE0mYVG6SMKl8UxKeUHkiCU+ofNOhatGhatGhatGH/xiVKQmbkjCpTEmYVP5NDlWLDlWLDlWLPvzLJWFSuVHZlIT/kkPVokPVokPVog9fpvKXJGFSmZIwqdyo3CRhUnlC5Z/kULXoULXoULXow7Ik/GUqUxImlSkJk8qUhEnljST8kx2qFh2qFh2qFn14SeUvScKk8obKjcqUhEnlRuUvOVQtOlQtOlQtij94IQmTypSETSpPJOENlSkJT6jcJGFSmZKwSeWbDlWLDlWLDlWLPrykMiVhUnkiCZPKlIQblRuVJ5IwqbyRhJskvKHyRBImlTcOVYsOVYsOVYviD15IwqSyKQmTypSEG5U3kvCGyk0SblT+kkPVokPVokPVoviDF5IwqUxJeEPliSTcqGxKwqQyJeGbVKYkTCpTEiaVTYeqRYeqRYeqRfEHLyThRmVKwqQyJeFG5ZuScKNyk4QblW9Kwo3KNx2qFh2qFh2qFn14SeUmCW+oTEmYVG6SMKncqHxTEt5QmZIwqTyRhEnljUPVokPVokPVoviDRUl4Q2VKwqTyTUmYVKYkPKFyk4RJ5SYJk8qUhBuVbzpULTpULTpULYo/+MOSMKlsSsITKjdJuFG5ScKNyk0SJpVNh6pFh6pFh6pFH15KwhMqTyThRmVKwqQyJWFSmZIwqUxJmFSmJEwqNypvqExJuFH5pkPVokPVokPVoviDF5IwqUxJuFF5IgmTyhNJeENlSsKkMiXhCZUpCU+oTEmYVKYkTCpvHKoWHaoWHaoWffhlKjdJuFGZknCjcqPyRBImlSdUbpIwqUxJmFTeUNl0qFp0qFp0qFr04ctU3lB5QuU3JWFSmVRukjCpTEm4ScKkMqlMSZhUNh2qFh2qFh2qFn34siTcqNwkYVK5ScKkMqncJGFSmVRukjCpTEm4ScKmJNwkYVJ541C16FC16FC1KP7gD0vCpDIlYVJ5IgmTypSESeWJJEwqTyRhk8obh6pFh6pFh6pFH15Kwm9SmVRuVG6SMKncJOEmCZuSMKm8ofJNh6pFh6pFh6pFH5apbErCTRImlZskTCpPqDyRhDdUnlC5ScKNyhuHqkWHqkWHqkUfviwJT6i8kYQblSdUpiRMKlMSJpWbJExJ2JSE33SoWnSoWnSoWvShHlGZkjCpvKFyk4RJZUrC/9OhatGhatGhatGHfzmVmyTcqExJ2KRyk4SbJLyhsulQtehQtehQtejDl6l8k8pNEm5UpiRMSbhRuUnCpDIlYVKZVKYkTCpTEiaVKQnfdKhadKhadKha9GFZEn5TEp5QeUPlJgmTypSESWVKwqRyk4SbJEwq33SoWnSoWnSoWhR/ULXkULXoULXoULXoULXoULXoULXoULXoULXoULXoULXoULXoULXoULXoULXoULXofxksR/0pgrj4AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
