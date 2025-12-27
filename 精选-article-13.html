@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Redis Stream 还是传统 MQ？队列选型全攻略（适用场景、优缺点与实践建议）</title>
+        <title>构建 AI 驱动产品十年：来自 Trello 产品副总裁的经验教训</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Redis Stream 还是传统 MQ？队列选型全攻略（适用场景、优缺点与实践建议）</h2>
-        <p>12/23/2025, 11:16:00 PM</p>
+        <h2>构建 AI 驱动产品十年：来自 Trello 产品副总裁的经验教训</h2>
+        <p>12/24/2025, 5:00:49 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度对比了 Redis 作为消息队列的 List、Pub/Sub、Stream 三种模式与专业消息队列（Kafka/RabbitMQ）的优劣，并提供了选型实践建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Trello 产品副总裁 Gaurav Kataria 分享了十年来构建 AI 驱动产品的 10 个经验，重点讨论了在应对用户信任、系统博弈以及产品经理在调试和个性化生成式 AI 中不断演变的角色等方面的挑战。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细探讨了将 Redis 用作消息队列的各种可能性。首先，介绍了 Redis List 和 Pub/Sub 模式的特点和局限性。随后，重点分析了 Redis Stream 作为队列的成熟特性，包括阻塞拉取、发布订阅（消费者组）和消息不丢失的机制。接着，文章将 Redis 与专业的 Kafka 和 RabbitMQ 等消息队列在生产者消息不丢、消费者消息不丢、队列中间件消息不丢以及消息积压处理能力等方面进行了全面对比。最终，文章强调技术选型不仅是技术问题，更要结合团队、运维能力和组织结构等非技术因素做出平衡的决策，并给出具体选型建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文凝练了 Trello 产品副总裁 Gaurav Kataria 在构建 AI 产品方面长达十年的经验，涵盖从初期概念到生成式 AI (GenAI) 的实际运营。他阐述了 AI 项目可能因初始价值不足或人为干预问题而陷入“绝望之谷”的情况。核心经验包括利用星级评分等可解释的用户界面元素来建立信任，以及理解用户如何通过激励机制“博弈” AI 系统，这要求相应调整路由逻辑。Kataria 还探讨了 GenAI 面临的挑战，例如摘要功能中的本地化错误以及对极致个性化的追求。文章重新定义了产品经理 (PM) 的角色，使其涵盖调试工作和为 AI 系统建立强大的评估框架，以应对其固有的概率性。最后，文章就 AI 产品经理的招聘、产品经理角色的未来（AI 助力而非取代）以及如何通过优先解决用户问题而非“生搬硬套” AI 策略提出了见解。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Redis List 和 Pub/Sub 模式在作为消息队列时存在明显局限性，不适合高可靠或多订阅场景。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> List 模式不支持重复消费和消息丢失风险，Pub/Sub 模式不具备消息持久化和离线消息处理能力，使得它们仅适用于简单、低可靠要求的场景。</span>
+                        <strong style="color: #1e40af">AI 产品开发常面临“绝望之谷”：初期负面价值与用户“博弈”的挑战。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 如果初期 AI 系统未能得到恰当校准或理解，其可能非但无益反而会产生负面价值。此外，用户为了个人利益会“博弈”系统，这也可能损害系统目标，导致价值的第二次下滑。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Redis Stream 通过消费者组和 ACK 机制，解决了传统 Redis 队列的消息不丢失、重复消费和阻塞拉取等问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Stream 提供了 XADD、XREADGROUP 等命令，支持多消费者组并行消费，并能通过 XACK 确保消息成功处理，大幅提升了 Redis 作为 MQ 的可靠性。</span>
+                        <strong style="color: #1e40af">设计用户信任的关键：可解释的界面和透明的说明。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将复杂的概率信息转化为简单易懂的评分（如星级），并提供附带解释的工具提示，有助于用户理解和信任 AI 系统的输出结果，从而提升采纳率和实用性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">与专业 MQ 相比，Redis 在数据持久化和消息积压处理方面仍有不足，但在特定场景下具备优势。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Redis 的内存存储和异步持久化可能导致数据丢失，且不擅长处理大规模消息积压。但其轻量易用，可作为中小型项目或低延迟场景的替代方案。</span>
+                        <strong style="color: #1e40af">AI 系统必须考虑人类激励因素和潜在的“博弈”行为，并据此调整路由逻辑和奖励结构。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当用户利用系统漏洞时，重新调整激励机制，并根据用户熟练度和投入成本动态调整机会分配，对于最大化组织整体价值至关重要。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">技术选型应综合考虑技术特性、团队能力、运维资源和业务需求，而非单一技术指标。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 选择消息队列不应仅关注技术本身，还需评估团队对复杂中间件的运维能力，以及公司是否有足够资源支持，避免盲目追求“最佳技术”导致落地困难。</span>
+                        <strong style="color: #1e40af">产品经理在 AI 产品开发中的新角色：调试、评估 (Evals) 及管理 AI 的概率性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 产品经理需要深入分析系统故障（例如本地化错误），创建“黄金真值集”进行持续评估，并设计“优雅降级”机制，以应对 AI 系统固有的不确定性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">生成式 AI 实现“极致个性化”的理想，让用户定义自己的规则和体验。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与为“最小公分母”设计的传统产品不同，生成式 AI 能够适应个体用户的需求和语言，从而提供真正意义上的定制化软件体验。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">很多人在做技术选型时会遇到一个问题：把 Redis 当作消息队列合适吗？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Stream 是新增加的数据类型，它与其它数据类型一样，每个写操作，也都会写入到 RDB 和 AOF 中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Redis 在以下 2 个场景下，都会导致数据丢失：1）AOF 持久化配置为每秒写盘，但这个写盘过程是异步的，Redis 宕机时会存在数据丢失的可能；2）主从复制也是异步的，主从切换时，也存在丢失数据的可能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">但 Redis 的定位则不同，它的定位更多是当作缓存来用，它们两者在这个方面肯定是存在差异的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所以，做技术选型不只是技术问题，还与人、团队、管理、组织结构有关。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我相信在座的各位都会为自己的利益最大化而努力，而系统则主要致力于为整个公司或组织争取最佳利益。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">调试，调试本身就成为了产品经理的一项技能。如果出现问题，你不能仅仅求助于工程团队或质量保证团队来弄清楚状况。在当前阶段，这完全属于产品经理的职责范畴。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由此显现的是，有些事情就是不重要，有些事情永远不会完成。这是一个颇具挑衅意味的说法。那就像，那个 Jira 工单呢？答案是，是的，那个工单永远不会完成。我们对此泰然处之。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">“优雅降级”的能力将是产品经理的必备技能之一，确保你的系统不会轻易崩溃。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果我们只是生搬硬套 AI，那更像是我们已有现有产品，然后硬找个地方把 AI 塞进去。但如果我们从用户需求出发，考虑用户想要达成什么目标，那么 AI 是否是那个解决方案？</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +68,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4072</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Product School</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Product School</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">36 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8817</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">消息队列</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kafka</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RabbitMQ</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Stream</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 产品开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">生成式 AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户激励</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 调试</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/c7b9dcef" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/video/48634ff" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            播放完整视频
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/c7b9dcef">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATNSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHYCxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBOQJNROQSc0TQCY1E5An1ExAfpOaN06qFp1ULTqpWvTJMjWbgLyh5gkgN2pugNyomYA8oWYTkE0nVYtOqhadVC365MuAPKHmCTU3QCY1T6iZgExq/ktAnlDzTSdVi06qFp1ULfrkHwfkRs0EZFIzAXkCyI2aCcik5v/JSdWik6pFJ1WLPvnHqZmA/CY1E5AngExq/mUnVYtOqhadVC365MvU/GVAnlBzo2YC8k1q/pKTqkUnVYtOqhZ9sgzIbwIyqZmATGomIJOaCcikZgIyqblRMwF5AshfdlK16KRq0UnVok9eUvMvU3OjZgIyqZmA3AB5Qs2/5KRq0UnVopOqRZ+8BGRSMwG5UTMBeULNjZoJyKTmBsikZgLyTUAmNTdAJjUTkBs1b5xULTqpWnRStQh/ZBGQGzU3QCY1E5BJzQRkUnMDZFLzBJBJzQ2Qb1LzBJBJzRsnVYtOqhadVC365CUgN2qeUDMBmdRMQCY1fwmQSc0bQJ4AcqNm00nVopOqRSdViz75ZUAmNROQSc0TQJ5QMwGZ1ExAJjU3am6ATGo2qbkBMql546Rq0UnVopOqRfgjLwCZ1ExAnlAzAXlCzQTkRs0E5EbNDZAbNd8E5EbNN51ULTqpWnRStQh/5AUgk5obIDdqngDyhJoJyKRmAnKj5gkgk5obIDdqboA8oeaNk6pFJ1WLTqoWfbIMyKTmRs0E5A01N0CeUPMEkCeAvAFkUvNfOqladFK16KRqEf7IfwjIpOYJIJOaTUCeUHMD5EbNDZAbNTdAJjWbTqoWnVQtOqlahD/yApBJzQTkL1EzAblR8waQN9TcALlRMwGZ1Gw6qVp0UrXopGrRJy+puVEzAZnUTEAmNROQSc0NkE1AJjU3am6APAFkUjMBmYD8ppOqRSdVi06qFn3yEpBJzRtqJiA3QCY1N0Bu1ExA3gAyqZnUTEDeUDMBmdR800nVopOqRSdViz55Sc0TaiYgk5pJzQ2QGzUTkCfU3AD5JiCTmr/spGrRSdWik6pFnywDcqNmUnMDZFIzqZmA3Kh5Asg3AXkCyF92UrXopGrRSdUi/JF/GJA31LwBZFLzBJBJzRNANql546Rq0UnVopOqRZ+8BOQ3qblRMwGZ1ExAbtRsAvIEkEnNE2omIJOaTSdVi06qFp1ULfpkmZpNQJ4AcgPkDSBvqJmA3KjZpOabTqoWnVQtOqla9MmXAXlCzRNqboA8oeYJNROQSc0TQN5QMwF5Qs0bJ1WLTqoWnVQt+uQfB2RSM6m5ATIBeQLIDZBJzaRmAjKpuQEyAZnU3ADZdFK16KRq0UnVok/+zwCZ1DyhZgIyqXkCyARkUvMEkEnNDZBJzTedVC06qVp0UrXoky9T801qJiA3QN4AMql5Qs0EZFLzBpBJzQRkUrPppGrRSdWik6pFnywD8puAPKFmAvKbgLyh5i87qVp0UrXopGoR/kjVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrR/wDBsCtHBtyxMgAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/video/48634ff">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATxSURBVO3BQY4cwREEwfDC/P/Lrj2mLgU0OmdFUmGGP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIjZoJyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AfkmNU8AuVEzqdmkZhOQTSdVi06qFp1ULfrky4A8oeYJIDdAboBMaiY1bwB5Qs0TQJ5Q800nVYtOqhadVC365B+j5g0gm9RMQCY1/5KTqkUnVYtOqhZ9Uv9FzSYg/09OqhadVC06qVr0yZep+U1AJjUTkEnNBOQJNTdqboBMap5Q8yc5qVp0UrXopGrRJ8uA/C+pmYBMaiYgk5oJyKRmAjKpmYBMat4A8ic7qVp0UrXopGrRJy+p+ZOpmYBMam7UvKFmAjKpuVHzNzmpWnRSteikatEnLwGZ1ExANqmZ1ExAJjVPAHkDyKRmUjMBmdRMQDap+aaTqkUnVYtOqhbhjywCcqPmBsikZgIyqXkCyI2abwLyTWqeADKpeeOkatFJ1aKTqkX4Iy8AeUPNDZBNam6APKFmAjKpuQFyo+ZvclK16KRq0UnVIvyRLwLyhpobIJOaJ4BMam6ATGpugHyTmgnIpGYCMqnZdFK16KRq0UnVIvyRF4DcqJmATGomIE+ouQFyo+YNIE+o+SYgN2q+6aRq0UnVopOqRfgjLwB5Qs0EZFJzA+QJNU8AmdQ8AeSb1ExAJjVPAJnUvHFSteikatFJ1aJPlqmZgExAJjUTkDfUPAHkBsiNmhs1N0AmNTdAJjUTkBs1k5pNJ1WLTqoWnVQt+mQZkBs1E5AbNTdAvknNBGQCMqm5AbIJyKTmBsikZtNJ1aKTqkUnVYs+WaZmAnKj5gbIpOYJIDdqboA8AWRSc6PmDTUTkBs133RSteikatFJ1aJPlgGZ1DwBZFIzAXlCzQTkCTXfBGRSMwG5ATKpmYDcAJnUvHFSteikatFJ1aJPlqm5AXKjZgLyBJAngExqboA8oWZScwNkUjMBmdS8oWbTSdWik6pFJ1WLPvllap5QMwG5UTMBmdRMQG6ATGomIJOaCcikZgIyqZmA3ACZ1ExqJiCTmk0nVYtOqhadVC365MuATGomIJOaCciNmieAPKHmRs0EZFIzAbkBsgnIDZBJzRsnVYtOqhadVC3CH/mLAXlCzQ2QGzU3QG7UTEAmNU8A2aTmjZOqRSdVi06qFn3yEpDfpGZScwPkBsgTQG7UTEAmIE8AmdS8oeabTqoWnVQtOqla9MkyNZuA3ACZ1ExqbtRMQCY1N0Bu1ExAnlDzhJongExq3jipWnRSteikatEnXwbkCTXfBORGzQRkUjOpmYBMaiY1E5AJyCYgk5pJzaaTqkUnVYtOqhZ98o8B8oSaCcik5gbIpGYCMqm5UXMDZFIzAbkBcqPmjZOqRSdVi06qFn3yj1EzAZnUTECeAPKEmhs1N0BugLyhZtNJ1aKTqkUnVYs++TI136RmAjKpmYBMam6AvAFkUjMBmdRMaiYgk5oJyKRmAvJNJ1WLTqoWnVQtwh95AchvUjMBmdR8E5BJzQRkUjMBmdRMQCY1E5A31HzTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gMDsF8i+IjMWAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
