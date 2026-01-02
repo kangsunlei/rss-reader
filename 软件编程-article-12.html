@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>【第 3633 期】管理依赖，其实是管理工程思维</title>
+        <title>Kubernetes 1.35 发布：引入原地 Pod 扩容与 AI 优化调度</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>【第 3633 期】管理依赖，其实是管理工程思维</h2>
-        <p>12/31/2025, 1:05:00 AM</p>
+        <h2>Kubernetes 1.35 发布：引入原地 Pod 扩容与 AI 优化调度</h2>
+        <p>12/31/2025, 10:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文系统阐述了前端项目中依赖管理的工程思维和实践方法，从源码阅读到工具使用，旨在帮助开发者构建高质量、可控的项目生态。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Kubernetes 1.35 “Timbernetes” 引入了原地 Pod 扩容、AI 优化的成组调度（Gang Scheduling），以及针对可变性、可观测性和证书管理的重大增强，标志着云原生和 AI/ML 工作负载的一次重要更新。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了前端项目中依赖管理的有效策略，强调了依赖是构建复杂项目不可避免的一部分，但可以通过精细化管理来控制其复杂性。作者提出了“依赖卫生习惯”的概念，包括仔细阅读新引入依赖的源码和 README、善用包管理工具如 `npm ls` 分析间接依赖、分析依赖包的实际体积以优化打包和开发效率。文章还定义了“好模块”的特征，并推荐了 `Renovate` 和 `Knip` 等工具来自动化依赖的更新和清理。最后，作者建议开发者建立“好模块作者”速查表，以识别高质量的开源贡献者，并将依赖管理比作园艺，强调其是开发者日常工作的重要组成部分。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Kubernetes 1.35 代号为 “Timbernetes”，其发布重点在于可变性以及对 AI/ML 工作负载的优化支持。核心特性包括原地 Pod 扩容（In-Place Pod Resize）正式商用（GA），允许在不重启的情况下动态调整运行中 Pod 的 CPU 和内存，这对 Java 应用和资源效率提升具有显著意义。此版本还引入了成组调度（Gang Scheduling）的 Alpha 支持和全新的 PodGroup API 资源，实现了相互依赖 Pod 的原子化调度，这对于此前由 Volcano 或 Kueue 等外部项目管理的 AI/ML 训练任务至关重要。`/flagz` 和 `/statusz` 端点的增强提升了可观测性和自动化故障排除能力。水平 Pod 自动扩缩器（HPA）的可配置容忍度已进入 Beta 阶段，提供了更灵活的扩缩容方案。此外，PodCertificateRequests 移至 Beta 阶段，简化了 Pod 的 mTLS 证书管理。文章还提到社区正逐渐从 Ingress NGINX 控制器转向 Gateway API 等现代替代方案。总体而言，1.35 版本引入了 60 项增强功能，巩固了 Kubernetes 作为高性能云原生和 AI/ML 应用平台的地位。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">引入新依赖前，务必深入阅读其源码以评估实际价值和潜在成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过阅读源码，开发者可以识别出不必要的庞大依赖、避免引入实际代码量很少的模块，并决定是复制使用还是作为完整依赖引入，从而减少不必要的项目负担和安全风险。</span>
+                        <strong style="color: #1e40af">原地 Pod 扩容现已正式商用，支持在不重启的情况下动态调整运行中 Pod 的资源。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该功能显著提高了资源利用率和应用效率，对于资源需求波动的应用（如启动阶段需要更多资源的 Java 应用）特别有利。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用包管理工具分析依赖树，识别和复用间接依赖以优化项目结构。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 理解 `package-lock.json` 或 `pnpm-lock.yaml` 可帮助开发者掌握项目的真实依赖图谱，从而在引入新依赖时，优先考虑利用项目中已存在的间接依赖，实现“零成本”添加。</span>
+                        <strong style="color: #1e40af">Kubernetes 1.35 引入了对成组调度的原生支持和新的 PodGroup API，优化了 AI/ML 工作负载的调度。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些 Alpha 特性允许将 AI/ML 训练中常见的相互依赖的 Pod 作为一个单元进行调度，减少了失败率并提高了复杂分布式应用的资源分配效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">评估依赖包的实际体积，优化应用打包大小和开发环境效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 大型依赖不仅增加最终应用体积，还会拖慢 CI/CD 流程。使用 `Grand Perspective` 或 `rollup-plugin-visualizer` 等工具分析依赖体积，有助于识别并优化冗余或庞大的模块。</span>
+                        <strong style="color: #1e40af">通过改进 `/flagz` 和 `/statusz` 端点以及可配置的 HPA 容忍度，增强了可观测性和自动化水平。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 核心组件提供的机器可解析输出简化了故障排除，而灵活的 HPA 容忍度允许更精确且针对特定工作负载的自动扩缩容配置，提升了集群运营效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">借助自动化工具持续管理和清理依赖，减少技术债。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 推荐使用 `Renovate` 进行小步、持续的依赖更新，以及 `Knip` 清理未使用的依赖和文件，这能有效防止技术债积累，保持项目健康。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">建立对“好模块作者/团队”的认知，作为选择依赖的重要参考。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过关注社区内公认的高质量开发者（如 Sindre Sorhus）或技术团队，可以快速识别并选择更可靠、维护良好的开源模块，从而提高项目依赖的整体质量。</span>
+                        <strong style="color: #1e40af">PodCertificateRequests 简化了 Pod 的 mTLS 证书管理，社区信号显示正逐渐放弃 Ingress NGINX。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Pod 级别的自动化证书生成提高了安全性并简化了 mTLS 流程。Ingress NGINX 的弃用则鼓励用户采用更现代、集成度更高的网络解决方案，如 Gateway API。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">读。这是真的字面意思 ------ 仔细阅读你要引入项目的依赖的源码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这是一个很有用的小技巧：当你要安装新依赖时，如果能复用项目中已有的间接依赖，那你就 "白嫖" 到一个依赖。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个应用的 bug 总和 = 你写的 bug + 你依赖的代码中的 bug。因此，对安装的依赖要求比对自己写的代码更严格，是合理的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Renovate 会自动提醒你更新依赖。持续、小步更新要远比一年一次的大规模升级安全得多。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Knip 简直是魔法般的工具：又快又准。它能扫描项目，告诉你 package.json 里哪些依赖其实没被使用。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">1.35 版本的一个核心特性是原地 Pod 扩容的正式商用。该功能允许集群操作员在不触发容器重启的情况下，调整运行中 Pod 的 CPU 和内存资源。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为什么它对 Java 至关重要？你可以在启动时为 Pod 分配额外的 CPU，然后在启动后将其缩小。这样应用启动快，且 Pod 始终使用适量的资源。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">成组调度确保了一组相互关联的 Pod（例如 AI/ML 训练任务）能够同时被调度，否则就都不调度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">社区决定逐步停止支持 Ingress NGINX 控制器，反映了向更集成解决方案迁移的趋势，鼓励用户考虑 Gateway API 等现代替代方案。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Mostafa Radwan</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2698</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">500</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">项目依赖</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">包管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术债</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源码阅读</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI/ML</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云计算</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">容器技术</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DevOps</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/4502d13c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/a88773cc" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/4502d13c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATQSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4DcqJmATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkE1qJiA3aiYgN2omNZvUbAKy6aRq0UnVopOqRZ98GZAn1DwB5EbNBGRS801AnlDzBJAn1HzTSdWik6pFJ1WLPvnHAXkCyKTmCSCTmgnIpOZfclK16KRq0UnVok/+MWomIJOaGzUTkEnNE0D+n5xULTqpWnRSteiTL1Pzm4C8AWRSMwGZ1NyouQEyqXlCzZ/kpGrRSdWik6pFnywD8l9SMwG5ATKpmYBMaiYgk5oJyKTmDSB/spOqRSdVi06qFuGP/MWA3KjZBORGzQ2QSc2/5KRq0UnVopOqRfgjLwCZ1ExANqn5JiCb1NwAmdRMQDap+aaTqkUnVYtOqhZ98svUTEBu1GwCcqPmm4DcAHlDzRNAJjVvnFQtOqladFK1CH9kEZBJzQ2QJ9RMQN5QcwPkDTU3QG7U/E1OqhadVC06qVqEP/ICkBs1E5An1DwBZFLzTUAmNROQb1IzAZnUTEAmNZtOqhadVC06qVr0yS9TMwGZ1ExAJjUTkCeATGomIJOaGzUTkBs1vwnIpOabTqoWnVQtOqlahD+yCMgbam6AfJOaCcik5gbIN6mZgExqngAyqXnjpGrRSdWik6pFn7wEZFLzBJAbIJOaCcikZgIyqZmA3KiZgDyh5gbIpOYGyKRmAnKjZlKz6aRq0UnVopOqRZ98GZAngExqngAyqZmATGpugDyh5gbIJiCTmhsgk5pNJ1WLTqoWnVQt+mQZkEnNBORGzQTkCTU3aiYgN2omIJOaCcik5kbNG2omIDdqvumkatFJ1aKTqkX4Iy8AmdRMQG7UPAHkCTVvAJnUTEAmNROQJ9RMQJ5QMwGZ1ExAJjVvnFQtOqladFK16JM/HJBJzSYgN2omIJOaJ9TcAJnUTEAmNW+o2XRSteikatFJ1aJPfpmaCciNmieATGqeUDMBuQEyqZnU3ACZ1ExAboBMaiY1E5BJzaaTqkUnVYtOqhZ98ocD8oSaN4DcqLkBMqmZgNwA2QTkBsik5o2TqkUnVYtOqhbhj/zFgExqJiA3at4AMql5Asik5gkgm9S8cVK16KRq0UnVIvyRF4D8JjVvAHlCzQTkm9RMQCY1E5An1HzTSdWik6pFJ1WLPlmmZhOQGyA3aiY1TwCZ1DwB5A01T6i5AXKj5o2TqkUnVYtOqhZ98mVAnlDzhpoJyI2aGzUTkEnNBGRScwNkArIJyG86qVp0UrXopGrRJ/8YIDdqJiCTmhs1E5BJzRtqboBMaiYg/6WTqkUnVYtOqhZ98o9T8wSQSc0EZJOaGyA3QN5Qs+mkatFJ1aKTqkWffJmab1IzAZmATGpu1ExAbtTcAJnUTEAmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwG5UXOjZgIyqXkCyKRmAjKpmYBMam6A3ACZ1HzTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gcC+UInxhOWsAAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/a88773cc">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATzSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIpGYCcqPmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXkDyKRmAjKpuQEyqblRs0nNJiCbTqoWnVQtOqla9MmXAXlCzRNAJjU3QCY13wTkCTVPAHlCzTedVC06qVp0UrXok38MkEnNDZAbNZOaCciNmgnIpOZfclK16KRq0UnVok/+MWomIJOaJ4BMaiY1N0D+n5xULTqpWnRSteiTL1PzX1LzBJAbIDdqJjU3QCY1T6j5k5xULTqpWnRSteiTZUD+JEAmNROQSc0EZFIzAbkBMql5A8if7KRq0UnVopOqRZ+8pOZvAmRS8wSQSc2NmgnIpOZGzd/kpGrRSdWik6pFn7wEZFIzAdmkZlIzAZnUPAFkUjMBuQEyqZnUTEAmNROQTWq+6aRq0UnVopOqRZ98mZoJyBNqJiCTmhsgk5oJyKRmAjKpmYBMam6A3AB5Q80TQCY1b5xULTqpWnRStQh/ZBGQJ9TcAHlDzQTkN6m5AXKj5m9yUrXopGrRSdUi/JFfBGRSMwGZ1DwB5Ak1N0AmNROQSc0E5JvUTEAmNROQSc2mk6pFJ1WLTqoWffISkBs1bwC5UfMGkBs1N2omIDdqfhOQSc03nVQtOqladFK16JOX1ExAbtRMQG7UTEBu1GwCMql5A8gbaiYgk5ongExq3jipWnRSteikatEnLwF5AsgTQCY1E5BJzRNAbtRMQJ5QcwNkUnMDZFIzAblRM6nZdFK16KRq0UnVIvyRRUAmNTdAJjU3QN5Q8wSQJ9TcALlRcwPkRs0NkEnNppOqRSdVi06qFn3yEpBJzSYgk5obIDdAJjUTkCfUTEAmNTdq3lAzAblR800nVYtOqhadVC365JcBmdRMQCY1m9TcqHkCyKRmAnIDZFIzAbkBMqmZgNwAmdS8cVK16KRq0UnVok++DMgNkBsg3wTkRs0EZFLzhJobIJOaCcik5g01m06qFp1ULTqpWoQ/8gKQSc0TQCY1N0AmNTdAbtTcAHlCzRNAJjUTkCfU3ACZ1Gw6qVp0UrXopGrRJ78MyBNAboBsAnKj5gbIpGYCcgNkE5AbIJOaN06qFp1ULTqpWoQ/8hcDsknNE0AmNU8AmdQ8AWSTmjdOqhadVC06qVr0yUtAfpOaSc0EZFIzAZnUTEAmNROQGyCbgExq3lDzTSdVi06qFp1ULfpkmZpNQG6ATGomIJOaCcikZgIyqXkCyBtqnlBzA+RGzRsnVYtOqhadVC365MuAPKHmDSA3QCY1N2omIJOaCcik5gbIBGQTkN90UrXopGrRSdWiT/4xaiYgk5oJyKTmRs0EZFLzhpobIJOaCch/6aRq0UnVopOqRZ/849RMQCY1E5DfpOYGyA2QN9RsOqladFK16KRq0Sdfpuab1ExAngByo2YCMqm5ATKpmYBMaiY1E5BJzQRkUjMB+aaTqkUnVYtOqhZ9sgzIbwIyqXkCyKRmAjKpuQEyqZmATGomIJOaGyA3QCY133RSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aL/AbioSFS9DOE6AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
