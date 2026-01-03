@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>技术内幕：我们如何（以及为何）构建 Question Assistant</title>
+        <title>从混乱到清晰：Netflix 媒体工作流的高级可观测性策略</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>技术内幕：我们如何（以及为何）构建 Question Assistant</h2>
-        <p>12/31/2025, 3:07:27 PM</p>
+        <h2>从混乱到清晰：Netflix 媒体工作流的高级可观测性策略</h2>
+        <p>1/2/2026, 9:02:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Stack Overflow 开发了 Question Assistant，这是一款结合传统机器学习与 Gemini 的混合 AI 工具，旨在为用户提问提供可操作的反馈，将提问质量和成功率显著提升了 12%。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Netflix 的高级可观测性策略——从基础追踪演进为基于流处理和元数据填充的分析，以管理媒体处理工作流的巨大规模和复杂性，并提供深度的运营与业务洞察。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Stack Overflow 构建 Question Assistant 的历程，这是一款旨在提高平台提问质量的 AI 驱动工具。最初，团队尝试使用 LLM 进行直接的质量评分，但由于提问质量的主观性，发现其结果并不可靠。随后，团队转向了混合方案：结合传统机器学习（逻辑回归模型）来识别具体的反馈指标（如缺失上下文、尝试细节等），并利用生成式 AI（Gemini）来撰写个性化、可操作的反馈。该系统通过聚类审核员评论和现有评论模板进行训练。在 Staging Ground 以及全站进行 A/B 测试后，他们发现 Question Assistant 并没有缩短审核时间，而是将提问成功率（即问题保持开放并获得回答/点赞）显著提高了 12%，从而验证了其价值以及对提问质量的积极影响。文章最后强调了在开发过程中灵活调整的重要性，以及持续优化该功能的努力。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">这篇由 Netflix 工程师 Naveen Mareddy 和 Sujana Sooreddy 在 InfoQ 上的演讲，讨论了 Netflix 可观测性的演进过程，特别是针对其极其复杂的媒体编码工作流。他们强调了巨大的规模：单集《鱿鱼游戏》就涉及数百万个追踪 Span、数千次微服务调用以及 12.2 万个 CPU 小时。文章概述了从单体架构向多层异步微服务平台（Cosmos）的转变，这种转变由于扇出效应和长耗时任务加剧了可观测性挑战。Netflix 的解决方案包括采用 OpenTelemetry 进行追踪，随后演进出“请求 ID”概念以管理海量的 Span 数量。核心创新是一个流处理流水线（使用 Flink），它聚合单个 Span，计算最佳处理时间，识别“长竿”（瓶颈），并最重要地，将所有数据与业务和用户元数据进行填充。这实现了丰富的实时分析，包括 ROI 分析、编码成本计算以及与特定内容特征挂钩的性能洞察，从而将关注点从单个追踪调试转向整体系统和业务智能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,23 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">由于质量的主观性和反馈的不一致，最初尝试使用 LLM 直接进行提问质量评分的努力并未成功。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LLM 难以可靠地评估质量并提供具体的分类反馈，经常产生重复或无关的建议，这凸显了需要更结构化的方法来定义和评估“质量”。</span>
+                        <strong style="color: #1e40af">Netflix 的媒体编码工作流以极端规模运行，每集产生数百万个追踪 Span 和数千次微服务调用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 例如，单集《鱿鱼游戏》第二季会产生 100 万个追踪 Span，涉及 2.7 万次唯一的微服务调用，这展示了内容处理中涉及的巨大数据量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Stack Overflow 采用了混合 AI 方案，将传统机器学习与生成式 AI 结合，以提供针对性的反馈。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 逻辑回归模型用于识别特定的问题指标（如缺失 MRE、问题定义不清），而 Gemini 则根据这些标记的指标，结合现有的评论模板和关闭原因，提供情境化且可操作的反馈。</span>
+                        <strong style="color: #1e40af">传统的追踪等可观测性方法对于复杂的、异步的、长耗时的分布式系统已不再适用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于追踪需要数天才能完成且包含数十万个 Span，人类理解和 UI 加载变得不可能，这使得超越简单的请求-响应追踪的新策略成为必然。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Question Assistant 显著提高了提问成功率，而非其最初设定的缩短审核时间的目标。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> A/B 测试证实成功率（获得回答/点赞并保持开放的问题）稳定增长了 12%，证明了该工具在提升整体提问质量和用户体验方面的有效性，即使它没有直接加速审核过程。</span>
+                        <strong style="color: #1e40af">引入“请求 ID”概念和“单实体 Span”存储模型显著提高了可调试性和查询性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将唯一的请求 ID 与所有相关 Span 关联并单独存储每个 Span，过滤和分组变得高效，使用户能够在海量追踪中专注于特定请求。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">开发过程展示了在研发中保持适应性以及拥抱意外结果的重要性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当 LLM 被证明不适合直接进行质量评分时，团队果断调整了初始目标，将精力转向更有效的混合模型，解决了另一个同样具有价值的问题，即提高提问的成功率。</span>
+                        <strong style="color: #1e40af">Netflix 演进到了实时流处理流水线（使用 Apache Flink）来聚合可观测性数据并获取系统性洞察。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 不再处理单个追踪，而是将所有 Span 进行流式传输并在请求和追踪级别进行聚合，将数据推送到 Elasticsearch 和 Iceberg，以实现近乎实时的分析并节省成本。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">将业务和用户元数据填充到可观测性数据中，对于高级分析和明智的决策至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将内容特定的元数据（如比特率、配方、制作公司）集成到处理后的 Span 中，可以进行 ROI 分析、编码成本计算以及基于业务上下文的性能调优。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">识别“长竿”并计算“最佳处理时间”有助于优化资源分配并满足 SLO。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过从执行树中分析并移除排队等待时间，工程师可以精准定位真正的瓶颈，并智能地在对整体处理速度影响最大的地方投入资源。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +61,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这看起来是一个利用机器学习和 AI 来识别常见案例并加速流程的机会，这样人工审核员就可以把时间花在处理更复杂的案例上。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们对 LLM 的测试表明，它们无法可靠地预测质量评分并提供相互关联的反馈。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然我们无法使用 LLM 来确定质量，但我们的调查确实确认了反馈类别对于该目的的重要性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一旦指标标记了一个问题，它就会将预加载的响应文本连同问题以及一些系统提示词发送给 Gemini。Gemini 随后将这些内容合成，生成针对该指标且与问题相关的反馈。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们看到问题的成功率有了显著提升；也就是说，这些问题在网站上保持开放状态，并获得了回答或至少加 2 分的帖子得分。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你知道吗，表示单集《鱿鱼游戏》第二季编码工作流需要大约 100 万个追踪 Span。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 是一个助手，而不是一个自主可靠的编码器。我是高级开发人员；LLM 的存在是为了加速我的工作，而不是取代我的判断。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">接着规模效应袭来。当规模爆发时发生了什么？平均产生了超过 30 万个 Span。对于肉眼来说，从 30 万个 Span 中看出任何端倪都是不可能的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们将思维模式从单个追踪转向了流式思维。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现在我们谈论的是连接的数据和分布式世界。巨大的挑战在于，我们构建了这些庞大的分布式系统，其中一切都是断开的，通过网络进行通信。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +69,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Stack Overflow Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Derek Cheng, Caroline Thomas, Ryan Donovan</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sujana Sooreddy, Naveen Mareddy</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1514</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6704</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 产品</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">机器学习</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Stack Overflow</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品开发</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Netflix</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">流处理</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/19727499" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/78ffcde5" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/19727499">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATeSURBVO3BQY4kRxIEQdNA/f/Lun30vQSQSK/mcGgi+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepeQLIpGYCMqm5AXKjZgLyhJoJyG9S88ZJ1aKTqkUnVYs+WaZmE5BvUnMDZFLzhJpNajYB2XRSteikatFJ1aJPvgzIE2qeAPIEkEnNE0AmNTdAnlDzBJAn1HzTSdWik6pFJ1WLPvnLqJmATGq+CcikZgIyqfmbnFQtOqladFK16JP/GCA3aiY1T6iZgPyXnFQtOqladFK16JMvU/ObgNyoeQLIjZobNTdAJjVPqPmTnFQtOqladFK16JNlQP5JaiYgN0AmNTdqJiCTmgnIpOYNIH+yk6pFJ1WLTqoW4Y/8iwF5Q80EZFIzAZnUPAFkUvM3OaladFK16KRqEf7IC0AmNROQTWreAPKEmgnIE2pugExqJiCb1HzTSdWik6pFJ1WL8EdeAPKEmgnIjZoJyKRmAjKpuQEyqZmA3Kh5Asg3qXkCyKTmjZOqRSdVi06qFuGPLAJyo2YCMqmZgExq/klAnlBzA+RGzb/JSdWik6pFJ1WLPnkJyKTmBsikZgIyqZmATGomIN+kZgIyqZmAvAHkRs0EZFIzAZnUbDqpWnRSteikatEny4BMaiY1TwB5Q80EZFLzhpoJyI2a3wRkUvNNJ1WLTqoWnVQt+uSXAXlCzRtA/iRA3lAzAZnUPAFkUvPGSdWik6pFJ1WLPvnDqJmATGomIJOaJ4BMam6APKHmBsik5gbIpGYCcqNmUrPppGrRSdWik6pFn7yk5gbIjZoJyKRmAjKpuQEyqZnUbFJzA2QTkEnNDZBJzaaTqkUnVYtOqhZ98hKQGzUTkCeA3ACZ1DwBZFLzhJoJyKTmRs0baiYgN2q+6aRq0UnVopOqRfgjLwCZ1DwB5EbNBGRSMwF5Qs0EZFJzA2RSMwF5Qs0E5Ak1E5BJzQRkUvPGSdWik6pFJ1WLPvkyIJOaSc0NkEnNJiA3QG7UPKHmBsikZgIyqXlDzaaTqkUnVYtOqhbhj7wAZFJzA2RS8ycBMqmZgNyoeQLIpGYC8oSaGyCTmk0nVYtOqhadVC365JepmYA8oeYJIJOaCcikZgIyqbkBMqmZgNwA2QTkBsik5o2TqkUnVYtOqhbhj/yLAZnU3AC5UfMEkEnNE0AmNU8A2aTmjZOqRSdVi06qFn3yEpDfpGZS84SaCcgTQG6AbAIyqXlDzTedVC06qVp0UrXok2VqNgG5AXKj5kbNDZBJzRNA3lDzhJobIDdq3jipWnRSteikatEnXwbkCTXfBORGzaRmAjKpmYBMam6ATEA2AblRs+mkatFJ1aKTqkWf1P8BcqNmAjKpeUPNDZBJzQTkCSCTmjdOqhadVC06qVr0yV9GzQTkRs0NkAnIJjU3QG6AvKFm00nVopOqRSdViz75MjXfpGYCcqNmAvKGmhsgk5oJyKRmUjMBmdRMQCY1E5BvOqladFK16KRq0SfLgPwmIJOaCcgEZFIzAblRcwNkUjMBmdRMQCY1N0BugExqvumkatFJ1aKTqkX4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/A53OSithGFSjAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/78ffcde5">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATVSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAblR8wSQN9RMQCY1TwD5TWreOKladFK16KRq0SfL1GwCcqNmAnID5EbNJjUTkBs1N2o2Adl0UrXopGrRSdWiT74MyBNq3lAzAZnUvAHkCTXfBOQJNd90UrXopGrRSdWiT/5yQJ4A8oaaJ4DcqPmXnFQtOqladFK16JN/jJobIJOaCcgNkEnNE2omIJOav9lJ1aKTqkUnVYs++TI1vwnIpOYJNU8AmdRMaiYgk5o31PxJTqoWnVQtOqla9MkyIP8nNROQSc0EZFIzAZnUPAFkUjMBmdTcAPmTnVQtOqladFK1CH/kLwbkRs0EZFKzCcgTav4lJ1WLTqoWnVQt+uQlIJOaJ4BMaiYgT6iZgHwTkBs1E5AbIJvU3ACZ1LxxUrXopGrRSdUi/JFfBGRSMwGZ1ExAJjWbgDyh5puA/CY1b5xULTqpWnRSteiTl4BMaiYgN0AmNROQGyCTmgnIpGYCcqNmAvIEkEnNBGSTmieAbDqpWnRSteikatEnfzg1N0AmIDdAbtRMQCY1N0AmNROQJ9TcAJmATGomIN90UrXopGrRSdWiT15S801AnlAzAblRc6NmAjKpuQHyTWreULPppGrRSdWik6pFn/wyNTdAJjU3QCYgk5obIL9JzRNAJjUTkDeATGreOKladFK16KRq0ScvAXkCyKRmUjMBuVEzAZmATGpu1ExAnlAzAbkBMqn5JjUTkE0nVYtOqhadVC365CU1E5AbNROQGzU3QCY1E5AbNTdqJiA3QG6AbFLzBJBvOqladFK16KRqEf7IHwTIE2omIE+o2QRkUnMD5EbNBGRS8wSQSc2mk6pFJ1WLTqoW4Y+8AGRSMwF5Qs0mIJOaGyBvqJmATGpugGxSMwG5UfPGSdWik6pFJ1WL8Ef+R0CeUDMBuVEzAZnU3AB5Q80TQG7UTEAmNROQSc0EZFLzxknVopOqRSdVi/BH/iBAJjUTkBs1TwCZ1ExAbtRMQG7UTEAmNd8E5EbNGydVi06qFp1ULfrkJSBPqLlRMwG5UTMB+ZOoeQLIJjWTmgnIppOqRSdVi06qFn3ykppvUnMD5EbNBGRSMwGZ1ExAJiCTmhsgN2qeADKp+T+dVC06qVp0UrXok5eA/CY1N2omIJOaCcikZgJyo+abgExqboDcqPmmk6pFJ1WLTqoWfbJMzSYgN2pu1NyoeULNBORGzRtqnlBzA2RSs+mkatFJ1aKTqkWffBmQJ9Q8AWRSMwGZ1ExA3lAzAXkDyBtAJjWTmgnIpOaNk6pFJ1WLTqoWffKXU3OjZgLyBpAbNU+omYBMaiYgk5o/yUnVopOqRSdViz75xwCZ1Exq3gAyqZmA3Ki5UXOj5gbI/+mkatFJ1aKTqkWffJma36TmCSBvALlRcwNkUjMBmdRMQG7UTEC+6aRq0UnVopOqRZ8sA/KbgNyomYDcqLkBMqmZgGxSMwG5UfOEmk0nVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36D4N4PTUj7fIVAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
