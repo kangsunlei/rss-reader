@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AI 时代：Web2.0 产品开发的反思与 AI Native 产品形态探讨</title>
+        <title>如何使用 Cloudflare Workers 构建可嵌入式 AI 聊天机器人组件</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,79 @@
         </style>
     </head>
     <body>
-        <h2>AI 时代：Web2.0 产品开发的反思与 AI Native 产品形态探讨</h2>
-        <p>1/4/2026, 1:54:28 PM</p>
+        <h2>如何使用 Cloudflare Workers 构建可嵌入式 AI 聊天机器人组件</h2>
+        <p>1/5/2026, 3:51:52 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者反思 Web2.0 时代的产品在 AI 冲击下面临的困境，并提出 AI Native 产品应更多以“无生态、全寄生”的方式存在，以降低用户学习和迁移成本。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本教程将指导你利用 Cloudflare Workers、Vectorize 和 KV 存储，构建一个具备 RAG、会话记忆和实时流式传输功能的免费、可嵌入式 AI 聊天机器人组件。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者深刻反思了在生成式 AI（尤其是 Claude Code Skills）普及后，许多 Web2.0 时代的产品如何迅速失去竞争力。作者指出，AI 在 SEO 页面生成等领域的表现，已经远超传统 AI SEO 产品。作者质疑了在 AI 时代开发传统“傻瓜产品”的价值，认为 AI Native 产品不应该强迫用户改变习惯，记住域名或学习新的 GUI，而应更多地以“无生态、全寄生”的方式存在，通过 API 连接到用户已有的 Slack、Telegram 等生态中，在需要时才提供 Link 或简单的 GUI，实现真正的“AI Native”体验，即无缝融入用户工作流，降低学习和迁移成本。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本教程提供了使用 Cloudflare 无服务器技术栈构建全功能、可嵌入式 AI 聊天机器人组件的全面指南。内容涵盖了项目搭建，以及为 Workers AI、Vectorize（用于 RAG）和 KV 存储（用于会话历史）等 Cloudflare 服务配置 Wrangler。文章详细介绍了后端 Worker（处理聊天逻辑、RAG 和会话管理）和前端组件（提供 UI 和 AI 响应的实时流式传输）的开发过程。此外，还包括了使用 Tailwind CSS 进行样式设置和创建测试演示页面的说明，并最终部署到 Cloudflare。其目标是为商业聊天机器人解决方案提供一种具有成本效益的替代方案，让用户能够完全控制其 AI 驱动的客户支持。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">利用 Cloudflare 无服务器生态系统构建全栈 AI 聊天机器人。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 本教程展示了如何将用于 AI 推理的 Workers AI、用于语义搜索的 Vectorize 以及用于持久化存储的 KV 集成到一个统一的应用中。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">实现检索增强生成（RAG）以通过自定义 FAQ 增强 AI 响应。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Cloudflare Vectorize，聊天机器人可以嵌入 FAQ 内容并根据用户查询检索相关信息，从而提供比直接调用 LLM 更准确、更具上下文感知能力的回答。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">设计可嵌入且自包含的前端组件，以便轻松集成到任何网站。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 前端构建为单个 JavaScript 文件，并使用 Tailwind CSS 进行样式设计，确保与现有网站样式的冲突降至最低，并通过 script 标签实现简单集成，模拟商业聊天机器人方案。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">启用实时 AI 响应流式传输和持久化对话历史。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 后端 Worker 将 AI 响应流式传输到前端以提供自然的用户体验，同时 Cloudflare KV 存储聊天会话，使机器人能够在页面重新加载后记住过去的对话。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你将构建一个生产就绪的 AI 聊天机器人组件，只需一个 script 标签即可嵌入任何网站。它类似于 Intercom 或 Drift，但完全免费且受你控制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你的聊天机器人将包含两个主要部分：后端 Worker (src/index.js) 负责处理聊天请求、管理会话并连接 AI；前端组件 (public/widget.js) 是用户交互的可嵌入 UI。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Vectorize 索引是一个允许你执行语义搜索的向量数据库。它不是搜索精确的关键词匹配，而是根据含义查找内容。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当用户第一次聊天时，Worker 会生成一个唯一的会话 ID，将其存储在 HTTP-only Cookie 中，并将对话历史保存到 KV。在后续访问中，Worker 会检索该会话并继续对话。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Yangyi(@Yangyixxxx)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Yangyi</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">352</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Mayur Vekariya</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4049</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Native</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Web2.0</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI冲击</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户体验</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 聊天机器人</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare Workers</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Serverless</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量数据库</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2007812879123185999" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/89bc4247" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2007812879123185999">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/89bc4247">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAT3SURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzQRkUvMEkEnNBOQJNROQ36TmjZOqRSdVi06qFn2yTM0mIG+oeQLIpGYC8oSaTWo2Adl0UrXopGrRSdWiT74MyBNqngAyqZmATGpu1Dyh5gbIE2qeAPKEmm86qVp0UrXopGrRJ38ZIJOaCcgNkBs1E5AbNROQSc3f5KRq0UnVopOqRZ/8ZdS8oeYJNTdA/k9OqhadVC06qVr0yZep+U1A3gAyqZmATGpu1NwAmdQ8oea/5KRq0UnVopOqRZ8sA/JvUjMBmdRMQCY1E5BJzQRkUjMBmdS8AeS/7KRq0UnVopOqRZ+8pOZPAmRS8wSQSc2NmgnIpOZGzZ/kpGrRSdWik6pFn7wEZFIzAdmkZlLzTWpugNyomdRMQCY1E5BNar7ppGrRSdWik6pF+COLgExqboBMam6ATGomIJOaCcik5gbIpOYNIN+k5gkgk5o3TqoWnVQtOqlahD+yCMg3qZmAPKFmAjKpuQHyhJobIDdq/iQnVYtOqhadVC365CUgT6iZgNyomYBMap4A8oaaCcikZgLyBpAbNROQSc0EZFKz6aRq0UnVopOqRfgjXwTkRs0NkCfU3ACZ1GwCcqPmm4DcqPmmk6pFJ1WLTqoWfbIMyI2aJ9TcALkBMqmZgExqJiCTmjeAvKFmAjKpeQLIpOaNk6pFJ1WLTqoW4Y+8AGRSMwF5Qs0EZFIzAdmk5gbIE2pugExqboBMaiYgN2q+6aRq0UnVopOqRZ+8pGYCcqNmAjIBmdQ8oWYCMqm5AfKGmhsgm4BMam6ATGo2nVQtOqladFK16JOXgExqboBMam6ATGomNU8AmdTcqJmATGomIJOaGzVvqJmA3Kj5ppOqRSdVi06qFn2yDMgbQCY1E5BJzQRkUjMBeUPNBGRSMwG5ATKpmYDcAJnUTEBugExq3jipWnRSteikatEny9Q8AWRSMwG5AXID5Ak1N0AmNU+ouQEyqZmATGreULPppGrRSdWik6pF+CMvAJnUTEDeUDMBmdRMQG7UvAHkRs0TQCY1E5An1NwAmdRsOqladFK16KRq0SdfpuYGyKRmAnIDZFJzA2RSMwG5UXMDZFIzAbkBsgnIDZBJzRsnVYtOqhadVC3CH/mDAblRMwGZ1NwAmdRMQCY1TwCZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5pJzQRkk5oJyA2QTUAmNW+o+aaTqkUnVYtOqhZ9skzNJiA3QCY136TmCSBvqHlCzQ2QGzVvnFQtOqladFK16JMvA/KEmjeATGpugExqboBMaiYgk5obIBOQTUAmNd90UrXopGrRSdWiT/4yap5Q84SaCcik5g01N0AmNROQGyA3at44qVp0UrXopGrRJ/8zaiYgN2omIJvU3AC5AfKGmk0nVYtOqhadVC365MvUfJOaCcik5kbNBOQJNTdAJjUTkEnNpGYCMqmZgExqJiDfdFK16KRq0UnVIvyRF4D8JjUTkE1q3gAyqZmATGomIJOaCcgbar7ppGrRSdWik6pF+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pF/wDyhWgc1/CcHgAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AI 时代的代码审核：写两遍，反而更快</title>
+        <title>大规模工程提速 —— 亚百毫秒级 API 的架构经验</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>AI 时代的代码审核：写两遍，反而更快</h2>
-        <p>1/3/2026, 9:24:16 PM</p>
+        <h2>大规模工程提速 —— 亚百毫秒级 API 的架构经验</h2>
+        <p>1/5/2026, 11:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章提出 AI 时代通过“两遍开发”实现快速原型验证和高质量生产的目标，即利用 AI 生成“原型版”代码验证需求、踩坑，再基于此传统工程化交付“生产版”。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了构建和维持亚百毫秒延迟 API 的架构与文化策略，强调了延迟预算、稳健的工程模式、全面的可观测性以及性能的共同所有权。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章提出在 AI 编程时代，开发者应采纳“原型开发法”的新思路，即通过“两遍开发”模式，反而能提高效率和代码质量。第一版作为“原型版”，利用 AI 快速生成代码以验证需求、摸清技术难点，此阶段不追求代码质量和架构，其价值在于以最低成本确认需求并踩坑，代码可随时废弃。第二版则是“生产版”，遵循传统软件工程规范，在第一版探明的路线图基础上，进行严谨的设计、模块划分、CI/CD 和 Code Review，此时 AI 仍是主力但由人主导。这种方法的底层逻辑是认识到在第一版完成前需求理解往往不完整，避免过早过度设计，且能降低资深开发者对 AI 生成代码质量的抵触心理，最终实现更优的生产代码。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了构建和维持亚百毫秒延迟高性能 API 的全面指南，将速度视为一等公民的产品关注点，而非单纯的技术细节。文章概述了一种结构化的架构方法，从“延迟预算”的概念出发，将整体延迟分解到整个请求路径中。核心内容详述了实用的工程策略，包括用于并行处理的异步扇出、具有稳健失效策略的多级缓存、用于管理敏感信息的精细数据分类，以及为提升韧性而部署的熔断器和回退机制。至关重要的是，它强调了可观测性的重要性，主张使用 p95/p99 指标、分布式追踪和带有消耗率告警的 SLO 进行严格测量。作者强调，在大规模环境下保持速度是一项持续的文化事业，需要广泛的所有权、对性能衰减的持续警惕，以及从真实系统行为中学习的承诺，而不是依赖专门的“性能团队”。文章还涉及了低延迟系统中的常见反模式和未来趋势。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 编程加速原型开发，使“两遍开发”模式从理论可行变为实践划算。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统原型开发因成本高昂而罕见，但 AI 代码生成速度的飞跃，显著降低了原型开发的成本，使其成为一种高效的开发策略。</span>
+                        <strong style="color: #1e40af">从一开始就将延迟视为产品特性，而非事后补救。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 延迟具有显著的业务成本，会影响转化率、用户信任和收入。应当像对待安全性和可靠性一样，带着同样的预见性进行设计，使用明确的预算和定义清晰的预期。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">第一版“原型版”专注于需求验证和技术踩坑，不顾代码质量和架构。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 此阶段目标是用 AI 快速实现功能，确认产品经理需求，并提前暴露技术难点，代码可随时废弃，最大化试错效率。</span>
+                        <strong style="color: #1e40af">实施“延迟预算”，为请求路径中的每个组件分配特定的毫秒配额。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这能将抽象的性能目标转化为具体的架构约束，使权衡变得明确，并促进关于速度的技术、文化和组织层面的清晰对话。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">第二版“生产版”回归传统工程，注重设计、质量和可维护性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在原型版明确方向后，再进行严谨的设计和开发，AI 仍辅助生成代码，但由人工主导，确保最终交付高质量、可维护的代码。</span>
+                        <strong style="color: #1e40af">采用特定的工程模式，如异步扇出、多级缓存、熔断器和回退机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些模式对于构建可靠、可预测且快速的系统至关重要，通过最大化并行性、最小化高耗时工作、隔离故障以及在压力下提供优雅降级来实现。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“两遍开发”解决了传统开发中需求理解不完整导致的过度设计问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过原型验证，开发者能更清晰地理解需求，避免在需求不明朗时进行复杂设计，从而减少返工和资源浪费。</span>
+                        <strong style="color: #1e40af">优先考虑严格的可观测性，测量 p50、p95、p99，并使用分布式追踪和带有消耗率告警的 SLO。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 可观测性作为一种持续的性能治理机制，允许团队在性能退化显著影响用户之前主动检测并解决问题，从而培养性能所有权文化。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">该方法降低了资深开发者对 AI 生成低质量代码的抵触，有助于 AI 推广。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 明确告知 AI 生成的原型代码可以抛弃，消除了开发者对 AI 代码质量的顾虑，让他们更愿意尝试和利用 AI 工具。</span>
+                        <strong style="color: #1e40af">培养强大的组织文化，让性能成为共同的责任，而不是孤立于“性能团队”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 只有当每个团队都拥有其服务的延迟所有权、将性能意识融入设计评审、并从性能退化中进行无责学习时，快速系统才能保持快速，从而确保长期可持续性。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个解法其实不新，软件工程教科书里叫"原型开发法"：先做个粗糙版本验证想法，再正式开发。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 写代码的速度，快到让人不适应。以前一个功能要写三天，现在可能三小时就能出个能跑的版本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个阶段的原则是"不管不顾"：不考虑架构设计，不考虑代码质量，不考虑安全性能。只考虑一件事：把功能实现出来。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心原因是：在第一版做完之前，你对需求的理解大概率是不完整的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">说到底，AI 改变的不只是写代码的速度，更是整个开发流程的经济学。以前做两遍太贵，现在做两遍反而更划算。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将延迟视为一等公民的产品关注点 —— 以对待安全性和可靠性同样的纪律进行设计。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">低延迟不是一种优化 —— 它是设计出来的结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">延迟很少是由“慢代码”引起的。在生产系统中，它通常源于：网络跳数、序列化与有效载荷大小、冷缓存、数据库查询形态、依赖服务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">除非你积极守护，否则速度会衰减。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只有当团队表现得像性能是每个人的工作时，快速系统才能保持快速。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -68,23 +68,23 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">宝玉的分享</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">宝玉</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1440</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Saranya Vedagiri</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4131</span></div>
             </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/9d8ac935" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/bf13b7da" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/9d8ac935">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAASvSURBVO3BQW4kwREEwfDC/P/LLh7zVECjc6ilFGb4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkN6mZgExqJiCTmhsgN2qeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCeAvKFmAvIEkBs1E5An1GwCsumkatFJ1aKTqkWffBmQJ9Q8oWYCcgNkUjMBmdQ8oeY3AXlCzTedVC06qVp0UrXokz8OyKTmCSA3QG7UTEAmNROQSc3/kpOqRSdVi06qFn3yx6mZgNyouVEzAbkB8gaQSc1fdlK16KRq0UnVok++TM1vUnMDZFIzAZnUvAHkm9T8S06qFp1ULTqpWvTJMiC/CcikZgIyqZmATGomIJOaCcik5kbNBOQJIP+yk6pFJ1WLTqoW4Y/8YUBu1ExAJjWbgLyh5i87qVp0UrXopGrRJy8BmdRMQG7UTECeUDMBuVHzBJAbNd8EZFJzA2RSMwG5UfPGSdWik6pFJ1WL8Ee+CMgTam6ATGpugDyh5puAfJOaJ4BMat44qVp0UrXopGrRJ1+mZgIyqZmAPAHkDTUTkBs1E5BJzQRkUvMGkCeA3KjZdFK16KRq0UnVok+WAblR84SaN4BMat4AMqm5UXMDZFKzSc0NkEnNGydVi06qFp1ULcIfeQHIpGYC8k1q/iVAbtR8E5AbNd90UrXopGrRSdUi/JEvAvKEmieATGqeADKpuQEyqXkCyKTmBsiNmhsgT6h546Rq0UnVopOqRfgjLwC5UTMBmdRMQJ5Q8wSQJ9Q8AeS/Sc0E5Ak1b5xULTqpWnRSteiTl9RMQJ4AMql5Asgbap4AcqPmBsiNmhsgT6iZgExqNp1ULTqpWnRStQh/5B8G5Ak1E5BJzQRkUjMBmdQ8AeQNNTdAbtRMQCY1m06qFp1ULTqpWoQ/8n8EyKTmCSCTmjeA3KiZgExqJiBPqNl0UrXopGrRSdWiT14CMqnZBOQ3AdkEZFIzqZmAvKFmAjKp+aaTqkUnVYtOqhZ98pKaGyA3aiYgk5oJyBtqJiA3am6AfBOQSc2/7KRq0UnVopOqRZ8sA3KjZgJyA2RScwNkUvOEmhsgm4A8AeRfdlK16KRq0UnVIvyRPwzIE2o2AZnUPAFkUvMEkE1q3jipWnRSteikatEnLwH5TWpu1ExAJiCTmgnIpGYTkCeATGqeUDMBmdRsOqladFK16KRq0SfL1GwC8oaaCcgTQDapmYDcqPlLTqoWnVQtOqla9MmXAXlCzRNqboDcAJnU3ACZ1ExAJjVPAHlDzQRkUvNNJ1WLTqoWnVQt+uSPAzKpuVEzAZmAPAHkBsikZlIzAZnU3ACZgExqboBMat44qVp0UrXopGrRJ/9jgExqbtR8E5AJyKTmCSCTmhsgk5pvOqladFK16KRq0Sdfpuab1NwAuVEzAZnUTEAmNU+omYBMat4AMqmZgExqNp1ULTqpWnRSteiTZUB+E5An1NyomYBsAvKGmn/ZSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gPEphJLHAR8aAAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/bf13b7da">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATMSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRSswnIpOYJIE+omYD8JjVvnFQtOqladFK16JNlajYBeQLIpGYCMqnZBORGzQTkCTWbgGw6qVp0UrXopGrRJ18G5Ak1T6i5AfIEkBsgk5pJzW8C8oSabzqpWnRSteikatEnfxyQGzU3QG7UTEBugExqJiCTmv+Sk6pFJ1WLTqoWffLHqbkB8oSaJ4C8AWRS85edVC06qVp0UrXoky9T85uATGomIG+omYBMaiYg36TmX3JSteikatFJ1aJPlgH5TUAmNROQSc0E5AbIpOYNNROQJ4D8y06qFp1ULTqpWoQ/8ocBmdR8E5BJzQTkDTV/2UnVopOqRSdViz55CcikZgJyo2YC8oSaGyCTmgnIpGYCMqmZgHwTkEnNDZBJzQTkRs0bJ1WLTqoWnVQt+uQlNROQSc0Tam6ATEAmNZvUPKHmBsgNkBsgN2pu1ExANp1ULTqpWnRSteiTl4A8AWSTmgnIpOZGzQTkRs0TQCY1bwB5AsiNmk0nVYtOqhadVC365CU1N0Bu1ExAJjUTkAnIG0Bu1ExAJjU3am6ATGo2qbkBMql546Rq0UnVopOqRfgjLwC5UTMBuVEzAZnUTEAmNROQSc0E5EbNE0Bu1HwTkBs133RSteikatFJ1SL8kReATGomIDdq3gByo2YCMql5Asik5gkgk5obIDdqboA8oeaNk6pFJ1WLTqoWfbIMyKRmAvIEkBs1N0DeADKpuQHyBJA3gExq/p9OqhadVC06qVr0yS9T84SaCcgTaiYgbwC5UXMD5EbNDZAn1ExAJjWbTqoWnVQtOqla9MlLaiYgm4A8AeQJIDdq3gDyBJBJzaRmAjIBmdT8ppOqRSdVi06qFn3yy4BMam7UTEAmIJOaCcikZgLyBJBJzY2aGyBPAJnUTEAmIL/ppGrRSdWik6pFn7wEZFLzBpBNaiYgN2omIG8AmdRMaiYgb6iZgExqvumkatFJ1aKTqkWfvKTmBsikZgJyo2aTmjfUTEC+Ccik5l92UrXopGrRSdWiT5YBmdS8AeRGzQRkUnMDZFJzA2QTkCeA/MtOqhadVC06qVqEP/KHAZnU/CYgk5ongExqngCySc0bJ1WLTqoWnVQt+uQlIL9JzRNAbtTcAJnUvAHkCSCTmifUTEAmNZtOqhadVC06qVr0yTI1m4A8AWRScwPkCSBvqJmA3KjZpOabTqoWnVQtOqla9MmXAXlCzRNqJiA3QG7U3ACZ1ExAJjVPAHlDzQTkCTVvnFQtOqladFK16JM/DsgNkEnNE0BugNwAmdRMaiYgk5obIBOQSc0NkE0nVYtOqhadVC365D9GzQTkDTVvAJmATGqeADKpuQEyqfmmk6pFJ1WLTqoWffJlar5JzRNAJjUTkCfUPKFmAjKpeQPIpGYCMqnZdFK16KRq0UnVok+WAflNQG7UTEAmIJOaCcgmIG+o+ZedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXof3wRCJFUeZpZAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
