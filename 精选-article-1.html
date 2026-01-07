@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>大规模工程提速 —— 亚百毫秒级 API 的架构经验</title>
+        <title>【第 3636 期】深度解读：React + Next.js 打造高性能 Web 应用的实战经验</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>大规模工程提速 —— 亚百毫秒级 API 的架构经验</h2>
-        <p>1/5/2026, 11:00:00 AM</p>
+        <h2>【第 3636 期】深度解读：React + Next.js 打造高性能 Web 应用的实战经验</h2>
+        <p>1/6/2026, 1:02:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了构建和维持亚百毫秒延迟 API 的架构与文化策略，强调了延迟预算、稳健的工程模式、全面的可观测性以及性能的共同所有权。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过多个真实案例，深度剖析了 React 和 Next.js 在 2022-2025 年间如何构建高性能 Web 应用，涵盖了性能优化、渲染策略、缓存、状态管理、DX 和 UX 等多个维度。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了构建和维持亚百毫秒延迟高性能 API 的全面指南，将速度视为一等公民的产品关注点，而非单纯的技术细节。文章概述了一种结构化的架构方法，从“延迟预算”的概念出发，将整体延迟分解到整个请求路径中。核心内容详述了实用的工程策略，包括用于并行处理的异步扇出、具有稳健失效策略的多级缓存、用于管理敏感信息的精细数据分类，以及为提升韧性而部署的熔断器和回退机制。至关重要的是，它强调了可观测性的重要性，主张使用 p95/p99 指标、分布式追踪和带有消耗率告警的 SLO 进行严格测量。作者强调，在大规模环境下保持速度是一项持续的文化事业，需要广泛的所有权、对性能衰减的持续警惕，以及从真实系统行为中学习的承诺，而不是依赖专门的“性能团队”。文章还涉及了低延迟系统中的常见反模式和未来趋势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度解读了 2022 至 2025 年期间 React 和 Next.js 在构建高性能 Web 应用方面的实战经验与最佳实践。文章通过 Vio、DoorDash、Preply、GeekyAnts 和 Inngest 等五个真实案例，详细分析了如何优化核心网页指标（如 INP、LCP），平衡服务器端渲染（SSR）与客户端渲染（CSR），以及有效利用缓存策略和轻量化的状态管理方案。同时，文章强调了提升开发者体验（DX）和可维护性的重要性，并指出了无障碍设计（Accessibility by Design）和以用户为中心（UX）的度量方式在现代 Web 开发中的核心地位。最终，文章总结了可执行的洞察，为工程负责人和开发者提供了构建更快、更用户友好的现代 Web 应用的指导。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,23 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">从一开始就将延迟视为产品特性，而非事后补救。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 延迟具有显著的业务成本，会影响转化率、用户信任和收入。应当像对待安全性和可靠性一样，带着同样的预见性进行设计，使用明确的预算和定义清晰的预期。</span>
+                        <strong style="color: #1e40af">性能优化以核心网页指标为导向，特别是 INP 和 LCP。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 案例表明，通过系统化的性能分析、代码分割、事件优化及 React 18 的并发特性，可显著提升用户体验和 SEO 排名，即使是微小的延迟优化也能带来巨大回报。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实施“延迟预算”，为请求路径中的每个组件分配特定的毫秒配额。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这能将抽象的性能目标转化为具体的架构约束，使权衡变得明确，并促进关于速度的技术、文化和组织层面的清晰对话。</span>
+                        <strong style="color: #1e40af">SSR 与 CSR 并非对立，而应采用混合与渐进式 Hydration 策略。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 现代 Web 应用应利用 SSR 提升首屏速度和 SEO，同时通过 CSR 增强交互流畅性，结合 React Server Components 和“交互岛”模式，实现二者的最佳平衡。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用特定的工程模式，如异步扇出、多级缓存、熔断器和回退机制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些模式对于构建可靠、可预测且快速的系统至关重要，通过最大化并行性、最小化高耗时工作、隔离故障以及在压力下提供优雅降级来实现。</span>
+                        <strong style="color: #1e40af">智能缓存策略是提升速度与数据新鲜度的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合 CDN、Next.js 内置缓存和客户端数据缓存库（如 React Query），可以在不同层面加速页面响应，但需警惕过度缓存导致的陈旧数据问题，并审慎规划失效策略。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">优先考虑严格的可观测性，测量 p50、p95、p99，并使用分布式追踪和带有消耗率告警的 SLO。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 可观测性作为一种持续的性能治理机制，允许团队在性能退化显著影响用户之前主动检测并解决问题，从而培养性能所有权文化。</span>
+                        <strong style="color: #1e40af">状态管理趋向轻量化、分层化和按需选择。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 避免过度设计全局状态，优先使用 React 原生能力和专用状态库（如 Zustand、React Query）处理不同类型的数据，并关注 Server Actions 等框架新特性，以简化逻辑。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">培养强大的组织文化，让性能成为共同的责任，而不是孤立于“性能团队”。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 只有当每个团队都拥有其服务的延迟所有权、将性能意识融入设计评审、并从性能退化中进行无责学习时，快速系统才能保持快速，从而确保长期可持续性。</span>
+                        <strong style="color: #1e40af">开发者体验（DX）与可维护性是提升效率的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 遵循框架约定、使用高效工具链（如 Turbopack、TypeScript）、推行自动化 CI/CD 和拥抱 React 新特性（如 Suspense、错误边界），能显著提升开发效率和团队协作质量。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">无障碍设计 (Accessibility by Design) 和用户体验 (UX) 是现代 Web 应用的核心考量。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将无障碍设计融入开发早期，通过语义化 HTML、键盘导航优化和辅助技术测试，结合性能优化和流畅交互，最终为所有用户提供更快、更顺滑、更包容的应用体验。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +61,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将延迟视为一等公民的产品关注点 —— 以对待安全性和可靠性同样的纪律进行设计。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">低延迟不是一种优化 —— 它是设计出来的结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">延迟很少是由“慢代码”引起的。在生产系统中，它通常源于：网络跳数、序列化与有效载荷大小、冷缓存、数据库查询形态、依赖服务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">除非你积极守护，否则速度会衰减。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只有当团队表现得像性能是每个人的工作时，快速系统才能保持快速。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">性能瓶颈往往藏在最意想不到的地方！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">长任务是 INP 的最大敌人。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缓存一切可缓存的内容，动态化只留给真正需要实时的部分。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们为一个激活 Tab 写了 200 行 Redux 代码，后来发现只要一个 useState 就够了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">无障碍设计应在设计初期就介入，而不是项目结束时的附加任务。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -68,23 +71,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Saranya Vedagiri</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4131</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">65 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">16125</span></div>
             </div>
+            
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
+                    <span style="color: #64748b; font-size: 14px;">标签：</span>
+                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">React</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Next.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Web性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SSR</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RSC</span>
+                    </span>
+                </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/bf13b7da" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/210b0fb9" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/bf13b7da">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATMSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRSswnIpOYJIE+omYD8JjVvnFQtOqladFK16JNlajYBeQLIpGYCMqnZBORGzQTkCTWbgGw6qVp0UrXopGrRJ18G5Ak1T6i5AfIEkBsgk5pJzW8C8oSabzqpWnRSteikatEnfxyQGzU3QG7UTEBugExqJiCTmv+Sk6pFJ1WLTqoWffLHqbkB8oSaJ4C8AWRS85edVC06qVp0UrXoky9T85uATGomIG+omYBMaiYg36TmX3JSteikatFJ1aJPlgH5TUAmNROQSc0E5AbIpOYNNROQJ4D8y06qFp1ULTqpWoQ/8ocBmdR8E5BJzQTkDTV/2UnVopOqRSdViz55CcikZgJyo2YC8oSaGyCTmgnIpGYCMqmZgHwTkEnNDZBJzQTkRs0bJ1WLTqoWnVQt+uQlNROQSc0Tam6ATEAmNZvUPKHmBsgNkBsgN2pu1ExANp1ULTqpWnRSteiTl4A8AWSTmgnIpOZGzQTkRs0TQCY1bwB5AsiNmk0nVYtOqhadVC365CU1N0Bu1ExAJjUTkAnIG0Bu1ExAJjU3am6ATGo2qbkBMql546Rq0UnVopOqRfgjLwC5UTMBuVEzAZnUTEAmNROQSc0E5EbNE0Bu1HwTkBs133RSteikatFJ1SL8kReATGomIDdq3gByo2YCMql5Asik5gkgk5obIDdqboA8oeaNk6pFJ1WLTqoWfbIMyKRmAvIEkBs1N0DeADKpuQHyBJA3gExq/p9OqhadVC06qVr0yS9T84SaCcgTaiYgbwC5UXMD5EbNDZAn1ExAJjWbTqoWnVQtOqla9MlLaiYgm4A8AeQJIDdq3gDyBJBJzaRmAjIBmdT8ppOqRSdVi06qFn3yy4BMam7UTEAmIJOaCcikZgLyBJBJzY2aGyBPAJnUTEAmIL/ppGrRSdWik6pFn7wEZFLzBpBNaiYgN2omIG8AmdRMaiYgb6iZgExqvumkatFJ1aKTqkWfvKTmBsikZgJyo2aTmjfUTEC+Ccik5l92UrXopGrRSdWiT5YBmdS8AeRGzQRkUnMDZFJzA2QTkCeA/MtOqhadVC06qVqEP/KHAZnU/CYgk5ongExqngCySc0bJ1WLTqoWnVQt+uQlIL9JzRNAbtTcAJnUvAHkCSCTmifUTEAmNZtOqhadVC06qVr0yTI1m4A8AWRScwPkCSBvqJmA3KjZpOabTqoWnVQtOqla9MmXAXlCzRNqJiA3QG7U3ACZ1ExAJjVPAHlDzQTkCTVvnFQtOqladFK16JM/DsgNkEnNE0BugNwAmdRMaiYgk5obIBOQSc0NkE0nVYtOqhadVC365D9GzQTkDTVvAJmATGqeADKpuQEyqfmmk6pFJ1WLTqoWffJlar5JzRNAJjUTkCfUPKFmAjKpeQPIpGYCMqnZdFK16KRq0UnVok+WAflNQG7UTEAmIJOaCcgmIG+o+ZedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXof3wRCJFUeZpZAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/210b0fb9">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS5SURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpongNyouQEyqXkCyBNqJiC/kpo3TqoWnVQtOqla9MkyNZuAbFLzhJoJyI2aSc0mNZuAbDqpWnRSteikatEnXwbkCTVPAJnU3AC5UfOEmhsgT6h5AsgTar7ppGrRSdWik6pFn/xjgExqboBMQJ4AcqNmAjKp+ZecVC06qVp0UrXok/8ZIDdqNgH5PzmpWnRSteikatEnX6bmV1IzAZnU3ACZ1ExAJjU3am6ATGqeUPMnOaladFK16KRq0SfLgPxNgExqJiCTmgnIpGYCMql5A8if7KRq0UnVopOqRfgjfzEgN2pugExqvgnIpOZfclK16KRq0UnVIvyRF4BMaiYgm9TcAJnUPAFkUjMBeULNDZBJzQRkk5pvOqladFK16KRq0SfLgExq/mRAJjUTkEnNG0BugLyh5gkgk5o3TqoWnVQtOqlahD/yGwGZ1ExAbtTcAHlCzQ2QJ9TcALlR8zc5qVp0UrXopGrRJy8BmdRMQCY1k5oJyKTmT6JmAjKpmYC8AeRGzQRkUjMBmdRsOqladFK16KRqEf7IC0B+JzUTkCfUTEBu1NwAuVHzTUBu1HzTSdWik6pFJ1WL8EcWAZnU3AC5UfMGkCfUvAHkm9RMQCY1TwCZ1LxxUrXopGrRSdWiT34zNTdAbtTcqHkCyCY1N0AmNTdAJjUTkBs1k5pNJ1WLTqoWnVQt+mSZmjeATGpugExqJiBPqLkBcqPmBsgmIJOaGyCTmk0nVYtOqhadVC36ZBmQSc0TaiYgk5pJzRtqJiBPqJmATGpu1LyhZgJyo+abTqoWnVQtOqla9MlLQCY1bwCZ1ExAbtQ8AWRS8wSQSc0E5AbIpGYCcgNkUjMBuQEyqXnjpGrRSdWik6pFn/xh1ExAngByo+YGyKRmAjKpeULNDZBJzQRkUvOGmk0nVYtOqhadVC3CH3kByKRmAnKjZgIyqXkCyKRmE5AbNU8AmdRMQJ5QcwNkUrPppGrRSdWik6pF+CMvAJnUPAHkV1IzAblR8wSQSc0E5JvUTECeUPPGSdWik6pFJ1WL8Ef+YkAmNU8AeULNBGRS8wSQSc0TQDapeeOkatFJ1aKTqkWfvATkV1Izqdmk5gbIDZBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAbtRMQCY1N0AmNU8AeUPNE2pugNyoeeOkatFJ1aKTqkWffBmQJ9RsAvKGmgnIpGYCMqm5ATIB2QTkVzqpWnRSteikatEn/zNqJiA3aiY1E5BJzRtqboBMaiYgv9NJ1aKTqkUnVYs++cepmYA8AeSb1NwAuQHyhppNJ1WLTqoWnVQt+uTL1HyTmifUvAFkUnMDZFIzAZnUTGomIJOaCcikZgLyTSdVi06qFp1ULfpkGZBfCciNmgnIjZoJyKTmBsikZgIyqZmATGpugNwAmdR800nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4DcgMzHjbxYXcAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
