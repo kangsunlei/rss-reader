@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>DeepSeek-V3.2 在推理任务上超越 GPT-5</title>
+        <title>Ray 异构融合底座重构数据管道：架构演进与万卡落地实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>DeepSeek-V3.2 在推理任务上超越 GPT-5</h2>
-        <p>1/6/2026, 2:00:00 PM</p>
+        <h2>Ray 异构融合底座重构数据管道：架构演进与万卡落地实践</h2>
+        <p>1/7/2026, 11:10:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">开源 AI 模型 DeepSeek-V3.2 采用 DeepSeek 稀疏注意力等新技术，在推理任务上超越 GPT-5，为专有模型提供了经济高效的替代方案，同时承认当前存在的局限性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">腾讯基于 Ray 重构混元数据管道，通过云原生调度融合、计算范式统一及多项优化实践，成功支撑万卡规模的 AI 数据处理，显著提升效率与稳定性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这篇 InfoQ 文章重点介绍了 DeepSeek-V3.2 的发布，这是一个开源推理和智能体 AI 模型系列。其高计算变体 DeepSeek-V3.2-Speciale 在特定推理基准测试中表现出与 GPT-5 和 Gemini-3.0-Pro 等闭源前沿模型相当甚至更优的性能。这些进步归功于三项关键技术：用于计算效率的 DeepSeek 稀疏注意力（DSA）、规模化强化学习以及用于增强工具使用的智能体任务合成流程。尽管取得了这些成就，DeepSeek 承认在通用知识、令牌效率和复杂任务解决方面与顶级专有模型相比仍存在局限性。文章还指出开源模型为经济高效的 AI 应用开发带来的好处，并提到 DeepSeek-V3.2 模型文件可供下载，但 'Speciale' 版本需要 API 访问权限。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细阐述了腾讯技术工程团队如何基于 Ray 重构混元大模型的数据管道，以应对大语言模型和多模态技术快速发展带来的海量非结构化数据处理挑战。文章首先分析了传统大数据引擎（如 Spark、Flink）在异构资源调度、Python 生态兼容性及细粒度资源管理方面的局限性。随后，深入介绍了基于 Ray 的新一代数据管道架构设计，包括云原生调度融合（KubeRay 联邦架构）、计算范式融合（Streaming-batch 流水线）以及在容错、资源利用率、规模化（万卡落地）和可观测性方面的关键技术优化实践，特别提到存算分离架构如何有效应对不稳定低优资源。最终，文章展示了重构后的数据管道在提升性能、节约资源及研发效率上的显著收益。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">开源模型 DeepSeek-V3.2 在推理基准测试中对闭源前沿模型表现出强大性能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 据报道，'Speciale' 变体在特定推理和智能体任务中超越 GPT-5，并与 Gemini-3.0-Pro 表现相当，展示了开源 AI 不断增长的能力。</span>
+                        <strong style="color: #1e40af">传统大数据引擎难以满足 AI 数据管道批量推理场景的需求。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统引擎在细粒度资源调度、异构计算支持不足以及 Python 生态兼容性差等方面存在局限，导致处理 AI 批量推理任务时效率低下且维护复杂。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">关键技术创新推动 DeepSeek-V3.2 的性能提升</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该模型集成了用于提升效率的 DeepSeek 稀疏注意力（DSA）、规模化强化学习和智能体任务合成流程，这些技术有助于提升其推理和工具使用能力。</span>
+                        <strong style="color: #1e40af">Ray 是解决 AI 数据管道挑战的理想异构融合底座。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Ray 通过其融合计算、异构资源调度和 Pythonic 特性，能够完美解决传统引擎的系统孤岛问题，实现数据处理和模型推理的统一运行。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">DeepSeek 坦诚地指出了 DeepSeek-V3.2 与顶级专有模型相比仍存在的局限性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 已承认的弱点包括通用知识覆盖范围较窄、令牌效率方面的挑战以及在高度复杂任务上的性能不足，这些指明了未来的发展方向。</span>
+                        <strong style="color: #1e40af">KubeRay 联邦架构实现了跨多 Kubernetes 集群的统一调度和资源弹性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过扩展 KubeRay 支持集群联邦，使得 CPU 和 GPU 算力得以统一管理，解决了云原生环境下物理集群碎片化和异构资源调度难题，支持 Data + AI 的调度统一。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">像 DeepSeek-V3.2 这样的开源模型为 AI 应用开发提供了显著的成本优势</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与使用昂贵的供应商 API 解决方案相比，开发者通过在自己的硬件上托管开源模型可以实现大幅成本节约，特别是对于专为高效 GPU 使用而设计的模型。</span>
+                        <strong style="color: #1e40af">引入 Streaming-batch 计算范式和存算分离架构，解决了大规模离线推理的容错和资源利用率问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Ray Data 的 Streaming-batch 范式提高了异构计算效率，而存算分离架构则通过将中间数据存储在稳定资源上，有效应对了不稳定低优资源带来的故障挑战，显著提升了系统稳定性和产能。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">构建了完善的可观测性体系，提升了研发运维效率。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过峰峦 Dashboard、Ray Dashboard、Ray Flow Insight 以及与社区共建的 Ray History Server，为用户提供了全面的任务状态监控、故障诊断和离线查询能力。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尽管取得了这些成就，我们承认与前沿闭源模型相比仍存在某些局限性...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你正在尝试构建基于 AI 的应用程序，你应该比较基于供应商的解决方案与在自己硬件上托管开源模型的成本...</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DeepSeek 和 Qwen 可以在廉价 GPU 上运行，而其他模型在这些 GPU 上根本无法正常工作。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">数据管道的本质应被定义为"批量推理"（Batch Inference）。相较于传统 ETL，如何以更高吞吐、更高效率支撑大规模模型推理，构成了 AI 数据管道的本质需求与核心挑战。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Ray 作为一个专门面向 AI 场景的计算引擎，具备通用分布式、融合计算、异构资源调度、pythonic 研发体验、AI 生态化五大核心能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">要彻底解决不稳定低优资源场景下的容错问题，降低容错成本，需要我们对计算架构进行又一次重构。因此，我们从存算一体的架构演进到了存算分离的架构。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Ray Data 的单集群规模可以从 6 月初的"500 节点/1w Actors/2w blocks/5 个算子"扩展到现在的"2 千节点/4w Actors/12w blocks/20 个算子"。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">经过以上我们在 Ray 异构融合底座方面的建设与实践，Ray 已经成为混元数据管道的统一底座。半年内我们已经完成了 10+条数据管线的重构，实现万卡规模的生产化。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">83</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Anthony Alford</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">520</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">53 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">13146</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepSeek</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源 AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepSeek 稀疏注意力</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 模型</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Ray</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式计算</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI数据管道</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">异构计算</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">KubeRay</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/aef1b062" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/754e582d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/aef1b062">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATKSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEevWQCxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUg/5KaCciNmgnIjZongExqJiBPqJmA/Etq3jipWnRSteikatEny9RsAvKEmhs1E5AJyKTmCSA3aiYgT6jZBGTTSdWik6pFJ1WLPvkyIE+oeULNBGRSMwHZpOa/BOQJNd90UrXopGrRSdWiT/44IDdANgGZ1ExAJjUTkEnN/5OTqkUnVYtOqhZ98sepmYBMaiYgN2qeAPIGkEnNX3ZSteikatFJ1aJPvkzNb6LmBsikZlLzBJBvUvObnFQtOqladFK16JNlQP4lIJOaCcikZgIyqZmATGomIJOaGzUTkCeA/GYnVYtOqhadVC3CH/nDgExqboDcqHkDyBtq/rKTqkUnVYtOqhZ98hKQSc0E5EbNBOQJNROQSc2Nmhsgk5oJyDcBmdTcAJnUTEBu1LxxUrXopGrRSdUi/JF/CMikZhOQSc03AZnU3AD5JjVPAJnUvHFSteikatFJ1aJP/mNAJjUTkEnNBOQJIG+oeQLIpOYNIE8AuVGz6aRq0UnVopOqRfgjLwCZ1ExA3lDzBJAbNROQGzUTkEnNG0AmNTdAbtQ8AWRS88ZJ1aKTqkUnVYvwR14AcqNmAjKpuQHyhpoJyKRmE5AbNd8E5EbNN51ULTqpWnRStQh/ZBGQSc0E5Ak1E5AbNROQGzVPAJnUPAFkUnMD5EbNDZAn1LxxUrXopGrRSdUi/JFfBMiNmieAvKHmCSD/JTUTkCfUvHFSteikatFJ1aJPXgIyqbkBcqPmCSCTmifUPAHkRs0NkBs1N0CeUDMBmdRsOqladFK16KRqEf7IC0B+MzUTkEnNDZBJzRNA3lBzA+RGzQRkUrPppGrRSdWik6pF+CNfBGRS8waQGzU3QG7U3ACZ1LwB5EbNBGRSMwF5Qs2mk6pFJ1WLTqoWffISkEnNG0CeUHMD5A0gbwCZ1ExqJiBvqJmATGq+6aRq0UnVopOqRZ+8pOYJIJOaSc0NkAnIpGZSMwGZ1DyhZgLyTUAmNb/ZSdWik6pFJ1WLPlkGZFJzA+QJNROQCcik5gbIpGZSMwHZBOQJIL/ZSdWik6pFJ1WL8Ef+MCCTmieAPKFmAjKpeQLIpOYJIJvUvHFSteikatFJ1aJPXgLyL6m5ATKpmYA8oWYTkCeATGqeUDMBmdRsOqladFK16KRq0SfL1GwC8gaQSc0NkBsgb6iZgNyo+UtOqhadVC06qVr0yZcBeULNE2omIJOaJ9Q8oWYCMql5AsgbaiYgk5pvOqladFK16KRq0Sd/HJBJzQTkCTUTkBsgN0AmNZOaCcik5gbIBGRScwNkUvPGSdWik6pFJ1WLPvk/A2RScwNkAnKj5gkgE5BJzRNAJjU3QCY133RSteikatFJ1aJPvkzNN6mZgDyhZgIyqZmATGqeUDMBmdS8AWRSMwGZ1Gw6qVp0UrXopGrRJ8uA/EtAboDcqJnUTEA2AXlDzW92UrXopGrRSdUi/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWi/wG70CtE4H1UHAAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/754e582d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATJSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4DcqJmATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkE1q3gByo2ZSs0nNJiCbTqoWnVQtOqla9MmXAXlCzRNAJjUTkBs1N2omIE8AeULNE0CeUPNNJ1WLTqoWnVQt+uQfA+RGzQ2QN4BMaiYgk5p/yUnVopOqRSdViz75x6i5AXKjZhOQ/5KTqkUnVYtOqhZ98mVq/iRqJiA3QJ5QM6m5ATKpeULNn+SkatFJ1aKTqkWfLAPyJwEyqXlDzQTkBsik5g0gf7KTqkUnVYtOqhZ98pKavwmQ36RmAjKpuVHzNzmpWnRSteikahH+yAtAJjUTkE1qboBMap4AMqmZgDyh5gbIpGYCsknNN51ULTqpWnRStQh/ZBGQJ9RMQCY1E5BJzTcBmdS8AeSb1DwBZFLzxknVopOqRSdVi/BHvgjIpGYC8oaabwLyhpobIDdq/iYnVYtOqhadVC36ZBmQSc0EZFIzAZnUPAHkRs0baiYgk5oJyBtAbtRMQCY1E5BJzaaTqkUnVYtOqhZ9skzNE0AmNROQSc0EZFIzAbkBcqPmRs0E5EbNbwIyqfmmk6pFJ1WLTqoWfbIMyBNqJiCTmgnIDZBJzRtAJjVvAHlDzQRkUvMEkEnNGydVi06qFp1ULfrkJSCTmhsgN2omIE+oeUPNDZAn1NwAmdTcAJnUTEBu1ExqNp1ULTqpWnRSteiTl9RMQCY1k5oJyKRmUnMD5E+i5gbIJiCTmhsgk5pNJ1WLTqoWnVQt+uQlIE8AuQFyo2ZS8wSQGyCTmhs1E5BJzY2aN9RMQG7UfNNJ1aKTqkUnVYs++TIgb6iZgLyh5gkgk5oJyKRmAnIDZFIzAbkBMqmZgNwAmdS8cVK16KRq0UnVok+WqbkBMqm5ATKpuQHyBpBJzQRkUvOEmhsgk5oJyKTmDTWbTqoWnVQtOqlahD/yApBJzQ2QSc0EZFLzBpAbNU8AuVHzBJBJzQTkCTU3QCY1m06qFp1ULTqpWoQ/8gKQSc0EZFIzAXlCzQRkUnMD5A01N0AmNROQb1IzAXlCzRsnVYtOqhadVC3CH/mLAZnUTECeUPMEkEnNE0AmNU8A2aTmjZOqRSdVi06qFn3yEpDfpGZSMwGZ1NwAuQHyBJBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAngAyqblR8waQN9Q8oeYGyI2aN06qFp1ULTqpWvTJlwF5Qs0baiYgm4BMaiYgk5obIBOQTUB+00nVopOqRSdViz75xwC5UfOGmgnIpOYNNTdAJjUTkP+nk6pFJ1WLTqoWffKPUbMJyDepuQFyA+QNNZtOqhadVC06qVr0yZep+SY1E5AbNROQSc0Tam6ATGomIJOaSc0EZFIzAZnUTEC+6aRq0UnVopOqRZ8sA/KbgNyomYBMam7UPAFkUjMBmdRMQCY1N0BugExqvumkatFJ1aKTqkX4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/A5oYNDXOGWPuAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
