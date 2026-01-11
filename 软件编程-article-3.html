@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>快速最终一致性：深入 Corrosion，Fly.io 的分布式系统引擎</title>
+        <title>MongoBleed 漏洞允许攻击者从 MongoDB 堆内存中读取数据</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>快速最终一致性：深入 Corrosion，Fly.io 的分布式系统引擎</h2>
-        <p>1/9/2026, 2:10:00 PM</p>
+        <h2>MongoBleed 漏洞允许攻击者从 MongoDB 堆内存中读取数据</h2>
+        <p>1/10/2026, 7:36:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Corrosion 是 Fly.io 自主研发的最终一致性分布式系统，能够在大型集群中快速复制 SQLite 数据，利用 CRDT 解决冲突，并采用基于 gossip 的传播模型为其全球应用部署平台提供支持。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">MongoDB Server 中的 "MongoBleed" 漏洞（CVE-2025-14847）由不当的 zlib 解压缩引起，允许未经身份验证的攻击者远程从堆内存中窃取敏感数据，已有活跃利用报告且已发布补丁。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本次演讲介绍了 Corrosion，这是 Fly.io 专为快速最终一致性设计的专有分布式系统，可在众多节点间复制 SQLite 数据。该系统旨在解决之前基于 Consul 架构的可扩展性和延迟问题，优先考虑路由决策中数据传播的速度。它利用 CR-SQLite 通过 CRDT 进行冲突解决，确保即使在副本间存在独立并发更新的情况下数据也能收敛。集群成员资格由采用 SWIM 协议的 Foca 管理。Corrosion 提供用于 SQL 操作的 HTTP/PG API，支持动态模式更新，并具有基于订阅的 SQL 查询功能以实现实时客户端更新。数据传播使用 QUIC 和基于 gossip 的机制，辅以定期节点同步。该系统已在 Fly.io 的 800 台物理服务器上经过实战测试，被其代理用于机器更新和健康检查，但存在需要主键和缺乏内置身份验证等特定注意事项。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">MongoDB 最近修补了 CVE-2025-14847，该漏洞被命名为 "MongoBleed"，是一个 CVSS 评分为 8.7 的关键漏洞，允许未经身份验证的远程攻击者读取未初始化的堆内存。该缺陷源于基于 zlib 的网络消息解压缩中的长度处理错误，发生在身份验证之前。这可能导致凭据或令牌等敏感数据被窃取。Wiz 的安全研究人员确认了野外活跃利用，根据 Censys 的数据，42% 的云环境中至少存在一个易受攻击的 MongoDB 实例，全球约有 87，000 台服务器可能暴露。虽然 MongoDB Atlas 实例已自动修补，但自托管部署必须立即应用更新或实施缓解措施，如禁用压缩和限制网络暴露。该漏洞影响自 2017 年以来的所有 MongoDB 版本，甚至生命周期结束版本（3.6、4.0、4.2）也不会收到修复。此事件凸显了数据库安全和及时修补的极端重要性，即使对于成熟的开源项目也是如此。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Corrosion 是一个自主研发的最终一致性分布式系统，用于快速 SQLite 数据复制</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由 Fly.io 开发以替代 Consul，提供更好的可扩展性和更低延迟，通过在 800+ 台物理服务器上高效分发应用状态来实现边缘路由决策</span>
+                        <strong style="color: #1e40af">MongoBleed（CVE-2025-14847）是 MongoDB 中一个关键的、被主动利用的身份验证前漏洞。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 此漏洞允许未经身份验证的远程攻击者通过发送格式错误的 zlib 压缩网络数据包来触发堆内存泄漏，可能导致数据和凭据被盗。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">它利用 CR-SQLite（SQLite 扩展）和 CRDT 实现无冲突数据合并</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CR-SQLite 在细粒度列级别跟踪变更，使用列版本和因果长度在副本同步时自动解决冲突，确保收敛而不依赖于严格的更新顺序</span>
+                        <strong style="color: #1e40af">该漏洞影响自 2017 年以来的 MongoDB 版本，原因是解压缩逻辑中的长度处理不正确。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `message_compressor_zlib.cpp` 中的一个错误返回了分配的缓冲区大小而不是实际的解压缩数据长度，从而暴露了相邻的堆内存。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">数据传播主要基于 gossip 机制，辅以定期同步</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 变更使用'感染式'模型（log n 次）广播到附近节点，然后由这些节点重新广播。定期同步确保最终一致性并捕获任何遗漏的更新，即使对于临时离线的节点也是如此</span>
+                        <strong style="color: #1e40af">全球存在重大暴露风险，特别是面向互联网的、未修补的自托管实例。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Wiz 报告称 42% 的云环境易受攻击，Censys 识别出约 87，000 台暴露的服务器，突显了由于未经身份验证的可利用性而带来的高风险。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Corrosion 提供用于 SQL 操作的 API 并支持基于订阅的查询</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这允许客户端（如 Fly Proxy）订阅特定的 SQL 查询结果，并在底层数据变更时接收实时更新，减少了对持续数据库轮询的需求</span>
+                        <strong style="color: #1e40af">对于自托管部署而言，立即打补丁至关重要，因为托管的 Atlas 实例已更新。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 敦促组织应用可用的安全补丁或实施缓解措施，如禁用压缩和网络限制，以防范主动利用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">系统架构强调本地优先操作和清晰的数据所有权以最小化冲突</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管 CRDT 处理冲突，但 Fly.io 的实现通过让不同组件拥有不同数据段（例如，每个节点维护自己的机器数据）来最小化冲突，防止对同一行的并发写入</span>
+                        <strong style="color: #1e40af">该事件凸显了严格的安全实践和及时更新的持续重要性，即使对于成熟软件也是如此。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它提醒我们数据库安全就是基础设施安全，挑战了关于开源安全模型的常见假设。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Corrosion 是一个将 SQLite 数据复制到不同节点的分布式系统</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CRDT 是分布式系统中的一种数据类型，您可以独立地对副本进行更新并同步它们。当它们同步时，数据类型本身可以解决冲突</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Corrosion 建立在一个名为 CR-SQLite 的库之上。CR-SQLite 是一个扩展，它允许您合并 CR-SQL 数据库</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们倾向于优先传播那些广播次数较少的数据，因为它们尚未像其他数据那样广泛传播</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果您将错误数据插入 Corrosion，它会迅速传播这些数据</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MongoBleed 突显了即使成熟的数据库在暴露或未修补时也可能成为关键的攻击面。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过发送格式错误的压缩网络数据包，未经身份验证的攻击者可以触发服务器错误处理解压缩消息长度，导致未初始化的堆内存返回给客户端。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在代码层面，该漏洞是由 `message_compressor_zlib.cpp` 中的长度处理不正确引起的。受影响的逻辑返回了分配的缓冲区大小（output.length()）而不是实际的解压缩数据长度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">许多人认为开源代码比闭源代码更安全，或者安全问题在开源代码中会被更快发现。存在如此级别的漏洞是对前者的反驳。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">它极易被利用 - 只需要连接到数据库（无需身份验证）。截至撰写本文时已修复，但一些 EOL 版本（3.6、4.0、4.2）将不会获得修复。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -68,22 +68,29 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Somtochi Onyekwere</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Renato Losio</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">26 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6265</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">524</span></div>
             </div>
+            
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
+                    <span style="color: #64748b; font-size: 14px;">标签：</span>
+                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MongoDB</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全漏洞</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CVE-2025-14847</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">堆内存泄漏</span>
+                    </span>
+                </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/e1e9de05" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/0c77db8d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/e1e9de05">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATsSURBVO3BQY4kRxIEQdNA/f/Lun10XgJIpFeTM2si+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQEyqZmA3Kh5AsikZgLyhJoJyG9S88ZJ1aKTqkUnVYs+WaZmE5An1Dyh5gbIG2o2qdkEZNNJ1aKTqkUnVYs++TIgT6h5Asik5gkgk5on1NwAeULNE0CeUPNNJ1WLTqoWnVQt+uQvA2RSM6mZgExAJjUTkAnIjZoJyKTmb3JSteikatFJ1aJP/jJqboBMaiYgE5BJzRNA/p+cVC06qVp0UrXoky9T85uA3KiZgExqboDcqJnU3ACZ1Dyh5r/kpGrRSdWik6pFnywD8m9SMwF5A8ikZgJyA2RS8waQ/7KTqkUnVYtOqhZ98pKaPwmQSc0TQJ5QMwGZ1Nyo+ZOcVC06qVp0UrUIf+QFIJOaCcgmNTdAJjU3QN5QMwGZ1NwAmdRMQDap+aaTqkUnVYtOqhbhjywCMqmZgExqJiCTmk1AJjVvAJnU3AD5JjVPAJnUvHFSteikatFJ1SL8kReATGpugExqboBMam6A3KiZgExqJiBvqLkBcqPmT3JSteikatFJ1SL8kUVAbtRMQCY1m4DcqHkDyKRmAvJNaiYgk5oJyKRm00nVopOqRSdViz55CciNmgnIpOYGyI2aGzUTkBsgN2omNROQGzW/Ccik5ptOqhadVC06qVqEP/ICkDfUTEAmNROQGzX/JiDfpGYCMql5Asik5o2TqkUnVYtOqhbhjywCcqNmAvKEmgnIpOYGyKTmBsgbam6ATGpugExqJiA3ar7ppGrRSdWik6pFn7wEZFIzAZmATGqeADKpmYDcqJmATGreUHMDZBOQSc0NkEnNppOqRSdVi06qFn3ykpoJyBtAngAyqXkDyKRmAjKpmYBMam7UvKFmAnKj5ptOqhadVC06qVr0yUtAJjUTkEnNBORGzQTkBsik5gk1E5BJzQRkUjMBuQEyqZmA3ACZ1ExAboBMat44qVp0UrXopGrRJ1+mZgIyqZmATEBu1NwAeUPNBGRS84SaGyCTmgnIpOYNNZtOqhadVC06qVr0yX+Mmj8JkEnNpOYGyKRmAnIDZFIzqZmATGo2nVQtOqladFK16JMvA3IDZFIzAZnUTEBu1DwBZFIzqbkBMqmZgNwA2QTkBsik5o2TqkUnVYtOqhbhj/zBgDyh5gkgk5oJyKTmCSCTmieAbFLzxknVopOqRSdViz55CchvUjOp+U1AboBsAjKpeUPNN51ULTqpWnRSteiTZWo2AbkBcqPmBsik5kbNE0DeUPOEmhsgN2reOKladFK16KRq0SdfBuQJNW+o2aRmAjKpmYBMam6ATEA2AflNJ1WLTqoWnVQt+qT+AcikZlIzAZnUvKHmBsikZgLybzqpWnRSteikatEnfzkgk5pJzQ2Qb1JzA+QGyBtqNp1ULTqpWnRSteiTL1PzTWqeADKpuVEzAZnU3ACZ1ExAJjWTmgnIpGYCMqmZgHzTSdWik6pFJ1WLPlkG5DcBeULNBORGzaTmBsikZgIyqZmATGpugNwAmdR800nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4HvKRTNJ2oUFAAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/0c77db8d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATeSURBVO3BSY4jSRAEQdMA//9lnT76KYBEOquXMRH8JVVLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkJ6mZgExqboBMaiYgk5oJyKTmBsik5gkgP0nNGydVi06qFp1ULfpkmZpNQG7UTEBu1ExAJjU3aiYgk5pJzQTkRs2Nmk1ANp1ULTqpWnRSteiTLwPyhJpNam7U3ACZ1NwAmdR8E5An1HzTSdWik6pFJ1WLPvnLAbkB8oaaCciNmgnIjZp/yUnVopOqRSdViz75n1EzAflJaiYgk5q/2UnVopOqRSdViz75MjW/k5oJyI2aGzVPqJmATGreUPMnOaladFK16KRq0SfLgPxOaiYgk5oJyA2QSc0EZFIzAZnUTEAmNTdA/mQnVYtOqhadVC3CX/IXAzKpuQFyo2YC8k1q/iUnVYtOqhadVC365CUgk5ongExqJiCb1Dyh5gbIjZoJyA2QTWpugExq3jipWnRSteikahH+kheA3KiZgExq3gByo+YJIE+o+SYgP0nNGydVi06qFp1ULfrkJTUTkAnIpOYGyI2aGzUTkEnNBGRSMwF5A8ikZgKySc0TQDadVC06qVp0UrXok5eATGreUPNNQJ5Q8wSQSc0E5Ak1N0AmIJOaCcg3nVQtOqladFK16JOX1ExAJjVPALlRM6m5UTMBeQPIpOYGyDepeUPNppOqRSdVi06qFn3yEpBJzQRkUvOEmhsgk5oJyI2aCcg3qXkCyKRmAvIGkEnNGydVi06qFp1ULfrkJTU3am6A3ACZ1NwAmdS8oWYCcqNmAnIDZFLzTWomIJtOqhadVC06qVr0yTIgk5o31ExAJjUTkDfUvAHkBsgmNU8A+aaTqkUnVYtOqhZ9skzNBGRS8wSQGyCTmgnIpOYJIJOaJ9TcAJmATGomIJOaN9RsOqladFK16KRq0ScvAblR84SaGyCTmm9SMwG5UTMBmdRMaiYgE5AbIDdqboBMat44qVp0UrXopGrRJy+puQFyo2YCcqPmBsgNkBs1bwCZ1GxSMwGZ1ExAJjUTkE0nVYtOqhadVC365MvUTECeUPOGmgnIpOYNNROQCcikZgIyqXlCzY2aCcg3nVQtOqladFK16JOXgDyh5kbNBORGzQ2QSc1PUvMEkE1qJjUTkE0nVYtOqhadVC365CU136TmBsik5gbIJiCTmhsgN2qeADKp+Z1OqhadVC06qVr0yUtAfpKaJ4DcqLkBcqPmm4BMam6A3Kj5ppOqRSdVi06qFn2yTM0mIDdqJiCTmgnIE2pugNyoeUPNE2pugExqNp1ULTqpWnRSteiTLwPyhJongDyh5gbIjZpJzQTkDSBvAJnUTGomIJOaN06qFp1ULTqpWvTJX07NBOQGyKTmCSA3ap5QMwGZ1ExAJjV/kpOqRSdVi06qFn3yjwPyhJobIJOaCciNmhs1N2pugPxOJ1WLTqoWnVQt+uTL1PwkNROQGyA3am6A3Ki5ATKpmYBMaiYgN2omIN90UrXopGrRSdWiT5YB+UlAbtRMQG7UPKFmArJJzQTkRs0TajadVC06qVp0UrUIf0nVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRfyiUTiSFbEN/AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
