@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>认知重建：Speckit 用了三个月，我放弃了——走出工具很强但用不好的困境</title>
+        <title>Anthropic 再发长文：首次详细揭秘 Agent 的评估全过程「Claude code 开发过程的经验总结」</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>认知重建：Speckit 用了三个月，我放弃了——走出工具很强但用不好的困境</h2>
-        <p>1/9/2026, 9:37:00 AM</p>
+        <h2>Anthropic 再发长文：首次详细揭秘 Agent 的评估全过程「Claude code 开发过程的经验总结」</h2>
+        <p>1/10/2026, 8:20:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一名腾讯开发者从传统 AI 编程工具 Speckit 的挫折中反思，提出并实践了一套以“上下文工程”和“复合工程”为核心的 AI 工程化方法，旨在实现知识复利和开发效率递减，解决人与 AI 协作中的实际困境。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Anthropic 首次详细披露 AI Agent 评估全流程，强调系统评估在 Agent 开发、迭代与质量保障中的核心作用，并分享了不同类型 Agent 的评估策略和实践路线图。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章作者分享了从使用规范驱动（Spec-Driven Development）的 AI 编程工具 Speckit 碰壁，到转而探索并实践“复合工程”与“上下文工程”理念的心路历程。作者指出，传统规范驱动工具因其理想化的流程、对动态需求和“考古”场景的应对不足、以及无法实现知识复利等问题，在企业复杂实践中难以落地。转而提出通过 Agent、Skill 分层架构，借助分层上下文组织、即时上下文加载、上下文压缩、结构化笔记和 MCP（Model Context Protocol）等技术实现知识的持续沉淀与复用。最终，文章详细阐述了一套 AI 工程化的设计与落地策略，强调让知识编码进工具，实现边际成本递减和“工具隐形”的目标，以更好地适配人的工作模式和企业实际需求。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度解析了 Anthropic 在 AI Agent 开发过程中总结出的一套严谨评估方法。文章强调，在 Agent 从开发早期到规模化生产的整个生命周期中，评估工作至关重要，能有效发现问题、提升质量、加速迭代，并避免“头痛医头、脚痛医脚”的被动局面。文章详细阐述了评估的基本结构（任务、尝试、评分器、记录、结果等），以及 Anthropic 自身产品 Claude Code 的实践经验。同时，文章深入探讨了基于代码、模型和人工的三种评分器类型及其优缺点，并区分了能力评估与衰退评估。针对不同类型的 Agent（编码 Agent、对话 Agent、研究 Agent、计算机使用 Agent），文章提供了具体的评估方法和基准案例。最后，文章提出了构建优秀 Agent 评估的“从 0 到 1”路线图，并强调了自动化评估与其他方法（如生产监控、A/B 测试、用户反馈）协同的重要性，指出这些方法共同构成了理解 Agent 性能的完整图景。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">传统规范驱动的 AI 编程工具（如 Speckit）在企业复杂环境中受挫。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这类工具假设需求清晰、流程线性，但企业面临动态需求、多方博弈和大量“考古”场景，导致其理想化流程与现实脱节，且无法有效沉淀和复用知识。</span>
+                        <strong style="color: #1e40af">评估是 AI Agent 全生命周期质量保障的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 评估能将潜在问题可视化，避免在生产环境中发现缺陷，从而加速迭代并维护产品质量，尤其在 Agent 规模化后，其价值更为凸显。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“复合工程”是实现知识复利和持续进化的开发范式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 核心理念是让每一次工程工作都使后续工作更容易。通过将 Agent 经验、问题解决方案和复杂流程编码为 Skill，实现知识的结构化记录、沉淀与自动化复用，系统随时间指数级成长。</span>
+                        <strong style="color: #1e40af">AI Agent 评估比传统 LLM 评估更复杂。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 涉及多轮交互、工具使用和环境状态修改，错误会传播累积，且其创造性解决方案可能超越静态评估框架，需要更精细的定义和度量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“上下文工程”是 AI 决策质量的核心，强调信息完整性与信噪比。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过分层组织、即时加载、上下文压缩和结构化笔记等策略，管理 LLM 的有限工作记忆。目标是提供最小但高信号的上下文集合，避免上下文腐蚀和注意力预算耗尽，确保 AI 决策的准确性。</span>
+                        <strong style="color: #1e40af">评估器分为代码、模型和人工三种类型，各有优缺点。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 代码评分器快速客观但缺乏灵活性，模型评分器灵活但非确定性且昂贵，人工评分器是黄金标准但成本高昂，通常需组合使用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 工程化通过 Agent、Skill 分层架构和外部系统集成解决实际问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 设计了决策层 Agent 和执行层 Skill，配合目录语义化、经验沉淀机制、多 Agent 协作及 MCP 与外部系统（如 TAPD， Git 仓库）集成，将知识融入工具链，大幅降低新人上手成本和边际开发成本。</span>
+                        <strong style="color: #1e40af">构建评估需遵循“从 0 到 1”的路线图。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从少量真实失败案例构建初始数据集开始，逐步设计稳健的评估框架和评分器，并进行长期维护与监控，最终达到“评估驱动开发”的目标。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 工程化的目标是让工具“隐形”，实现知识的自动化复用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过极简化的入口、上下文自动加载和删除优先的原则，让用户关注于任务本身，而不是工具操作。知识主动提醒、自动化校验和生成代码，形成一个自我进化的开发系统，最终实现边际成本递减的复利效应。</span>
+                        <strong style="color: #1e40af">自动化评估应与其他方法协同，形成多层保障。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合生产监控、A/B 测试、用户反馈和人工审查等方法，可以弥补单一评估方法的不足，更全面地理解 Agent 性能，如同“瑞士奶酪模型”多层叠加增强安全性。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 工具明明很强但就是用不好。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不是约束 AI，而是给 AI 完整信息 + 让知识复利。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的工具，就是没有工具。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">知识应该沉淀到工具，让工具在正确的时刻主动提醒你。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 的决策质量 ∝ 可用信息的完整性 × 信息的信噪比。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">评估，能在问题影响用户之前就将其可视化，其价值会在 Agent 的整个生命周期中不断累积。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个 Agent 的评估是复杂的。Agent 会在多轮交互中使用工具，修改环境状态，并根据中间结果进行调整------这意味着错误会传播和累积。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Anthropic 在自家明星产品 Claude Code 等 Agent 的开发过程中，以及与前沿客户的合作中，总结出了一套严谨且实用的 AI Agent 评估方法。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">评估能迫使团队明确定义“成功”的标准，解决对需求的模糊理解，并有助于维持一致的质量标准，防止产品质量下滑。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">没有评估的团队会陷入被动修复的泥潭。而尽早投入评估的团队则会发现开发速度在加快，因为失败案例变成了测试用例，测试用例防止了衰退，而指标取代了猜测。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">AI寒武纪</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">AI寒武纪</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">82 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">20445</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">21 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5193</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI工程化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">复合工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI辅助编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent架构</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">评估方法</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型评估</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">质量保障</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Anthropic</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/0f05763c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/38906550" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/0f05763c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATSSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHZAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBORGzQRkUnMDZFLzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgLwB5DcBuVEzAXlCzSYgm06qFp1ULTqpWvTJlwF5Qs0Tap4AMgG5UTMBmdRMan4TkCfUfNNJ1aKTqkUnVYs++ccBmdT8PwGZ1ExAJjX/JSdVi06qFp1ULfrkH6dmAnKjZgIyqXkCyBtAJjX/spOqRSdVi06qFn3yZWr+MjUTkBs1E5BJzQTkm9T8JSdVi06qFp1ULfpkGZDfBGRSMwG5ATKpmYBsUjMBeQLIX3ZSteikatFJ1SL8kX8YkEnNDZAbNW8AeUPNv+ykatFJ1aKTqkWfvARkUjMBuVEzAXlCzQTkRs0E5C8DMqm5ATKpmYDcqHnjpGrRSdWik6pF+CO/CMiNmjeATGpugExqJiCTmjeAfJOaJ4BMat44qVp0UrXopGrRJy8BmdRMQG7UTEDeUDMBmdRMaiYgk5obIJOaCcik5g0gTwC5UbPppGrRSdWik6pFn/wyNTdqboBMaiYgN0AmNTdAbtTcqLkBMqnZpOYGyKTmjZOqRSdVi06qFuGPLAJyo2YCMqmZgDyhZgIyqbkBMql5AsiNmm8CcqPmm06qFp1ULTqpWoQ/8gKQJ9TcAJnUTEAmNTdAnlBzA2RS8wSQSc0NkBs1N0CeUPPGSdWik6pFJ1WLPvkyNTdAJjUTkEnNBGRS84SaGyCTmhsgTwB5A8ik5v/ppGrRSdWik6pF+COLgExqJiA3am6ATGomIJOaCciNmhsgN2pugNyouQFyo+YGyKRm00nVopOqRSdViz75ZWomIDdAJjUTkEnNBOQJIDdqngDyBJBJzaRmAjIBmdT8ppOqRSdVi06qFn2yTM0NkEnNjZpNaiYgTwCZ1NyouQHyBJBJzQRkAvKbTqoWnVQtOqla9MlLQCY1TwB5Qs0NkCfUTEAmNROQJ4BMaiY1E5A31ExAJjXfdFK16KRq0UnVok9eUnMD5EbNN6l5Qs2NmgnINwGZ1PxlJ1WLTqoWnVQt+mQZkEnNE0A2AZnUPAHkm4A8AeQvO6ladFK16KRqEf7IPwzIjZobIJOaJ4BMap4AMql5AsgmNW+cVC06qVp0UrXok5eA/CY1TwCZ1NwAuVHzBpAngExqnlAzAZnUbDqpWnRSteikatEny9RsAvKEmhsgk5oJyA2QN9RMQG7UbFLzTSdVi06qFp1ULfrky4A8oeYJNROQSc2kZgIyqbkBMqmZgExqngDyhpoJyBNq3jipWnRSteikatEn/zggTwC5AfIEkBsgk5pJzQRkUnMDZAIyqbkBsumkatFJ1aKTqkWf/MeomYBMam6ATGreADIBmdQ8AWRScwNkUvNNJ1WLTqoWnVQt+uTL1HyTmgnIpGYCMql5Asik5gk1E5BJzRtAJjUTkEnNppOqRSdVi06qFn2yDMhvAnID5Ak1E5BNQN5Q85edVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXof+qyJV9tGfjPAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/38906550">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATcSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GqSsyaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCcikZgIyqbkB8k1qngDym9S8cVK16KRq0UnVok+WqdkE5AkgN0AmNTdqJiA3am6A3Ki5UbMJyKaTqkUnVYtOqhZ98mVAnlCzSc0NkBsgbwCZ1ExA3gDyhJpvOqladFK16KRq0Sf/ODUTkAnIjZobIJOaCcgEZFIzAfkvO6ladFK16KRq0Sf/OCCTmk1qbtRMQCYg/09OqhadVC06qVr0yZep+SY1N0CeUPMEkBs1N0DeUPM3OaladFK16KRq0SfLgPwmIJOaGzUTkBsgk5obNROQSc0bQP5mJ1WLTqoWnVQtwh/5DwFyo+YGyI2aTUAmNf+yk6pFJ1WLTqoWffISkEnNDZBvUvNNQCY1E5BJzQTkBsik5gbIpGYC8oSaN06qFp1ULTqpWvTJS2omIJOaN9TcAJmATGreUHMDZFLzhJongGxSs+mkatFJ1aKTqkWfvATkBsik5gkgN2omIE8AmdRMQDapuQEyqblR84SabzqpWnRSteikatEnL6mZgLwBZFIzAZmATGpugExq3lAzAXlDzY2aGyCTmhsgk5o3TqoWnVQtOqla9MlLQG7UTEBu1ExAJjU3QCY1k5oJyBNqJiCTmgnIG0Bu1Exq/qSTqkUnVYtOqhZ9skzNBGRSMwG5UXMD5AbIJiCTmgnIjZo31ExA/iYnVYtOqhadVC365CU1E5BJzQTkCSBPqHkDyKRmAvKEmgnIjZobIJOaGyCTmgnIppOqRSdVi06qFn3yEpBJzQTkDTUTkBsgk5oJyKRmUjMBmdTcqHlCzQTkCSCTmj/ppGrRSdWik6pFn7yk5g01N0AmNROQN4BMam6ATGreADKpeQPIpOZGzaaTqkUnVYtOqhZ98hKQSc2k5gkgk5oJyKRmAnKj5gbIpGYCcgPkDSCTmhsgk5oJyI2aTSdVi06qFp1ULcIfeQHIjZoJyKTmBsiNmhsgT6i5AfInqbkBMqm5ATKpeeOkatFJ1aKTqkX4Iy8A2aTmDSCTmhsgk5oJyKRmAjKpuQEyqZmAfJOabzqpWnRSteikatEnv0zNDZA31ExAJjU3QN4AMqmZ1ExAfhOQSc2mk6pFJ1WLTqoW4Y/8w4BMam6A3KiZgNyoeQPIpOYJIDdqftNJ1aKTqkUnVYs+eQnIb1JzA2RSc6PmDSCTmgnIG0AmNX+zk6pFJ1WLTqoWfbJMzSYgT6iZgExqJiCTmjeAbFLzhJo/6aRq0UnVopOqRZ98GZAn1PxJQN5QcwPkBsgbQCY1E5AbNW+cVC06qVp0UrXok/8YIJOaCcikZgIyqZmAbFIzAZnUTEAmNU+omYBsOqladFK16KRq0Sf/ODUTkAnIpOZGzQTkRs0mNU8AmdRMQH7TSdWik6pFJ1WLPvkyNX+SmhsgT6iZgExqJiCTmhsgT6iZgNyomYBsOqladFK16KRqEf7IC0B+k5oJyBNqJiA3ajYBeULNDZAbNb/ppGrRSdWik6pF+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pF/wOqHTlL0F7w1QAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
