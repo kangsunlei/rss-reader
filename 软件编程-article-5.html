@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>LLM 评估指南</title>
+        <title>Lyft 如何构建每秒处理数百万预测的机器学习平台</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>LLM 评估指南</h2>
-        <p>1/12/2026, 4:30:42 PM</p>
+        <h2>Lyft 如何构建每秒处理数百万预测的机器学习平台</h2>
+        <p>1/13/2026, 4:30:57 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本指南全面概述了 LLM 评估，解释了其挑战、类型（自动、人工、基准）、关键概念，以及在生产环境中建立有效迭代评估流程的实用步骤。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Lyft 构建了 LyftLearn Serving 机器学习平台，为每个团队使用独立的微服务，以处理每秒数百万的实时预测，简化部署并确保可扩展性和灵活性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是关于在生产环境中评估大语言模型（LLM）的全面指南。它解释了为什么 LLM 评估本质上具有挑战性，因为其概率性和上下文依赖性，与传统确定性软件测试形成对比。文章将评估方法分为自动（精确/关键词匹配、语义相似性、基于模型的评估）、人工（偏好排序、李克特量表、任务完成度）和基于基准的评估，详细说明了各自的优缺点。还涵盖了各种指标、稳健评估数据集的重要性以及统计考量等关键概念。最后，它提供了建立有效评估流程的实用建议，强调定义成功标准、创建初始评估集、选择适当方法、建立迭代周期以及跟踪长期性能，同时指出了需要避免的常见陷阱。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Lyft 如何设计 LyftLearn Serving 机器学习平台，该平台旨在处理每秒数百万的实时预测，同时解决数据平面和控制平面的复杂性。面对不同团队的需求和单体遗留系统的局限性，Lyft 采用了独特的微服务方法。该平台不是构建单一共享服务，而是为每个机器学习团队生成专用的独立微服务，实现自主部署、库版本控制和更清晰的所有权。文章概述了平台的运行时架构，包括 Flask、Gunicorn、Envoy 和核心服务库，允许机器学习工程师注入自定义的加载和预测函数。一个关键创新是配置生成器，它可以搭建完整的微服务仓库，极大简化了机器学习工程师的入门流程。系统还集成了模型自测试功能，用于早期问题检测。结论部分强调了经验教训，如清晰术语的重要性、长期模型稳定性、强文档支持以及采用成熟技术。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">LLM 评估至关重要但具有挑战性，因为语言具有概率性、主观性和上下文依赖性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与确定性的传统软件测试不同，LLM 产生可变输出，判断质量需要细微差别，这使得评估变得困难但对于理解模型性能和改进至关重要</span>
+                        <strong style="color: #1e40af">Lyft 的机器学习平台 LyftLearn Serving 解决了数据平面（运行时性能）和控制平面（模型生命周期管理）的双重复杂性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了大规模管理实时预测，该平台旨在高效处理即时执行需求（低延迟、高吞吐量）和机器学习模型的长期运营方面（部署、重新训练、版本控制）。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">评估方法包括自动、人工和基于基准的方法，每种方法都有不同的优势和权衡</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 自动方法为基本检查提供速度，人工评估提供细致的定性评估，基准允许标准化比较，通常需要混合方法进行全面评估</span>
+                        <strong style="color: #1e40af">该平台采用独特的微服务架构，为每个机器学习团队生成独立的微服务。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方法克服了单体系统的局限性，允许每个团队对其模型部署、库版本和运营所有权拥有完全自主权，促进独立开发并减少冲突。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">有效的评估需要理解任务特定指标，使用有代表性且干净的数据集，并考虑统计变异</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 除了基本指标外，确保评估数据集不被训练数据污染，并通过统计方法和重复测试来考虑 LLM 输出的固有方差至关重要</span>
+                        <strong style="color: #1e40af">配置生成器简化了机器学习工程师的入门流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 Yeoman，该生成器自动化创建完整的 GitHub 仓库，包含所有必要的基础设施配置和示例代码，使机器学习工程师能够快速部署模型而无需深入了解基础设施。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实用的评估流程包括定义成功标准、创建迭代测试集、选择方法以及持续性能跟踪</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从明确定义什么是'好'开始，构建多样化的初始示例集，选择最合适的评估方法，并建立测试、改进和重新评估的迭代周期，同时跟踪进展</span>
+                        <strong style="color: #1e40af">集成模型自测试以确保持续模型完整性并早期检测问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 机器学习工程师在其模型代码中定义测试数据，平台在模型加载期间和 CI/CD 过程中自动执行这些测试，为模型兼容性和行为变化提供即时反馈。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">避免常见陷阱，如对评估集过拟合、忽略边缘情况或根本不评估；保持多样化和不断发展的评估套件</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 持续更新评估集以防止过拟合，积极寻找困难案例，并使用系统评估来补充人类直觉，使评估成为开发工作流程的核心部分</span>
+                        <strong style="color: #1e40af">运行时架构采用分层设计，支持多样化的机器学习库并与 Lyft 现有基础设施集成。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基于 Flask、Gunicorn、Envoy 和 Kubernetes 构建，该系统提供了一个灵活的环境，机器学习工程师可以使用他们偏好的库，同时受益于集中式监控、日志记录和追踪。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与传统软件不同，我们可以编写检查精确输出的单元测试，而 LLM 是概率系统。两次询问相同问题，模型可能会给出不同的答案，两者都可能完全有效。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">没有适当的评估，我们基本上是在盲目飞行，无法知道我们最新的提示更改是否使事情变得更好或更糟，我们的模型是否准备好投入生产，或者它是否正确处理边缘情况。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当我们需要捕捉明显失败、运行回归测试以确保更改不会破坏现有功能，或快速迭代提示时，自动评估表现出色。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尽管自动化测试取得了进步，但人工评估仍然是评估 LLM 性能细微方面的黄金标准。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">关键是从简单开始并迭代。不要等待完美的评估设置。定期运行的基本评估比从未实施的复杂评估更有价值。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在这种规模下提供机器学习服务的工程挑战是巨大的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Lyft 选择使用微服务架构构建 LyftLearn Serving，其中小型独立服务各自处理特定职责。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">他们没有构建一个所有团队共享的单一微服务，而是创建了一个为每个团队生成完全独立微服务的平台。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">生成器通过简单的问答流程工作...然后自动创建一个完整的 GitHub 仓库，包含运行 LyftLearn Serving 微服务所需的一切。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">他们拥抱了成熟技术。与其追逐最新趋势，他们选择了经过验证的稳定工具，如 Flask、Kubernetes 和 Python。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,24 +66,24 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2072</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2457</span></div>
             </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/54e256c8" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/1b2ee2fc" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/54e256c8">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATkSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnU3AD5JjUTkEnNE0B+k5o3TqoWnVQtOqla9MkyNZuA3Ki5ATKpuQEyqXlDzQTkRs2Nmk1ANp1ULTqpWnRSteiTLwPyhJo3gExqJiCTmknNBORGzQRkUvNNQJ5Q800nVYtOqhadVC365C8HZFIzAZnUTEBu1ExAbtRMQG7U/EtOqhadVC06qVr0yT8GyKTmRs0E5JvUTEAmNX+zk6pFJ1WLTqoWffJlan6TmhsgN2omIJOaCcikZlIzAZnUvKHmT3JSteikatFJ1aJPlgH5kwCZ1ExAvgnIpGYCMqm5AfInO6ladFK16KRqEf7IXwzIjZobIJOaGyCTmgnIE2r+JSdVi06qFp1ULfrkJSCTmieATGomIE+omYBMaiY1N0AmNROQGzUTkBsgm9TcAJnUvHFSteikatFJ1SL8kT8IkEnNJiBPqJmATGq+CchvUvPGSdWik6pFJ1WLPvkyIG8AmdRMQG7UPKFmAvIGkEnNBGSTmieAbDqpWnRSteikatEnLwGZ1ExqboBMam6AbFLzhJobIJOaCcgTam6ATEAmNROQbzqpWnRSteikatEny4DcqJnUTEBu1ExAJjUTkEnNG0AmNTdAvknNG2o2nVQtOqladFK16JOX1NwAuQFyo+ZGzY2aJ4BMaiYgb6h5AsikZgLyBpBJzRsnVYtOqhadVC365CUgN2omIJOaGyCTmgnIjZobIDdAnlAzAbkBMqn5JjUTkE0nVYtOqhadVC36ZJmaCcik5gk1N2omIE+oeQLIDZAbIJvUPAHkm06qFp1ULTqpWvTJS2omIJOaGyCTmgnIpGYCMqmZgExqJiCTmhs1T6i5ATIBmdRMQCY1b6jZdFK16KRq0UnVIvyRF4DcqPmTAPkmNROQSc0NkE1qJiA3at44qVp0UrXopGrRJy+puQHyhJoJyKTmBsgTaiYgk5oJyA2QSc0mNROQSc0EZFIzAdl0UrXopGrRSdUi/JH/EZAbNROQTWpugNyomYDcqJmATGq+CciNmjdOqhadVC06qVr0yUtAbtRMQJ4AcqNmAjKp+T+peQLIJjWTmgnIppOqRSdVi06qFuGP/MWATGqeADKpuQFyo+YGyI2aJ4BMap4AMql546Rq0UnVopOqRZ+8BOQ3qXkCyI2aN9R8E5BJzQ2QGzXfdFK16KRq0UnVok+WqdkE5EbNjZoJyARkUnOjZgJyo+YNNU+ouQEyqdl0UrXopGrRSdWiT74MyBNqngAyqXlCzQTkRs2kZgLyBpA3gExqJjUTkEnNGydVi06qFp1ULfrkL6fmDSBPALlR84SaCcikZgIyqfmTnFQtOqladFK16JN/HJBJzQRkUnMDZFIzAblRc6PmRs0NkP/TSdWik6pFJ1WLPvkyNb8JyKTmCSCTmhsgN2pugExqJiCTmgnIjZoJyDedVC06qVp0UrXok2VAfhOQGyCTmknNBGQCcqNmArJJzQTkRs0TajadVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXoP+FwUSroEe7OAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/1b2ee2fc">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS6SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaJ4BMaiYgk5oJyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AflNQCY1E5BJzY2aTWo2Adl0UrXopGrRSdWiT74MyBNqngDyBJBJzRNqngDyhJongDyh5ptOqhadVC06qVr0yT9GzRtAnlAzAZnUTEAmNf+Sk6pFJ1WLTqoWffKPAfKGmieATGomIP9PTqoWnVQtOqla9MmXqfmT1LwB5A01N0AmNU+o+ZucVC06qVp0UrXok2VA/iQ1E5BJzQRkUnOjZgJyA2RS8waQv9lJ1aKTqkUnVYvwR/7DgDyh5gkgN2qeADKp+ZecVC06qVp0UrUIf+QFIJOaCcgmNU8AmdRMQL5JzQ2QSc0EZJOabzqpWnRSteikatEnf5iaCcikZgLyTWq+CcgNkDfUPAFkUvPGSdWik6pFJ1WL8EcWAblRcwPkRs0NkEnNBORGzQTkDTU3QG7U/JecVC06qVp0UrXok7+MmieA3ACZ1LyhZgIyqZmAvAHkRs0EZFIzAZnUbDqpWnRSteikatEnLwGZ1GwCcqPmDSA3am7UTEBu1PwmIJOabzqpWnRSteikatEnL6l5AsgTaiYgN0AmNROQSc0NkEnNG0DeUDMBmdQ8AWRS88ZJ1aKTqkUnVYvwR14AMqmZgExqboD8JjUTkEnNBOQJNTdAJjU3QCY1E5AbNd90UrXopGrRSdWiT5YBmdRMQG7UvAFkUjMBmYBMat5QcwNkE5BJzQ2QSc2mk6pFJ1WLTqoWffKSmgnIE2omIG+ouVFzA+QJNROQSc2NmjfUTEBu1HzTSdWik6pFJ1WLPnkJyKRmAjKpmYBMam6ATGomIJOaGyCTmieATGomIDdAJjUTkBsgk5oJyA2QSc0bJ1WLTqoWnVQt+uQvA+QNNROQGzUTkCfUPKHmBsikZgIyqXlDzaaTqkUnVYtOqhbhj7wAZFIzAXlCzRNAJjUTkCfU3AC5UfMEkEnNBOQJNTdAJjWbTqoWnVQtOqla9MmXqbkBcgNkUjOp2QTkRs0NkEnNBOQGyCYgN0AmNW+cVC06qVp0UrUIf+Q/DMiNmm8CMql5Asik5gkgm9S8cVK16KRq0UnVok9eAvKb1ExqJiATkDfUTEBugGwCMql5Q803nVQtOqladFK16JNlajYBuQHyhpobIJOaJ4C8oeYJNTdAbtS8cVK16KRq0UnVok++DMgTav4maiYgk5oJyKTmBsgEZBOQ33RSteikatFJ1aJP/nFqboBMam7UTEAmNW+ouQEyqZmA/EknVYtOqhadVC365P8MkBsgv0nNDZAbIG+o2XRSteikatFJ1aJPvkzNN6n5JjUTkEnNDZBJzQRkUjOpmYBMaiYgk5oJyDedVC06qVp0UrXok2VAfhOQGzVvAJnU3ACZ1ExAJjUTkEnNDZAbIJOabzqpWnRSteikahH+SNWSk6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatH/AHajH0Ssp1/iAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

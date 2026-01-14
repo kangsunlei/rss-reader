@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Salesforce 如何将其 1，000 个 EKS 集群从 Cluster Autoscaler 迁移到 Karpenter | Amazon Web Services</title>
+        <title>Compose Hot Reload 1.0.0 的技术之旅 | Kotlin 博客</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Salesforce 如何将其 1，000 个 EKS 集群从 Cluster Autoscaler 迁移到 Karpenter | Amazon Web Services</h2>
-        <p>1/12/2026, 12:03:32 PM</p>
+        <h2>Compose Hot Reload 1.0.0 的技术之旅 | Kotlin 博客</h2>
+        <p>1/13/2026, 2:47:58 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Salesforce 成功将 1，000 多个 EKS 集群从 Cluster Autoscaler 迁移到 Karpenter，通过自动化分阶段方法显著提升了运营效率、性能和成本优化。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文阐述了 Compose Hot Reload 1.0.0 背后的技术历程，详细介绍了 JetBrains Runtime、DCEVM、Java agents 和构建系统集成如何为 Compose Multiplatform 实现动态代码和 UI 更新，并解决了编译器方面的重大挑战。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Salesforce 如何成功将 1，000 多个 Amazon EKS 集群从 Kubernetes Cluster Autoscaler 迁移到开源节点供应项目 Karpenter。面对节点组激增导致的扩展缓慢、资源利用率低下和运营瓶颈等挑战，Salesforce 设计了一个自动化、风险可控的迁移方案。迁移策略包括开发用于无缝切换的自定义工具、自动化配置映射以及谨慎的分阶段部署。迁移过程中的关键洞察包括管理 PDB、优化节点维护工作流、解决 Kubernetes 标签限制、保护单实例应用以及精确映射存储需求。此次迁移带来了显著价值：手动运营开销减少 80%，扩展延迟从分钟级降至秒级，预计节省 5-10% 的成本，并通过真正的自助服务基础设施和对异构实例类型的支持提升了开发者体验。该案例研究凸显了 Karpenter 等现代自动扩展解决方案在大规模 Kubernetes 部署中的优势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Compose Multiplatform 的新稳定功能 Compose Hot Reload 1.0.0 的开发历程和技术实现。它解释了 Hot Reload 如何在无需重新编译的情况下实现运行中应用程序的动态代码更新和 UI 刷新，显著提升了开发者体验。核心机制包括：利用 JetBrains Runtime 的 DCEVM 实现实现无限制的动态代码演进；使用 Java agents 进行 API 访问和后台任务处理；与 Gradle 等构建系统深度集成以高效检测和应用代码变更。文章重点讨论了面临的挑战，特别是 Kotlin 编译器 lambda 命名规范的不一致性，以及如何解决这些问题以确保可组合函数的热重载稳定性。该过程还涉及使用 ASM 进行字节码分析以跟踪 Compose 组变更，并通过智能 UI 失效机制尽可能保留状态。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Salesforce 在其 1，000 多个 EKS 集群中面临传统 Kubernetes Cluster Autoscaler 的重大扩展和运营挑战</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 节点组激增导致运营瓶颈、需求高峰期间扩展性能缓慢（数分钟延迟）、资源利用率低下以及可用区平衡不佳，迫切需要更现代的自动扩展解决方案。</span>
+                        <strong style="color: #1e40af">Compose Hot Reload 通过利用 JetBrains Runtime 的 DCEVM 实现实现动态代码更新</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> DCEVM（动态代码演进虚拟机）扩展了 JVM 的热交换能力，支持近乎任意的代码变更，如添加/删除字段和方法，这对高级热重载功能至关重要</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">高度自动化、风险可控和分阶段的迁移策略对于向 Karpenter 的无中断过渡至关重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Salesforce 开发了内部工具用于自动化切换、配置映射和强大的回滚支持，同时从低风险环境开始谨慎分阶段部署，以确保稳定性并持续学习。</span>
+                        <strong style="color: #1e40af">使用 Java agent 附加到应用程序，访问 DCEVM API 并管理重载请求</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> agent 在 JVM 启动前运行，使用 Java Instrumentation API 观察、修改和重定义类。它启动后台任务，在代码变更时调用 instrumentation.redefineClasses</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">迁移在运营效率、性能、成本优化和开发者体验方面带来了可衡量的改进</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实现了手动开销减少 80%，扩展延迟从分钟级降至秒级，预计节省 5-10% 的成本，并通过支持多样化实例类型增强了开发者的自助服务能力。</span>
+                        <strong style="color: #1e40af">与 Gradle 和 Amper 等构建系统的深度集成确保零配置开发者体验</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 构建系统插件管理应用程序启动、编译代码、获取类路径快照（热区和冷区），并协调向 agent 发送重载请求，实现变更的自动检测和应用</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">获得的关键洞察包括谨慎管理 PDB、优化节点维护、遵守 Kubernetes 标签限制以及保护单实例应用</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些洞察突显了大规模 Kubernetes 迁移中的常见陷阱和最佳实践，强调了基础设施效率与应用可用性之间的平衡。</span>
+                        <strong style="color: #1e40af">执行字节码分析以跟踪 Compose 组变更并智能失效 UI 组件</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 ASM，agent 分析类字节码以识别 Compose 组、它们的依赖关系和语义变更（通过哈希值），允许运行时仅重新渲染必要的 UI 部分同时保留状态</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">克服了 Kotlin 编译器 lambda 命名规范相关的重大挑战以实现稳定热重载</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基于类（ComposableSingleton）和 indy lambda 的编译器生成名称不一致导致过度失效和错误。JetBrains 对 Compose 和 Kotlin 编译器的修改引入了基于组键和范围唯一索引的稳定命名</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Karpenter 是一个用于 Kubernetes 的开源节点供应项目，可以通过基于实时工作负载需求直接供应合适大小的节点来改变这种方法。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Salesforce 的大规模部署中，传统的 Kubernetes 基础设施面临若干关键挑战。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们成功的关键在于精心规划、自定义工具以及优先考虑稳定性和零中断迁移的分阶段方法相结合。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过 Karpenter，扩展延迟从分钟级降至秒级，这是通过基于实际待处理 Pod 供应节点实现的，有效绕过了与 Auto Scaling 组相关的延迟。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DCEVM 提出"Java 的无限制安全动态代码演进"，它解除了限制并支持几乎任意的代码变更</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Compose Hot Reload 严重依赖 JetBrains Runtime 来运行用户代码。JetBrains Runtime 不仅专门用于构建 UI 应用程序，而且至今仍是唯一实现 DCEVM 提案的 JVM</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Compose 将代码分割成称为**组**的部分，并为每个组分配唯一的整数键。近似地说，你可以认为每个**作用域**（例如代码中的每个 `{}` 对）对应一个单独的组</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">许多问题源于 Kotlin 编译器和 Compose 插件在设计时并未考虑 DCEVM 和热交换。因此，这些工具生成的字节码在热重载期间经常表现出意外行为</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从 2.1.20 版本开始，Compose 编译器使用**组键**作为可组合 lambda 的稳定唯一名称</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,24 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">AWS Architecture Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sana Jawad</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sebastian Sellmair</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1599</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">29 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7132</span></div>
             </div>
-            
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
-                    <span style="color: #64748b; font-size: 14px;">标签：</span>
-                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Karpenter</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">EKS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动扩展</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云迁移</span>
-                    </span>
-                </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/6c868c01" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/2449a03c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/6c868c01">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATBSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEBu1DwBZFJzA2RS8wSQ36TmjZOqRSdVi06qFn2yTM0mIDdqNgG5UTMBmdRMaiYgN2pu1GwCsumkatFJ1aKTqkWffBmQJ9RsUvOEmjeATGq+CcgTar7ppGrRSdWik6pFn/zlgExqboA8oWYCcqNmAnKj5l9yUrXopGrRSdWiT/4xQJ5QMwH5JjUTkEnN3+ykatFJ1aKTqkWffJma/5OaCciNmhs1T6iZgExq3lDzJzmpWnRSteikatEny4D8n9RMQCY1E5BJzQRkUjMBmdRMQCY1E5BJzQ2QP9lJ1aKTqkUnVYvwR/5iQCY1E5AbNZuAPKHmX3JSteikatFJ1aJPXgIyqXkCyKRmAvIEkEnNDZBJzQRkUjMBuVEzAbkBsknNDZBJzRsnVYtOqhadVC3CH/kiIDdqJiCTmgnIpOY3AZnUfBOQ36TmjZOqRSdVi06qFn3yEpA3gNwAmdTcAHlDzSYgk5oJyCY1TwDZdFK16KRq0UnVok9+mZo3gNyouQHyhpobIJOaCcgTam6ATEAmNROQbzqpWnRSteikatEnX6bmBsg3AdkEZFJzA+Sb1LyhZtNJ1aKTqkUnVYs+eUnNDZBJzRNqJiA3QG7UTEAmIN+k5gkgk5oJyBtAJjVvnFQtOqladFK16JNlQCY1T6iZgExqboDcAHlCzQTkRs0E5AbIpOab1ExANp1ULTqpWnRSteiTZWomIG+ouQHyhJoJyKRmAvIEkBsgm9Q8AeSbTqoWnVQtOqla9MlLQJ5QcwPkRs0mNU+oeULNDZAJyKRmAjKpeUPNppOqRSdVi06qFn3yZWpugNyomYBMam6A3AC5UTMBuVEzAZnUTGomIBOQGyA3am6ATGreOKladFK16KRq0ScvqXkCyBNAJjVPqHlCzRtAJjWb1ExAJjUTkEnNBGTTSdWik6pFJ1WL8Ee+CMgTap4AcqNmE5BJzQTkRs0EZFLzTUBu1LxxUrXopGrRSdWiT14C8oaaGyBPqLkBcqNmAvKGmieAbFIzqZmAbDqpWnRSteikahH+yF8MyDepmYDcqLkBcqPmCSCTmieATGreOKladFK16KRq0ScvAflNap5QMwG5UfOEmm8CMqm5AXKj5ptOqhadVC06qVr0yTI1m4DcqJmA3Kh5AsikZgJyo+YNNU+ouQEyqdl0UrXopGrRSdWiT74MyBNqngAyqZmA3KiZgDyhZgLyBpA3gExqJjUTkEnNGydVi06qFp1ULfrkL6fmNwG5UfOEmgnIpGYCMqn5k5xULTqpWnRSteiTfwyQSc0EZAIyqZmA3KiZgNyouVFzo+YGyP/ppGrRSdWik6pFn3yZmt+kZpOaCcgE5EbNDZBJzQRkUjMBuVEzAfmmk6pFJ1WLTqoWfbIMyG8CMqmZgNyomYBMam7UTEA2qZmA3Kh5Qs2mk6pFJ1WLTqoW4Y9ULTmpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoW/QdEPSk93G7+RgAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2449a03c">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATXSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4DcqJmATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkD8JkEnNjZpNajYB2XRSteikatFJ1aJPvgzIE2qeAPJNaiYgE5BJzQTkCTVPAHlCzTedVC06qVp0UrXok3+Mmhsgk5oJyKTmCSCTmgnIpOZfclK16KRq0UnVok/+MUAmNZOaCcgNkEnNE0D+n5xULTqpWnRSteiTL1PzXwIyqZnUPAFkUnOj5gbIpOYJNX+Sk6pFJ1WLTqoWfbIMyH9JzQTkBsikZgIyqZmATGomIJOaN4D8yU6qFp1ULTqpWoQ/8hcDcqPmDSCTmjeATGr+JSdVi06qFp1ULcIfeQHIpGYCsknNDZAbNROQb1JzA2RSMwHZpOabTqoWnVQtOqla9MmXqZmATGomIJOaGyCb1HwTkBsgb6h5Asik5o2TqkUnVYtOqhbhj3wRkEnNE0B+k5obIE+ouQFyo+ZvclK16KRq0UnVok9eAnKj5gkgk5oJyBNqboDcAJnUTEAmNROQN4DcqJmATGomIJOaTSdVi06qFp1ULcIf+SIgN2pugDyh5gbIE2qeAHKj5puA3Kj5ppOqRSdVi06qFuGP/CIgT6iZgExqboBMaiYgk5oJyKTmBsg3qZmATGqeADKpeeOkatFJ1aKTqkWfLANyo2YCMqmZgExqJiCTmknNG2omIE+ouQEyqbkBMqmZgNyomdRsOqladFK16KRq0SfL1LwBZFJzo2YCcqPmm9TcANkEZFJzA2RSs+mkatFJ1aKTqkWf/DIgTwCZ1LwB5AbIpOZGzQRkUnOj5g01E5AbNd90UrXopGrRSdUi/JEXgExqJiBvqJmATGpugNyouQEyqZmATGomIE+omYA8oWYCMqmZgExq3jipWnRSteikatEnv0zNBOQGyKRmAjKpuVEzAblRMwGZ1Dyh5gbIpGYCMql5Q82mk6pFJ1WLTqoWffJlaiYgN2p+k5obIDdAJjWTmhsgk5oJyA2QSc2kZgIyqdl0UrXopGrRSdWiT/5wQG7UTEBugLyh5gbIpGYCcgNkE5AbIJOaN06qFp1ULTqpWoQ/8hcDcqNmAjKpeQPIpOYJIJOaJ4BsUvPGSdWik6pFJ1WLPnkJyG9SM6mZgExAJjUTkBs1E5AbIJuATGreUPNNJ1WLTqoWnVQt+mSZmk1AboDcqLlRcwNkUvMEkDfUPKHmBsiNmjdOqhadVC06qVr0yZcBeULNG2omIDdqbtRMQCY1E5BJzQ2QCcgmIL/ppGrRSdWik6pFn/xjgDwBZFJzo2YCMql5Q80NkEnNBOS/dFK16KRq0UnVok/+MWomIG8A+SY1N0BugLyhZtNJ1aKTqkUnVYs++TI136TmCTUTkBs1E5BJzQ2QSc0EZFIzqZmATGomIJOaCcg3nVQtOqladFK16JNlQH4TkEnNpOYNIJOaGyCTmgnIpGYCMqm5AXIDZFLzTSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfof8tRELmTeV9MAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

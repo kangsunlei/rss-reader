@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>微软发布 TypeScript 7 更新进展</title>
+        <title>Node.js — 为 React、Next.js 和 APM 用户缓解不可恢复栈空间耗尽导致的拒绝服务漏洞</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>微软发布 TypeScript 7 更新进展</h2>
-        <p>1/12/2026, 5:00:00 PM</p>
+        <h2>Node.js — 为 React、Next.js 和 APM 用户缓解不可恢复栈空间耗尽导致的拒绝服务漏洞</h2>
+        <p>1/13/2026, 5:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">微软的 TypeScript 7 更新（代号 Project Corsa）正在用 Go 重写编译器，构建速度提升高达 10 倍，并默认启用严格模式，引发了开发者对性能提升的兴奋和对工具迁移的担忧。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">一个关键的 Node.js 漏洞在使用 `async_hooks`（被 React、Next.js 和 APM 使用）时会导致不可恢复的崩溃，由于栈耗尽将 `RangeError` 转变为立即的进程退出。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">微软发布了 TypeScript 7（Project Corsa）的进展更新，该项目涉及用 Go 语言对 TypeScript 编译器进行根本性重写。这一转变预计将带来显著的性能提升，构建速度最高可提升 10 倍，并大幅降低内存使用量。新的原生编译器 `tsgo` 利用了 Go 的性能特性和并行处理能力。TypeScript 7 的一个关键变化是默认启用严格模式，这有助于提升类型安全性，但可能需要对现有项目进行调整。选择 Go 的理由在于其原生优先的方法、自动垃圾回收特性以及适合 TypeScript 函数式编码风格的特点。虽然开发者对性能提升表示兴奋，但也对依赖 TypeScript 编译器的工具的迁移路径和 API 兼容性表示担忧。此举使 TypeScript 与 esbuild、SWC 和 oxc 等其他高性能原生 JavaScript 工具保持一致。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">这篇来自 Node.js 博客的文章讨论了一个关键的拒绝服务漏洞，源于不可恢复的栈空间耗尽。当启用 `async_hooks`（或基于它构建的 `AsyncLocalStorage`）时，用户代码中的深度递归，特别是在创建 Promise 时，可能导致 Node.js 立即退出并返回代码 7，而不是抛出可捕获的 `RangeError`。这意味着应用程序无法优雅地处理栈溢出，使其容易受到通过恶意构造输入（例如深度嵌套的 JSON）的 DoS 攻击。这个问题广泛影响了像 React Server Components 和 Next.js 这样的框架，以及几乎所有广泛使用 `async_hooks` 进行上下文跟踪的应用性能监控（APM）工具。文章解释了该 bug 的技术细节，展示了 `async_hooks` 机制中的 `TryCatchScope::kFatal` 如何意外捕获用户发起的栈溢出。已实施修复以将栈溢出错误重新抛出到用户代码。虽然修复缓解了立即崩溃，但文章强调依赖未指定的栈溢出行为进行安全保护是不可靠的，并建议开发人员实施强大的输入清理和递归深度限制。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">TypeScript 7 正在用 Go 对其编译器进行根本性重写</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作为 Project Corsa 的一部分，这次重写旨在通过利用 Go 的原生能力显著提升性能，包括构建速度和内存使用效率</span>
+                        <strong style="color: #1e40af">当 `async_hooks` 或 `AsyncLocalStorage` 处于活动状态时，Node.js 漏洞会导致立即进程退出（退出代码 7），而不是在栈溢出期间抛出可捕获的错误。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 此 bug 阻止应用程序优雅处理 `RangeError: Maximum call stack size exceeded`，使其容易受到通过精心构造的递归输入进行的拒绝服务攻击，因为 Node.js 进程会直接崩溃。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">新的原生编译器（`tsgo`）承诺构建速度提升高达 10 倍</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这一性能提升对开发者来说是一个重大利好，特别是那些处理大型代码库的开发者，并使 TypeScript 能够与其他高性能原生 JavaScript 工具竞争</span>
+                        <strong style="color: #1e40af">该漏洞广泛影响了 Node.js 生态系统的很大一部分，包括 React Server Components、Next.js 和所有主要的 APM 工具。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `AsyncLocalStorage`（被 React/Next.js 用于上下文跟踪）和直接的 `async_hooks` 使用（在 APM 中常见）会触发此行为，使许多广泛部署的应用程序易受攻击。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">TypeScript 7 将默认启用严格模式，促进更好的类型安全性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这一变化虽然可能对某些项目造成破坏性影响，但符合行业最佳实践，有助于开发者更早发现错误，提高代码质量和可维护性</span>
+                        <strong style="color: #1e40af">问题源于 `async_hooks` 回调在与用户代码相同的调用栈上运行，其中 `TryCatchScope::kFatal` 意外地将用户发起的栈溢出视为致命的钩子错误。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当栈耗尽发生在 `async_hooks` 回调处于活动状态时（例如在 `new Promise()` 期间），`TryCatchScope` 的 `kFatal` 模式将用户代码产生的错误误解为不可恢复的内部钩子错误，强制进程退出。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">对现有工具的迁移路径和 API 兼容性存在担忧</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 转向原生 Go 编译器给工具作者带来了关于如何与新编译器 API 交互的问题，可能需要重大的调整或重写</span>
+                        <strong style="color: #1e40af">通过将栈溢出错误重新抛出到用户代码的修复缓解了问题，但强大的输入清理和递归深度限制仍然是关键的防御措施。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然 Node.js 现在修补了此特定行为（针对 20+ 版本），但文章强调底层的 `RangeError` 是未指定的 ECMAScript 行为；因此，应用程序不得依赖它进行安全保护，应实施自己的防御措施来应对递归输入攻击。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">使用 `AsyncContextFrame` 的现代 Node.js 版本（24+）不受此特定 bug 影响，但直接使用 `async_hooks` 的 APM 工具仍然受影响。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `AsyncContextFrame` 将 `AsyncLocalStorage` 与有问题的 `async_hooks.createHook()` 机制解耦，提高了性能并为使用它的框架避免了此 bug。然而，直接与原始 `async_hooks` 集成的 APM 工具在所有 Node.js 版本中仍然易受攻击。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">哇，这太重磅了！10 倍的速度提升将对我们这样的大型 TypeScript 代码库产生革命性影响。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我非常担心工具的迁移路径可能会极其困难。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">默认启用严格模式真是太棒了。当你正在开发一个项目时突然发现没有启用严格模式，然后需要做大量修复，这真是太痛苦了。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个仅在启用 `async_hooks` 时重现的 bug 会破坏此尝试，导致 Node.js 直接退出并返回代码 7，而不会在用户代码中的递归耗尽栈空间时抛出可捕获的错误。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">讽刺的是：您安装用于监控和调试崩溃的工具可能会使一类崩溃表现不同。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于必须防御无限递归或来自攻击者可控制深度的递归导致的栈溢出的关键任务路径，始终清理输入或通过其他方式限制递归深度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">错误源于用户代码（递归模式），但由于它在钩子回调是活动帧时表现出来，因此被视为致命的钩子错误。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">此 bug 突显了 `async_hooks` 在 Node.js 生态系统中嵌入的深度。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,23 +67,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Daniel Curtis</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Node.js Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Node.js Blog</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">559</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2951</span></div>
             </div>
+            
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
+                    <span style="color: #64748b; font-size: 14px;">标签：</span>
+                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Node.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">拒绝服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AsyncHooks</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AsyncLocalStorage</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">漏洞</span>
+                    </span>
+                </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/71c8a392" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/9f048c4b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/71c8a392">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGaCxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRS8wSQSc0TQCY1E5An1ExAfpOaN06qFp1ULTqpWvTJMjWbgGwCcgPkRs0NkBs1E5An1GwCsumkatFJ1aKTqkWffBmQJ9Q8oeYJNTdA3lDzm4A8oeabTqoWnVQtOqla9MkfB+Sb1ExAboBMaiYgk5r/JydVi06qFp1ULfrkj1MzAZnUTEAmNROQJ9RMQJ4AMqn5y06qFp1ULTqpWvTJl6n5LwHZpOZGzQTkm9T8S06qFp1ULTqpWvTJMiC/CcikZgIyqZmATGomIJOaCcik5kbNBOQJIP+yk6pFJ1WLTqoW4Y/8YUBu1ExAbtRMQH6Tmr/spGrRSdWik6pFn7wEZFIzAblRMwF5Qs0EZAIyqZmAPKHmBsgmIJOaGyCTmgnIjZo3TqoWnVQtOqlahD+yCMikZgJyo+YJIJOaCciNmt8E5JvUPAFkUvPGSdWik6pFJ1WLPlmm5gk1N0CeALIJyKRmAjKpmYBMat4A8gSQGzWbTqoWnVQtOqla9MmXAXkCyKRmAnKjZgJyA+QJIJOaGzU3QCY1m9TcAJnUvHFSteikatFJ1SL8kUVA3lAzAZnUTEA2qXkDyI2abwJyo+abTqoWnVQtOqlahD+yCMikZhOQSc1vAjKpeQLIpOYGyI2aGyBPqHnjpGrRSdWik6pFn7wEZFIzAfkvAZnU3ACZ1ExqboA8AeQNIJOa/9JJ1aKTqkUnVYs+WQbkRs0NkEnNE0AmNU+ouQFyo+YGyI2aGyBPqJmATGo2nVQtOqladFK16JNlaiYgT6iZgNyoeQLIjZoJyKTmCSBPAJnUTGomIBOQSc1vOqladFK16KRq0ScvqZmATGomIJOaCcikZpOaJ9RMQCY1N2pugDwBZFIzAZmA/KaTqkUnVYtOqhZ98hKQSc0EZFIzAbkB8gaQSc0EZFIzAXkDyKRmUjMBeUPNBGRS800nVYtOqhadVC365CU1m9RsAnKjZgIyqbkB8k1AJjX/spOqRSdVi06qFn2yDMikZgIyqZmA3Ki5AfJNQDYBeQLIv+ykatFJ1aKTqkX4I38YkEnNBOQNNTdAJjVPAJnUPAFkk5o3TqoWnVQtOqla9MlLQH6TmhsgN2qeADKpeQPIE0AmNU+omYBMajadVC06qVp0UrXok2VqNgF5Q80EZFIzAZnUTEDeUDMBuVHzl5xULTqpWnRSteiTLwPyhJon1NwAmdTcqHlCzQRkUvMEkDfUTEAmNd90UrXopGrRSdWiT/44IJOaSc0NkDeA3ACZ1ExqJiCTmhsgE5BJzQ2QSc0bJ1WLTqoWnVQt+uT/DJBJzQTkDTVPAJmATGqeADKpuQEyqfmmk6pFJ1WLTqoWffJlar5JzQRkAjKpmYA8AWRS84SaCcik5g0gk5oJyKRm00nVopOqRSdViz5ZBuQ3AZnUTEDeUDMBeQPIG2r+ZSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfofbdoVbwTf190AAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/9f048c4b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATNSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIpOYGyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXkDyKTmCTUTkEnNjZpNajYB2XRSteikatFJ1aJPvgzIE2qeAPKb1ExAJjUTkCfUPAHkCTXfdFK16KRq0UnVok/+MWomIBOQJ9RMQCY1E5BJzQRkUvMvOaladFK16KRq0Sf/GCCTmgnIjZoJyKRmAjKpmYD8l5xULTqpWnRSteiTL1PzJ1EzAXkCyBNqboBMap5Q8yc5qVp0UrXopGrRJ8uA/D+pmYBMat5QMwG5ATKpeQPIn+ykatFJ1aKTqkWfvKTmb6bmRs0EZFJzo2YCMqm5UfM3OaladFK16KRqEf7IC0AmNROQTWpugExqngAyqbkBcqPmBsikZgKySc03nVQtOqladFK1CH/kBSBPqJmA3KiZgExqboBMam6A3Kh5A8g3qXkCyKTmjZOqRSdVi06qFuGP/MGATGreAHKj5gbIE2pugNyo+ZucVC06qVp0UrUIf+SLgExqJiCTmieA3Kj5JiCTmgnIN6mZgExqJiCTmk0nVYtOqhadVC3CH3kByBtqboBMat4A8oaaGyA3ar4JyI2abzqpWnRSteikahH+yF8EyKRmAvKGmjeAfJOaCcik5gkgk5o3TqoWnVQtOqla9MlLQCY1E5AbNROQGzUTkBs1E5BJzQRkUjMBeULNDZBJzQ2QSc0E5EbNpGbTSdWik6pFJ1WLPlkG5Akgk5obIDdqJiCTmhs1E5An1NwA2QRkUnMDZFKz6aRq0UnVopOqRfgjvwjI30TNBGRSMwGZ1ExAJjVPAJnUTEBu1HzTSdWik6pFJ1WLPnkJyKRmAvKEmjeATGreADKpmYBMaiYgN0AmNROQGyCTmgnIDZBJzRsnVYtOqhadVC365MvU3AC5ATKpmYDcAHlCzQ2QSc0Tam6ATGomIJOaN9RsOqladFK16KRqEf7IC0AmNROQJ9TcAHlCzQ2QSc0NkBs1TwCZ1ExAnlBzA2RSs+mkatFJ1aKTqkWf/GGAPKHmCSA3QG7U3ACZ1ExAboBsAnIDZFLzxknVopOqRSdVi/BH/mJAJjW/Ccik5gkgk5ongGxS88ZJ1aKTqkUnVYs+eQnIb1IzqbkBMqm5ATKpmYDcANkEZFLzhppvOqladFK16KRq0SfL1GwCcgPkCSCTmknNjZongLyh5gk1N0Bu1LxxUrXopGrRSdWiT74MyBNqNqnZBGRSMwGZ1NwAmYBsAvKbTqoWnVQtOqla9Mk/Rs0TQG7UTGomIJOaN9TcAJnUTED+n06qFp1ULTqpWvTJfwyQN4BsUnMD5AbIG2o2nVQtOqladFK16JMvU/NNaiYgk5pJzQ2QJ9TcAJnUTEAmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwGZ1DwB5AbIpOYGyKRmAjKpmYBMam6A3ACZ1HzTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/geq4jc1CsQyxwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
