@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>解决碎片化移动分析：Uber 的平台主导方法</title>
+        <title>Uber 如何从集成缓存中每秒提供超过 1.5 亿次读取</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>解决碎片化移动分析：Uber 的平台主导方法</h2>
-        <p>1/13/2026, 3:00:00 PM</p>
+        <h2>Uber 如何从集成缓存中每秒提供超过 1.5 亿次读取</h2>
+        <p>1/14/2026, 4:31:13 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Uber 采用集中化、平台主导的方法重新设计了其移动分析平台，以标准化事件检测、提高数据质量并减少 iOS 和 Android 应用程序的工程工作量。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文解释了 Uber 的 CacheFront 系统如何通过包含同步写入路径失效和 CDC 的三重防御缓存策略，演进到每秒处理超过 1.5 亿次读取并保持强一致性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Uber Engineering 对其移动分析架构进行了平台主导的重新设计，以应对先前在 iOS 和 Android 应用中分散式事件检测所带来的碎片化、数据不一致和高工程工作量问题。核心问题是超过 40% 的移动事件是自定义的，导致产品和数据团队获得的数据不可靠。他们的解决方案包括将分析责任转移到共享平台基础设施，通过代码生成的模式标准化事件类型（点击、展示、滚动），并将分析逻辑直接嵌入平台级 UI 组件。这种方法集中了事件发送，通过后端服务丰富数据，并通过 Uber 的分析管道简化了数据消费。关键改进包括一致的跨平台数据、减少功能团队的检测代码、可靠的展示计数以及可扩展的 UI 交互覆盖。该项目通过双发送试点验证，展示了优势并突出了差异，并通过自动化迁移工具和检查器来强制执行新标准。未来的努力旨在通过唯一的 UI 元素 ID 进行组件化，以进一步标准化事件命名和元数据，持续减少开发人员的工作量。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Uber 的 CacheFront 系统如何在保持强一致性的同时，每秒处理超过 1.5 亿次数据库读取。文章解释了缓存的基础重要性、Uber 的三层架构（查询引擎、带有 MySQL 的存储引擎和 CacheFront）以及它们的读写路径。重点讲述了 Uber 缓存一致性机制的演进：从最初导致读取自己写入违规和无限制陈旧性等一致性挑战的异步 CDC（Flux）系统，到一个创新解决方案。突破性进展包括通过软删除和单调时间戳使条件更新可追踪，从而实现同步缓存失效。Uber 现在采用结合同步写入路径失效、异步 CDC（Flux）和 TTL 过期的'三重防御策略'，并通过'缓存检查器'工具进行严格验证。这种多管齐下的方法使 Uber 能够显著扩展其缓存基础设施，同时提高一致性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">碎片化的移动分析导致数据不一致和高工程开销。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 众多功能团队之间的分散式事件检测导致超过 40% 的移动事件是自定义的，造成数据不可靠，并增加了产品和数据团队的工作量。</span>
+                        <strong style="color: #1e40af">Uber 的 CacheFront 系统通过策略性地使用 Redis 缓存，高效处理海量读取负载</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该系统作为应用程序请求和 MySQL 数据库之间的关键中介，显著降低了数据库负载和延迟，在许多用例中实现了超过 99.9% 的缓存命中率</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Uber 采用平台主导的方法来标准化移动分析。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 核心分析责任被转移到共享基础设施，采用标准化事件类型，并将分析逻辑嵌入平台级 UI 组件，显著减少了自定义检测。</span>
+                        <strong style="color: #1e40af">在高规模写入环境中保持强缓存一致性很复杂，特别是对于条件更新</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 最初的异步失效方法（如通过 Flux 的 CDC）引入了读取自己写入的一致性问题和由于失效延迟或失败可能导致的无限制数据陈旧性</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">标准化涉及模式驱动的事件生成、统一的元数据收集和集中报告。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 事件通过共享模式代码生成，必要的元数据被自动收集，所有事件流经集中报告层，并由后端服务进行丰富。</span>
+                        <strong style="color: #1e40af">Uber 通过在存储层使条件更新可追踪，实现了同步缓存失效</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过实施软删除和严格单调时间戳，Uber 的存储引擎现在可以在事务期间识别所有受影响的行键，从而实现即时缓存失效</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">新平台提高了数据质量，减少了开发人员工作量，并确保了跨平台一致性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 优势包括更好的数据可靠性、功能团队更少的自定义代码、准确的展示计数以及 iOS 和 Android 应用间一致的语义，并通过检查器和自动化迁移等工具得到加强。</span>
+                        <strong style="color: #1e40af">'三重防御策略'确保 Uber 架构中的强大缓存一致性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该策略结合了同步写入路径失效、异步 CDC 和 TTL 过期，提供了多层保护以防止陈旧数据，并改善了一致性保证</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">'缓存检查器'工具对于验证和测量缓存一致性至关重要</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过比较 binlog 事件和缓存数据，缓存检查器使 Uber 能够自信地增加 TTL 值以提高命中率，同时不牺牲一致性，证明了他们新方法的有效性</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">随着应用和团队的增长，检测变得分散。功能团队独立定义和发送事件，共享 UI 组件通常缺乏分析钩子，相似的交互在不同团队中以不同方式记录。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个关键决策是将分析逻辑嵌入平台级 UI 组件中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该平台还实现了通用的元数据收集。应用级元数据（如接载地点或餐厅 UUID）被自动记录，而事件类型元数据（包括列表索引、行标识符、滚动方向和视图位置）由 AnalyticsBuilder 捕获。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">工程师报告了改进的跨平台一致性、一致的元数据和语义、减少的检测代码、可靠的展示计数以及可扩展、开箱即用的 UI 交互覆盖。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Uber 的 CacheFront 每秒提供超过 1.5 亿次数据库读取，同时保持强一致性保证</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缓存通过将频繁访问的数据存储在更快的存储系统中来解决这个问题。应用程序不是每次都查询数据库，而是首先检查缓存</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">刷新缓存的挑战在于确定当写入发生时哪些缓存条目需要失效</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Flux 异步运行，意味着数据库中的数据更改与缓存更新之间存在延迟。这种异步特性会产生一致性问题</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">TTL 只控制缓存条目的生存时间，而不是其中数据的陈旧程度</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,23 +67,23 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Leela Kumili</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">515</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2012</span></div>
             </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/4663029e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/2c203fab" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/4663029e">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATeSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnt6MRH8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aJPXgLyK6m5ATKpuQEyqZmAPKFmAvKEmgnIr6TmjZOqRSdVi06qFn2yTM0mIE+oeQPIpOYGyI2aTWo2Adl0UrXopGrRSdWiT74MyBNqngByo2YCcqPmBsgTQJ5Q8wSQJ9R800nVopOqRSdViz75x6m5ATKpmYBMQCY1E5BJzd/kpGrRSdWik6pFn/xl1ExAJjUTkBs1E5BJzQ2Qf8lJ1aKTqkUnVYs++TI1vxMgk5oJyCY1N0AmNU+o+Z2cVC06qVp0UrXok2VAfmdqJiCTmgnIpGYCMqmZgExq3gDyOzupWnRSteikahH+yB8MyKTmBsgmNU8AmdT8TU6qFp1ULTqpWoQ/8gKQSc0EZJOaGyCTmgnIpGYCMqmZgDyh5gbIpGYCsknNN51ULTqpWnRSteiTl9Q8oWYCMqn5JjU3ap5Q8wSQGyBvqHkCyKTmjZOqRSdVi06qFn3yEpBvAvKEmieATGomIDdAbtRMaiYgN2q+Sc2mk6pFJ1WLTqoWffKSmgnIDZBJzQRkUjMBeQPIpOYJNROQSc0E5A0gN2omIJOaCcikZtNJ1aKTqkUnVYs+WabmCSCTmgnIpOYGyKTmDTU3aiYgN2p+JSCTmm86qVp0UrXopGrRJy8BeUPNBGRScwNkUjMBmdRMQCY13wTkDTUTkEnNE0AmNW+cVC06qVp0UrUIf+R/BOQJNROQGzUTkEnNE0CeUHMDZFJzA2RSMwG5UfNNJ1WLTqoWnVQt+uQlIDdqbtRMQCY1E5BJzQ2QGyCTmjfU3ADZBGRScwNkUrPppGrRSdWik6pFn7ykZpOaCcikZgLyTUBu1ExAJjU3at5QMwG5UfNNJ1WLTqoWnVQt+uQlIDdqboDcqJmATGo2AblRMwGZ1ExAboBMaiYgN0AmNROQGyCTmjdOqhadVC06qVr0yTI1m4DcALlRMwG5UXMDZFLzhJobIJOaCcik5g01m06qFp1ULTqpWoQ/8gKQSc0E5A01TwB5Qs0NkCfUPAFkUjMBeULNDZBJzaaTqkUnVYtOqhZ98j9TMwGZgExqJiCTmieATGpu1NwAmdRMQG6AbAJyA2RS88ZJ1aKTqkUnVYvwR/5gQCY1N0AmNW8AmdQ8AWRS8wSQTWreOKladFK16KRq0ScvAfmV1ExqnlDzBpAbIJuATGreUPNNJ1WLTqoWnVQt+mSZmk1AboBMam6A3Ki5UfMEkDfUPKHmBsiNmjdOqhadVC06qVr0yZcBeULNN6mZgDwBZFIzAZnU3ACZgGwCcqNm00nVopOqRSdViz75xwCZ1DyhZgIyqXlDzQ2QSc0E5Akgk5o3TqoWnVQtOqla9MlfBsik5gkgk5oJyCY1N0BugLyhZtNJ1aKTqkUnVYs++TI136TmBsik5kbNE2pugExqJiCTmknNBGRSMwGZ1ExAvumkatFJ1aKTqkWfLAPyKwG5UbNJzQ2QSc0EZFIzAZnU3AC5ATKp+aaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9B2ORSDO/JqkDAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2c203fab">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAT5SURBVO3BQY4jRxAEwfAC//9l1xzzVECjk7PSKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2RS8waQSc0TQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8oSaCciNmgnIpGYCcqNmUrNJzSYgm06qFp1ULTqpWvTJlwF5Qs0TQCY1N2omIJOaGzVPAHlCzRNAnlDzTSdVi06qFp1ULfrkLwPkCTUTkEnNBGRSMwGZ1ExAJjV/k5OqRSdVi06qFn3yl1EzAXlCzQRkUjMBmdRMQP5PTqoWnVQtOqla9MmXqflNQCY1E5BJzY2aCcik5kbNDZBJzRNq/k1OqhadVC06qVr0yTIgf5KaCcikZgIyqZmATGomIJOaCcik5g0g/2YnVYtOqhadVC365CU1fzM1N2pu1ExAJjU3av5LTqoWnVQtOqla9MlLQCY1E5BNaiY1E5A3gExqJiBPqJnUTEAmNROQTWq+6aRq0UnVopOqRZ+8pGYCMqm5AXKjZgJyo2YC8oSaCcik5g0gN0DeUPMEkEnNGydVi06qFp1ULcIfeQHIpGYCMqmZgExqJiCTmjeATGomIJOaCcgTam6A3Kj5LzmpWnRSteikahH+yCIgk5pNQG7U3AC5UTMBmdRMQCY1E5BvUjMBmdRMQCY1m06qFp1ULTqpWvTJS0DeAPKGmgnIpGZSMwGZgDyhZgJyo+Y3AZnUfNNJ1aKTqkUnVYs+WaZmAjKpeULNBGQCMql5Q803AXlDzQRkUvMEkEnNGydVi06qFp1ULcIfeQHIjZobIE+omYA8oeYGyCY1N0AmNTdAJjUTkBs133RSteikatFJ1aJPvgzIpOZGzQ2QSc0NkAnIpGZScwPkRs0NkE1AJjU3QCY1m06qFp1ULTqpWvTJLwNyA+RGzQ2QJ4C8oWYCMqm5UfOGmgnIjZpvOqladFK16KRq0SfL1ExAJjUTkEnNE0CeUDMBmdQ8AWRSMwG5ATKpmYDcAJnUTEBugExq3jipWnRSteikatEnX6bmDSCTmk1qngAyqXlCzQ2QSc0EZFLzhppNJ1WLTqoWnVQtwh95AcikZgJyo+YJIDdqJiA3am6APKHmCSCTmgnIE2pugExqNp1ULTqpWnRSteiTPwzIpGYC8gSQSc0NkCfU3ACZ1ExAboBsAnIDZFLzxknVopOqRSdVi/BH/sOA3Ki5ATKpeQLIpOYJIJOaJ4BsUvPGSdWik6pFJ1WLPnkJyG9SM6mZgExAJjU3QCY1E5AbIJuATGreUPNNJ1WLTqoWnVQt+mSZmk1AboBMam6A3Ki5UfMEkDfUPKHmBsiNmjdOqhadVC06qVr0yZcBeULNG0AmNZOaN4BMaiYgk5obIBOQTUB+00nVopOqRSdViz75y6i5ATKpeULNBGRS84aaGyCTmgnIn3RSteikatFJ1aJP/mfUTED+JDU3QG6AvKFm00nVopOqRSdViz75MjXfpGYC8oSaJ4BMam6ATGomIJOaSc0EZFIzAZnUTEC+6aRq0UnVopOqRZ8sA/KbgExqJiCTmgnIpOZGzQ2QSc0EZFIzAZnU3AC5ATKp+aaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9Aw6TYyrkS4r0AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
