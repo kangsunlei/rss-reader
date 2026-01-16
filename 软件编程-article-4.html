@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>GitHub Copilot 正式推出 GPT-5.2-Codex 模型</title>
+        <title>如何在 AWS ECS 上通过数据库迁移管理蓝绿部署：完整实现指南</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,82 @@
         </style>
     </head>
     <body>
-        <h2>GitHub Copilot 正式推出 GPT-5.2-Codex 模型</h2>
-        <p>1/14/2026, 6:11:50 PM</p>
+        <h2>如何在 AWS ECS 上通过数据库迁移管理蓝绿部署：完整实现指南</h2>
+        <p>1/15/2026, 6:25:13 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 宣布在 GitHub Copilot 中推出 OpenAI 的 GPT-5.2-Codex 模型，该模型尤其擅长大规模代码重构与迁移，并在 Windows 环境下的性能有所提升。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本指南提供了在 AWS ECS 上实现蓝绿部署的全面实施方案，特别针对使用扩展-收缩模式处理数据库迁移的复杂性，实现零停机模式演进。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 官方宣布，OpenAI 的 GPT-5.2-Codex 模型现已在 GitHub Copilot 中正式可用。该模型特别擅长处理如代码重构或迁移这类大规模的代码变更。公告同时指出，其在 Windows 开发环境下的性能也得到了改进。用户可在 Visual Studio Code 中体验这一新模型，更多详情请参阅官方更新日志。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了一个实用且深入的指南，介绍如何在 AWS ECS 上管理蓝绿部署，重点关注具有共享状态的数据库迁移这一挑战性方面。详细阐述了为什么蓝绿部署在涉及数据库时会变得复杂，概述了模式版本冲突、数据不一致和不可逆迁移等问题。核心解决方案是数据库模式变更的'扩展-收缩'模式，分为三个阶段：扩展（添加新列/结构）、部署（新应用版本同时写入新旧结构，仍与旧应用版本兼容以便回滚）和收缩（移除旧列）。文章还涵盖了管理其他有状态服务，如会话、S3 存储桶、消息队列和缓存层，强调版本控制以确保兼容性。通过使用 Terraform 和 Flask 应用的完整端到端实现指南，演示了地址字段迁移的扩展-收缩模式，提供了架构图和逐步命令，用于在 AWS 上部署和验证蓝绿环境。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">涉及数据库的蓝绿部署需要谨慎处理，因为存在模式版本冲突和数据不一致的风险。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在旧（蓝）和新（绿）应用版本之间共享数据库会带来重大挑战，需要制定策略来保持兼容性，并在模式或数据格式演进时实现安全回滚。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">'扩展-收缩'模式是蓝绿部署中数据库模式演进推荐策略。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种三阶段方法通过首先扩展模式，然后部署能够同时写入新旧格式的新应用版本，最后在成功迁移后通过移除旧模式元素来收缩，确保向后兼容性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">在过渡阶段保持对新旧模式元素的读写兼容性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 绿色环境的应用代码必须能够读取现有数据并同时写入新旧数据库列，确保回滚到蓝色环境时无缝且数据保持一致。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">有效的蓝绿部署详细工作示例，说明了如何设置必要的 AWS 基础设施并自动化部署过程，从初始设置到验证绿色环境。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 会话管理、S3 对象版本控制、消息队列模式版本控制和缓存键版本控制对于在蓝绿转换期间保持跨应用版本的数据一致性和兼容性至关重要。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">利用 ECS、ALB、RDS、CodeDeploy 和 Parameter Store 等 AWS 服务构建健壮的蓝绿架构。</strong>
+                        
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然蓝绿部署对无状态应用效果很好，但当引入数据库和有状态服务时，它们变得显著复杂。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">扩展-收缩模式是处理共享数据库的蓝绿部署最实用的方法。它通过将模式变更分解为三个阶段来工作，确保整个过程保持向后兼容性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现在，使用新模式的代码部署绿色环境。但此代码仍应同时写入新旧列以保持兼容性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">权衡之处在于，您的代码库暂时包含新旧逻辑，到处都是条件分支。这会增加复杂性，并需要在功能完全发布后进行有纪律的清理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">关键观察：我们不会删除 `address` 列。它仍然存在。蓝色环境继续读写该列，完全不知道新列的存在。这正是使迁移安全的原因——不会破坏任何东西。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHub(@github)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHub</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Destiny Erhabor</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">232</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">25 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6087</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Copilot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPT-5.2-Codex</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程助手</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码重构</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS ECS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">蓝绿部署</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库迁移</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DevOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2011501527991546066" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/b662ff9f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2011501527991546066">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYqSURBVO3BQY4cy5LAQDJQ978yR0tfJZCobineHzezP1jrEoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS5yWOsih7UucljrIoe1LnJY6yKHtS7y4Usqf1PFpDJVvKHypGJSeVIxqUwVk8pU8URlqnii8jdVfOOw1kUOa13ksNZFPvywip+k8qTiGxWTyqQyVUwqb6hMFW9UTCpTxZOKn6Tykw5rXeSw1kUOa13kwy9TeaPiGypPKp5UTCqTyhOVb6hMFU8qvqHyRsVvOqx1kcNaFzmsdZEP/3EqTyomlaniScWk8kbFN1SeVPwvOax1kcNaFzmsdZEP/2MqJpWpYlJ5UjFVTCpvqEwVU8WkMlX8LzusdZHDWhc5rHWRD7+s4m9SeaNiUnmiMlVMKk8qJpWp4onKk4o3Km5yWOsih7UucljrIh9+mMq/VDGpPFGZKiaVqWJSmSomlaniGxWTyhsqNzusdZHDWhc5rHUR+4P/MJWp4onKVPGTVKaKSeWNiicqU8V/2WGtixzWushhrYt8+JLKVPGGylQxqdxEZap4o+KJyqTyhspPqniiMlV847DWRQ5rXeSw1kU+fKniicqTikllqviGym9SeaIyVfykikllqnhDZVKZKn7TYa2LHNa6yGGti3y4TMWkMlVMKlPFVDGpTCo/qWJSeaIyVTxReUNlqnij4knFTzqsdZHDWhc5rHWRD19S+U0Vb6g8qXiiMlVMKlPFk4pJ5Q2VqWJSmSq+UfFE5UnFNw5rXeSw1kUOa13kw5cqJpU3VKaKSeVJxROVJypvVEwqU8UbFW+ovKEyVTxRmSqmit90WOsih7UucljrIvYHP0jljYpvqPykikllqnhD5Y2KN1SmijdUpopJZar4TYe1LnJY6yKHtS7y4YdVTCpTxaTyRsWTiicqU8Wk8kRlqphUnlRMKk9UnlRMKk8qnqhMFZPKVPGTDmtd5LDWRQ5rXeTDl1SeVHyjYlKZKiaVqeKJyjdUnlQ8qZhUpopJ5RsqU8UbFb/psNZFDmtd5LDWRewPfpDKk4pJ5SdVTCpTxaTypOKJypOKSeU3VUwqU8WkMlVMKk8qftJhrYsc1rrIYa2LfPjLVKaKN1SmiknljYpJ5YnKk4pJZap4Q+UbFU8qJpV/6bDWRQ5rXeSw1kXsD36RylTxROWNiicqTyomlTcqJpWp4onKv1QxqUwVf9NhrYsc1rrIYa2LfPjHVKaKJyqTylQxVUwqTyomlaliUnmi8o2KJypTxROVJxVPVJ5UfOOw1kUOa13ksNZFPnxJ5SepPKn4TSpvVDxRmSomlanijYpJZaqYKp6oTBV/02GtixzWushhrYt8+GUV36h4Q+UNlW+oTBVTxaQyVTxRmSomlaliUpkqJpVvVPykw1oXOax1kcNaF/nwpYo3VKaKJypvVLyhMlV8Q+UbKlPFGypTxX/JYa2LHNa6yGGti3z4x1SmiqniDZWp4hsqU8VUMam8ofJEZap4Q2WqeFIxqfxNh7UucljrIoe1LvLhSyrfqJhU3qh4ovKkYlKZKiaVNyqeqPxNKj9JZar4xmGtixzWushhrYt8+FLFT6p4Q+WNiknlX6qYVKaKSeVJxRsqb1T8psNaFzmsdZHDWhf58CWVv6niScUTlScVb1Q8UZkqnlQ8qZhUnqhMFU9UpopJZar4SYe1LnJY6yKHtS7y4YdV/CSVJxWTylTxhsqTijcqnqhMFZPKVPFGxRsV/9JhrYsc1rrIYa2LfPhlKm9UvKHykyqeqDypeKPiJ6l8Q2WqmComlaniG4e1LnJY6yKHtS7y4T+uYlJ5UjGpTCpTxVTxhsobFVPFpDJVPFF5o+KJylTxkw5rXeSw1kUOa13kw/9zFU9UnlS8UTGpPFGZKp6o/KaK33RY6yKHtS5yWOsiH35Zxd9UMak8qZhUpopJZVJ5UvGkYlL5RsWkMlU8UZkq/qbDWhc5rHWRw1oXsT/4gsrfVDGpTBX/kspvqniiMlX8JpWp4huHtS5yWOsih7UuYn+w1iUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5P8AXYsIXmK2LCAAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/b662ff9f">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmjeATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCfU3AB5A8ik5kbNJjWbgGw6qVp0UrXopGrRJ18G5Ak1TwDZpOYJIJOaCcgTap4A8oSabzqpWnRSteikatEn/xg1N0BugExqJiA3QCY1E5BJzb/kpGrRSdWik6pFn/xjgNyoeQLIpOYJIP9PTqoWnVQtOqla9MmXqfmT1ExAnlAzAZnU3Ki5ATKpeULN3+SkatFJ1aKTqkWfLAPyJ6mZgExqJiCTmgnIpGYCMqmZgExq3gDyNzupWnRSteikahH+yH8YkCfU/ElAJjX/kpOqRSdVi06qFuGPvABkUjMB2aTmDSCb1ExAJjU3QCY1E5BNar7ppGrRSdWik6pFnywD8oSaCcikZgLyhpoJyKTmCSCTmhsgN0DeUPMEkEnNGydVi06qFp1ULcIf+UVAbtRMQJ5QMwG5UTMB2aTmBsiNmv+Sk6pFJ1WLTqoW4Y8sAjKpuQFyo+YJIE+oeQPIpGYC8k1qJiCTmgnIpGbTSdWik6pFJ1WLPvkyIJOaJ4BMat5QcwPkRs2kZgJyo+Y3AZnUfNNJ1aKTqkUnVYs++TI1E5BJzQRkUnMDZFJzA2RSM6n5JiBvqJmATGqeADKpeeOkatFJ1aKTqkWffBmQN4DcqJmA3KiZgHyTmhsgk5obIJOaCciNmknNppOqRSdVi06qFn2yTM0mNb9JzQ2QGzU3QDYBmdTcAJnUbDqpWnRSteikatEnLwG5UXMDZFIzAXlDzY2aCcik5kbNBGRSc6PmDTUTkBs133RSteikatFJ1aJPlql5A8ikZgLyBpAngExqJiCTmgnIDZBJzQTkBsikZgJyA2RS88ZJ1aKTqkUnVYs++cuomYBMap4A8oSaGyCTmifU3ACZ1ExAJjVvqNl0UrXopGrRSdUi/JEXgExqboDcqLkB8oSaN4A8oeYJIJOaCcgTam6ATGo2nVQtOqladFK16JMvAzKpeQLIpOYGyBtAbtTcAJnUTEBugGwCcgNkUvPGSdWik6pFJ1WL8Ef+w4A8oWYTkEnNE0AmNU8A2aTmjZOqRSdVi06qFn3yEpDfpGZSMwGZ1ExAJjUTkDeAbAIyqXlDzTedVC06qVp0UrXok2VqNgG5AfIGkEnNJiBvqHlCzQ2QGzVvnFQtOqladFK16JMvA/KEmr8ZkEnNBGRScwNkArIJyG86qVp0UrXopGrRJ/8YNTdqJiATkEnNpGYCMql5Q80NkEnNBORPOqladFK16KRq0Sf/GCBPqJmATEC+Sc0NkBsgb6jZdFK16KRq0UnVok++TM03qZmA3Kh5Qs0EZFJzA2RSMwGZ1ExqJiCTmgnIpGYC8k0nVYtOqhadVC36ZBmQ3wTkRs0EZFJzA2RScwNkUjMBmdRMQCY1N0BugExqvumkatFJ1aKTqkX4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/AwXLJUG4QL4NAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

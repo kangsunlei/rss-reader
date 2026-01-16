@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Uber 如何从集成缓存中每秒提供超过 1.5 亿次读取</title>
+        <title>如何在自己的数据上对嵌入模型进行基准测试</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Uber 如何从集成缓存中每秒提供超过 1.5 亿次读取</h2>
-        <p>1/14/2026, 4:31:13 PM</p>
+        <h2>如何在自己的数据上对嵌入模型进行基准测试</h2>
+        <p>1/15/2026, 3:49:38 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文解释了 Uber 的 CacheFront 系统如何通过包含同步写入路径失效和 CDC 的三重防御缓存策略，演进到每秒处理超过 1.5 亿次读取并保持强一致性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了一个关于使用自有数据进行嵌入模型自定义基准测试的全面课程，涵盖通过 VLM 进行文本提取、使用 LLM 生成合成数据以及统计评估。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Uber 的 CacheFront 系统如何在保持强一致性的同时，每秒处理超过 1.5 亿次数据库读取。文章解释了缓存的基础重要性、Uber 的三层架构（查询引擎、带有 MySQL 的存储引擎和 CacheFront）以及它们的读写路径。重点讲述了 Uber 缓存一致性机制的演进：从最初导致读取自己写入违规和无限制陈旧性等一致性挑战的异步 CDC（Flux）系统，到一个创新解决方案。突破性进展包括通过软删除和单调时间戳使条件更新可追踪，从而实现同步缓存失效。Uber 现在采用结合同步写入路径失效、异步 CDC（Flux）和 TTL 过期的'三重防御策略'，并通过'缓存检查器'工具进行严格验证。这种多管齐下的方法使 Uber 能够显著扩展其缓存基础设施，同时提高一致性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章强调了在特定数据集上对嵌入模型进行自定义基准测试的必要性，因为通用基准测试往往不够充分。它推广了一个 freeCodeCamp.org 的 YouTube 课程，旨在指导初学者完成这一过程。课程教授如何克服使用视觉语言模型（VLM）进行标准文本提取的局限性，分割提取的文本，并使用大型语言模型（LLM）生成合成评估问题。参与者还将学习使用各种嵌入模型创建向量表示，通过 llama.cpp 部署本地 GGUF 模型，使用 ranx 库的指标和统计测试对模型进行基准测试，可视化向量聚类，并解释如 p 值等统计结果。目标是让用户能够为其独特的机器和数据确定性能最佳的嵌入模型。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Uber 的 CacheFront 系统通过策略性地使用 Redis 缓存，高效处理海量读取负载</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该系统作为应用程序请求和 MySQL 数据库之间的关键中介，显著降低了数据库负载和延迟，在许多用例中实现了超过 99.9% 的缓存命中率</span>
+                        <strong style="color: #1e40af">通用嵌入模型基准测试对于自定义数据集和特定领域术语来说是不够的。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 要准确评估嵌入模型的性能，关键在于直接在您的独特数据上进行基准测试，而不是仅仅依赖通用基准。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在高规模写入环境中保持强缓存一致性很复杂，特别是对于条件更新</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 最初的异步失效方法（如通过 Flux 的 CDC）引入了读取自己写入的一致性问题和由于失效延迟或失败可能导致的无限制数据陈旧性</span>
+                        <strong style="color: #1e40af">该课程为自定义嵌入模型基准测试提供了适合初学者的路线图。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它教授生成合成评估数据、利用 VLM 进行文本提取以及应用严格的统计测试来找到最佳模型的实用技能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Uber 通过在存储层使条件更新可追踪，实现了同步缓存失效</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过实施软删除和严格单调时间戳，Uber 的存储引擎现在可以在事务期间识别所有受影响的行键，从而实现即时缓存失效</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">'三重防御策略'确保 Uber 架构中的强大缓存一致性</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该策略结合了同步写入路径失效、异步 CDC 和 TTL 过期，提供了多层保护以防止陈旧数据，并改善了一致性保证</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">'缓存检查器'工具对于验证和测量缓存一致性至关重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过比较 binlog 事件和缓存数据，缓存检查器使 Uber 能够自信地增加 TTL 值以提高命中率，同时不牺牲一致性，证明了他们新方法的有效性</span>
+                        <strong style="color: #1e40af">关键技术包括使用 VLM 进行文本提取、使用 LLM 生成合成数据以及通过 ranx 库进行统计测试。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 学习者将掌握高级文本处理、数据增强和评估方法，包括部署本地 GGUF 模型和解释统计显著性。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Uber 的 CacheFront 每秒提供超过 1.5 亿次数据库读取，同时保持强一致性保证</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缓存通过将频繁访问的数据存储在更快的存储系统中来解决这个问题。应用程序不是每次都查询数据库，而是首先检查缓存</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">刷新缓存的挑战在于确定当写入发生时哪些缓存条目需要失效</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Flux 异步运行，意味着数据库中的数据更改与缓存更新之间存在延迟。这种异步特性会产生一致性问题</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">TTL 只控制缓存条目的生存时间，而不是其中数据的陈旧程度</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为您的特定数据找到合适的嵌入模型常常感觉像是在猜测，但其实不必如此。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然通用基准测试提供了一个基线，但它们很少能反映模型在您的独特数据集和特定领域术语上的表现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过超越标准指标，您将学习如何利用视觉语言模型进行精确的文本提取，使用 LLM 生成合成评估数据，并应用严格的统计测试来确定哪个模型真正为您的机器提供最佳结果。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,24 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">75</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Beau Carnes</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2012</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">221</span></div>
             </div>
+            
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
+                    <span style="color: #64748b; font-size: 14px;">标签：</span>
+                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">嵌入模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">基准测试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">VLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据评估</span>
+                    </span>
+                </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/2c203fab" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/305d505d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/2c203fab">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAT5SURBVO3BQY4jRxAEwfAC//9l1xzzVECjk7PSKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2RS8waQSc0TQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8oSaCciNmgnIpGYCcqNmUrNJzSYgm06qFp1ULTqpWvTJlwF5Qs0TQCY1N2omIJOaGzVPAHlCzRNAnlDzTSdVi06qFp1ULfrkLwPkCTUTkEnNBGRSMwGZ1ExAJjV/k5OqRSdVi06qFn3yl1EzAXlCzQRkUjMBmdRMQP5PTqoWnVQtOqla9MmXqflNQCY1E5BJzY2aCcik5kbNDZBJzRNq/k1OqhadVC06qVr0yTIgf5KaCcikZgIyqZmATGomIJOaCcik5g0g/2YnVYtOqhadVC365CU1fzM1N2pu1ExAJjU3av5LTqoWnVQtOqla9MlLQCY1E5BNaiY1E5A3gExqJiBPqJnUTEAmNROQTWq+6aRq0UnVopOqRZ+8pGYCMqm5AXKjZgJyo2YC8oSaCcik5g0gN0DeUPMEkEnNGydVi06qFp1ULcIfeQHIpGYCMqmZgExqJiCTmjeATGomIJOaCcgTam6A3Kj5LzmpWnRSteikahH+yCIgk5pNQG7U3AC5UTMBmdRMQCY1E5BvUjMBmdRMQCY1m06qFp1ULTqpWvTJS0DeAPKGmgnIpGZSMwGZgDyhZgJyo+Y3AZnUfNNJ1aKTqkUnVYs+WaZmAjKpeULNBGQCMql5Q803AXlDzQRkUvMEkEnNGydVi06qFp1ULcIfeQHIjZobIE+omYA8oeYGyCY1N0AmNTdAJjUTkBs133RSteikatFJ1aJPvgzIpOZGzQ2QSc0NkAnIpGZScwPkRs0NkE1AJjU3QCY1m06qFp1ULTqpWvTJLwNyA+RGzQ2QJ4C8oWYCMqm5UfOGmgnIjZpvOqladFK16KRq0SfL1ExAJjUTkEnNE0CeUDMBmdQ8AWRSMwG5ATKpmYDcAJnUTEBugExq3jipWnRSteikatEnX6bmDSCTmk1qngAyqXlCzQ2QSc0EZFLzhppNJ1WLTqoWnVQtwh95AcikZgJyo+YJIDdqJiA3am6APKHmCSCTmgnIE2pugExqNp1ULTqpWnRSteiTPwzIpGYC8gSQSc0NkCfU3ACZ1ExAboBsAnIDZFLzxknVopOqRSdVi/BH/sOA3Ki5ATKpeQLIpOYJIJOaJ4BsUvPGSdWik6pFJ1WLPnkJyG9SM6mZgExAJjU3QCY1E5AbIJuATGreUPNNJ1WLTqoWnVQt+mSZmk1AboBMam6A3Ki5UfMEkDfUPKHmBsiNmjdOqhadVC06qVr0yZcBeULNG0AmNZOaN4BMaiYgk5obIBOQTUB+00nVopOqRSdViz75y6i5ATKpeULNBGRS84aaGyCTmgnIn3RSteikatFJ1aJP/mfUTED+JDU3QG6AvKFm00nVopOqRSdViz75MjXfpGYC8oSaJ4BMam6ATGomIJOaSc0EZFIzAZnUTEC+6aRq0UnVopOqRZ8sA/KbgExqJiCTmgnIpOZGzQ2QSc0EZFIzAZnU3AC5ATKp+aaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9Aw6TYyrkS4r0AAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/305d505d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATWSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCcik5g0gk5oJyKTmBsik5gkgv0nNGydVi06qFp1ULfpkmZpNQG7UTEBu1Lyh5gk1E5AbNTdqNgHZdFK16KRq0UnVok++DMgTajapmYDcqJmAvKHmm4A8oeabTqoWnVQtOqla9MlfDsgmIE+ouQFyo+ZfclK16KRq0UnVok/+cUD+JGomIJOav9lJ1aKTqkUnVYs++TI1fzM1N0AmNZOaCcik5g01f5KTqkUnVYtOqhZ9sgzIf0nNBGRSMwGZ1ExAJjVPAJnUTEAmNTdA/mQnVYtOqhadVC3CH/mLAblRMwG5UfMEkDfU/EtOqhadVC06qVr0yUtAJjVPAJnUTECeUDMBmdQ8AWRS84SaCcgNkE1qboBMat44qVp0UrXopGrRJ18GZFLzhJobIJuATGomIJOaJ9TcqJmAvAHkN51ULTqpWnRSteiTl9RMQCY1E5BJzQTkRs0bQCY1k5oJyBtAJjUTkE1qngCy6aRq0UnVopOqRZ+8BOQJNROQGzVPALlR84aaGyCTmgnIE2pugExAJjUTkG86qVp0UrXopGoR/sgXAZnU3AB5Qs0EZFLzBpAbNROQTWo2AZnUbDqpWnRSteikahH+yAtAJjVPALlRMwHZpGYCMqmZgExqJiA3ap4AMqmZgGxS88ZJ1aKTqkUnVYs+eUnNBGRS84SaCcikZgIyqZmATGomIJOaN9RMQG6ATGq+Sc0EZNNJ1aKTqkUnVYs++TIgk5on1ExAJjUTkEnNjZpNQG6AbFLzBJBvOqladFK16KRq0ScvAZnUPKFmAnKj5kbNJiCTmifU3ACZgExqJiCTmjfUbDqpWnRSteikahH+yAtA3lAzAZnUTEAmNTdA3lAzAblRMwGZ1NwA2aRmAnKj5o2TqkUnVYtOqhZ98pKaGyBvAJnUTEA2qZmAPAFkUrNJzQRkUjMBmdRMQDadVC06qVp0UrXok1+mZgIyqXlCzQTkN6mZgExAJjUTkEnNE2pu1ExAvumkatFJ1aKTqkWfvATkRs0E5AkgN2omNROQN9RMQJ5Q8wSQTWomNROQTSdVi06qFp1ULcIf+YsBmdTcAJnUTEDeUHMD5EbNE0AmNU8AmdS8cVK16KRq0UnVok9eAvKb1NwAmdQ8oWYCcqPmm4BMam6A3Kj5ppOqRSdVi06qFn2yTM0mIDdqnlAzAZnUTGpugNyoeUPNE2pugExqNp1ULTqpWnRSteiTLwPyhJongExqJiBPALlRM6mZgLwB5A0gk5pJzQRkUvPGSdWik6pFJ1WLPvnLqdmkZgIyAblR84SaCcikZgIyqfmTnFQtOqladFK16JP/c2omIE+omYDcqLlRc6PmBsh/6aRq0UnVopOqRZ98mZr/kpoJyARkUnMDZAJyo+YGyKRmAjKpmYDcqJmAfNNJ1aKTqkUnVYs+WQbkNwGZ1ExAbtTcALlRMwHZpGYCcqPmCTWbTqoWnVQtOqlahD9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9D/rCE4bbvOAtwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
