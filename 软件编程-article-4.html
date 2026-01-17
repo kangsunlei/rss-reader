@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何在 AWS ECS 上通过数据库迁移管理蓝绿部署：完整实现指南</title>
+        <title>提升全球运营：通过 Fleet 掌握多集群 Elastic 部署</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何在 AWS ECS 上通过数据库迁移管理蓝绿部署：完整实现指南</h2>
-        <p>1/15/2026, 6:25:13 PM</p>
+        <h2>提升全球运营：通过 Fleet 掌握多集群 Elastic 部署</h2>
+        <p>1/16/2026, 4:46:24 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本指南提供了在 AWS ECS 上实现蓝绿部署的全面实施方案，特别针对使用扩展-收缩模式处理数据库迁移的复杂性，实现零停机模式演进。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Elastic Fleet (9.1+) 现在通过全局 Fleet 管理、集成同步和空间感知功能提供多集群管理，实现对分布式 Elastic Agent 的集中控制，同时保持数据主权并优化成本。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了一个实用且深入的指南，介绍如何在 AWS ECS 上管理蓝绿部署，重点关注具有共享状态的数据库迁移这一挑战性方面。详细阐述了为什么蓝绿部署在涉及数据库时会变得复杂，概述了模式版本冲突、数据不一致和不可逆迁移等问题。核心解决方案是数据库模式变更的'扩展-收缩'模式，分为三个阶段：扩展（添加新列/结构）、部署（新应用版本同时写入新旧结构，仍与旧应用版本兼容以便回滚）和收缩（移除旧列）。文章还涵盖了管理其他有状态服务，如会话、S3 存储桶、消息队列和缓存层，强调版本控制以确保兼容性。通过使用 Terraform 和 Flask 应用的完整端到端实现指南，演示了地址字段迁移的扩展-收缩模式，提供了架构图和逐步命令，用于在 AWS 上部署和验证蓝绿环境。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文讨论了 Elastic Fleet 如何解决全球企业中多集群 Elastic 部署的复杂性。文章重点介绍了多集群架构的驱动因素：数据主权、性能/成本优化以及弹性/本地自治。核心创新在于将 Agent 的数据目的地与其管理控制平面分离，实现集中管理的同时保持数据本地化。Elastic 9.1 引入的关键功能包括：全局 Fleet 管理提供 Agent 的统一视图，集成同步确保跨集群的一致安全和可观测性标准，以及具有细粒度角色权限的空间感知功能，支持多租户企业用例。这些增强功能使组织能够扩展 Elastic Agent 部署、一致地执行策略、遵守数据主权并最小化跨区域数据传输成本，为全球运营提供真正的"单一管理平台"。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">涉及数据库的蓝绿部署需要谨慎处理，因为存在模式版本冲突和数据不一致的风险。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在旧（蓝）和新（绿）应用版本之间共享数据库会带来重大挑战，需要制定策略来保持兼容性，并在模式或数据格式演进时实现安全回滚。</span>
+                        <strong style="color: #1e40af">多集群部署由数据主权、性能/成本和弹性需求驱动</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 全球企业采用分散式数据存储以遵守法规、减少昂贵的跨区域数据传输、最小化延迟并增强系统对中断的弹性</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">'扩展-收缩'模式是蓝绿部署中数据库模式演进推荐策略。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种三阶段方法通过首先扩展模式，然后部署能够同时写入新旧格式的新应用版本，最后在成功迁移后通过移除旧模式元素来收缩，确保向后兼容性。</span>
+                        <strong style="color: #1e40af">Elastic Fleet (9.1+) 通过将 Agent 数据目的地与控制平面解耦实现全局管理</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种分离允许 Elastic Agent 将数据发送到本地集群以实现主权，同时其状态和管理检查被路由到中央控制平面，提供统一的全局视图而无需集中批量数据</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在过渡阶段保持对新旧模式元素的读写兼容性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 绿色环境的应用代码必须能够读取现有数据并同时写入新旧数据库列，确保回滚到蓝色环境时无缝且数据保持一致。</span>
+                        <strong style="color: #1e40af">集成同步确保所有集群间的一致安全和可观测性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 操作员可以在中央管理集群中一次性安装集成，Fleet 会自动将它们同步到所有远程集群，保持统一标准并简化安全和可观测性分析</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">有效的蓝绿部署详细工作示例，说明了如何设置必要的 AWS 基础设施并自动化部署过程，从初始设置到验证绿色环境。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 会话管理、S3 对象版本控制、消息队列模式版本控制和缓存键版本控制对于在蓝绿转换期间保持跨应用版本的数据一致性和兼容性至关重要。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 ECS、ALB、RDS、CodeDeploy 和 Parameter Store 等 AWS 服务构建健壮的蓝绿架构。</strong>
-                        
+                        <strong style="color: #1e40af">空间感知和细粒度权限支持多租户企业用例</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Fleet 现在允许定义特定角色并通过 Kibana Spaces 分割资源，为不同团队或租户提供隔离管理，同时保持整体中央控制</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然蓝绿部署对无状态应用效果很好，但当引入数据库和有状态服务时，它们变得显著复杂。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">扩展-收缩模式是处理共享数据库的蓝绿部署最实用的方法。它通过将模式变更分解为三个阶段来工作，确保整个过程保持向后兼容性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现在，使用新模式的代码部署绿色环境。但此代码仍应同时写入新旧列以保持兼容性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">权衡之处在于，您的代码库暂时包含新旧逻辑，到处都是条件分支。这会增加复杂性，并需要在功能完全发布后进行有纪律的清理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">关键观察：我们不会删除 `address` 列。它仍然存在。蓝色环境继续读写该列，完全不知道新列的存在。这正是使迁移安全的原因——不会破坏任何东西。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分散数据存储的决定通常由三个关键因素驱动：数据主权和法规遵从性、性能、延迟和成本优化、弹性和本地自治</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心创新简单而强大：将 Agent 的数据目的地与其管理控制平面分离</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">中央管理集群中的 Fleet 维护着全球部署的每个 Agent 的全局视图，尽管大部分摄入的数据都驻留在本地</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">集成同步通过确保所有远程集群自动接收与管理集群相同的集成内容来直接解决这个问题</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Elastic 在 Fleet 中的新多集群功能直接解决了分布式数据对于合规性和成本的必要性，与运营上对集中管理以简化一致性的需求之间的长期紧张关系</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,31 +63,24 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Destiny Erhabor</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Elastic Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Nima Rezainia</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">25 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6087</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1055</span></div>
             </div>
-            
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
-                    <span style="color: #64748b; font-size: 14px;">标签：</span>
-                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AWS ECS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">蓝绿部署</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库迁移</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DevOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生</span>
-                    </span>
-                </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/b662ff9f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/681a1929" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/b662ff9f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmjeATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCfU3AB5A8ik5kbNJjWbgGw6qVp0UrXopGrRJ18G5Ak1TwDZpOYJIJOaCcgTap4A8oSabzqpWnRSteikatEn/xg1N0BugExqJiA3QCY1E5BJzb/kpGrRSdWik6pFn/xjgNyoeQLIpOYJIP9PTqoWnVQtOqla9MmXqfmT1ExAnlAzAZnU3Ki5ATKpeULN3+SkatFJ1aKTqkWfLAPyJ6mZgExqJiCTmgnIpGYCMqmZgExq3gDyNzupWnRSteikahH+yH8YkCfU/ElAJjX/kpOqRSdVi06qFuGPvABkUjMB2aTmDSCb1ExAJjU3QCY1E5BNar7ppGrRSdWik6pFnywD8oSaCcikZgLyhpoJyKTmCSCTmhsgN0DeUPMEkEnNGydVi06qFp1ULcIf+UVAbtRMQJ5QMwG5UTMB2aTmBsiNmv+Sk6pFJ1WLTqoW4Y8sAjKpuQFyo+YJIE+oeQPIpGYC8k1qJiCTmgnIpGbTSdWik6pFJ1WLPvkyIJOaJ4BMat5QcwPkRs2kZgJyo+Y3AZnUfNNJ1aKTqkUnVYs++TI1E5BJzQRkUnMDZFJzA2RSM6n5JiBvqJmATGqeADKpeeOkatFJ1aKTqkWffBmQN4DcqJmA3KiZgHyTmhsgk5obIJOaCciNmknNppOqRSdVi06qFn2yTM0mNb9JzQ2QGzU3QDYBmdTcAJnUbDqpWnRSteikatEnLwG5UXMDZFIzAXlDzY2aCcik5kbNBGRSc6PmDTUTkBs133RSteikatFJ1aJPlql5A8ikZgLyBpAngExqJiCTmgnIDZBJzQTkBsikZgJyA2RS88ZJ1aKTqkUnVYs++cuomYBMap4A8oSaGyCTmifU3ACZ1ExAJjVvqNl0UrXopGrRSdUi/JEXgExqboDcqLkB8oSaN4A8oeYJIJOaCcgTam6ATGo2nVQtOqladFK16JMvAzKpeQLIpOYGyBtAbtTcAJnUTEBugGwCcgNkUvPGSdWik6pFJ1WL8Ef+w4A8oWYTkEnNE0AmNU8A2aTmjZOqRSdVi06qFn3yEpDfpGZSMwGZ1ExAJjUTkDeAbAIyqXlDzTedVC06qVp0UrXok2VqNgG5AfIGkEnNJiBvqHlCzQ2QGzVvnFQtOqladFK16JMvA/KEmr8ZkEnNBGRScwNkArIJyG86qVp0UrXopGrRJ/8YNTdqJiATkEnNpGYCMql5Q80NkEnNBORPOqladFK16KRq0Sf/GCBPqJmATEC+Sc0NkBsgb6jZdFK16KRq0UnVok++TM03qZmA3Kh5Qs0EZFJzA2RSMwGZ1ExqJiCTmgnIpGYC8k0nVYtOqhadVC36ZBmQ3wTkRs0EZFJzA2RScwNkUjMBmdRMQCY1N0BugExqvumkatFJ1aKTqkX4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/AwXLJUG4QL4NAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/681a1929">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATJSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GqSsyaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCcikZgJyo+YGyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2Admk5puA3KiZgDyhZhOQTSdVi06qFp1ULfrky4A8oeYJNROQN4A8AWRS85uAPKHmm06qFp1ULTqpWvTJPw7IpOYJIJuATGomIJOa/5KTqkUnVYtOqhZ98o9TMwGZ1NyouQEyAZnUTECeADKp+ZedVC06qVp0UrXoky9T8ycBmdRMQG7U3ACZ1ExAvknN3+SkatFJ1aKTqkWfLAPym4BMaiYgT6iZgExq3lAzAXkCyN/spGrRSdWik6pFn7yk5m+m5g01E5AbIDdAnlDzLzmpWnRSteikatEnLwGZ1ExAbtRMQJ5QcwPkCSCTmknNDZBNQCY1N0AmNROQGzVvnFQtOqladFK1CH/kBSCTmhsgN2q+CciNmgnIpOYNIN+k5gkgk5o3TqoWnVQtOqla9MlLat5QcwNkUnMD5Ak1bwCZ1ExAJjVvAHkCyI2aTSdVi06qFp1ULfrkJSA3am6A3KiZgNyomYBMaiYgN2omIJOaGzU3QCY1m9TcAJnUvHFSteikatFJ1SL8kReAPKHmBsiNmjeATGo2AblR801AbtR800nVopOqRSdVi/BHFgGZ1NwAmdQ8AeQNNU8AmdQ8AWRScwPkRs0NkCfUvHFSteikatFJ1aJPXgJyA+RGzQ2QGzU3QJ4AMqmZ1NwAeQLIG0AmNX/SSdWik6pFJ1WLPlmmZgIyqZmATGomNTdAJjVPAHkCyI2aGyA3am6APKFmAjKp2XRSteikatFJ1SL8kReA3KiZgExqboDcqJmA3KiZgExqNgF5Q80NkBs1E5BJzaaTqkUnVYtOqhZ98pKaTUAmNROQN4DcAJnUTEAmNTdqboA8AWRSMwGZgPymk6pFJ1WLTqoWffISkEnNjZongExqJiCTmgnIjZpvAjKpmdRMQN5QMwGZ1HzTSdWik6pFJ1WLPnlJzQ2QJ9TcAJnU3KiZgNwAuVEzAfkmIJOav9lJ1aKTqkUnVYs+WQZkUnMDZALyTWqeUDMB2QTkCSB/s5OqRSdVi06qFuGP/MOAbFIzAZnUTEAmNU8AmdQ8AWSTmjdOqhadVC06qVr0yUtAfpOaGzU3QP4kIE8AmdQ8oWYCMqnZdFK16KRq0UnVok+WqdkE5DcBmdRMQN5QMwG5UbNJzTedVC06qVp0UrXoky8D8oSaJ9Q8oWYCMql5Qs0EZFLzBJA31ExAJjXfdFK16KRq0UnVok/+cUBu1NyomYA8AeQGyKRmUjMBmdTcAJmATGpugExq3jipWnRSteikatEn/2eATGpu1LwBZAIyqXkCyKTmBsik5ptOqhadVC06qVr0yZep+SY1N0BugExqJiA3ap5QMwGZ1LwBZFIzAZnUbDqpWnRSteikatEny4D8JiCTmknNDZAJyKRmAvIGkDfU/M1OqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0P3iRHl156PpjAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

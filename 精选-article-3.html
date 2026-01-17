@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>vivo 微服务架构实践之 Dubbo 性能优化</title>
+        <title>Spring AI 智能体模式（第二部分）：AskUserQuestionTool - 行动前先澄清的智能体</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>vivo 微服务架构实践之 Dubbo 性能优化</h2>
-        <p>1/14/2026, 12:02:00 PM</p>
+        <h2>Spring AI 智能体模式（第二部分）：AskUserQuestionTool - 行动前先澄清的智能体</h2>
+        <p>1/16/2026, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">vivo 详细分享了其在 Dubbo 微服务架构下，通过对路由策略和自适应负载均衡的深度优化，解决大规模集群性能瓶颈，实现降本增效和提升服务质量的实践经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Spring AI 的 AskUserQuestionTool 通过让 AI 智能体在生成响应前交互式地提出澄清问题，将其转变为协作伙伴，减少假设和返工。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 vivo 在大规模微服务架构中，基于 Dubbo 框架进行性能优化的实践经验。文章首先概述了 Dubbo 在 vivo 的演进历程及当前支撑的庞大业务规模。接着，深入剖析了 Dubbo 路由（包括就近路由和标签路由）存在的性能瓶颈，并提出了通过减少遍历运算、引入位图缓存、缓存一致性及主动缓存更新策略等多项优化措施，将路由筛选复杂度从 O(n) 降至 O(1)，显著提升了 TPS 并降低了 CPU 利用率。随后，针对负载均衡模块在异构服务器环境下的算力不均问题，文章阐述了 vivo 对社区版自适应负载均衡策略的改进，通过优化 P2C 算法和引入独立的权重计算单元，实现了流量的自适应与平滑调度，大幅提升了服务容量、降低了超时率和请求失败率，并有效节省了计算成本及运维人力。最后，展望了 Dubbo 未来与开源社区对齐、拥抱云原生以及构建跨语言统一微服务治理平台的发展方向。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是 Spring AI 智能体模式系列的第二部分，介绍了 AskUserQuestionTool，这是一种让 AI 智能体在生成响应前主动向用户提出澄清问题的机制。这种交互式方法旨在从一开始就消除假设、减少返工，并使 AI 输出更贴近用户需求。该工具支持多选和自由文本输入，是模型无关的（适用于各种 LLM 提供商），并在 Spring AI 生态系统中提供了可移植的实现。文章详细解释了其工作流程，通过旅行推荐助手的示例进行说明，并提供了实用的 '入门' 指南，包括依赖管理和基于 Java 的 `QuestionHandler` 示例（适用于控制台和 Web 应用程序），强调了其在将 AI 智能体转变为协作伙伴方面的作用。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Dubbo 路由在超大规模集群中存在性能瓶颈，主要源于遍历操作导致的 CPU 资源消耗。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> vivo 在万级微服务、十万级机器规模下，发现 Dubbo 路由模块因大量遍历操作导致 CPU 占用率高，影响系统性能。</span>
+                        <strong style="color: #1e40af">AskUserQuestionTool 使 AI 智能体能够交互式地向用户提出澄清问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该工具通过在生成响应前提出问题，帮助智能体更好地理解用户需求，从而减少假设和因误解而需要的迭代修正。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过引入位图缓存和减少遍历运算，Dubbo 路由效率从 O(n) 提升至 O(1)。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> vivo 针对路由模块进行了多项优化，包括关闭不使用的路由、新增虚拟分组以减少负载均衡的节点数，以及通过位图缓存机制，显著降低了路由筛选的计算复杂度。</span>
+                        <strong style="color: #1e40af">Spring AI 的 AskUserQuestionTool 实现是可移植且模型无关的。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者可以一次性定义问题处理器，并将其与各种 LLM 提供商一起使用，确保没有供应商锁定，并允许在不更改代码的情况下灵活切换模型。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">就近路由有效降低了跨机房调用的延迟，提升了服务质量和容灾能力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在提供方服务部署时上报机房信息，消费方优先筛选同机房提供方，并引入阈值判断实现自动降级，避免了无可用提供者或集群雪崩风险。</span>
+                        <strong style="color: #1e40af">该工具为 AI 交互推广了一种结构化的需求收集工作流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它允许智能体构建带选项的问题（单选/多选、自由文本），通过自定义处理器（控制台/Web UI）收集用户答案，并使用此上下文提供定制化解决方案。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">优化自适应负载均衡策略，解决异构服务器算力不均导致的资源利用率低和性能波动问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对社区讨论版自适应负载均衡存在的 CPU 利用率波动问题，vivo 改进了 P2C 流量分发机制，并分离了负载计算与调度，引入独立权重计算单元，实现了流量的平滑自适应调度。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Dubbo 性能优化显著提升了服务容量和质量，并实现了成本节约。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 经过优化，集群流量吞吐上限平均提升约 15%，高峰期超时率下降超过 50%，预计每年可节省百万元级别计算成本，同时减轻运维负担。</span>
+                        <strong style="color: #1e40af">它将 AI 智能体转变为协作伙伴，而不是基于假设的响应者。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过让用户积极参与问答流程，智能体确保其最终输出从一开始就与用户的实际需求保持一致，从而提高准确性和用户满意度。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 vivo 内部业务的大规模实践过程中，我们碰到了质量、性能和容量等方面的挑战，通过一系列的扩展与优化，较好的解决了相关问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在大规模集群部署环境下，路由与负载均衡模块因遍历计算产生了明显的资源消耗。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">就近路由通过简单的元数据标记和灵活的阈值规则，实现了流量的自动优化与隔离。其改造过程对业务代码无侵入，并带来延迟降低、网络带宽成本下降、稳定性提升的巨大收益。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">vivo 优化版本不仅实现了更优的流量分层，还将各节点 CPU 利用率收敛至基本一致的水平，并始终保持稳定，使得集群达成高效、高吞吐且稳定运行的理想状态。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">双算力配置集群的压测环境中的压测表现：vivo 优化版本...使得集群达成高效、高吞吐且稳定运行的理想状态。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果您的 AI 智能体在提供答案之前能向您提出澄清问题会怎样？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AskUserQuestionTool 解决了这个问题。它允许 AI 智能体在回答之前提出澄清问题，交互式地收集需求，并从一开始就创建与您实际需求一致的规范。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与绑定到特定 LLM 平台的实现不同，这个 Spring AI 的实现适用于许多 LLM 提供商，让您无需重写代码或问题处理器即可切换模型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体在提供个性化推荐之前通过交互式问题收集了全面的需求——无需假设，无需迭代。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AskUserQuestionTool 将 AI 智能体从基于假设的响应者转变为在行动前收集需求的协作伙伴，在第一次尝试时就提供符合您需求的答案。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +63,25 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6527</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Spring Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">tzolov</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1059</span></div>
             </div>
-            
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
-                    <span style="color: #64748b; font-size: 14px;">标签：</span>
-                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Dubbo</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">路由</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">负载均衡</span>
-                    </span>
-                </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/7cf164c3" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/0a060724" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/7cf164c3">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk7NaKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1KzCcik5gkgk5oJyBNqJiC/Sc0bJ1WLTqoWnVQt+mSZmk1A3gDyBJBNajap2QRk00nVopOqRSdViz75MiBPqHkCyKRmUvMnAXlCzRNAnlDzTSdVi06qFp1ULfrkfwbIpGYCMqmZgExqJiCTmgnIpOa/5KRq0UnVopOqRZ/8xwCZ1ExqbtRMQCY1E5BJzQTk/+SkatFJ1aKTqkWffJma36RmAvKEmknNBOQJNTdAJjVPqPk3OaladFK16KRq0SfLgPybqZmA3ACZ1ExAboBMat4A8m92UrXopGrRSdWiT15S8zdT801qJiCTmhs1f5OTqkUnVYtOqhZ98hKQSc0EZJOaSc0bQG7UTEBugExqJjUTkEnNBGSTmm86qVp0UrXopGrRJ8uATGomIJOaTUCeUHMDZFLzBpAbIG+oeQLIpOaNk6pFJ1WLTqoW4Y/8IiCTmgnIE2reAPJNam6A3Kj5m5xULTqpWnRSteiTZUBu1ExAJjU3QN4AMql5A8ikZgLyBpAbNROQSc0EZFKz6aRq0UnVopOqRfgjXwTkN6l5AsiNmieA3Kj5JiA3ar7ppGrRSdWik6pF+CN/EJAbNTdA3lBzA2RScwPkm9RMQCY1TwCZ1LxxUrXopGrRSdWiT14CMqm5ATKpuQEyqZnUPAHkDSBPqLkBMqm5ATKpmYDcqJnUbDqpWnRSteikatEny4BMat5QMwGZ1ExAJjWTmgnIpGZSMwG5UXMDZBOQSc0NkEnNppOqRSdVi06qFn3ykpon1ExAnlAzAZnUvAHkCTUTkEnNjZo31ExAbtR800nVopOqRSdViz55Ccgbap4AMqm5AfKEmieATGomIDdAJjUTkBsgk5oJyA2QSc0bJ1WLTqoWnVQt+mSZmjeAPAHkRs0NkAnIpGYCMql5Qs0NkEnNBGRS84aaTSdVi06qFp1ULcIfeQHIpOYGyBNq/iQgT6h5AsikZgLyhJobIJOaTSdVi06qFp1ULfrkl6m5ATIBmdRMQG7UTEAmNROQSc0TQCY1E5AbIJuA3ACZ1LxxUrXopGrRSdUi/JG/GJBJzQ2QGzUTkEnNBGRS8wSQSc0TQDapeeOkatFJ1aKTqkWfvATkN6mZ1NwAmdTcAJnUTEBugGwCMql5Q803nVQtOqladFK16JNlajYBuQGySc0EZFLzBJA31Dyh5gbIjZo3TqoWnVQtOqla9MmXAXlCzSY1b6iZgExqJiCTmhsgE5BNQH7TSdWik6pFJ1WLPvmfAXKj5kbNBGRS84aaGyCTmgnIn3RSteikatFJ1aJP/uOA3Ki5AfJNam6A3AB5Q82mk6pFJ1WLTqoWffJlar5JzRNAJiCTmifU3ACZ1ExAJjWTmgnIpGYCMqmZgHzTSdWik6pFJ1WLPlkG5DcBuVEzqbkBcqPmBsikZgIyqZmATGpugNwAmdR800nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4BAi8tP7UmkZEAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/0a060724">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATZSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIjZoJyI2aGyBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXlCzQTkRs2NmgnIBGRSM6nZpGYTkE0nVYtOqhadVC365MuAPKHmCSCTmknNN6m5AfKEmieAPKHmm06qFp1ULTqpWvTJ/zkgk5o3gExqJiCTmn/JSdWik6pFJ1WLPvnHAJnUTEBugNyomYBMaiYg/09OqhadVC06qVr0yZep+U1q3lBzA2RSc6PmBsik5gk1f5OTqkUnVYtOqhZ9sgzI3wTIpGYCcgNkUjMBmdRMQCY1bwD5m51ULTqpWnRStQh/5D8MyI2aGyCTmhsgk5ongExq/iUnVYtOqhadVC365CUgk5oJyCY1k5oJyA2QSc0EZFJzA+RGzaRmAjKpmYBsUvNNJ1WLTqoWnVQtwh9ZBGRSMwG5UfMEkBs1E5A31LwB5JvUPAFkUvPGSdWik6pFJ1WL8Ef+ICBPqJmAvKHmBsgbam6A3Kj5LzmpWnRSteikatEny4A8oeY3qbkBMqm5ATKpmYC8AeRGzQRkUjMBmdRsOqladFK16KRq0SdfpuYGyBNqbtRMQG6AvKFmAnKj5jcBmdR800nVopOqRSdViz55CcgTQCY1TwCZ1ExAJjVPqJmATGreAPKGmgnIpOYJIJOaN06qFp1ULTqpWvTJXw7IpOZGzRNqngDyhJobIJOaGyCTmgnIjZpJzaaTqkUnVYtOqhZ98ocBuVGzCciNmjfU3ADZBGRScwNkUrPppGrRSdWik6pFn/xhaiYgE5AbNTdAbtTcqJmATGomIJOaGzVvqJmA3Kj5ppOqRSdVi06qFuGPvADkCTUTkBs1N0Bu1NwAmdQ8AWRSMwF5Qs0E5Ak1E5BJzQRkUvPGSdWik6pFJ1WLPlmm5gk1N0Bu1NwAuVHzBJBJzRNqboBMaiYgk5o31Gw6qVp0UrXopGoR/sgLQCY1N0Bu1NwAuVEzAZnUTEAmNTdAbtQ8AWRSMwF5Qs0NkEnNppOqRSdVi06qFn3yh6m5AXKj5kbNBGRS84SaGyCTmgnIDZBNQG6ATGreOKladFK16KRqEf7IfxiQGzVPAJnU3ACZ1DwBZFLzBJBNat44qVp0UrXopGrRJy8B+U1qJjVPAHkCyBNANgGZ1Lyh5ptOqhadVC06qVr0yTI1m4DcAJnU3KiZgNyoeQPIG2qeUHMDZFKz6aRq0UnVopOqRZ98GZAn1LwBZFIzAblRMwG5UTMBmdTcAJmAbAIyqfmmk6pFJ1WLTqoWffKPA/IEkEnNDZBJzRtqboBMaiYgN0Bu1LxxUrXopGrRSdWiT/4xap4AMqmZgHyTmhsgN0DeULPppGrRSdWik6pFn3yZmm9SMwGZ1NyomYBMaiYgk5obIJOaCcikZlIzAZnUTEAmNROQbzqpWnRSteikatEny4D8JiBPAJnU3ACZ1NwAmdRMQCY1E5BJzQ2QGyCTmm86qVp0UrXopGoR/kjVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrR/wA0JEkjCYmeuQAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
