@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>防止数据泄露：在 Google Cloud Platform 中实现企业级 VPC 服务控制的实际应用</title>
+        <title>Pinterest 如何构建支持数十亿次任务执行的异步计算平台</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>防止数据泄露：在 Google Cloud Platform 中实现企业级 VPC 服务控制的实际应用</h2>
-        <p>1/19/2026, 11:00:00 AM</p>
+        <h2>Pinterest 如何构建支持数十亿次任务执行的异步计算平台</h2>
+        <p>1/20/2026, 4:31:20 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了在企业规模实施 Google Cloud VPC 服务控制以防止数据泄露的实用见解，强调发现过程、试运行测试、组织变革管理和分层安全方法。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Pinterest 将其异步作业平台从 Pinlater 演进为 Pacer，利用有状态代理架构和自适应分片消除了数据库锁竞争，并提升了系统扩展性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了一个在 Google Cloud Platform 中实施企业级 VPC 服务控制（VPC-SC）的全面指南，借鉴了一家大型金融科技组织的经验教训。文章强调，虽然 VPC-SC 对于防止数据泄露至关重要，但其成功部署需要大量的前期发现工作（特别是隐藏依赖关系）和强制性的试运行阶段以防止生产中断。作者主张采用分层安全方法，将 VPC-SC 与其他安全服务集成，并强调了组织变革管理、清晰的异常处理流程和有效的开发者沟通的关键作用。关键战略决策包括用于分层边界的数据分类、详尽的依赖关系映射（包括隐藏的服务账户）以及混合边界拓扑。实施遵循三阶段方法：发现、试运行部署和分阶段强制执行，强调通过基础设施即代码（IaC）实现自动化，并通过可衡量的安全和运营指标进行持续监控。文章最后强调，真正的安全成功超越技术，而是依赖于人员、流程和组织文化，主张将安全视为推动因素而非障碍。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Pinterest 从 Pinlater 到 Pacer 的架构转型，Pacer 是一个大规模异步计算平台。Pinlater 曾因冗余分片、缺乏工作节点隔离以及入队与出队操作间的资源竞争而深受数据库锁竞争之苦。Pacer 通过引入由 Apache Helix 管理的有状态“出队代理（Dequeue Broker）”层解决了这些问题，确保每个队列分区由单一代理拥有。该设计消除了数据库锁，通过内存缓存实现了亚毫秒级的出队延迟，并支持 FIFO 顺序。此外，Pacer 利用自适应分片减少了数据库资源浪费，并借助 Kubernetes 提供隔离且规格适中的工作节点环境，最终构建了一个更具弹性且可线性扩展的系统。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">VPC-SC 实施需要大量的前期发现和试运行阶段以防止生产中断</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在强制执行前识别所有隐藏依赖关系，包括未记录的服务账户和跨项目通信。在生产环境中进行强制性试运行阶段可以检测和解决策略违规问题，而不会阻塞流量，从而降低关键业务应用中断的风险。</span>
+                        <strong style="color: #1e40af">引入有状态出队代理层消除了数据库锁竞争。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Helix 将每个队列分区分配给唯一的代理实例，Pacer 防止了多个服务器竞争相同的数据库行，将协调工作从数据库层转移到了服务层。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将 VPC-SC 视为分层安全策略的一个组成部分，而非独立解决方案</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 VPC-SC（服务 API 层）与虚拟防火墙（网络层）、Cloud Armor（应用层）和 IAM（资源级别）集成，以提供针对多样化威胁向量的全面保护，因为没有任何单一控制措施是足够的。</span>
+                        <strong style="color: #1e40af">自适应分片取代了 Pinlater 中低效的“全量分片”模型。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Pacer 根据实际流量需求分配数据库分区，将空查询结果比例从 50% 以上降低到接近于零，优化了整个数据库集群的资源利用率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">组织变革管理和清晰沟通对于成功采用与技术配置同样重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将 VPC-SC 定位为保护工具来解决开发者抵制问题，投资自助工具进行访问检查和异常请求，并保持透明、响应迅速的沟通，以培养安全作为合作伙伴而非障碍的文化。</span>
+                        <strong style="color: #1e40af">代理层内的内存缓存将出队延迟降低至 1 毫秒以下。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 代理主动将作业抓取到线程安全的内存缓冲区中，使工作节点无需等待耗时的数据库查询即可获取任务，显著提升了作业吞吐量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">基础设施即代码（IaC）对于在企业规模管理 VPC-SC 至关重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 IaC（如 Terraform）自动化策略部署和管理，确保一致性，实现快速回滚，并与自动化验证测试集成，在生产前捕获策略冲突，确保在安全的同时保持敏捷性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">成功的 VPC-SC 部署需要平衡安全指标与运营和业务成果</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过跟踪被阻止的数据泄露尝试、审计范围减少和异常检测速度来衡量成功，同时关注部署时间、异常处理时间和策略管理效率。还通过估计的违规成本预防和合规节省来量化业务价值。</span>
+                        <strong style="color: #1e40af">Kubernetes 上的工作环境隔离防止了跨队列的性能干扰。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从共享工作池迁移到专用 Pod，允许为每个队列分配自定义资源（CPU/RAM），确保某一任务类型的错误不会导致整个处理流水线崩溃。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">VPC 服务控制（VPC-SC）实施需要大量的前期发现和强制性试运行阶段来识别隐藏依赖关系并防止生产中断，因为过早的强制执行可能会破坏关键业务应用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">组织变革管理决定实施成功；清晰的异常处理流程和开发者沟通与技术配置同样重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最困难的挑战不是技术性的，而是组织性的。开发者最初将 VPC-SC 视为阻碍工作而没有明显好处的障碍。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 VPC-SC 阻止操作时，在问'我们如何允许它？'之前先问'这应该被允许吗？'。有时被阻止的操作代表需要修复而非适应的技术债务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">安全应该赋能而非阻碍；严重影响生产力的控制措施将被规避。你应该设计没有不必要摩擦的安全保护：自动化可扩展，手动流程不行，因此要投资工具，使安全实践成为最小阻力路径。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">结果是来自不同 Thrift 服务器的数十个线程都在尝试同时读取相同的数据库分区。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">出队代理的作用不仅仅是消除竞争，它还通过缓存提升了性能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">内存访问速度比数据库查询快几个数量级，Pinterest 的指标显示出队延迟已降至 1 毫秒以下。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">随着分区数量的增加，系统现在可以通过添加更多代理来实现线性扩展，而不会触及限制 Pinlater 的扩展瓶颈。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尽管人们普遍偏好无状态设计，但有状态服务在分布式系统中仍占有一席之地。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,24 +63,30 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Shijin Nair</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2956</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1814</span></div>
             </div>
+            
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
+                    <span style="color: #64748b; font-size: 14px;">标签：</span>
+                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">异步处理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库分片</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Pinterest</span>
+                    </span>
+                </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/934e3d3f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/e1be29d1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/934e3d3f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATSSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGaCxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRSMwGZ1DwBZFLzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgDwBZFLzhpobIE+omYA8oWYTkE0nVYtOqhadVC365MuAPKHmCTUTkDeATGomIDdqfhOQJ9R800nVopOqRSdViz7544BMaiYgk5ongDwBZFIzAZnU/D85qVp0UrXopGrRJ3+cmhs1E5BJzaRmAnKjZgLyBJBJzV92UrXopGrRSdWiT75MzX8JyBNAbtTcqJmAfJOaf8lJ1aKTqkUnVYs+WQbkNwGZ1NyomYBMaiYgN0AmNTdqJiBPAPmXnVQtOqladFK1CH/kDwPyhJpvAvKGmr/spGrRSdWik6pFn7wEZFIzAblRMwF5Qs0E5Akgk5obIJOabwIyqbkBMqmZgNyoeeOkatFJ1aKTqkX4I18EZFIzAblRMwG5UXMD5EbNBGRS8waQb1LzBJBJzRsnVYtOqhadVC365D+m5gbIpOYNNTdAngAyqZmATGreAPIEkBs1m06qFp1ULTqpWvTJP07NBOQJNROQSc0TQCY1N2pugExqNqm5ATKpeeOkatFJ1aKTqkWfLAMyqbkB8oaaGyCb1NwAuVEzqXlCzQ2QGzWTmk0nVYtOqhadVC3CH1kE5A01N0AmNROQSc0bQG7UPAFkUnMD5EbNDZAn1LxxUrXopGrRSdUi/JEvAjKpeQLIE2omIJOaGyA3am6A/JfUTECeUPPGSdWik6pFJ1WLPnkJyI2aCciNmknNBGRSMwGZ1ExAbtTcALlRcwPkRs0NkCfUTEAmNZtOqhadVC06qVr0yUtqJiBPqLkBMqmZgNwAuVEzAblR8wSQJ4BMaiY1E5AJyKTmN51ULTqpWnRSteiTLwPyBJBJzQTkRs0EZFLzBpBJzY2aGyBPAJnUTEAmIL/ppGrRSdWik6pFn7wEZFIzAXkDyKRmE5AbNROQJ4BMaiY1E5A31ExAJjXfdFK16KRq0UnVok9eUvNNaiYgk5oJyKRmAnKj5kbNBOSbgExq/mUnVYtOqhadVC36ZBmQSc0EZAJyA2RSMwGZ1ExAJjUTkBsg3wTkCSD/spOqRSdVi06qFuGP/GFAnlCzCcik5gkgk5ongGxS88ZJ1aKTqkUnVYs+eQnIb1LzTUAmNZuAPAFkUvOEmgnIpGbTSdWik6pFJ1WLPlmmZhOQbwLyBJA31ExAbtRsUvNNJ1WLTqoWnVQt+uTLgDyh5gk1N0AmIJOaN9RMQCY1TwB5Q80E5Ak1b5xULTqpWnRSteiTPw7IpOZGzQRkUjMBuQFyA2RSM6mZgExqboBMQCY1N0A2nVQtOqladFK16JP/M0BugNwAuVHzBJAJyKTmCSCTmhsgk5pvOqladFK16KRq0Sdfpuab1ExAJjU3QCY1E5AJyKTmCTUTkEnNG0AmNROQSc2mk6pFJ1WLTqoWfbIMyG8CcgPkDTUTkDeAvKHmX3ZSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aL/Abo0HmwMC6XzAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/e1be29d1">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATJSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2RS801AJjUTkCfUTEB+k5o3TqoWnVQtOqla9MkyNZuAPKHmBsgTaiYgT6jZpGYTkE0nVYtOqhadVC365MuAPKHmCSCTmhs1m9TcAHlCzRNAnlDzTSdVi06qFp1ULfrkLwfkRs0E5AkgN2omIJOav8lJ1aKTqkUnVYs++csAeUPNJiD/JydVi06qFp1ULfrky9T8JjUTkEnNE0CeUDOpuQEyqXlCzZ/kpGrRSdWik6pFnywD8l8CZFJzo2YCcgNkUvMGkD/ZSdWik6pFJ1WLPnlJzf8JkCfUTEAmNTdq/ktOqhadVC06qVqEP/ICkEnNBGSTmhsgT6iZgExqJiCTmgnIpOYGyKRmArJJzTedVC06qVp0UrXok2VAbtRMQCY1m9RMQG7UTEAmNROQSc0NkBsgb6h5Asik5o2TqkUnVYtOqhZ98ocB8puA3KiZgNwAmdRMaiYgN2q+Sc2mk6pFJ1WLTqoWffIvU/MGkEnNBOQJNTdqJiCTmgnIG0Bu1ExAJjUTkEnNppOqRSdVi06qFn2yTM0TQN5Qc6PmCSCTmhs1E5AbNb8JyKTmm06qFp1ULTqpWvTJS2omIJOaN9TcALlRMwGZ1NwAmdS8AeQNNROQSc0TQCY1b5xULTqpWnRStQh/5AUgb6i5ATKpmYA8oeYNIE+ouQEyqbkBMqmZgNyo+aaTqkUnVYtOqhZ9skzNBOQGyI2aGzUTkE1AnlBzA2QTkEnNDZBJzaaTqkUnVYtOqhZ98pKaGzVvALlRc6PmCSBPqJmATGpu1LyhZgJyo+abTqoWnVQtOqla9MlLQCY1N0CeUDMBeQLIpOZGzRNAJjUTkBsgk5oJyA2QSc0E5AbIpOaNk6pFJ1WLTqoWffJlQN4AMqm5UTMBuQEyqZmA3Kh5Qs0NkEnNBGRS84aaTSdVi06qFp1ULcIfeQHIpGYCcqPmCSA3aiYgN2qeAHKj5gkgk5oJyBNqboBMajadVC06qVp0UrUIf+QFIJOaTUCeUHMD5Ak1TwCZ1ExAvknNBOQJNW+cVC06qVp0UrUIf+Q/DMik5gkgk5oJyKRmAjKpeQLIpOYJIJvUvHFSteikatFJ1aJPXgLym9RMar5JzQTkBsgmIJOaN9R800nVopOqRSdViz5ZpmYTkBsgk5oJyBtAJjVPAHlDzRNqboDcqHnjpGrRSdWik6pFn3wZkCfUbFIzAXlCzQRkUjMBmdTcAJmAbALym06qFp1ULTqpWvTJXwbIpGZSMwF5Qs0EZFLzhpobIJOaCci/6aRq0UnVopOqRZ/8ZdRMQCY1TwD5JjU3QG6AvKFm00nVopOqRSdViz75MjXfpOYJIJOaCcikZgIyqbkBMqmZgExqJjUTkEnNBGRSMwH5ppOqRSdVi06qFn2yDMhvAnKj5gbIpOZGzQ2QSc0EZFIzAZnU3AC5ATKp+aaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9AzSDOSrpwgleAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Spring AI 智能体模式（第二部分）：AskUserQuestionTool - 行动前先澄清的智能体</title>
+        <title>极速开发出一个高质量 Claude Agent Skills 最佳实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Spring AI 智能体模式（第二部分）：AskUserQuestionTool - 行动前先澄清的智能体</h2>
-        <p>1/16/2026, 12:00:00 AM</p>
+        <h2>极速开发出一个高质量 Claude Agent Skills 最佳实践</h2>
+        <p>1/16/2026, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Spring AI 的 AskUserQuestionTool 通过让 AI 智能体在生成响应前交互式地提出澄清问题，将其转变为协作伙伴，减少假设和返工。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Anthropic Claude Agent Skills 的概念、与 MCP 的异同，并通过实战案例和官方最佳实践，指导开发者如何高效、高质量地设计、开发和优化 Claude Agent Skills。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是 Spring AI 智能体模式系列的第二部分，介绍了 AskUserQuestionTool，这是一种让 AI 智能体在生成响应前主动向用户提出澄清问题的机制。这种交互式方法旨在从一开始就消除假设、减少返工，并使 AI 输出更贴近用户需求。该工具支持多选和自由文本输入，是模型无关的（适用于各种 LLM 提供商），并在 Spring AI 生态系统中提供了可移植的实现。文章详细解释了其工作流程，通过旅行推荐助手的示例进行说明，并提供了实用的 '入门' 指南，包括依赖管理和基于 Java 的 `QuestionHandler` 示例（适用于控制台和 Web 应用程序），强调了其在将 AI 智能体转变为协作伙伴方面的作用。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度探讨了 Anthropic 最新推出的 Claude Agent Skills 机制，旨在帮助开发者快速理解 Skill 的概念、其与 MCP 的区别，并掌握开发高质量 Skill 的最佳实践。作者分享了其在实践中积累的经验，包括如何利用 AI 工具（如 Qoder、NotebookLM）和官方资源（如 Anthropic skills 仓库）来辅助 Skill 的设计与生成，从而提高开发效率和质量。文章通过一个“提示词优化专家”Skill 的案例，详细展示了从需求梳理、资料准备到 AI 辅助生成和测试的全过程，并强调了在开发过程中“把任务拆解到模型能力以内，提供充足准确的上下文”的重要性。最后，文章总结了 Claude Skill 自身的设计哲学、自由度控制、结构组织、命名规范，以及迭代开发和可执行 Skill 的进阶实践，为读者提供了全面的开发指导和避坑指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AskUserQuestionTool 使 AI 智能体能够交互式地向用户提出澄清问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该工具通过在生成响应前提出问题，帮助智能体更好地理解用户需求，从而减少假设和因误解而需要的迭代修正。</span>
+                        <strong style="color: #1e40af">Claude Agent Skill 是 Anthropic 提出的 Agent 能力扩展机制，专注于封装经验、最佳实践和流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Skill 主要通过 Markdown 文件和脚本来定义，与 MCP (Model Context Protocol) 互补，Skill 侧重知识传授，MCP 侧重功能扩展和工具调用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Spring AI 的 AskUserQuestionTool 实现是可移植且模型无关的。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者可以一次性定义问题处理器，并将其与各种 LLM 提供商一起使用，确保没有供应商锁定，并允许在不更改代码的情况下灵活切换模型。</span>
+                        <strong style="color: #1e40af">高效开发高质量 Skill 的核心在于利用 AI 和提供充足上下文，而非完全人工编写。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过学习官方 Skill 仓库、使用 AI 工具（如 Qoder、NotebookLM）进行资料整理和学习，并将需求和相关资料清晰地提供给 AI，让 AI 自身来生成和优化 Skill，能够显著提升开发效率与质量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">该工具为 AI 交互推广了一种结构化的需求收集工作流程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它允许智能体构建带选项的问题（单选/多选、自由文本），通过自定义处理器（控制台/Web UI）收集用户答案，并使用此上下文提供定制化解决方案。</span>
+                        <strong style="color: #1e40af">Skill 的设计应遵循“上下文公共品”原则，注重精简、渐进式披露和精准命名。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者需在 SKILL.md 中保持精简，按需加载资源，避免深层嵌套；命名要使用动名词形式；描述要清晰包含触发词，且避免第一人称，以确保 Skill 被准确调用和高效执行。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">它将 AI 智能体转变为协作伙伴，而不是基于假设的响应者。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过让用户积极参与问答流程，智能体确保其最终输出从一开始就与用户的实际需求保持一致，从而提高准确性和用户满意度。</span>
+                        <strong style="color: #1e40af">Skill 开发应采用迭代开发流程，利用多个 Claude 模型进行生成和测试。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过让 Claude A 负责 Skill 的编写和优化，Claude B 负责实战测试，并根据测试反馈进行修正，确保 Skill 在不同负载和场景下的效果和稳定性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">对于复杂或高风险任务，应采用“Plan-Validate-Execute”模式，并确保错误处理明确。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 可执行 Skills 相比纯文本指令更适用于复杂任务，但需设计明确的计划、验证和执行步骤，并使脚本抛出具体的错误信息，避免“魔术数字”，提高自动化操作的可靠性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果您的 AI 智能体在提供答案之前能向您提出澄清问题会怎样？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AskUserQuestionTool 解决了这个问题。它允许 AI 智能体在回答之前提出澄清问题，交互式地收集需求，并从一开始就创建与您实际需求一致的规范。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与绑定到特定 LLM 平台的实现不同，这个 Spring AI 的实现适用于许多 LLM 提供商，让您无需重写代码或问题处理器即可切换模型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体在提供个性化推荐之前通过交互式问题收集了全面的需求——无需假设，无需迭代。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AskUserQuestionTool 将 AI 智能体从基于假设的响应者转变为在行动前收集需求的协作伙伴，在第一次尝试时就提供符合您需求的答案。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">继 MCP（Model Context Protocol）之后，Anthropic 最近又推出了 Skill（技能）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">简单来说，技能就是怎么做；MCP 是有什么工具、有什么功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skill 主要是经验、最佳实践、流程的封装，而 MCP 是连接与交互的协议，主要是 API 调用、数据读写和工具等。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们更多的是需要把自己的想法表达清楚，第二是把 AI 干活所需要的信息给充足。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所以，我们要做的不是关心 Skill 怎么写，而是如何表达清楚，如何给足 AI 上下文。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,25 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Spring Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">tzolov</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1059</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4767</span></div>
             </div>
+            
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
+                    <span style="color: #64748b; font-size: 14px;">标签：</span>
+                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Agent Skills</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大型语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent技术</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">最佳实践</span>
+                    </span>
+                </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/0a060724" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/368cc8b7" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/0a060724">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATZSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIjZoJyI2aGyBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXlCzQTkRs2NmgnIBGRSM6nZpGYTkE0nVYtOqhadVC365MuAPKHmCSCTmknNN6m5AfKEmieAPKHmm06qFp1ULTqpWvTJ/zkgk5o3gExqJiCTmn/JSdWik6pFJ1WLPvnHAJnUTEBugNyomYBMaiYg/09OqhadVC06qVr0yZep+U1q3lBzA2RSc6PmBsik5gk1f5OTqkUnVYtOqhZ9sgzI3wTIpGYCcgNkUjMBmdRMQCY1bwD5m51ULTqpWnRStQh/5D8MyI2aGyCTmhsgk5ongExq/iUnVYtOqhadVC365CUgk5oJyCY1k5oJyA2QSc0EZFJzA+RGzaRmAjKpmYBsUvNNJ1WLTqoWnVQtwh9ZBGRSMwG5UfMEkBs1E5A31LwB5JvUPAFkUvPGSdWik6pFJ1WL8Ef+ICBPqJmAvKHmBsgbam6A3Kj5LzmpWnRSteikatEny4A8oeY3qbkBMqm5ATKpmYC8AeRGzQRkUjMBmdRsOqladFK16KRq0SdfpuYGyBNqbtRMQG6AvKFmAnKj5jcBmdR800nVopOqRSdViz55CcgTQCY1TwCZ1ExAJjVPqJmATGreAPKGmgnIpOYJIJOaN06qFp1ULTqpWvTJXw7IpOZGzRNqngDyhJobIJOaGyCTmgnIjZpJzaaTqkUnVYtOqhZ98ocBuVGzCciNmjfU3ADZBGRScwNkUrPppGrRSdWik6pFn/xhaiYgE5AbNTdAbtTcqJmATGomIJOaGzVvqJmA3Kj5ppOqRSdVi06qFuGPvADkCTUTkBs1N0Bu1NwAmdQ8AWRSMwF5Qs0E5Ak1E5BJzQRkUvPGSdWik6pFJ1WLPlmm5gk1N0Bu1NwAuVHzBJBJzRNqboBMaiYgk5o31Gw6qVp0UrXopGoR/sgLQCY1N0Bu1NwAuVEzAZnUTEAmNTdAbtQ8AWRSMwF5Qs0NkEnNppOqRSdVi06qFn3yh6m5AXKj5kbNBGRS84SaGyCTmgnIDZBNQG6ATGreOKladFK16KRqEf7IfxiQGzVPAJnU3ACZ1DwBZFLzBJBNat44qVp0UrXopGrRJy8B+U1qJjVPAHkCyBNANgGZ1Lyh5ptOqhadVC06qVr0yTI1m4DcAJnU3KiZgNyoeQPIG2qeUHMDZFKz6aRq0UnVopOqRZ98GZAn1LwBZFIzAblRMwG5UTMBmdTcAJmAbAIyqfmmk6pFJ1WLTqoWffKPA/IEkEnNDZBJzRtqboBMaiYgN0Bu1LxxUrXopGrRSdWiT/4xap4AMqmZgHyTmhsgN0DeULPppGrRSdWik6pFn3yZmm9SMwGZ1NyomYBMaiYgk5obIJOaCcikZlIzAZnUTEAmNROQbzqpWnRSteikatEny4D8JiBPAJnU3ACZ1NwAmdRMQCY1E5BJzQ2QGyCTmm86qVp0UrXopGoR/kjVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrR/wA0JEkjCYmeuQAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/368cc8b7">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATLSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRSMwGZ1NwAuVHzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgGwCcqNmAvIEkBs1E5An1GwCsumkatFJ1aKTqkWffBmQJ9Q8oeZGzQTkBsikZgIyqZnU/CYgT6j5ppOqRSdVi06qFn3yxwF5Qs0NkAnIDZAbNROQSc1/yUnVopOqRSdViz7549RMQCY1N0AmNROQGzUTkCeATGr+spOqRSdVi06qFn3yZWp+k5oJyKTmCTVPqJmAfJOaf8lJ1aKTqkUnVYs+WQbkNwGZ1GwCMqmZgExqbtRMQJ4A8i87qVp0UrXopGoR/sgfBuRGzSYgk5oJyBtq/rKTqkUnVYtOqhZ98hKQSc0E5EbNBOQJNTdAJjUTkEnNBGRS85uATGpugExqJiA3at44qVp0UrXopGoR/sgLQG7UbAIyqZmATGomIJOa3wTkm9Q8AWRS88ZJ1aKTqkUnVYs++TIgk5oJyBNqbtQ8AeQJNROQSc0EZFLzBpAngNyo2XRSteikatFJ1aJPvkzNG2omIJOa3wRkUnOj5gbIpGaTmhsgk5o3TqoWnVQtOqlahD+yCMikZgJyo2YC8oSaCcgbap4AcqPmm4DcqPmmk6pFJ1WLTqoW4Y8sAvKEmk1AbtTcAJnUTEAmNU8AmdTcALlRcwPkCTVvnFQtOqladFK16JNlaiYgk5obIDdqNgF5Qs0NkCeAvAFkUvP/dFK16KRq0UnVIvyRF4BMam6ATGqeADKpuQFyo+YJIDdqboDcqLkBcqPmBsikZtNJ1aKTqkUnVYvwRxYBmdTcAJnUTEAmNROQGzVPAJnUvAHkDTU3QG7UTEAmNZtOqhadVC06qVr0yTI1E5AbNTdq3gCyCcik5kbNDZAngExqJiATkN90UrXopGrRSdWiT14CMqmZ1ExAJiBPqLlRMwGZ1NwA2QRkUjOpmYC8oWYCMqn5ppOqRSdVi06qFn3ykpon1NwAmdRMQJ5QcwNkUjMBmdRMQL4JyKTmX3ZSteikatFJ1aJPlgG5UfMEkEnNDZBJzRtqJiCbgDwB5F92UrXopGrRSdWiT5apeUPNE0AmNZuATGomIJOaN9Q8AeQJIDdq3jipWnRSteikatEnLwH5TWpugDyhZgIyqdkE5Akgk5on1ExAJjWbTqoWnVQtOqla9MkyNZuAvKHmBsgNkE1qJiA3ajap+aaTqkUnVYtOqhZ98mVAnlDzhJoJyBtqboBMaiYgk5ongLyhZgLyhJo3TqoWnVQtOqla9MkfB2RSswnIDZAbIJOaSc0EZFJzA2QCMqm5AbLppGrRSdWik6pFn/zHAZnU3ACZ1LwBZAIyqXkCyKTmBsik5ptOqhadVC06qVr0yZep+SY1E5BJzY2aGyA3ap5QMwGZ1LwBZFIzAZnUbDqpWnRSteikatEny4D8JiCTmieATGomNROQN4C8oeZfdlK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8BRUkxPn8TLUUAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
