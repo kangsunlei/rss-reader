@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何避免 JPA 与 Kotlin 结合时的常见陷阱</title>
+        <title>这被允许吗？模型上下文协议（MCP）中的身份验证与授权</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何避免 JPA 与 Kotlin 结合时的常见陷阱</h2>
-        <p>1/20/2026, 5:25:41 PM</p>
+        <h2>这被允许吗？模型上下文协议（MCP）中的身份验证与授权</h2>
+        <p>1/21/2026, 3:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了将 Kotlin 现代语言特性与 Jakarta Persistence (JPA) 规范对齐的全面指南，重点介绍了实体设计的最佳实践以及即将推出的 IntelliJ IDEA 支持。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了模型上下文协议（MCP）的身份验证与授权机制，重点关注远程服务器的 OAuth 2.1 集成。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章探讨了 Kotlin 默认特性（如 final 类、不可变属性和数据类）与 Jakarta Persistence (JPA) 规范（要求非 final 类和无参构造函数）之间的技术冲突。它提供了切实可行的解决方案，包括使用 all-open 和 no-arg 编译器插件，在不牺牲 Kotlin 语法的情况下满足 JPA 要求。核心话题包括：为什么数据类不适合作为实体、在持久层使用 val 与 var 的细微差别、Kotlin 空安全对基于反射的数据填充的影响，以及可空主键的重要性。此外，文章还预告了 IntelliJ IDEA 2026.1 的新功能，旨在自动检测并修复这些常见的 JPA-Kotlin 陷阱。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章探讨了模型上下文协议（MCP）的安全架构，这是 AI 智能体与服务通信的标准。它区分了依赖操作系统级进程隔离和环境变量的“stdio”（本地）传输，以及利用 OAuth 2.1 的“可流式 HTTP”（远程）传输。针对远程服务器，作者详细介绍了复杂的握手过程，包括资源元数据发现（RFC 9728）、授权服务器发现（RFC 8414）以及动态客户端注册。该工作流确保 AI 智能体（客户端）获取有范围限制的访问令牌，以便安全地与 MCP 服务器交互。此外，本文还涵盖了下游授权（MCP 服务器如何向后端 API 进行身份验证）、PKCE 的重要性、令牌刷新策略，以及新兴扩展，如客户端 ID 元数据和用于智能体间通信的客户端凭据。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">由于继承和代理需求，应避免使用 Kotlin 数据类作为 JPA 实体。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 数据类默认是 final 的，并且会基于所有属性生成 equals/hashCode 方法，这与 JPA 对代理子类和基于标识的等值性需求相冲突。</span>
+                        <strong style="color: #1e40af">MCP 身份验证依赖于传输方式，分别利用本地进程隔离或 OAuth 2.1。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 本地（stdio）服务器继承父进程的安全上下文，而远程（HTTP）服务器实现完整的 OAuth 2.1 流程，以验证智能体的身份和权限。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 Kotlin 编译器插件自动满足 JPA 的结构要求。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 应使用 no-arg 和 all-open 插件来提供实体填充和延迟加载所需的无参构造函数及非 final 类状态。</span>
+                        <strong style="color: #1e40af">远程 MCP 服务器使用标准化的发现机制，引导客户端访问受信任的授权服务器。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过返回带有资源元数据（RFC 9728）的 401 Unauthorized 状态，服务器动态地告知客户端在哪里进行身份验证，从而实现灵活且去中心化的安全模型。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">谨慎对待 Kotlin 的空安全，因为反射可以绕过语言层面的限制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使属性在 Kotlin 中定义为非空，使用反射的 JPA 提供者仍可能从数据库注入 null 值，这可能导致意外的运行时异常。</span>
+                        <strong style="color: #1e40af">下游授权必须考虑最终用户的身份，而不仅仅是 MCP 服务器的身份。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作为中间件的 MCP 服务器应使用令牌交换（RFC 8693）等技术，确保后端服务能够根据原始请求者做出细粒度的访问决策。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在 Kotlin 实体映射中，优先选择字段访问而非属性访问。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Hibernate 中，将注解放在属性上通常默认通过反射进行字段访问，这样更简洁，并能避免 Kotlin 中 val 属性缺少 setter 的问题。</span>
+                        <strong style="color: #1e40af">协议正朝着更简单的注册方式和更细粒度的权限模型演进。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 较新的规范正从复杂的动态客户端注册转向客户端 ID 元数据文档，并探索用于精细控制的丰富授权请求（RAR）。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Kotlin 的一些流行特性和概念（如空安全和数据类）在实现业务逻辑时非常有帮助，但它们与规范并不契合。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">推荐的方法是使用常规的 open 类来建模实体。它们是可变的且对代理友好，不会导致 Jakarta Persistence 的任何问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你的持久化提供者可以修改 val 字段，但这违背了 Kotlin 的不可变性保证。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了避免不同 Jakarta Persistence 实现之间的移植性问题，请使用 null 来表示未定义的主键值。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">IntelliJ IDEA 2026.1 将自动检测其中许多问题，通过警告进行高亮显示，并提供各种检查支持。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 服务器类似于 REST API：它提供对资源、数据和功能的标准化远程访问。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 服务器代表 MCP 客户端执行操作，该信息应成为任何授权或身份验证决策的一部分。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 服务器绝不能接受并非明确为该 MCP 服务器签发的任何令牌。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与难以升级软件客户端的 API 不同，在 MCP 中，权限范围由资源服务器控制，并在初始的 WWW-Authenticate 响应头中提供。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了实现简单，MCP 核心规范有意对服务器间身份验证保持沉默。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,30 +64,29 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The IntelliJ IDEA Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Teodor Irkhin</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Stack Overflow Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Dan Moore</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2993</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4076</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kotlin</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JPA</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Hibernate</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IntelliJ IDEA</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Model Context Protocol</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OAuth 2.1</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API 安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">身份验证</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/83a462b4" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/44ec72da" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/83a462b4">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATXSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ7UjIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIn6TmBsik5g0gN2pugNyouQHyJ6l546Rq0UnVopOqRZ8sU7MJyBNqboBMam7UTEBugNyoeUPNJiCbTqoWnVQtOqla9MmXAXlCzRtAJjWTmgnIpGYCcgPkCSA3ap4A8oSabzqpWnRSteikatEn/zggk5on1ExAbtRMQCY1/7KTqkUnVYtOqhZ98o9T8wSQSc2NmjeATGr+ZidVi06qFp1ULfrky9R8E5BJzW8GZFLzhprf5KRq0UnVopOqRZ8sA/KbAJnU3KiZgExqJiCTmhs1E5BJzQ2Q3+ykatFJ1aKTqkX4I/8wIJOaCcik5gbIJjX/kpOqRSdVi06qFn3yEpBJzQ2QSc0E5EbNBGRScwPkBsik5kbNG0Bu1ExAJjW/yUnVopOqRSdVi/BHFgF5Q80NkCfUTEAmNROQGzU3QG7UTECeUHMDZFJzA2RS88ZJ1aKTqkUnVYvwR14AMqm5AfKGmhsgN2o2AblRMwGZ1GwC8oSaTSdVi06qFp1ULfrkJTU3QCY1N0AmNTdAJjU3QN5Qc6PmRs0NkDfUTED+pJOqRSdVi06qFuGPvABkUjMBeULNBGSTmgnIn6RmAvKEmhsgk5oJyI2aN06qFp1ULTqpWoQ/8gKQGzUTkBs1TwB5Q80NkEnNBGRScwPkCTUTkEnNb3JSteikatFJ1SL8kUVAnlBzA2RSMwGZ1ExAbtRMQCY13wTkCTU3QN5Q88ZJ1aKTqkUnVYs+eQnIpGYCMql5Qs0E5AbIpGYC8gaQN9TcqNmkZgIyqdl0UrXopGrRSdWiT75MzQ2QJ9TcAJmA3ACZ1NyouQEyqXkCyKRmAjKpmdT8n06qFp1ULTqpWoQ/8kVAJjU3QCY1E5An1NwAeULNBGRSswnIjZoJyKTmBsik5o2TqkUnVYtOqhZ98hKQSc0TQCY1E5BJzQTkBsik5k8CMqmZgExq3lBzA+SbTqoWnVQtOqla9MlLap4AMqmZgExqnlAzAZmA3Ki5ATKpmYBsUvM3OaladFK16KRq0ScvAZnU3KiZgExqJiCTmifUPAFkUnMDZFJzA+QGyBtqJiCTmm86qVp0UrXopGoR/shfDMiNmhsgT6iZgGxS8wSQSc0E5Ak1b5xULTqpWnRSteiTl4D8SWomNTdAbtRMQCY1m9RMQG6ATGqeUDMBmdRsOqladFK16KRq0SfL1GwCcgNkUjOpuQFyA2RSM6n5JjVPAHkCyKTmjZOqRSdVi06qFn3yZUCeUPOEmhsgk5obNROQGyA3ap4A8oaa/9NJ1aKTqkUnVYs++csBeUPNBGRSc6NmAjIBmdTcqJmATGomIBOQJ9RsOqladFK16KRq0Sd/OTUTkEnNBORGzSY1N2omIJOaTWomIJOaN06qFp1ULTqpWvTJl6n5TdQ8AeRGzRNAbtS8oeYGyKRm00nVopOqRSdViz5ZBuRPAnIDZFJzA+Sb1ExAngDym51ULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteg/vVdUDLmPAIYAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/44ec72da">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpobIDdqJiCTmieATGomIE+omYD8SmreOKladFK16KRq0SfL1GwC8jsBuVFzo2aTmk1ANp1ULTqpWnRSteiTLwPyhJongLyh5g0gk5oJyBNqngDyhJpvOqladFK16KRq0Sf/ODUTkEnNBOQNIJOaCcik5l9yUrXopGrRSdWiT/5n1ExAJjWbgPyfnFQtOqladFK16JMvU/M3ATKpmYBMam7U3ACZ1Dyh5k9yUrXopGrRSdWiT5YB+Z3UTEAmNTdqJiCTmgnIpGYCMql5A8if7KRq0UnVopOqRZ+8pOZPAmRSMwF5A8gTaiYgk5obNX+Tk6pFJ1WLTqoW4Y+8AGRSMwHZpOYGyI2aCciNmgnIE2pugExqJiCb1HzTSdWik6pFJ1WL8Ee+CMiNmieAbFJzA2RS8waQb1LzBJBJzRsnVYtOqhadVC3CH3kByBNqboDcqLkB8idRcwPkRs3f5KRq0UnVopOqRZ8sUzMBeUPNBORGzSYgk5oJyKRmAvIGkBs1E5BJzQRkUrPppGrRSdWik6pF+COLgPxKat4AcqPmCSA3ar4JyI2abzqpWnRSteikatEnLwF5Q80mIJOaJ9RMQCY1bwB5Q80EZFLzBJBJzRsnVYtOqhadVC3CH3kByKRmAjKpuQFyo+YJIG+omYA8oeYGyKTmBsikZgJyo+abTqoWnVQtOqla9MkyIJOaGyA3ap4AcqPmm9TcANkEZFJzA2RSs+mkatFJ1aKTqkWfvKTmBsiNmhsgk5oJyKTmDSBPqJmATGpu1LyhZgJyo+abTqoWnVQtOqlahD/yApBJzQTkCTVvAJnUTEBu1DwBZFIzAXlCzQTkCTUTkEnNBGRS88ZJ1aKTqkUnVYs++TI1E5AngNyomdRsAnKj5gk1N0AmNROQSc0bajadVC06qVp0UrXokz8MkEnNBOQGyKTmRs2NmgnIBGRSM6m5ATKpmYDcAJnUTGomIJOaTSdVi06qFp1ULfrky4BMaiYgk5oJyKRmArIJyI2aGyCTmgnIDZBNQG6ATGreOKladFK16KRqEf7IXwzIpOYJIJOaJ4BMap4AMql5AsgmNW+cVC06qVp0UrXok5eA/EpqJjUTkBs1bwC5AbIJyKTmDTXfdFK16KRq0UnVok+WqdkE5AbIjZobNTdAJjVPAHlDzRNqboDcqHnjpGrRSdWik6pFn3wZkCfUbAIyqXlCzQRkUjMBmdTcAJmAbALyK51ULTqpWnRSteiTf4yaCcgEZFLzhJoJyKTmDTU3QCY1E5Df6aRq0UnVopOqRZ/849Q8AWRSMwHZpOYGyA2QN9RsOqladFK16KRq0Sdfpuab1NwAmdTcqHlCzQ2QSc0EZFIzqZmATGomIJOaCcg3nVQtOqladFK1CH/kBSC/kpoJyKTmBsikZgIyqXkCyKRmAjKpmYBMaiYgb6j5ppOqRSdVi06qFuGPVC05qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFv0HJ89CFRJBncAAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
