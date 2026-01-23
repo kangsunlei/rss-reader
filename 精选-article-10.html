@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>极速开发出一个高质量 Claude Agent Skills 最佳实践</title>
+        <title>怎么做 Long-running Agents，Cursor、Anthropic 给了两种截然不同的思路</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>极速开发出一个高质量 Claude Agent Skills 最佳实践</h2>
-        <p>1/16/2026, 12:31:00 AM</p>
+        <h2>怎么做 Long-running Agents，Cursor、Anthropic 给了两种截然不同的思路</h2>
+        <p>1/20/2026, 2:58:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Anthropic Claude Agent Skills 的概念、与 MCP 的异同，并通过实战案例和官方最佳实践，指导开发者如何高效、高质量地设计、开发和优化 Claude Agent Skills。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度对比了 Cursor 与 Anthropic 在实现长时运行 AI Agent 上的两种工程路径：前者侧重多 Agent 大规模并行协作，后者聚焦单 Agent 的跨上下文记忆连续性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度探讨了 Anthropic 最新推出的 Claude Agent Skills 机制，旨在帮助开发者快速理解 Skill 的概念、其与 MCP 的区别，并掌握开发高质量 Skill 的最佳实践。作者分享了其在实践中积累的经验，包括如何利用 AI 工具（如 Qoder、NotebookLM）和官方资源（如 Anthropic skills 仓库）来辅助 Skill 的设计与生成，从而提高开发效率和质量。文章通过一个“提示词优化专家”Skill 的案例，详细展示了从需求梳理、资料准备到 AI 辅助生成和测试的全过程，并强调了在开发过程中“把任务拆解到模型能力以内，提供充足准确的上下文”的重要性。最后，文章总结了 Claude Skill 自身的设计哲学、自由度控制、结构组织、命名规范，以及迭代开发和可执行 Skill 的进阶实践，为读者提供了全面的开发指导和避坑指南。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细解析了 AI 领域两大头部玩家在处理复杂、长周期任务（Long-running Agents）时的不同工程哲学。Cursor 走的是“组织架构”路线，通过从扁平化协作向“规划者-工作者-裁判”层级结构的演进，实现了成百上千个 Agent 并行构建百万行代码项目的能力。而 Anthropic（Claude Code）则选择了“流程标准化”路线，通过引入初始化与编码双 Agent 机制，将任务拆解为可跟踪的 JSON 功能清单，并利用 Git 历史和外部日志文件将“记忆”外化，确保单 Agent 在跨会话时能像人类工程师一样接续工作。两者的实践均表明，Agent 的进头在于精细的工程化设计而非单纯的模型升级。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Claude Agent Skill 是 Anthropic 提出的 Agent 能力扩展机制，专注于封装经验、最佳实践和流程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Skill 主要通过 Markdown 文件和脚本来定义，与 MCP (Model Context Protocol) 互补，Skill 侧重知识传授，MCP 侧重功能扩展和工具调用。</span>
+                        <strong style="color: #1e40af">Cursor 通过引入层级化的角色分工解决多 Agent 协作的瓶颈。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在经历扁平化锁定机制和乐观并发控制的失败后，Cursor 采用规划者、工作者、裁判的三层架构，有效避免了 Agent 的风险规避倾向和协作冲突。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">高效开发高质量 Skill 的核心在于利用 AI 和提供充足上下文，而非完全人工编写。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过学习官方 Skill 仓库、使用 AI 工具（如 Qoder、NotebookLM）进行资料整理和学习，并将需求和相关资料清晰地提供给 AI，让 AI 自身来生成和优化 Skill，能够显著提升开发效率与质量。</span>
+                        <strong style="color: #1e40af">Anthropic 通过“记忆外化”实现单 Agent 的跨上下文连续工作。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Git 提交记录、JSON 功能清单和工作日志，将任务状态持久化到外部文件，使 Agent 能够通过“阅读进度-执行单一任务-提交更新”的标准化流程推进长周期项目。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Skill 的设计应遵循“上下文公共品”原则，注重精简、渐进式披露和精准命名。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者需在 SKILL.md 中保持精简，按需加载资源，避免深层嵌套；命名要使用动名词形式；描述要清晰包含触发词，且避免第一人称，以确保 Skill 被准确调用和高效执行。</span>
+                        <strong style="color: #1e40af">长时运行 Agent 的核心挑战在于全局目标的对齐与验证。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 容易出现“过早宣布胜利”或“测试敷衍”的问题，Anthropic 通过引入浏览器自动化工具（如 Puppeteer）进行端到端验证来提升可靠性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Skill 开发应采用迭代开发流程，利用多个 Claude 模型进行生成和测试。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过让 Claude A 负责 Skill 的编写和优化，Claude B 负责实战测试，并根据测试反馈进行修正，确保 Skill 在不同负载和场景下的效果和稳定性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">对于复杂或高风险任务，应采用“Plan-Validate-Execute”模式，并确保错误处理明确。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 可执行 Skills 相比纯文本指令更适用于复杂任务，但需设计明确的计划、验证和执行步骤，并使脚本抛出具体的错误信息，避免“魔术数字”，提高自动化操作的可靠性。</span>
+                        <strong style="color: #1e40af">模型选择与 Prompt 工程在长时任务中比通用架构更关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cursor 的实践发现不同模型擅长不同角色（如 GPT-5.2 更适合规划），且系统的最终行为高度依赖于如何通过 Prompt 设定精确的行为边界。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">继 MCP（Model Context Protocol）之后，Anthropic 最近又推出了 Skill（技能）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">简单来说，技能就是怎么做；MCP 是有什么工具、有什么功能。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skill 主要是经验、最佳实践、流程的封装，而 MCP 是连接与交互的协议，主要是 API 调用、数据读写和工具等。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们更多的是需要把自己的想法表达清楚，第二是把 AI 干活所需要的信息给充足。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所以，我们要做的不是关心 Skill 怎么写，而是如何表达清楚，如何给足 AI 上下文。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent 的尽头也许是 Engineering。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在一个没有任何层级、所有个体都平等的结构中，Agent 们表现出了一种强烈的「风险规避」倾向。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的系统，往往比你想象的更简单。我们起初试图模仿分布式计算和组织设计中的复杂系统，但后来发现，并不是所有的理论都适用于 Agent。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个设计的巧妙之处在于，它把「记忆」外化成了文件和 Git 历史。每一轮的 Agent 不需要依赖上下文窗口里的碎片信息，而是模仿靠谱的人类工程师每天上班会做的事。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统的绝大部分行为最终都归结于我们如何编写 prompt。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +63,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Founder Park</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Founder Park</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4767</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">23 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5746</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Agent Skills</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大型语言模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent技术</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">最佳实践</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cursor</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Anthropic</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Multi-Agent</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/368cc8b7" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/8a6663a8" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/368cc8b7">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATLSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRSMwGZ1NwAuVHzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgGwCcqNmAvIEkBs1E5An1GwCsumkatFJ1aKTqkWffBmQJ9Q8oeZGzQTkBsikZgIyqZnU/CYgT6j5ppOqRSdVi06qFn3yxwF5Qs0NkAnIDZAbNROQSc1/yUnVopOqRSdViz7549RMQCY1N0AmNROQGzUTkCeATGr+spOqRSdVi06qFn3yZWp+k5oJyKTmCTVPqJmAfJOaf8lJ1aKTqkUnVYs+WQbkNwGZ1GwCMqmZgExqbtRMQJ4A8i87qVp0UrXopGoR/sgfBuRGzSYgk5oJyBtq/rKTqkUnVYtOqhZ98hKQSc0E5EbNBOQJNTdAJjUTkEnNBGRS85uATGpugExqJiA3at44qVp0UrXopGoR/sgLQG7UbAIyqZmATGomIJOa3wTkm9Q8AWRS88ZJ1aKTqkUnVYs++TIgk5oJyBNqbtQ8AeQJNROQSc0EZFLzBpAngNyo2XRSteikatFJ1aJPvkzNG2omIJOa3wRkUnOj5gbIpGaTmhsgk5o3TqoWnVQtOqlahD+yCMikZgJyo2YC8oSaCcgbap4AcqPmm4DcqPmmk6pFJ1WLTqoW4Y8sAvKEmk1AbtTcAJnUTEAmNU8AmdTcALlRcwPkCTVvnFQtOqladFK16JNlaiYgk5obIDdqNgF5Qs0NkCeAvAFkUvP/dFK16KRq0UnVIvyRF4BMam6ATGqeADKpuQFyo+YJIDdqboDcqLkBcqPmBsikZtNJ1aKTqkUnVYvwRxYBmdTcAJnUTEAmNROQGzVPAJnUvAHkDTU3QG7UTEAmNZtOqhadVC06qVr0yTI1E5AbNTdq3gCyCcik5kbNDZAngExqJiATkN90UrXopGrRSdWiT14CMqmZ1ExAJiBPqLlRMwGZ1NwA2QRkUjOpmYC8oWYCMqn5ppOqRSdVi06qFn3ykpon1NwAmdRMQJ5QcwNkUjMBmdRMQL4JyKTmX3ZSteikatFJ1aJPlgG5UfMEkEnNDZBJzRtqJiCbgDwB5F92UrXopGrRSdWiT5apeUPNE0AmNZuATGomIJOaN9Q8AeQJIDdq3jipWnRSteikatEnLwH5TWpugDyhZgIyqdkE5Akgk5on1ExAJjWbTqoWnVQtOqla9MkyNZuAvKHmBsgNkE1qJiA3ajap+aaTqkUnVYtOqhZ98mVAnlDzhJoJyBtqboBMaiYgk5ongLyhZgLyhJo3TqoWnVQtOqla9MkfB2RSswnIDZAbIJOaSc0EZFJzA2QCMqm5AbLppGrRSdWik6pFn/zHAZnU3ACZ1LwBZAIyqXkCyKTmBsik5ptOqhadVC06qVr0yZep+SY1E5BJzY2aGyA3ap5QMwGZ1LwBZFIzAZnUbDqpWnRSteikatEny4D8JiCTmieATGomNROQN4C8oeZfdlK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8BRUkxPn8TLUUAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/8a6663a8">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATZSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4DcqJmATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCeAPKFmAnID5EbNpGaTmk1ANp1ULTqpWnRSteiTLwPyhJongNyoeULNDZBJzQ2QJ9Q8AeQJNd90UrXopGrRSdWiT/5jgExqJiCTmieATGomIJOaf8lJ1aKTqkUnVYs++Y9Rc6NmAjKpmYBMaiYg/yUnVYtOqhadVC365MvU/CY1E5BJzQTkCSCTmhs1N0AmNU+o+ZOcVC06qVp0UrXok2VA/mZqJiCTmgnIpGYCMql5A8if7KRq0UnVopOqRZ+8pOZvpuZGzQRkUnOjZgIyqblR8zc5qVp0UrXopGrRJy8BmdRMQDapmdS8AeRGzaRmAnKjZlIzAZnUTEA2qfmmk6pFJ1WLTqoW4Y+8AGRScwPkCTVPAHlCzQ2QSc0bQL5JzRNAJjVvnFQtOqladFK1CH/kFwGZ1ExAbtTcALlRcwNkk5obIDdq/iYnVYtOqhadVC3CH3kByKTmNwGZ1PwmIJOaCcg3qZmATGomIJOaTSdVi06qFp1ULfrkJTVvAPmTAJnU3KiZgNyo+U1AJjXfdFK16KRq0UnVIvyRF4BMat4AMqmZgDyhZgJyo2YCMqm5AfJNaiYgk5ongExq3jipWnRSteikatEnL6m5AXKjZlIzAZnU3AB5Qs0EZFIzAXlCzQ2QSc0NkEnNBORGzaRm00nVopOqRSdViz55Ccik5kbNDZBJzQRkUjOpmYBMaiYgk5oJyBNqboBsAjKpuQEyqdl0UrXopGrRSdWiT5YBmdRMQCY1N0BugLyhZgLyhJoJyKTmRs0baiYgN2q+6aRq0UnVopOqRfgjLwB5Qs0bQCY1E5A31DwBZFIzAXlCzQTkCTUTkEnNBGRS88ZJ1aKTqkUnVYs+WabmDSA3am7UTEAmNW8AmdQ8oeYGyKRmAjKpeUPNppOqRSdVi06qFuGPvABkUjMBeULNNwG5UTMBeULNE0AmNROQJ9TcAJnUbDqpWnRSteikahH+yAtAJjVPAPlNaiYgN2qeADKpmYB8k5oJyBNq3jipWnRSteikahH+yF8MyKRmAjKpmYA8oWYCMql5Asik5gkgm9S8cVK16KRq0UnVok9eAvKb1ExqJiCTmifU3AC5AbIJyKTmDTXfdFK16KRq0UnVok+WqdkE5AbIE0AmNU+oeQLIG2qeUHMD5EbNGydVi06qFp1ULfrky4A8oeYNNROQTUAmNROQSc0NkAnIJiC/6aRq0UnVopOqRZ/8Y4DcqLkBMqmZ1ExAJjVvqLkBMqmZgPw/nVQtOqladFK16JN/jJobIDdqboBsUnMD5AbIG2o2nVQtOqladFK16JMvU/NNaiYgk5obNROQJ9TcAJnUTEAmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwGZ1NyomYA8oeYGyKRmAjKpmYBMam6A3ACZ1HzTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gcyDV/3XOx6GwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
