@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>揭秘 Uber 跨区域数据湖与灾难恢复机制：350PB 数据、数百万事件、单一系统</title>
+        <title>在 Kotlin 中构建 AI 智能体 – 第 5 部分：教智能体学会遗忘 | JetBrains AI 博客</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>揭秘 Uber 跨区域数据湖与灾难恢复机制：350PB 数据、数百万事件、单一系统</h2>
-        <p>1/25/2026, 2:15:00 AM</p>
+        <h2>在 Kotlin 中构建 AI 智能体 – 第 5 部分：教智能体学会遗忘 | JetBrains AI 博客</h2>
+        <p>1/26/2026, 4:09:12 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文揭秘了 Uber 开发的 HiveSync 系统，该系统通过分片式批量复制和控制平面分离架构，实现了 350PB 级跨区域数据湖的实时同步与灾难恢复。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了如何使用 Koog 框架在基于 Kotlin 的 AI 智能体中实现历史记录压缩，以防止在执行长期任务时因上下文窗口溢出而导致崩溃。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了 Uber 为解决跨区域数据一致性及降低灾难恢复成本而构建的 HiveSync 系统。HiveSync 基于 Airbnb ReAir 扩展，核心特性包括控制平面与数据平面的分离、基于 DAG 的任务编排以及分片技术。系统通过 Hive Metastore 事件监听器捕获变更，利用有限状态机管理复制作业，并针对不同规模任务采用 RPC 或 YARN DistCp 执行。此外，配套的数据修复服务能持续检测并修正数据中心间的不一致性。目前该系统管理着 80 万个表、350PB 数据，日处理事件超 500 万，确保了高可用性与 99.99% 的数据准确性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">JetBrains 关于在 Kotlin 中构建 AI 智能体系列的第五部分讨论了上下文窗口限制这一关键问题。随着智能体不断累积冗长的工具输出和历史记录，它们最终会崩溃。作者引入了“智能压缩”策略——这种策略能够识别历史记录何时过大，并在丢弃不必要细节的同时提取核心事实。文章详细介绍了如何使用 Koog 框架的 `singleRunStrategyWithHistoryCompression` 根据消息数量或字符长度设置阈值。它探讨了两种压缩方法：用于通用摘要的“WholeHistory”和用于针对性提取特定“概念”（如项目结构和目标）的“RetrieveFactsFromHistory”。通过使用专门的模型进行检索，开发者可以在有限的 Token 预算内维持智能体的性能和可靠性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">HiveSync 通过控制平面与数据平面分离，实现了高效的元数据管理与数据传输。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 控制平面负责在 MySQL 中管理任务状态和编排，而数据平面则专注于 HDFS 和 Hive 的实际文件操作，这种解耦提升了系统的扩展性和稳定性。</span>
+                        <strong style="color: #1e40af">当智能体超出上下文限制时会发生崩溃，因为它们保留了每一个命令和文件读取记录。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 标准的智能体循环会累积所有交互，导致“超出上下文窗口”错误。智能压缩模仿了人类的任务交接，保留目标和结果，同时丢弃冗长的日志。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用分片技术和 DAG 编排，支持大规模数据的并行复制与细粒度容错。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将表和分区划分为独立单元，系统能够水平扩展并强制执行排序锁定，确保在处理每日数百万个事件时保持一致且无冲突。</span>
+                        <strong style="color: #1e40af">有效的压缩需要定义特定的阈值来确定“何时”触发该过程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过监控消息数量或字符限制（例如 Claude 的 20 万字符限制），开发者可以在崩溃发生前触发压缩，从而在节省 Token 和保留信息之间取得平衡。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">引入持续的数据修复服务，确保跨区域数据的一致性达到 99.99% 以上。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该服务通过扫描不同数据中心间的差异（如缺失分区或异常更新），自动修复不匹配项，作为增量复制之外的强力补充。</span>
+                        <strong style="color: #1e40af">提取特定的“概念”比通用的 LLM 摘要更可靠。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用带有针对性问题（概念）的“RetrieveFactsFromHistory”可以防止 LLM 遗漏关键细节，例如项目结构或已实现的里程碑，而这些细节在通用摘要中经常会丢失。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">针对单个事实进行独立的 LLM 调用可以提高压缩上下文的准确性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LLM 在一次只回答一个问题时表现更好。为每个定义的“概念”进行独立的调用，可以确保提取的事实精确且高质量。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">HiveSync 确保了跨区域数据的一致性，实现了 Uber 的灾难恢复策略，并消除了由次要区域闲置而导致的低效问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分片功能允许将表和分区划分为独立的单元，从而实现并行复制和细粒度容错。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">HiveSync 的规模很大，管理着 80 万个 Hive 表，总计约 300PB 的数据，每天处理超过 500 万个 Hive DDL 和 DML 事件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">数据修复是一个持续检测异常的服务，恢复数据中心 1 和数据中心 2 之间的一致性，从而保证数据的正确性。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体最终会耗尽上下文。当它们耗尽时，就会崩溃，你会丢失任务进行中的所有内容。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">想象一下把任务移交给另一位开发者。你不会给他们一份你所做每件事的笔录。你会告诉他们目标、你修改了哪些文件、哪些行得通、哪些行不通。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">策略无法猜测历史记录何时过大，也无法猜测哪些事实对你的任务重要。你必须告诉它两件事：何时压缩，以及保留什么。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当你一次问多个问题时，LLM 的回答能力会变差。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">目标不是复制列表；而是识别你的智能体继续工作需要什么状态，并定义能够保留这些信息的概念。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1094</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Fatimazahra El Akkary</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1524</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据湖</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">灾难恢复</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">HiveSync</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大数据架构</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kotlin</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文窗口</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 记忆管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Koog 框架</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/429d0191" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/8900c5b0" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/429d0191">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATOSURBVO3BSY4kSRIEQWFD/P/LPHnUuRjgcI1auoQIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXok5eA/EpqngByo2YCcqPmCSBPqJmA/Epq3jipWnRSteikatEny9RsAvIEkEnNBORGzQ2QSc2Nmk1qNgHZdFK16KRq0UnVok++DMgTap4AcgPkDSCTmieAPKHmCSBPqPmmk6pFJ1WLTqoWfVL/B8gNkCfUTEAmNf8lJ1WLTqoWnVQt+uQfo+ZGzSYg/5KTqkUnVYtOqhZ98mVqfiU1E5AJyI2aCciNmhs1N0AmNU+o+ZOcVC06qVp0UrXok2VA/mRqJiBPqJmATGomIJOaN4D8yU6qFp1ULTqpWoQ/8hcDcqNmAjKpeQLIjZobIJOa/5KTqkUnVYtOqhbhj7wAZFIzAdmk5g0gN2pugDyh5gbIpGYCsknNN51ULTqpWnRStQh/5C8CZFJzA+RGzQ2QSc0bQL5JzRNAJjVvnFQtOqladFK1CH/kBSCTmgnIjZoJyBNqngAyqXkCyBNqboDcqPmbnFQtOqladFK1CH9kEZBJza8EZFJzA2RS8wSQSc0E5JvUTEAmNROQSc2mk6pFJ1WLTqoW4Y+8AGRSMwG5UXMDZFIzAZnU/E5AbtR8E5AbNd90UrXopGrRSdUi/JFFQG7UTEBu1ExA3lAzAZnUTEAmNTdAvknNBGRS8wSQSc0bJ1WLTqoWnVQtwh95AcikZgJyo+YGyI2aJ4DcqLkB8oSaGyCTmhsgk5oJyI2abzqpWnRSteikatEnvxmQSc2k5gbIjZpJzTepuQGyCcik5gbIpGbTSdWik6pFJ1WLPlkG5Ak1N0AmNZOaCcgE5EbNG2omIJOaGzVvqJmA3Kj5ppOqRSdVi06qFn3yhwEyqbkBMqm5ATIBmdRMQCY1E5BJzQTkBsikZgJyA2RSMwG5ATKpeeOkatFJ1aKTqkWfLFMzAXkDyKTmBsikZlIzAZmATGomIJOaJ9TcAJnUTEAmNW+o2XRSteikatFJ1SL8kReATGqeADKpuQEyqbkBMql5AsgTap4AMqmZgDyh5gbIpGbTSdWik6pFJ1WL8EdeADKpmYBMam6A/E5q3gAyqZmAfJOaCcgTat44qVp0UrXopGoR/shfDMgTaiYgk5oJyKRmAjKpeQLIpOYJIJvUvHFSteikatFJ1aJPXgLyK6mZ1DwB5Ak1E5AbIJuATGreUPNNJ1WLTqoWnVQt+mSZmk1AboBMaiYgN2qeUPMEkDfUPKHmBsiNmjdOqhadVC06qVr0yZcBeULNJjWbgExqJiCTmhsgE5BNQCY133RSteikatFJ1aJP/nFAbtRMaiYgk5o31NwAmdRMQG6A3Kh546Rq0UnVopOqRZ/8Y4A8AeSb1NwAuQHyhppNJ1WLTqoWnVQt+uTL1HyTmgnIjZoJyKTmBsik5gbIpGYCMqmZ1ExAJjUTkEnNBOSbTqoWnVQtOqla9MkyIL8SkEnNDZBJzRNqboBMaiYgk5oJyKTmBsgNkEnNN51ULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteh/22JFG5uesSAAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/8900c5b0">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATcSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJAbNTdAJjVPAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBtqJiATkEnNpGYCcqNmUrNJzSYgm06qFp1ULTqpWvTJlwF5Qs0TQCY1E5BvUnMD5Ak1TwB5Qs03nVQtOqladFK16JO/DJBJzQTkBsikZlIzAblRMwGZ1PxNTqoWnVQtOqla9Mn/nJobIJOaSc0NkP+Tk6pFJ1WLTqoWffJlan6TmgnIpGYCMqmZ1ExAJjU3am6ATGqeUPNfclK16KRq0UnVok+WAfmbAJnUTEAmNROQSc0bQP7LTqoWnVQtOqlahD/yBwNyo2YTkEnNE0AmNX+Tk6pFJ1WLTqoW4Y+8AGRSMwHZpOYJIJOaCcgTaiYgN2pugExqJiCb1HzTSdWik6pFJ1WL8EdeADKpuQHyhJoJyCY1vwnIN6l5Asik5o2TqkUnVYtOqhbhj7wA5EbNBGRSMwG5UfNNQCY1E5An1NwAuVHzJzmpWnRSteikahH+yBcBeUPNBGRS801AJjUTkEnNBOSb1ExAJjUTkEnNppOqRSdVi06qFuGPLAJyo+YGyI2aGyCb1DwB5EbNNwG5UfNNJ1WLTqoWnVQt+uQlIDdq3lAzAXlCzQ2QSc0EZFLzBpA31ExAJjVPAJnUvHFSteikatFJ1SL8kReATGqeAPKEmgnIpGYTkDfU3ACZ1NwAmdRMQG7UfNNJ1aKTqkUnVYs+eUnNG2qeAPIEkEnNBGRS84aaGyCbgExqboBMajadVC06qVp0UrXok5eATGomIDdqJiBPqHlDzQTkCTUTkEnNjZo31ExAbtR800nVopOqRSdViz75lwG5UTMBuQEyqZmATGomNU8AmdRMQG6ATGomIDdAJjUTkBsgk5o3TqoWnVQtOqla9MkvUzMBmdRMQCY1E5AbIDdAbtRMQCY1T6i5ATKpmYBMat5Qs+mkatFJ1aKTqkX4Iy8AmdTcAJnUPAHkRs0E5Ak1N0Bu1DwBZFIzAXlCzQ2QSc2mk6pFJ1WLTqoWffJlQCY1E5BJzQTkRs2NmieATGomNTdAJjUTkBsgm4DcAJnUvHFSteikatFJ1SL8kT8YkBs1E5BJzQ2QSc0EZFLzBJBJzRNANql546Rq0UnVopOqRZ+8BOQ3qZnUTEBu1ExAJjWTmgnIDZBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAJjU3QCY1T6h5Asgbap5QcwPkRs0bJ1WLTqoWnVQt+uTLgDyh5pvUvAFkUjMBmdTcAJmAbALym06qFp1ULTqpWvTJ/wyQJ9RMaiYgk5o31NwAmdRMQP5NJ1WLTqoWnVQt+uQvA2RSM6l5Asg3qbkBcgPkDTWbTqoWnVQtOqla9MmXqfkmNTdAJjUTkEnNE2pugExqJiCTmknNBGRSMwGZ1ExAvumkatFJ1aKTqkWfLAPym4BMam6ATGpu1DwBZFIzAZnUTEAmNTdAboBMar7ppGrRSdWik6pF+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pF/wA5EFUUMKQwQgAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
