@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>在 Kotlin 中构建 AI 智能体 – 第 5 部分：教智能体学会遗忘 | JetBrains AI 博客</title>
+        <title>如何使用 Next.js、Supabase 和 OpenAI 构建 AI 驱动的 RAG 搜索应用</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>在 Kotlin 中构建 AI 智能体 – 第 5 部分：教智能体学会遗忘 | JetBrains AI 博客</h2>
-        <p>1/26/2026, 4:09:12 PM</p>
+        <h2>如何使用 Next.js、Supabase 和 OpenAI 构建 AI 驱动的 RAG 搜索应用</h2>
+        <p>1/27/2026, 5:21:37 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了如何使用 Koog 框架在基于 Kotlin 的 AI 智能体中实现历史记录压缩，以防止在执行长期任务时因上下文窗口溢出而导致崩溃。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">一份关于使用 Next.js、Supabase (PostgreSQL/pgvector) 和 OpenAI 构建生产级 RAG 搜索应用的全面、分步技术指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">JetBrains 关于在 Kotlin 中构建 AI 智能体系列的第五部分讨论了上下文窗口限制这一关键问题。随着智能体不断累积冗长的工具输出和历史记录，它们最终会崩溃。作者引入了“智能压缩”策略——这种策略能够识别历史记录何时过大，并在丢弃不必要细节的同时提取核心事实。文章详细介绍了如何使用 Koog 框架的 `singleRunStrategyWithHistoryCompression` 根据消息数量或字符长度设置阈值。它探讨了两种压缩方法：用于通用摘要的“WholeHistory”和用于针对性提取特定“概念”（如项目结构和目标）的“RetrieveFactsFromHistory”。通过使用专门的模型进行检索，开发者可以在有限的 Token 预算内维持智能体的性能和可靠性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本教程详细介绍了开发检索增强生成 (RAG) 应用的全过程。它涵盖了 RAG 系统的整个生命周期：从搭建 Next.js 环境、配置带有 pgvector 扩展的 Supabase，到实现复杂的后端逻辑。解释的关键技术流程包括从多种文件格式（PDF、DOCX、TXT）中提取文本、使用 LangChain 的 RecursiveCharacterTextSplitter 进行文本分块、通过 OpenAI 的 text-embedding-3-small 模型生成 1536 维向量嵌入，以及使用余弦距离进行语义相似度搜索。该指南还详细说明了“生成”阶段，即如何将检索到的文档上下文输入到 GPT-4o-mini 以产生准确且有据可依的回答，并同步构建了基于 React 的前端用于文档管理和搜索。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">当智能体超出上下文限制时会发生崩溃，因为它们保留了每一个命令和文件读取记录。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 标准的智能体循环会累积所有交互，导致“超出上下文窗口”错误。智能压缩模仿了人类的任务交接，保留目标和结果，同时丢弃冗长的日志。</span>
+                        <strong style="color: #1e40af">RAG 架构弥合了静态 LLM 训练数据与私有、即时文档之间的鸿沟。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在生成之前检索相关的文档块，系统可以确保更高的准确性，减少幻觉，并通过来源归属提供透明度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">有效的压缩需要定义特定的阈值来确定“何时”触发该过程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过监控消息数量或字符限制（例如 Claude 的 20 万字符限制），开发者可以在崩溃发生前触发压缩，从而在节省 Token 和保留信息之间取得平衡。</span>
+                        <strong style="color: #1e40af">有效的语义搜索依赖于向量嵌入和像 pgvector 这样的专业数据库扩展。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文本被转换为高维向量，数学上的相似性（余弦相似度）允许系统即使在没有精确关键词匹配的情况下也能找到相关内容。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">提取特定的“概念”比通用的 LLM 摘要更可靠。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用带有针对性问题（概念）的“RetrieveFactsFromHistory”可以防止 LLM 遗漏关键细节，例如项目结构或已实现的里程碑，而这些细节在通用摘要中经常会丢失。</span>
+                        <strong style="color: #1e40af">策略性的文本分块对于保持上下文和控制在 LLM Token 限制内至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用带有重叠的递归字符分块确保了语义在分块边界处不会丢失，这对于检索质量至关重要。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">针对单个事实进行独立的 LLM 调用可以提高压缩上下文的准确性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LLM 在一次只回答一个问题时表现更好。为每个定义的“概念”进行独立的调用，可以确保提取的事实精确且高质量。</span>
+                        <strong style="color: #1e40af">Supabase 作为一个多功能后端，同时提供关系型存储和向量搜索能力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它通过允许开发者在 Storage 中存储原始文件并在 PostgreSQL 中存储嵌入，利用 SQL 函数进行相似度匹配，从而简化了技术栈。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体最终会耗尽上下文。当它们耗尽时，就会崩溃，你会丢失任务进行中的所有内容。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">想象一下把任务移交给另一位开发者。你不会给他们一份你所做每件事的笔录。你会告诉他们目标、你修改了哪些文件、哪些行得通、哪些行不通。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">策略无法猜测历史记录何时过大，也无法猜测哪些事实对你的任务重要。你必须告诉它两件事：何时压缩，以及保留什么。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当你一次问多个问题时，LLM 的回答能力会变差。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">目标不是复制列表；而是识别你的智能体继续工作需要什么状态，并定义能够保留这些信息的概念。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">RAG 是一种结合了信息检索与文本生成的 AI 模式。它不再仅仅依赖 AI 模型的训练数据，而是从你自己的文档中检索相关信息。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">嵌入（Embeddings）是捕捉语义信息的文本数值表示。当你将文本转换为嵌入时，相似的含义会由相似的数字表示。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统提示词（System Prompt）指示 AI 仅根据提供的上下文进行回答，从而确保准确性并防止幻觉。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这是一个生产级的解决方案，你可以立即部署并投入使用。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,30 +64,29 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Fatimazahra El Akkary</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Mayur Vekariya</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1524</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7387</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kotlin</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文窗口</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 记忆管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Koog 框架</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Next.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Supabase</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量数据库</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/8900c5b0" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/f667a232" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/8900c5b0">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATcSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJAbNTdAJjVPAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBtqJiATkEnNpGYCcqNmUrNJzSYgm06qFp1ULTqpWvTJlwF5Qs0TQCY1E5BvUnMD5Ak1TwB5Qs03nVQtOqladFK16JO/DJBJzQTkBsikZlIzAblRMwGZ1PxNTqoWnVQtOqla9Mn/nJobIJOaSc0NkP+Tk6pFJ1WLTqoWffJlan6TmgnIpGYCMqmZ1ExAJjU3am6ATGqeUPNfclK16KRq0UnVok+WAfmbAJnUTEAmNROQSc0bQP7LTqoWnVQtOqlahD/yBwNyo2YTkEnNE0AmNX+Tk6pFJ1WLTqoW4Y+8AGRSMwHZpOYJIJOaCcgTaiYgN2pugExqJiCb1HzTSdWik6pFJ1WL8EdeADKpuQHyhJoJyCY1vwnIN6l5Asik5o2TqkUnVYtOqhbhj7wA5EbNBGRSMwG5UfNNQCY1E5An1NwAuVHzJzmpWnRSteikahH+yBcBeUPNBGRS801AJjUTkEnNBOSb1ExAJjUTkEnNppOqRSdVi06qFuGPLAJyo+YGyI2aGyCb1DwB5EbNNwG5UfNNJ1WLTqoWnVQt+uQlIDdq3lAzAXlCzQ2QSc0EZFLzBpA31ExAJjVPAJnUvHFSteikatFJ1SL8kReATGqeAPKEmgnIpGYTkDfU3ACZ1NwAmdRMQG7UfNNJ1aKTqkUnVYs+eUnNG2qeAPIEkEnNBGRS84aaGyCbgExqboBMajadVC06qVp0UrXok5eATGomIDdqJiBPqHlDzQTkCTUTkEnNjZo31ExAbtR800nVopOqRSdViz75lwG5UTMBuQEyqZmATGomNU8AmdRMQG6ATGomIDdAJjUTkBsgk5o3TqoWnVQtOqla9MkvUzMBmdRMQCY1E5AbIDdAbtRMQCY1T6i5ATKpmYBMat5Qs+mkatFJ1aKTqkX4Iy8AmdTcAJnUPAHkRs0E5Ak1N0Bu1DwBZFIzAXlCzQ2QSc2mk6pFJ1WLTqoWffJlQCY1E5BJzQTkRs2NmieATGomNTdAJjUTkBsgm4DcAJnUvHFSteikatFJ1SL8kT8YkBs1E5BJzQ2QSc0EZFLzBJBJzRNANql546Rq0UnVopOqRZ+8BOQ3qZnUTEBu1ExAJjWTmgnIDZBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAJjU3QCY1T6h5Asgbap5QcwPkRs0bJ1WLTqoWnVQt+uTLgDyh5pvUvAFkUjMBmdTcAJmAbALym06qFp1ULTqpWvTJ/wyQJ9RMaiYgk5o31NwAmdRMQP5NJ1WLTqoWnVQt+uQvA2RSM6l5Asg3qbkBcgPkDTWbTqoWnVQtOqla9MmXqfkmNTdAJjUTkEnNE2pugExqJiCTmknNBGRSMwGZ1ExAvumkatFJ1aKTqkWfLAPym4BMam6ATGpu1DwBZFIzAZnUTEAmNTdAboBMar7ppGrRSdWik6pF+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pF/wA5EFUUMKQwQgAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/f667a232">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATBSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GqSsyaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCcikZgIyqbkBMqm5AfKEmieA/CY1b5xULTqpWnRSteiTZWo2AXlDzRNqnlDzBJAbNTdqNgHZdFK16KRq0UnVok++DMgTajYBeUPNG0AmNROQN4A8oeabTqoWnVQtOqla9Mk/Ts0baiYgE5BJzQ2QSc0E5L/spGrRSdWik6pFn/zjgNyoeULNJiD/T06qFp1ULTqpWvTJl6n5JjVPAHlDzQTkRs0NkDfU/E1OqhadVC06qVr0yTIgvwnIpGYCMqmZgExqJiBPqJmATGreAPI3O6ladFK16KRqEf7IfwiQSc0TQCY1E5AbNU8AmdT8y06qFp1ULTqpWoQ/8gKQSc0NkG9SMwG5UXMD5A01E5An1NwAmdRMQJ5Q88ZJ1aKTqkUnVYs+WQbkCTVPAHlCzQ2QSc0Tat5Q8wSQTWo2nVQtOqladFK16JNlam6A3AB5Qs0TQCY1bwCZ1NyouQEyqblR84SabzqpWnRSteikahH+yBcBmdTcAJnUTEBu1GwCcqNmAvKGmjeATGpugExq3jipWnRSteikatEnvwzIpGZSMwGZ1ExAboBMaiYgT6iZgExqJiBvALlRM6n5k06qFp1ULTqpWvTJS0Bu1ExAboBMat5Qc6NmAjKpmYBMaiYgN2reUDMB+ZucVC06qVp0UrXok5fU3AC5AXIDZFIzqXkCyG9SMwG5UXMDZFJzA2RSMwHZdFK16KRq0UnVok9eAnKj5gkgk5o3gExqngAyqblR84SaCcgTQCY1f9JJ1aKTqkUnVYs+WaZmAjKpmYBMaiYgT6iZ1ExAJjVPAJnUvAFkUvMGkEnNjZpNJ1WLTqoWnVQt+uSXAbkBMqmZgExqJiBPALlRMwG5AfIGkEnNDZBJzQTkRs2mk6pFJ1WLTqoW4Y+8AORGzQ2QJ9RMQN5QMwGZ1ExA/iQ1N0AmNTdAJjVvnFQtOqladFK1CH/kBSDfpGYC8oSaCcik5gbIpGYCMqm5ATKpmYB8k5pvOqladFK16KRq0SdfpuYGyA2QGzU3QCY1E5BJzRtAJjWTmgnIbwIyqdl0UrXopGrRSdUi/JF/GJAbNU8AeULNG0AmNU8AuVHzm06qFp1ULTqpWvTJS0B+k5obNU8AmdRMQG6ATGomIG8AmdT8zU6qFp1ULTqpWvTJMjWbgPxJaiYgN0A2qXlCzQ2QSc2mk6pFJ1WLTqoWffJlQJ5Q8waQSc0TQN5QcwPkBsgbQCY1k5oJyKTmjZOqRSdVi06qFn3yHwdkUjOpmYD8JjUTkEnNBGRS8zc5qVp0UrXopGrRJ/84NROQSc0NkBs1E5BJzSY1TwCZ1ExAftNJ1aKTqkUnVYs++TI1fzM1E5AJyKRmAjKpmYBMam6APKFmAnKjZgKy6aRq0UnVopOqRfgjLwD5TWomIE+omYA8oeYNIE+ouQFyo+Y3nVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16H8xXC8uJEc5VAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

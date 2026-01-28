@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cursor 如何将编程智能体推向生产环境</title>
+        <title>Flutter 中的工厂模式与抽象工厂设计模式详解</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Cursor 如何将编程智能体推向生产环境</h2>
-        <p>1/26/2026, 4:30:35 PM</p>
+        <h2>Flutter 中的工厂模式与抽象工厂设计模式详解</h2>
+        <p>1/27/2026, 5:23:03 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 Cursor “Composer” 智能体背后的系统工程，详细介绍了它如何克服生产环境中的挑战，如“Diff 问题”、复合延迟以及大规模沙箱化。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本教程介绍了如何在 Flutter 中实现工厂模式和抽象工厂设计模式，通过结构化的对象创建来提升应用的扩展性和可维护性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 Cursor 智能体编程系统（特别是 Composer 模型）的架构和生产障碍。它区分了智能体模型（大脑）和编程智能体（身体/框架），解释了 Cursor 如何使用路由在不同模型之间平衡效率。讨论的关键工程挑战包括“Diff 问题”——即模型在精确文件编辑方面存在困难——Cursor 通过在数万个 GPU 上进行轨迹训练解决了这一问题。为了应对迭代循环中的复合延迟，Cursor 采用了混合专家模型（MoE）、针对专门草稿模型的投机采样以及上下文压缩。最后，文章阐述了在大规模、安全沙箱中执行代码和运行测试的必要性，强调这些系统的速度和可靠性与底层模型的智能同样重要。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 Flutter 生态系统中的创建型设计模式，重点关注工厂模式和抽象工厂模式。文章首先定义了五大主要创建型模式，随后转向 Dart 的实际应用。针对工厂模式，展示了如何封装针对特定平台的逻辑，如主题设置和安全检查（例如检测设备是否 Root 或越狱）。针对抽象工厂模式，作者演示了如何跨 Android、iOS 和 Linux 管理相关产品族，包括主题、组件（Widgets）和架构处理器。该指南强调将客户端代码与具体实现解耦，以确保应用在复杂度增加时仍易于扩展和维护。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">编程智能体是一个复杂的系统，而不仅仅是一个独立的 LLM。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它需要一个由路由器、工具访问、上下文检索、编排器和安全沙箱组成的“框架”，才能从简单的文本生成转向端到端的任务执行。</span>
+                        <strong style="color: #1e40af">工厂模式封装了单一产品类型的对象创建。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它允许开发者管理单一类型对象的相关数据集（例如特定平台的安全检查器），而无需向客户端代码暴露实例化逻辑。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“Diff 问题”是实现可靠自动化代码编辑的主要障碍。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通用模型通常在精确格式化和行匹配方面表现不佳；Cursor 通过在海量的编辑轨迹数据集上训练 Composer，专门针对搜索与替换工具优化，从而解决了这一问题。</span>
+                        <strong style="color: #1e40af">抽象工厂模式管理跨不同平台的相关对象族。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它提供了一个主蓝图（接口）来创建多个相互依赖的对象（如主题、组件和架构），确保特定环境内的一致性和兼容性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">必须通过架构优化来减轻智能体循环中的复合延迟。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用 MoE 提高效率、使用投机采样加快生成速度以及使用上下文压缩减少 Prompt 膨胀，Cursor 确保了迭代循环保持响应。 </span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">沙箱必须被视为核心推理基础设施，而不仅仅是一个安全层。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了支持训练和生产过程中高并发的工具执行，Cursor 构建了自定义虚拟机调度程序，以最大限度地缩短配置时间并处理突发需求。</span>
+                        <strong style="color: #1e40af">将客户端代码与具体类解耦可提高应用的扩展性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过仅与抽象接口和工厂交互，应用程序可以支持新平台或功能，而无需对现有业务逻辑进行重大更改。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体编程模型就像大脑……编程智能体则是身体。它拥有执行工具、管理上下文并确保达成解决方案的“双手”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在生产环境中，错误的编辑通常比不编辑更糟糕，因为它们会降低信任并增加清理时间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Cursor 将速度视为核心产品策略……延迟塑造了日常使用习惯。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">工具使用必须内置于模型中。仅靠 Prompt 对于长循环中可靠的工具调用是不够的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果编辑无法干净利落地应用，如果系统迭代太慢，或者如果验证不安全，那么一个能写出好代码的模型仍然是无用的。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">创建型设计模式以系统化和可扩展的方式管理类和对象的创建。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种模式的美妙之处在于客户端代码保持整洁，即使以后添加新平台也无需更改。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">抽象工厂提供了一种结构化的方式来处理不同平台的多个相关对象。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当你需要单一产品并希望封装创建逻辑时，工厂模式是理想选择；而当你拥有多个相关产品时，抽象工厂模式效果更佳。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用这些模式将帮助你编写整洁、可维护且可扩展的 Flutter 应用。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,32 +60,30 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Oluwaseyi Fatunmole</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2508</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2736</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cursor</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM Ops</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">混合专家模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">设计模式</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Flutter</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Dart</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">面向对象编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/f0bf0131" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/bdc9866b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/f0bf0131">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATUSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJweSNszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA2RScwNkUvMEkEnNBOQJNROQ36TmjZOqRSdVi06qFn2yTM0mIG8AmdRMaiYgk5oJyKTmRs0mNZuAbDqpWnRSteikatEnXwbkCTVPAJnUTEAmIDdqNgF5Qs0TQJ5Q800nVYtOqhadVC365B8D5EbNDZAngNyomYBMav4lJ1WLTqoWnVQt+uQfp+YJNZuA/J+cVC06qVp0UrXoky9T85vUPAHkDTU3am6ATGqeUPMnOaladFK16KRq0SfLgPxJgExqbtRMQCY1E5BJzQRkUvMGkD/ZSdWik6pFJ1WL8Ef+YkCeULMJyKTmBsik5l9yUrXopGrRSdWiT14CMqmZgGxSM6m5AbIJyKRmAjKpmdRMQCY1E5BNar7ppGrRSdWik6pFnywDMqnZBGRS8wSQSc0NkEnNBGRScwPkBsgbap4AMql546Rq0UnVopOqRfgjvwjIpOYGyBtqJiA3am6APKHmBsiNmr/JSdWik6pFJ1WL8EcWAblRcwNkUnMDZFIzAZnUbAIyqZmAfJOaCcikZgIyqdl0UrXopGrRSdWiT14CMql5AsgNkG8CMql5Qs0E5EbNbwIyqfmmk6pFJ1WLTqoW4Y8sAjKp2QTkCTVvAJnU3AD5JjUTkEnNE0AmNW+cVC06qVp0UrUIf+QFIJOaGyCTmgnIjZongExq3gDyhJobIJOaGyCTmgnIjZpvOqladFK16KRq0ScvqbkBcgPkRs0E5Ak1E5AbNW+ouQGyCcik5gbIpGbTSdWik6pFJ1WLPlkGZFIzAZnUTEAmIG8AmdRsUjMBmdTcqHlDzQTkRs03nVQtOqladFK16JOXgGxScwNkUjMBmdRMQCY1E5BJzaRmAjKpmYDcAJnUTEBugExqJiA3QCY1b5xULTqpWnRSteiTZWpu1NwAeUPNjZoJyKRmAnKj5gk1N0AmNROQSc0bajadVC06qVp0UrXoky8DcqPmRs0TQCY13wRkUjOpuQEyqZmA3ACZ1ExqJiCTmk0nVYtOqhadVC365JepeQLIpOYNIJOaGzVPAJnUTEBugGwCcgNkUvPGSdWik6pFJ1WL8Ef+YkBu1LwBZFIzAZnUPAFkUvMEkE1q3jipWnRSteikahH+yAtAfpOaGyA3at4A8k1qJiCTmgnIE2q+6aRq0UnVopOqRZ8sU7MJyA2QJ4DcqLlR8wSQN9Q8oeYGyI2aN06qFp1ULTqpWvTJlwF5Qs0bam6ATGqeADKpmYBMam6ATEA2AZnUfNNJ1aKTqkUnVYs++ccAuVFzA2RSM6mZgExq3lBzA2RSMwG5AXKj5o2TqkUnVYtOqhZ98j8DZFLzBJBNam6A3AB5Q82mk6pFJ1WLTqoWffJlar5JzQ2QSc0EZFLzhJobIJOaCcikZlIzAZnUTEAmNROQbzqpWnRSteikahH+yAtAfpOaCcg3qXkCyKRmAjKpmYBMaiYgb6j5ppOqRSdVi06qFuGPVC05qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFv0HshZLHnZqcMUAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/bdc9866b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATxSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA+QJNW8AmdRMQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8oSaN4BMaiYgk5obNZvUbAKy6aRq0UnVopOqRZ98GZAn1DwB5EbNDZBJzQTkBsikZgLyhJongDyh5ptOqhadVC06qVr0yV9GzQTkCSCTmgnIpGYCMqmZgExq/iYnVYtOqhadVC365C8DZFIzAZnUTEAmIJOaCcikZgLyf3JSteikatFJ1aJPvkzNvwnIpGYCMqm5ATKpuVFzA2RS84SaP8lJ1aKTqkUnVYs+WQbk36RmAvIGkEnNBGRSMwGZ1LwB5E92UrXopGrRSdWiT15S83+m5kbNBGRSc6Pmv+SkatFJ1aKTqkX4Iy8AmdRMQDapuQEyqZmATGomIJOaCcikZgIyqbkBMqmZgGxS800nVYtOqhadVC36ZBmQSc0NkBs1N0AmNROQN4BMaiYgk5obIDdA3lDzBJBJzRsnVYtOqhadVC3CH3kByKTmBsiNmgnIpGYC8oSaN4A8oeYGyI2a/5KTqkUnVYtOqhbhj7wA5EbNBORGzW8CMql5AsikZgLyTWomIJOaCcikZtNJ1aKTqkUnVYvwR/4gQG7UTEAmNU8AuVHzBJAbNd8E5EbNN51ULTqpWnRStQh/5AUgN2pugExq/iRAJjU3QL5JzQRkUvMEkEnNGydVi06qFp1ULcIfeQHIpGYC8pvUTEAmNTdANqm5ATKpuQEyqZmA3Kj5ppOqRSdVi06qFn2yDMiNmgnIjZoJyA2QSc0E5EbNDZAbNTdANgGZ1NwAmdRsOqladFK16KRq0SfL1NwAeQLIjZoJyATkRs0EZFJzo2YCMqm5UfOGmgnIjZpvOqladFK16KRq0SdfBuQNNROQCcgmNROQSc0EZFIzAbkBMqmZgNwAmdRMQG6ATGreOKladFK16KRq0Se/TM0NkAnIjZoJyKTmBsgTQCY1T6i5ATKpmYBMat5Qs+mkatFJ1aKTqkWf/DIgN2pugDwB5EbNE0AmIJOaSc0NkEnNBOQGyKRmUjMBmdRsOqladFK16KRq0Se/TM0NkDfUPAHkCTU3QCY1E5AbIJuA3ACZ1LxxUrXopGrRSdUi/JH/MCCTmgnIE2qeADKpeQLIpOYJIJvUvHFSteikatFJ1aJPXgLym9RMaiYgN2omIBOQSc0E5AbIJiCTmjfUfNNJ1aKTqkUnVYs+WaZmE5AbIDdqJiCTmifUPAHkDTVPqLkBcqPmjZOqRSdVi06qFn3yZUCeUPOGmieATGpugExqJiCTmhsgE5BNQH7TSdWik6pFJ1WLPvnLAJnU3KiZgExqJjUTkEnNG2pugExqJiD/ppOqRSdVi06qFn3yl1EzAZnU3KiZgHyTmhsgN0DeULPppGrRSdWik6pFn3yZmm9SMwF5Asgbam6ATGomIJOaSc0EZFIzAZnUTEC+6aRq0UnVopOqRZ8sA/KbgNyomYBMaiYgk5ongExqJiCTmgnIpOYGyA2QSc03nVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16B/BWkpPsbXDIwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
