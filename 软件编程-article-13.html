@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>腾讯混元 AI Infra 核心技术重磅开源：推理吞吐提升 30%！</title>
+        <title>统一缓存之道：利用 Durable Objects 处理响应与进行中的请求</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>腾讯混元 AI Infra 核心技术重磅开源：推理吞吐提升 30%！</h2>
-        <p>1/27/2026, 9:36:00 AM</p>
+        <h2>统一缓存之道：利用 Durable Objects 处理响应与进行中的请求</h2>
+        <p>1/28/2026, 9:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">腾讯混元开源高性能推理算子库 HPC-Ops，通过 CUDA 和 CuTe 深度优化，使混元及 DeepSeek 模型推理吞吐显著提升。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提出了一种利用 Cloudflare Durable Objects 的统一缓存模式，用于同时处理进行中的请求和已完成的响应，从而消除分布式环境中的冗余计算。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">腾讯混元 AI Infra 团队正式开源了生产级高性能 LLM 推理核心算子库 HPC-Ops。该库针对当前主流算子库在 H20 等推理型显卡上适配不佳、开发门槛高等痛点，采用 CUDA 和 CuTe 从零构建。通过任务特性与硬件微架构的深度对齐、精细的任务调度策略以及抽象化工程架构，HPC-Ops 在保证高性能的同时降低了开发难度。实验数据显示，该库使混元模型推理 QPM 提升 30%，DeepSeek 提升 17%，且在 Attention、GroupGEMM 等核心算子性能上大幅超越 FlashInfer 和 DeepGEMM 等业界 SOTA 实现。目前该项目已在 GitHub 开源，支持 BF16、FP8 等精度，并计划未来在稀疏算子、混合精度量化及计通融合方向持续演进。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章探讨了分布式系统中一个常见的低效问题：缓存失效期间重复的进行中请求。传统的缓存仅存储已完成的结果，当多个客户端同时请求同一个缺失的 Key 时，会导致“惊群效应”。作者提出了一种模型，将进行中的任务和已完成的响应视为同一缓存条目的两种状态。通过利用 Cloudflare Durable Objects 的独特属性——按 Key 路由的单例模式、共享内存状态和串行执行——一个权威的所有者可以管理一个代表进行中任务的内存 Promise。这允许并发调用者等待相同的结果，而无需分布式锁或轮询。虽然该方案依赖于特定的运行时（需要类似 Actor 模型语义），但它简化了系统设计，并在水平扩展下保证了正确性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">针对国内主流推理显卡（如 H20）进行底层微架构深度适配。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 不同于以 H800 为目标的算子库，HPC-Ops 通过调整指令发射顺序和数据预取，使访存带宽达到硬件峰值的 80% 以上。</span>
+                        <strong style="color: #1e40af">将进行中的请求与已完成的响应统一为单个状态机。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与其使用独立的协调层，不如将进行中的计算视为“Promise”状态，将完成的结果视为“Value”状态，并统一在同一个缓存条目中，以防止冗余工作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">引入抽象层降低高性能 CUDA 内核的开发与维护门槛。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 CuTe 扩展开发 vec 抽象层和 Layout 代数抽象，隔离复杂的 Tiling 与计算逻辑，让开发者能聚焦于算法本身。</span>
+                        <strong style="color: #1e40af">利用按 Key 路由的单例执行特性，消除分布式锁的复杂性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将特定 Key 的所有请求路由到唯一的权威 Durable Object，系统获得了内存状态的单一事实来源，消除了轮询或外部标记的需求。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">核心算子性能实现跨越式突破，超越现有 SOTA 方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Attention 算子相比 FlashInfer 最高提升 2.22 倍，GroupGEMM 相比 DeepGEMM 最高提升 1.88 倍，显著提升端到端吞吐。</span>
+                        <strong style="color: #1e40af">串行化的请求处理简化了有状态环境中的并发管理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Durable Objects 顺序处理请求，允许开发者确定性地检查、创建并为进行中的 Promise 挂载等待者，而无需显式的互斥锁（Mutex）。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">该模式依赖于运行时环境，需要特定的架构保证。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方法在类 Actor 运行时（如 Durable Objects、Akka、Orleans）中非常有效，但在仅使用最终一致性 KV 存储的无状态环境中无法被完美复制。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心算子性能逼近硬件峰值，实现显著性能突破。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现有 SOTA 算子库在这些显卡上往往难以发挥硬件峰值能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">HPC-Ops 实现了 Attention 相比 FlashInfer/FlashAttention 最高提升 2.22 倍。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本算子库不仅是高性能生产工具，也可作为开发者深入理解 CUTLASS 与 CuTe 工业级开发的实践范本。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">进行中的任务和已完成的响应可以被视为同一缓存条目的两种状态，从而消除缓存失效期间的重复计算。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缓存只有在第一个请求完成后才能发挥作用。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Durable Objects 将进行中的任务提升为一等公民。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种模式将两个相关的关注点折叠进了一个单一的抽象中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">进行中请求去重的困难并非分布式系统固有，而是源于我们通常使用的执行模型。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Gabor Koos</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2709</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2703</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM推理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPU算子优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">腾讯混元</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CUDA</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepSeek</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存策略</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare Durable Objects</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Serverless 架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发控制</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/76d6e56c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/86529b4e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/76d6e56c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATNSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCcik5gbIpGYC8oaaCcik5gkgv0nNGydVi06qFp1ULfpkmZpNQG7UvAHkRs0baiYgN2pu1GwCsumkatFJ1aKTqkWffBmQJ9S8AeRGzQRkUvMGkEnNNwF5Qs03nVQtOqladFK16JO/HJAngExqJiCTmgnIpGZSMwG5UfMvOaladFK16KRq0Sf/Z9RMQH6TmgnIpOZvdlK16KRq0UnVok++TM2fTM0TaiYgk5pJzQRkUvOGmj/JSdWik6pFJ1WLPlkG5L+kZgJyA2RSMwGZ1DwBZFIzAZnU3AD5k51ULTqpWnRStQh/5C8GZFIzAblRswnIE2r+JSdVi06qFp1ULfrkJSCTmieATGomIE8AmdRMQDYBuVEzAbkBsknNDZBJzRsnVYtOqhadVC3CH/kiIE+oeQLIjZobIG+o+SYgv0nNGydVi06qFp1ULfpkGZBJzRNA3lAzAblRcwPkDSCTmgnIJjVPANl0UrXopGrRSdWiT14CcgPkDTVPAJnU3ACZ1NyouQEyqZmAPKHmBsgEZFIzAfmmk6pFJ1WLTqoWfbJMzQTkRs0NkDeATGreADKpuQHyTWreULPppGrRSdWik6pFn7ykZgIyqbkBMqmZ1ExAJjVPAJnUTEAmNROQN9Q8AWRSMwF5A8ik5o2TqkUnVYtOqhZ9skzNBGRScwPkRs0EZFJzo2YCMqmZgDyhZgJyA2RS801qJiCbTqoWnVQtOqla9MmXqblRswnIpOZGzSYgN0A2qXkCyDedVC06qVp0UrXokz8MkCfU3AB5Qs2NmifU3ACZgExqJiCTmjfUbDqpWnRSteikahH+yAtAJjUTkDfUTEAmNROQSc0TQCY1E5AbNROQSc0NkE1qJiA3at44qVp0UrXopGrRJy+puVFzA2RSMwGZ1DwBZFLzBJAngExqNqmZgExqJiCTmgnIppOqRSdVi06qFuGPfBGQSc0NkEnNBORGzQ2QGzU3QCY1E5AbNROQSc03AblR88ZJ1aKTqkUnVYs+eQnINwH5m6l5AsgmNZOaCcimk6pFJ1WLTqoW4Y/8xYA8oeYGyBtqboDcqHkCyKTmCSCTmjdOqhadVC06qVr0yUtAfpOaGzUTkAnIpOZGzQRkUvNNQCY1N0Bu1HzTSdWik6pFJ1WLPlmmZhOQGzUTkEnNE2omIJOaCciNmjfUPKHmBsikZtNJ1aKTqkUnVYs++TIgT6h5AsgNkEnNBOQNNROQN4C8AWRSM6mZgExq3jipWnRSteikatEnfzk1E5AbIDdqJiATkBs1T6iZgExqJiCTmj/JSdWik6pFJ1WLPvnHqJmATGpugDyhZgJyo+ZGzY2aGyD/pZOqRSdVi06qFn3yZWp+E5AbIJOaN4DcqLkBMqmZgExqJiA3aiYg33RSteikatFJ1aJPlgH5TUAmNROQSc0E5A01E5BNaiYgN2qeULPppGrRSdWik6pF+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pF/wNyaDY5P70T4wAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/86529b4e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATcSURBVO3BQY4kRxIEQdNA/f/Lun10XgJIpFcPh2si+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQFyo+YJIJOaJ4A8oWYC8pvUvHFSteikatFJ1aJPlqnZBOSbgExqboBMam7UbFKzCcimk6pFJ1WLTqoWffJlQJ5Q8wSQGzUTkEnNE2omIJOaCcgTap4A8oSabzqpWnRSteikatEn/zFqngByo2YCcgNkUjMBmdT8l5xULTqpWnRSteiT+gc1E5BJzRNA/p+cVC06qVp0UrXoky9T8ycBmdRMQCYgk5oJyKTmRs0NkEnNE2r+TU6qFp1ULTqpWvTJMiB/MzUTkEnNBGRSMwGZ1LwB5N/spGrRSdWik6pFn7yk5m+m5kbNBGRSc6NmAjKpuVHzNzmpWnRSteikahH+yAtAJjUTkE1qboBMaiYgk5oJyKTmBsiNmhsgk5oJyCY133RSteikatFJ1SL8kUVAJjU3QG7UTEDeUDMBeULNG0C+Sc0TQCY1b5xULTqpWnRStQh/5IuATGomIG+ouQFyo+YJIE+ouQFyo+ZvclK16KRq0UnVok+WAbkB8oSaCcgmIJOaCcikZgIyqZmAvAHkRs0EZFIzAZnUbDqpWnRSteikatEnX6bmBsikZgLyBJBJzQ2QCcgTaiYgN2p+E5BJzTedVC06qVp0UrUIf+QFIE+oeQPIpGYC8oaaN4B8k5oJyKTmCSCTmjdOqhadVC06qVqEP/JFQG7U3AC5UXMD5EbNBGRSMwF5Qs0NkEnNDZBJzQTkRs03nVQtOqladFK16JOXgExq3gAyqbkBMqm5UTMBmdS8oeYGyCYgk5obIJOaTSdVi06qFp1ULfrkl6l5AsiNmhs1E5BJzQRkUnOjZgIyqblR84aaCciNmm86qVp0UrXopGrRJ8uATGreUDMBuQHyhpoJyKRmAjKpmYDcAJnUTEBugExqJiA3QCY1b5xULTqpWnRSteiTZWpugExqboDcAJnU3ACZgExqboBMap5QcwNkUjMBmdS8oWbTSdWik6pFJ1WL8EdeADKpeQPIpOYGyI2aGyCTmhsgN2qeADKpmYA8oeYGyKRm00nVopOqRSdViz75w4DcAJnU3KiZgDwB5EbNDZBJzQTkBsgmIDdAJjVvnFQtOqladFK16JOX1Lyh5t9EzRNAJjU3aiYgk5ongExA/qSTqkUnVYtOqhZ98hKQ36RmUnOj5g0gTwDZBGRS84aabzqpWnRSteikatEny9RsAnID5Ak1E5BJzY2aJ4C8oeYJNTdAbtS8cVK16KRq0UnVok++DMgTajapuVFzo2YCMqmZgExqboBMQDYB+U0nVYtOqhadVC365D8OyI2aJ9RMQCY1b6i5ATKpmYD8SSdVi06qFp1ULfqk/gHIb1JzA+QGyBtqNp1ULTqpWnRSteiTL1PzTWomIDdqJiCTmhsgk5obIJOaCcikZlIzAZnUTEAmNROQbzqpWnRSteikatEny4D8JiCTmgnIE0Bu1NwAmdRMQCY1E5BJzQ2QGyCTmm86qVp0UrXopGoR/kjVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrR/wC9A0M13mbGKAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
