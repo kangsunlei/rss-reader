@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何编写高性能代码</title>
+        <title>Uber 从静态限制转向分布式存储的优先级感知负载控制</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何编写高性能代码</h2>
-        <p>1/28/2026, 4:30:44 PM</p>
+        <h2>Uber 从静态限制转向分布式存储的优先级感知负载控制</h2>
+        <p>1/29/2026, 3:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过关注性能估算、经验测量、算法效率、内存局部性以及减少不必要的工作，为编写高性能代码提供了全面指南。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Uber 将其分布式存储负载管理从静态 QPS 限制演进为名为 Cinnamon 的优先级感知动态系统，显著提升了数据库的韧性和性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章探讨了软件性能的基本原则，打破了“优化仅限专家”的迷思。它首先结合上下文解读了 Donald Knuth 关于“过早优化”的名言，强调开发者仍需处理那关键的 3% 性能敏感代码。核心策略包括：建立对硬件延迟层级（CPU 缓存 vs. RAM vs. 磁盘）的直觉；使用分析工具（Profiling）定位实际瓶颈而非凭空猜测；优先考虑算法改进（O(N) vs. O(N²)）。此外，文章还强调了常被忽视的内存布局影响，提倡使用连续存储以利用 CPU 缓存局部性。针对减少内存分配、利用惰性求值以及为常用场景创建“快速路径”，文章提供了实用建议。作者总结道，虽然可读性依然至关重要，但在热点路径和资源受限的环境中，性能应是一个持续考量的因素。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Uber 如何将其分布式数据库 Docstore 和 Schemaless 从传统的静态限流转变为复杂的优先级感知负载管理架构。最初，Uber 依赖基于 QPS 的限制，但发现静态配额无法考虑不同的资源消耗（CPU / IO）以及多租户环境中的“嘈杂邻居”问题。在经历了一个缺乏优先级细分的使用 CoDel（受控延迟）的中间阶段后，他们开发了 Cinnamon。这一新系统利用分级层级在过载期间丢弃低优先级流量，并采用“自带信号”模型来统一本地和集群层面的健康指标。该实现使得在压力条件下吞吐量提高了 80 %，P99 延迟降低了 70 %。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">建立硬件延迟层级的心理模型，以估算性能成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 理解内存访问比缓存慢 100 倍，而磁盘/网络又慢了几个数量级，这能让开发者在编写代码前做出更好的架构选择。</span>
+                        <strong style="color: #1e40af">基于 QPS 的静态限流不足以应对大规模有状态多租户系统。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 静态限制无法反映单个请求的实际资源消耗（CPU、RAM、I / O），导致在过载分区仍未受到保护的情况下，健康的流量却被丢弃。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在尝试优化代码之前，务必进行测量和性能分析。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 人类对瓶颈的直觉经常是错误的；分析工具提供了数据驱动的洞察，展示了 CPU 时间、内存和 I/O 实际消耗在哪里。</span>
+                        <strong style="color: #1e40af">优先级感知队列对于在过载期间保护关键的面向用户操作至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将流量分为不同的等级，系统可以优先丢弃后台或低优先级任务，确保对延迟敏感的用户请求即使在压力下也能保持高性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">优先考虑算法效率和数据结构选择，以获得巨大收益。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 O(N²) 的嵌套循环切换为 O(N) 的哈希表查找，可以提供微观优化无法比拟的 10 倍到 100 倍的加速。</span>
+                        <strong style="color: #1e40af">统一的“自带信号”模型提高了准入控制的准确性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将本地节点信号（内存、并发）与集群级信号（复制延迟）整合到单个控制循环中，可以防止碎片化且冲突的负载丢弃决策。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">优化内存局部性以最大化 CPU 缓存效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 现代 CPU 受限于内存速度；将相关数据连续存储在数组中，而不是通过指针分散存储，可以确保更多数据进入高速缓存行。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">减少热点路径中内存分配的频率和开销。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 频繁的分配会触发簿记开销和垃圾回收停顿；通过容器预设大小和对象复用等技术可以显著提高吞吐量。</span>
+                        <strong style="color: #1e40af">与静态阈值相比，使用基于 PID 调节的动态微调增强了系统稳定性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从固定超时转向基于高分位延迟的动态调整，使系统能够适应不断变化的工作负载，并防止“惊群”重试效应。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们应该忘记微小的效率，大约 97% 的情况下是这样：过早优化是万恶之源。然而，我们不应放过那关键 3% 中的机会。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">事实是，编写相当快的代码并不需要高深的计算机科学知识……它需要培养一种关于性能在何处至关重要的直觉。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">数据在内存中的布局往往比代码的算法复杂度更重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最快的代码是永远不运行的代码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">性能不是唯一的关注点。代码可读性也很重要，因为其他开发者需要维护我们的代码。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在大规模环境下，有状态数据库的过载保护是一个多维问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Cinnamon 使用高分位延迟指标动态调整在途限制和队列超时，减少了对静态阈值的依赖。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">整合这些信号消除了碎片化的控制逻辑，并避免了早期基于令牌桶系统中所见的冲突负载丢弃决策。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在过载条件下，吞吐量增加了约 80 %，而 upsert 操作的 P99 延迟下降了约 70 %。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尽早拒绝请求以保持可预测的延迟并减轻内存压力。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Leela Kumili</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2713</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">533</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">计算机体系结构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">算法</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">负载管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库可靠性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Uber 工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">限流</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/f940a947" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/1a572371" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/f940a947">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATgSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1Lzm4BMap4A8oSaCchvUvPGSdWik6pFJ1WLPlmmZhOQJ4BMaiYgk5ongNyomdRsUrMJyKaTqkUnVYtOqhZ98mVAnlDzBJBJzQTkDTUTkEnNDZAn1DwB5Ak133RSteikatFJ1aJP/mfUTEBu1ExqJiA3aiYgk5q/yUnVopOqRSdViz75ywC5ATKpuQEyqZnU3AD5PzmpWnRSteikatEnX6bm36RmAjIBmdRMaiYgk5obNTdAJjVPqPkvOaladFK16KRq0SfLgPyb1ExAJjUTkBsgk5oJyKRmAjKpeQPIf9lJ1aKTqkUnVYvwR/5gQG7UfBOQSc0NkEnN3+SkatFJ1aKTqkX4Iy8AmdRMQDapuQFyo+YGyBNqJiCTmhsgk5oJyCY133RSteikatFJ1aJPfpmaCcik5gkgk5ongExqngAyqbkBcgPkDTVPAJnUvHFSteikatFJ1SL8kReAPKHmCSCTmhsgb6i5AfKEmhsgN2r+JCdVi06qFp1ULfrky9RMQCY1N2omIJOaJ9Q8AWRSMwGZ1ExA3gByo2YCMqmZgExqNp1ULTqpWnRSteiTZWo2AXlCzQ2QSc2Nmhs1E5AbNb8JyKTmm06qFp1ULTqpWvTJlwG5ATKpmdT8m4BMat4A8oaaCcik5gkgk5o3TqoWnVQtOqlahD/yApBJzRNAnlAzAZnUTECeUHMD5Ak1N0AmNTdAJjUTkBs133RSteikatFJ1aJPXlJzA+QNNTdqbtT8JjU3QDYBmdTcAJnUbDqpWnRSteikatEnLwGZ1NyomYBMaiYgT6i5AXKj5gk1E5BJzY2aN9RMQG7UfNNJ1aKTqkUnVYs++TI1b6jZpOYGyKRmUjMBmdRMQG6ATGomIDdAJjUTkBsgk5o3TqoWnVQtOqla9MmXAblRMwF5Qs0bQG6A3Kh5Qs0NkEnNBGRS84aaTSdVi06qFp1ULcIfeQHIpOYJIDdq3gByo2YC8oaaJ4BMaiYgT6i5ATKp2XRSteikatFJ1SL8kReATGomIJOaGyA3aiYgk5obIE+oeQLIpGYC8k1qJiBPqHnjpGrRSdWik6pF+CN/MCA3at4AMqmZgExqngAyqXkCyCY1b5xULTqpWnRSteiTl4D8JjWTmgnIBORGzQRkUjMBuQGyCcik5g0133RSteikatFJ1aJPlqnZBOQGyBtAJjUTkEnNE0DeUPOEmieATGreOKladFK16KRq0SdfBuQJNW+omYC8oWYCMqmZgExqboBMQDYBmdRMajadVC06qVp0UrXok78MkEnNBOQGyKRmUjMBmdS8oeYGyKRmAnID5EbNGydVi06qFp1ULfrkL6PmRs0E5AbIN6m5AXID5A01m06qFp1ULTqpWvTJl6n5JjWb1ExAbtTcAJnUTEAmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwGZ1LwB5EbNDZBJzQRkUjMBmdTcALkBMqn5ppOqRSdVi06qFuGPVC05qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFv0D0ppZEAwFGB4AAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/1a572371">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATASURBVO3BQY4cSRIEQdNA/f/Lun1bPwWQSK8ekjAR/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWiT14C8pvUTECeUDMBuVHzBpBJzRNAfpOaN06qFp1ULTqpWvTJMjWbgNyo+SYgk5oJyKRmUjMBuVFzo2YTkE0nVYtOqhadVC365MuAPKHmDSCTmhs1TwC5ATKp+SYgT6j5ppOqRSdVi06qFn3ylwPyJ1EzAblR8y85qVp0UrXopGrRJ/8YNROQJ9R8k5oJyKTmb3ZSteikatFJ1aJPvkzNn0TNBOQGyKRmAnKjZgIyqXlDzZ/kpGrRSdWik6pFnywDUv8HZFIzAZnU3AD5k51ULTqpWnRStQh/5C8GZFJzA2RS8wSQTWr+JSdVi06qFp1ULfrkJSCTmieATGomIE8AmdS8AWRSMwG5UTMBuQGySc0NkEnNGydVi06qFp1ULcIfeQHIN6m5AXKjZgJyo+YGyKTmm4D8JjVvnFQtOqladFK16JNlam6APAFkUnOj5kbNE0DeADKpmYBsUvMEkE0nVYtOqhadVC365MuATGomIDdqJiCTmhsgk5on1DwBZFIzAXlCzQ2QCcikZgLyTSdVi06qFp1ULfrky9RMQG7UTEB+E5BJzQRkUnMD5JvUvKFm00nVopOqRSdViz75MiA3aiYgk5pNQG7UfJOaJ4BMaiYgbwCZ1LxxUrXopGrRSdWiT36ZmgnIDZBJzRNqJiBPAHlCzQTkBsik5pvUTEA2nVQtOqladFK16JOX1DwB5EbNE0AmNU+omYBMaiYgN0BugGxS8wSQbzqpWnRSteikatEny4DcqLkBcqNmUvOEmgnIE2qeUHMDZAIyqZmATGreULPppGrRSdWik6pF+CMvAHlCzQTkRs0NkCfUTEA2qZmATGpugGxSMwG5UfPGSdWik6pFJ1WLPnlJzSY1E5AbNTdAJiCTmieA3ACZ1GxSMwGZ1ExAJjUTkE0nVYtOqhadVC365MuATGpugExqJiCbgExqnlAzAZmATGomIJOaJ9TcqJmAfNNJ1aKTqkUnVYs+eQnIE0AmNROQCcik5gk1E5BJzQRkk5ongGxSM6mZgGw6qVp0UrXopGrRJy+p2aTmCSBPqJmATGomIDdAJjU3QG7UPAFkUvNfOqladFK16KRq0ScvAflNat4AMqmZgDyh5puATGpugNyo+aaTqkUnVYtOqhZ9skzNJiA3aiYgk5obIDdqboDcqHlDzRNqboB800nVopOqRSdViz75MiBPqHkCyBNANqmZgLwB5A0gk5obNZtOqhadVC06qVr0yV9OzQTkRs0EZFIzAXlCzRNqJiCTmgnIpOYJNROQSc0bJ1WLTqoWnVQt+uQfo2YCMqm5ATKpmYBMaiYgN2pu1NyouQHyXzqpWnRSteikatEnX6bmNwGZ1NyomYBMQG6A3Ki5ATKpmYBMaiYgN2omIN90UrXopGrRSdWiT5YB+U1AboA8oWYCcqNmArJJzQTkRs0TajadVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXof3FjH1BIGn5jAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

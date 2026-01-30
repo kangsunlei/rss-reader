@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Spring AI 智能体模式（第四部分）：子智能体编排</title>
+        <title>Clawdbot/Moltbot 深度解析（及使用指南）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Spring AI 智能体模式（第四部分）：子智能体编排</h2>
-        <p>1/27/2026, 12:00:00 AM</p>
+        <h2>Clawdbot/Moltbot 深度解析（及使用指南）</h2>
+        <p>1/27/2026, 7:00:34 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Spring AI 中的 “Task” 工具，通过层级化子智能体编排实现上下文隔离和专业任务委派，从而提升 LLM 的性能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 Moltbot（原名 Claudebot）的变革潜力，这是一个 AI Agent 框架，可作为独立创业者的“数字员工”，自动完成编程、研究和业务运营。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章探讨了 Spring AI 生态系统中的层级化子智能体模式，重点介绍了 spring-ai-agent-utils 工具包中的 “Task” 工具。该模式告别了单体通用智能体，转向基于委派的架构，由主编排器管理专业化的子智能体。每个子智能体在各自独立的上下文窗口中运行，有效防止了上下文混乱和性能下降。核心特性包括多模型路由（根据复杂度将任务分配给不同的 LLM）、基于 Markdown 的子智能体配置以及对后台执行的支持。该框架提供了用于探索、规划和 Bash 执行的内置子智能体，同时允许开发者通过特定工具和系统提示词定义自定义智能体。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 Greg Isenberg 与 Alex Finn 关于开源 AI Agent 框架 Moltbot 的对话。与标准聊天机器人不同，Moltbot 的功能更像是一个“数字员工”，能够自主执行任务、自我改进并主动解决问题。Finn 分享了实际应用案例，例如 AI 生成每日情报简报、在 YouTube 上进行竞品研究，以及根据市场趋势数据自主为 SaaS 产品编写代码。讨论涵盖了技术设置，建议使用 Mac Mini 等本地硬件以获得更好的控制权和隐私，并强调了从将 AI 视为工具到将其视为主动合作伙伴的心理转变。至关重要的是，它还探讨了提示词注入等安全风险，以及在关键业务基础设施中保持“人工干预”监督的必要性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将任务委派给专业智能体以保持专注的上下文窗口</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 子智能体在隔离的窗口中运行，而不是由单个智能体处理所有逻辑，这防止了通常会降低 LLM 推理性能的上下文混乱。</span>
+                        <strong style="color: #1e40af">通过设定明确预期，实现从被动提示到主动 AI 代理的转变。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用户不应只是请求特定任务，而应为 AI 提供背景信息和指令进行“入职培训”，使其能够自主行动，从而在无需人类持续输入的情况下识别机会并解决问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Task 工具实现了包含编排器和注册表的层级架构</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 主智能体使用智能体注册表（Agent Registry）根据描述识别并调用专业子智能体，管理信息流和结果。</span>
+                        <strong style="color: #1e40af">利用多模型策略平衡智能水平与运营成本。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 Claude Opus 等高推理模型作为负责策略的“大脑”，同时将编程等执行任务交给 Codex 等专用模型，以优化 Token 使用和效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">多模型路由优化了不同任务的成本和性能</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该框架允许将简单任务路由到成本更低的模型（如 Claude Haiku），而将复杂的分析任务留给能力更强的模型（如 Claude Opus）。</span>
+                        <strong style="color: #1e40af">本地硬件（如 Mac Mini/Studio）为 AI Agent 提供卓越的控制力和隐私保护。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与基于云的 VPS 方案相比，在本地运行模型可以更好地与个人文件和账户集成，同时提供更安全的环境来监控 Agent 的行为。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">子智能体使用便携的基于 Markdown 的配置格式定义</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在 Markdown 文件中使用 YAML 前置内容（frontmatter），开发者可以轻松定义子智能体名称、描述、允许的工具和特定的系统提示词，无需编写复杂代码。</span>
+                        <strong style="color: #1e40af">实施严格的安全边界以降低提示词注入等风险。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 拥有业务基础设施访问权限的 AI Agent 存在重大风险；用户应限制其访问敏感账户（如社交媒体），并使用专用电子邮件地址以防止未经授权的指令。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与其让一个通用智能体处理所有事情，不如委派给专业智能体。这能保持上下文窗口的专注——防止因混乱导致的性能下降。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">主智能体会根据每个子智能体的描述字段自动决定何时进行委派。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">子智能体在独立的智能体实例中运行，并在隔离的上下文窗口中执行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 是助手，而不是自主可靠的程序员。我是高级开发人员；LLM 的存在是为了加速我的工作，而不是取代我的判断。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">子智能体不能再产生自己的子智能体。不要在子智能体的工具列表中包含 Task。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这是关于你利用一名 AI 员工来独自经营整个业务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我想要一名能尽可能减轻我的负担，并且尽可能主动的员工。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Opus 是大脑。你会希望使用其他模型作为肌肉。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你买的不是一件硬件；你买的是一名员工。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">风险越大，机会越大。那些投身其中的人……这里有太多的获胜方式。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Spring Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">tzolov</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Greg Isenberg</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Greg Isenberg</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1043</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">42 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">10333</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spring AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agentic Patterns</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多智能体系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 编排</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java 开发</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Moltbot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自主工作流</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">一人公司</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/0dff932f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/video/4aea584" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            播放完整视频
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/0dff932f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAT+SURBVO3BQQ4kR5LAQDJQ//8yt49+SiBRUS2N1s3sD9a65LDWRYe1LjqsddFhrYsOa110WOuiw1oXHda66LDWRYe1LjqsddFhrYsOa110WOuiw1oXffiSyt9U8URlqphUpopvqEwVk8obFZPK31TxjcNaFx3Wuuiw1kUfLqu4SeWNim+ovFHxpOKmiptUbjqsddFhrYsOa1304cdU3qh4Q2WqmFTeqHiiMqlMFZPKGxVvqLxR8UuHtS46rHXRYa2LPvzHVbyh8kbFpDJVTCpTxX/JYa2LDmtddFjrog//MSpPKiaVqeINlaliUvn/5LDWRYe1LjqsddGHH6v4myomlUnlicobFU8qnqhMFW9U/Jsc1rrosNZFh7Uu+nCZyr9ZxaQyVUwqU8WkMlVMKlPFN1T+zQ5rXXRY66LDWhfZH/wPU5kqnqg8qXiiMlW8oTJV/Jcc1rrosNZFh7Uusj/4gspUMancVPFLKlPFpPJGxROVqWJSuanilw5rXXRY66LDWhd9+LGKSeVJxROVqWJSmSomlTdUpopvqDxR+UbFGypTxTcOa110WOuiw1oXffjLKiaVJyrfUJkqJpWp4onKGxVTxaTypOKXKm46rHXRYa2LDmtd9OFLFU9UpoonKlPFpHJTxROVqWJSmSomlW+oPKmYVKaKSWWquOmw1kWHtS46rHWR/cFFKm9UPFF5o+KJylQxqUwVb6g8qfgllScVv3RY66LDWhcd1rrow49VTCqTypOKX1KZKiaVqeIbKt+omFSmijdUpopvHNa66LDWRYe1LvrwYypvVEwqU8UTlaniScWkMlVMKm9UPFGZKp6oTBWTypOKqeKmw1oXHda66LDWRR9+rGJSeaIyVTxRmSomlScqU8Wk8kbFE5WbVKaKJypTxU2HtS46rHXRYa2LPlxWMalMFZPKVDGpvKEyVUwqU8WkMlVMKlPFpDJVPKn4RsWk8qTilw5rXXRY66LDWhfZH3xBZap4ojJVTCpTxaQyVTxReVLxRGWqmFSmiknljYpJ5Y2KSWWqmFSmim8c1rrosNZFh7Uu+vAPU3miMlVMKlPFVPGGylQxqUwVb1Q8UZkqJpWp4hsVNx3Wuuiw1kWHtS768GMqU8WkMlV8Q+VJxaQyVbyhMlVMFU9UpopJ5YnKVDFVTCpTxU2HtS46rHXRYa2LPvxYxRsqTyreqHhD5UnFE5WpYlJ5onKTyhOVqeIbh7UuOqx10WGti+wP/oepvFExqUwVb6hMFW+oTBVvqNxU8Y3DWhcd1rrosNZFH76k8jdVTBWTylQxqTxR+YbKTSpTxTcqfumw1kWHtS46rHXRh8sqblJ5ojJVTCpTxaQyVdyk8o2KNyqeqDyp+MZhrYsOa110WOuiDz+m8kbFN1SmiptUpopJZap4ojKp3KTyNx3Wuuiw1kWHtS768B9TMak8qXijYlKZKr5R8URlqphU/kmHtS46rHXRYa2LPvzHqLyh8k+qeKLyROUbFTcd1rrosNZFh7Uu+vBjFb9UMalMFd9QeVLxRGWqmFSmiqliUpkqJpWpYlL5pcNaFx3Wuuiw1kUfLlP5m1SmikllqphUpoonFU9UpopJZaqYVKaKJypPVKaKXzqsddFhrYsOa11kf7DWJYe1LjqsddFhrYsOa110WOuiw1oXHda66LDWRYe1LjqsddFhrYsOa110WOuiw1oXHda66P8ASAlaSM5jup0AAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/video/4aea584">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpobIJOaN4DcqLkB8oSaCcivpOaNk6pFJ1WLTqoWfbJMzSYgT6iZgExqnlAzAZmATGomNZvUbAKy6aRq0UnVopOqRZ98GZAn1DwBZFIzqbkBMql5Qs0NkCfUPAHkCTXfdFK16KRq0UnVok/+59RsAjKpmYBMav4lJ1WLTqoWnVQt+uQfA+RGzQTkRs2kZgIyqZmA/J+cVC06qVp0UrXoky9T8zupeQPIG2pugExqnlDzJzmpWnRSteikatEny4D8TmomIJOaGzUTkEnNBOQGyKTmDSB/spOqRSdVi06qFuGP/MWAPKHmDSA3am6ATGr+JSdVi06qFp1ULcIfeQHIpGYCsknNDZBJzRtAbtRMQCY1N0AmNROQTWq+6aRq0UnVopOqRZ98mZobIDdqJiCTmieAPKHmBsik5gbIDZA31DwBZFLzxknVopOqRSdVi/BHXgAyqXkDyI2aCcikZgIyqXkDyBNqboDcqPmbnFQtOqladFK16JNlQJ5Qc6NmAnIDZFIzAblR84SaGyBvALlRMwGZ1ExAJjWbTqoWnVQtOqla9MlLap4AcqNmAjKpuQHyhJpNQG7U/EpAJjXfdFK16KRq0UnVIvyRF4A8oWYCMqn5nYBMam6A/EpqJiCTmieATGreOKladFK16KRqEf7IIiCTmieA3KiZgExqboBsUjMBmdTcAJnU3ACZ1ExAbtR800nVopOqRSdViz5ZpuYGyKRmUvMGkEnNG2omIBOQSc0NkE1AJjU3QCY1m06qFp1ULTqpWvTJS0AmNTdqJiBvqLkBMqmZgExqJiBPAJnU3Kh5Q80E5EbNN51ULTqpWnRSteiTP5yaCcgNkEnNjZobNd8EZFIzAbkBMqmZgNwAmdS8cVK16KRq0UnVok/+cEBugExqJiCTmjeAPKFmUnMDZFIzAZnUvKFm00nVopOqRSdViz75zdRMQCY1E5BJzRtAJjUTkEnNBGRSMwGZ1ExAJjUTkBsgk5pJzQRkUrPppGrRSdWik6pFn3wZkBs1k5oJyCYgT6i5UTMBmdRMQG6AbAJyA2RS88ZJ1aKTqkUnVYvwR/5iQJ5QcwPkRs0NkBs1E5BJzRNANql546Rq0UnVopOqRZ+8BORXUjOpmYA8AeQJIDdqJiATkCeATGreUPNNJ1WLTqoWnVQt+mSZmk1AboB8k5obIDdqJiBPqHlCzQ2QSc2mk6pFJ1WLTqoWffJlQJ5Q84aaGyA3aiYgk5pJzQRkUjOpmYBMQDYBmdR800nVopOqRSdViz75xwC5UXMDZFJzA2RSMwGZ1NyouQEyqZmA3AC5UfPGSdWik6pFJ1WLPvnHqJmATEAmNTdA3lBzo+YGyA2QN9RsOqladFK16KRq0Sdfpuab1NyouQHyTUAmNROQSc2kZgIyqZmATGomIN90UrXopGrRSdWiT5YB+ZWATGpugNyouQEyqZmATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXoPxGDTyyHuZRFAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
