@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Clawdbot/Moltbot 深度解析（及使用指南）</title>
+        <title>Spring AI 智能体模式（第五部分）：利用 Agent2Agent (A2A) 协议构建互操作智能体</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Clawdbot/Moltbot 深度解析（及使用指南）</h2>
-        <p>1/27/2026, 7:00:34 PM</p>
+        <h2>Spring AI 智能体模式（第五部分）：利用 Agent2Agent (A2A) 协议构建互操作智能体</h2>
+        <p>1/29/2026, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 Moltbot（原名 Claudebot）的变革潜力，这是一个 AI Agent 框架，可作为独立创业者的“数字员工”，自动完成编程、研究和业务运营。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Agent2Agent (A2A) 协议与 Spring AI 的集成，为构建具有互操作性的跨平台 AI 智能体生态系统提供了一个标准化框架。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 Greg Isenberg 与 Alex Finn 关于开源 AI Agent 框架 Moltbot 的对话。与标准聊天机器人不同，Moltbot 的功能更像是一个“数字员工”，能够自主执行任务、自我改进并主动解决问题。Finn 分享了实际应用案例，例如 AI 生成每日情报简报、在 YouTube 上进行竞品研究，以及根据市场趋势数据自主为 SaaS 产品编写代码。讨论涵盖了技术设置，建议使用 Mac Mini 等本地硬件以获得更好的控制权和隐私，并强调了从将 AI 视为工具到将其视为主动合作伙伴的心理转变。至关重要的是，它还探讨了提示词注入等安全风险，以及在关键业务基础设施中保持“人工干预”监督的必要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Spring AI A2A 项目，该项目将 A2A Java SDK 与 Spring AI 集成，实现了不同底层实现的 AI 智能体之间的无缝通信。文章解释了 A2A 协议的核心机制，特别是使用标准化 AgentCard JSON 文档的“智能体发现”过程。此外，本文还提供了全面的技术指导，包括如何将 Spring Boot 应用程序配置为 A2A 服务器、通过 JSON-RPC 暴露工具，以及实现用于多智能体编排的宿主智能体。通过将底层协议细节与 ChatClient 等高级 Spring AI 抽象相结合，该集成允许开发者构建厂商中立且高度可扩展的复杂分布式智能体工作流。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过设定明确预期，实现从被动提示到主动 AI 代理的转变。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用户不应只是请求特定任务，而应为 AI 提供背景信息和指令进行“入职培训”，使其能够自主行动，从而在无需人类持续输入的情况下识别机会并解决问题。</span>
+                        <strong style="color: #1e40af">A2A 协议为 AI 智能体的通信和发现建立了一个厂商中立的开放标准。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过利用 HTTP、SSE 和 JSON-RPC 等行业标准协议，A2A 允许在不同平台上构建的智能体交换消息并协调复杂任务，而无需绑定到特定厂商的生态系统。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用多模型策略平衡智能水平与运营成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 Claude Opus 等高推理模型作为负责策略的“大脑”，同时将编程等执行任务交给 Codex 等专用模型，以优化 Token 使用和效率。</span>
+                        <strong style="color: #1e40af">智能体发现是通过 AgentCard 实现的，这是一种描述智能体技能的标准化 JSON 文档。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该文档托管在众所周知的 URI 上，使远程客户端能够在启动任何通信或任务委派之前，通过编程方式识别智能体的身份、支持的输入/输出模式以及特定的功能特性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">本地硬件（如 Mac Mini/Studio）为 AI Agent 提供卓越的控制力和隐私保护。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与基于云的 VPS 方案相比，在本地运行模型可以更好地与个人文件和账户集成，同时提供更安全的环境来监控 Agent 的行为。</span>
+                        <strong style="color: #1e40af">Spring AI A2A 通过 Spring Boot 强大的自动配置机制提供了无缝的服务端集成。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该框架会自动设置必要的 REST 控制器和 JSON-RPC 端点，有效地将 A2A Java SDK 与 Spring AI 的 ChatClient 连接起来，从而将本地工具和逻辑作为可互操作的服务暴露给网络。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实施严格的安全边界以降低提示词注入等风险。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 拥有业务基础设施访问权限的 AI Agent 存在重大风险；用户应限制其访问敏感账户（如社交媒体），并使用专用电子邮件地址以防止未经授权的指令。</span>
+                        <strong style="color: #1e40af">该协议通过基于工具的动态委派和路由，实现了复杂的多智能体编排。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 中心宿主智能体可以在运行时发现专门的远程智能体并将其注册为工具，从而允许 LLM 根据用户的查询智能地决定哪个外部智能体最适合处理特定的子任务。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这是关于你利用一名 AI 员工来独自经营整个业务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我想要一名能尽可能减轻我的负担，并且尽可能主动的员工。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Opus 是大脑。你会希望使用其他模型作为肌肉。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你买的不是一件硬件；你买的是一名员工。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">风险越大，机会越大。那些投身其中的人……这里有太多的获胜方式。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent2Agent (A2A) 协议是实现 AI 智能体无缝通信的开放标准。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体通过 AgentCard 发现彼此的能力，这是一种在 /.well-known/agent-card.json 暴露的标准化 JSON 文档。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种模式实现了 LLM 驱动的路由——模型根据用户的查询决定调用哪些专门的智能体。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">A2A 协议代表了迈向具有互操作性的 AI 智能体生态系统的重要一步。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过标准化智能体的通信方式，它消除了构建复杂多智能体系统的障碍。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Greg Isenberg</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Greg Isenberg</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Spring Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ilayaperumalg</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">42 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">10333</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1379</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Moltbot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自主工作流</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">一人公司</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spring AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">A2A 协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多智能体系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体互操作性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spring Boot</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/video/4aea584" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            播放完整视频
+        <a href="https://www.bestblogs.dev/article/9dc4d4ec" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/video/4aea584">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpobIJOaN4DcqLkB8oSaCcivpOaNk6pFJ1WLTqoWfbJMzSYgT6iZgExqnlAzAZmATGomNZvUbAKy6aRq0UnVopOqRZ98GZAn1DwBZFIzqbkBMql5Qs0NkCfUPAHkCTXfdFK16KRq0UnVok/+59RsAjKpmYBMav4lJ1WLTqoWnVQt+uQfA+RGzQTkRs2kZgIyqZmA/J+cVC06qVp0UrXoky9T8zupeQPIG2pugExqnlDzJzmpWnRSteikatEny4D8TmomIJOaGzUTkEnNBOQGyKTmDSB/spOqRSdVi06qFuGP/MWAPKHmDSA3am6ATGr+JSdVi06qFp1ULcIfeQHIpGYCsknNDZBJzRtAbtRMQCY1N0AmNROQTWq+6aRq0UnVopOqRZ98mZobIDdqJiCTmieAPKHmBsik5gbIDZA31DwBZFLzxknVopOqRSdVi/BHXgAyqXkDyI2aCcikZgIyqXkDyBNqboDcqPmbnFQtOqladFK16JNlQJ5Qc6NmAnIDZFIzAblR84SaGyBvALlRMwGZ1ExAJjWbTqoWnVQtOqla9MlLap4AcqNmAjKpuQHyhJpNQG7U/EpAJjXfdFK16KRq0UnVIvyRF4A8oWYCMqn5nYBMam6A/EpqJiCTmieATGreOKladFK16KRqEf7IIiCTmieA3KiZgExqboBsUjMBmdTcAJnU3ACZ1ExAbtR800nVopOqRSdViz5ZpuYGyKRmUvMGkEnNG2omIBOQSc0NkE1AJjU3QCY1m06qFp1ULTqpWvTJS0AmNTdqJiBvqLkBMqmZgExqJiBPAJnU3Kh5Q80E5EbNN51ULTqpWnRSteiTP5yaCcgNkEnNjZobNd8EZFIzAbkBMqmZgNwAmdS8cVK16KRq0UnVok/+cEBugExqJiCTmjeAPKFmUnMDZFIzAZnUvKFm00nVopOqRSdViz75zdRMQCY1E5BJzRtAJjUTkEnNBGRSMwGZ1ExAJjUTkBsgk5pJzQRkUrPppGrRSdWik6pFn3wZkBs1k5oJyCYgT6i5UTMBmdRMQG6AbAJyA2RS88ZJ1aKTqkUnVYvwR/5iQJ5QcwPkRs0NkBs1E5BJzRNANql546Rq0UnVopOqRZ+8BORXUjOpmYA8AeQJIDdqJiATkCeATGreUPNNJ1WLTqoWnVQt+mSZmk1AboB8k5obIDdqJiBPqHlCzQ2QSc2mk6pFJ1WLTqoWffJlQJ5Q84aaGyA3aiYgk5pJzQRkUjOpmYBMQDYBmdR800nVopOqRSdViz75xwC5UXMDZFJzA2RSMwGZ1NyouQEyqZmA3AC5UfPGSdWik6pFJ1WLPvnHqJmATEAmNTdA3lBzo+YGyA2QN9RsOqladFK16KRq0Sdfpuab1NyouQHyTUAmNROQSc2kZgIyqZmATGomIN90UrXopGrRSdWiT5YB+ZWATGpugNyouQEyqZmATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXoPxGDTyyHuZRFAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/9dc4d4ec">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATDSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHYCxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRSMwGZ1ExAJjVPAJnUTECeUDMB+U1q3jipWnRSteikatEny9RsAvKbgNyomdRMQG7UTECeULMJyKaTqkUnVYtOqhZ98mVAnlDzhJoJyKRmAvJNan4TkCfUfNNJ1aKTqkUnVYs++ccBeUPNBGRSMwGZ1ExAJjUTkEnN/5OTqkUnVYtOqhZ98o9T84SaCcik5gkgbwCZ1PzLTqoWnVQtOqla9MmXqfkvAblRMwG5UfMEkG9S85ecVC06qVp0UrXok2VAfhOQSc2NmgnIpGYCcgNkUnOjZgLyBJC/7KRq0UnVopOqRZ+8pOYvU3Oj5g01E5AbIE+o+ZecVC06qVp0UrXok5eATGomIDdqJiBPqHkCyKTmCSCTmm8CMqm5ATKpmYDcqHnjpGrRSdWik6pF+CNfBORGzQRkUjMBmdTcAHlCzTcB+SY1TwCZ1LxxUrXopGrRSdWiT5YBeQLIDZBJzQ2QGzWbgExqJiCTmjeAPAHkRs2mk6pFJ1WLTqoWfbJMzQRkUjMBuVEzAblR8waQSc0EZFJzo+YGyKRmk5obIJOaN06qFp1ULTqpWoQ/8kVAnlAzAZnU3ACZ1ExAJjUTkEnNE0Bu1HwTkBs133RSteikatFJ1SL8kReATGomIDdqJiCTmieA3Kh5A8ik5gkgk5obIDdqboA8oeaNk6pFJ1WLTqoWffLHqJmA3KiZ1NwAeUPNDZAngLwBZFLzXzqpWnRSteikatEnL6mZgNyomYDcqLkBMqmZgDyh5gbIjZobIDdqboA8oWYCMqnZdFK16KRq0UnVIvyRF4DcqLkBMqmZgLyh5gbIjZo3gLyh5gbIjZoJyKRm00nVopOqRSdViz55Sc0E5Ak1E5BJzQTkvwRkUnOj5gbIE0AmNROQCchvOqladFK16KRq0ScvAZnUPAHkBsiNmhsgT6iZgLwBZFIzqZmAvKFmAjKp+aaTqkUnVYtOqhZ98pKaGyCTmhs1N0BugGxScwPkm4BMav6yk6pFJ1WLTqoWfbIMyA2QJ4BMat5Q8wSQbwLyBJC/7KRq0UnVopOqRfgj/zAgk5obIJOaN4BMap4AMql5AsgmNW+cVC06qVp0UrXok5eA/CY1TwCZ1ExAnlDzBpAngExqnlAzAZnUbDqpWnRSteikatEny9RsAvKGmgnIG0DeUDMBuVGzSc03nVQtOqladFK16JMvA/KEmifUvKHmCSCTmgnIpOYJIG+omYA8oeaNk6pFJ1WLTqoWffKPA3Kj5gbIG0BugExqJjUTkEnNDZAJyKTmBsimk6pFJ1WLTqoWffJ/Rs0TaiYgk5o3gExAJjVPAJnU3ACZ1HzTSdWik6pFJ1WLPvkyNd+kZgJyo2YC8gSQSc0TaiYgk5o3gExqJiCTmk0nVYtOqhadVC36ZBmQ3wRkUnMDZFJzA2QTkDfU/GUnVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36HwRDG1fe1ydpAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
