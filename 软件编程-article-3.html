@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>使用 R2 Local Uploads 提升全球上传性能</title>
+        <title>百亿级 ES 集群调优：删了 10 亿+数据，查询延迟从 5s 到 200ms……</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>使用 R2 Local Uploads 提升全球上传性能</h2>
-        <p>2/3/2026, 2:00:00 PM</p>
+        <h2>百亿级 ES 集群调优：删了 10 亿+数据，查询延迟从 5s 到 200ms……</h2>
+        <p>2/4/2026, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare R2 推出 “Local Uploads” 功能，通过先将数据存储在客户端附近并进行异步复制来优化全球写入性能，将延迟降低高达 75%。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过一个百亿级 ES 集群的实战案例，详细介绍了通过分片优化、索引瘦身、JVM 调优及查询重构将延迟从 5s 降至 200ms 的全过程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Cloudflare R2 Local Uploads 的公开测试版发布，该功能旨在解决全球对象存储中固有的延迟问题。传统上，上传必须传输到存储桶的主区域，这会导致远程用户出现显著延迟。Local Uploads 允许将数据写入靠近客户端的存储位置并立即确认，从而确保强一致性和即时可访问性。文章解释了其底层架构，包括 Gateway Workers、用于元数据的 Durable Objects，以及使用 Cloudflare Queues 的基于拉取的复制模型。基准测试显示，跨区域上传的最后一字节时间 (TTLB) 减少了 75%，使其成为全球分布式应用的理想选择。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章围绕某电商平台百亿级日志分析系统的性能危机展开，系统性地总结了 Elasticsearch 调优的四大核心策略。首先是分片管理，通过冷热分离和科学的分片计算公式解决 IO 瓶颈；其次是索引优化，利用 ILM 策略和禁用无意义字段降低存储成本；第三是 JVM 深度调优，强调了 31GB 堆内存的临界点以优化 GC 效率；最后是查询层面的重构，通过限制时间窗口、使用过滤器及设置强制超时来提升响应速度并保障集群稳定性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Local Uploads 将初始写入与最终存储位置解耦，以最大限度地减少全球延迟。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过先写入本地存储节点并异步复制到存储桶的主区域，R2 在保持数据即时可访问性的同时，减少了全球用户的往返时间。</span>
+                        <strong style="color: #1e40af">科学计算分片数量与大小是解决 IO 瓶颈的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 单分片不应超过 50GB，应根据节点数和总数据量动态平衡分片分布，防止单节点分片过载导致的随机读延迟爆炸。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">综合基准测试表明，跨区域任务的上传请求时长显著减少了 75%。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 涉及从北美上传到亚太地区存储桶的测试显示，TTLB 中位数从 2 秒降至 500 毫秒，突显了对全球用户体验的影响。</span>
+                        <strong style="color: #1e40af">JVM 堆内存设置存在“31GB 禁忌线”以优化指针压缩。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 堆内存需保持在 31GB 以内以利用压缩指针（Compressed OOPs），超过此值会导致指针膨胀，反而降低缓存效率并引发频繁 GC。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">系统利用原子元数据更新过程来可靠且一致地管理复制任务。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当对象上传时，R2 会同时存储元数据、创建待处理副本密钥并设置任务标记，确保后台复制得到跟踪并最终完成，且不会丢失数据。</span>
+                        <strong style="color: #1e40af">索引瘦身与生命周期管理（ILM）可大幅降低存储成本。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过禁用非搜索字段的索引、缩短热数据滚动周期并定期清理陈旧数据，可以在保证核心业务查询的同时，显著减少磁盘占用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用 Cloudflare Queues 的基于拉取的复制模型确保了系统的稳定性和高效的数据移动。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 集中式轮询服务从区域队列中消费任务并将其分发给 Gateway Workers，允许系统根据实时系统健康状况和网络成本调整复制速度。</span>
+                        <strong style="color: #1e40af">查询优化应从“全量扫描”转向“精准过滤”模式。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 避免使用通配符查询和超大结果集，通过强制超时拦截、缓存过滤和跳过精确计数（track_total_hits）来保障系统稳定性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">启用 Local Uploads 后，对象数据会自动先写入靠近客户端的存储位置，然后异步复制到存储桶所在的区域。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在我们的综合基准测试中，当上传请求发生在与存储桶不同的区域时，我们观察到最后一字节时间 (TTLB) 减少了高达 75%。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">重要的是，对象在初始写入完成后即可立即访问……在读取对象之前，无需等待后台复制完成。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们通过先在目标存储桶区域创建一个副本，然后使用此本地副本创建其他副本，从而最大限度地减少跨区域数据移动的次数。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">堆内存必须≤31GB，建议通过公式计算：堆内存=min(31GB， 物理内存/2)</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正的架构优化，不是堆硬件，而是用脑子打仗！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">单分片超过 50GB（IO 瓶颈直接拉垮查询性能）</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">强制设置 index.routing.allocation.total_shards_per_node=3（防止单节点分片过载）</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,30 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Frank Chen</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1561</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1398</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare R2</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">对象存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Elasticsearch</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大数据</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM 调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">索引优化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/f9d9cb08" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/8021d714" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/f9d9cb08">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATtSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzQRkUvMEkEnNBOQJNROQ36TmjZOqRSdVi06qFn2yTM0mIE8AmdRMQCY1N0DeULNJzSYgm06qFp1ULTqpWvTJlwF5Qs0TQCY1E5BJzRNqJiCTmhsgT6h5AsgTar7ppGrRSdWik6pFn/xlgNwAmdRMQCY1k5oJyI2aCcik5m9yUrXopGrRSdWiT/4yaiYgN0BugExqJjU3QP5PTqoWnVQtOqla9MmXqflNQG7UTEAmNTdAJjU3am6ATGqeUPMnOaladFK16KRq0SfLgPyb1ExA3gAyqZmATGomIJOaN4D8yU6qFp1ULTqpWvTJS2r+JEBugExqvknNBGRSc6Pmv+SkatFJ1aKTqkX4Iy8AmdRMQDapuQEyqZmAbFIzAZnU3ACZ1ExANqn5ppOqRSdVi06qFn2yDMiNmt8EZFKzCcik5gbIDZA31DwBZFLzxknVopOqRSdVi/BHvgjIpOYGyI2aN4BMaiYgk5oJyBNqboDcqPkvOaladFK16KRqEf7IC0AmNU8AuVEzAZnUTEBu1DwBZFIzAZnUTEC+Sc0EZFIzAZnUbDqpWnRSteikahH+yAtAnlDzBJBJzRNAbtRMQG7U3AC5UfNNQG7UfNNJ1aKTqkUnVYvwRxYBmdTcALlRswnIjZo3gHyTmgnIpOYJIJOaN06qFp1ULTqpWoQ/8gKQSc0NkEnNBORGzQ2QJ9RMQCY1E5An1NwAmdTcAJnUTEBu1HzTSdWik6pFJ1WLPvkyIDdAbtR8E5BJzRtqboBsAjKpuQEyqdl0UrXopGrRSdWiT/4waiYgT6i5AXIDZFJzo2YCMqm5UfOGmgnIjZpvOqladFK16KRq0SdfpmYCMqm5UTMBuQEyqblRcwNkUjMBmdRMQG6ATGomIDdAJjUTkBsgk5o3TqoWnVQtOqla9MmXAZnUTEAmNROQJ9Q8AWRSM6mZgExqnlBzA2RSMwGZ1LyhZtNJ1aKTqkUnVYvwR14AMqm5ATKpmYBMaiYgk5oJyKTmBsik5gbIjZongExqJiBPqLkBMqnZdFK16KRq0UnVok++DMik5kbNBOQNIDdqJiCTmknNDZBJzQTkBsgmIDdAJjVvnFQtOqladFK1CH/kPwzIpGYCsknNBGRS8wSQSc0TQDapeeOkatFJ1aKTqkWfvATkN6mZ1NyomYBMap4AcgNkE5BJzRtqvumkatFJ1aKTqkWfLFOzCcgNkBs1N0AmNTdqngDyhpon1NwAuVHzxknVopOqRSdViz75MiBPqPkmNROQJ4BMaiYgk5obIBOQTUB+00nVopOqRSdViz75n1PzhJoJyKTmDTU3QCY1E5B/00nVopOqRSdViz75ywG5UTMBmdRMQDapuQFyA+QNNZtOqhadVC06qVr0yZep+SY1bwB5Q80NkEnNBGRSM6mZgExqJiCTmgnIN51ULTqpWnRSteiTZUB+E5AbNTdqboBMam6ATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXoH+kjVy3P/gEmAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/8021d714">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIjZoJyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AflNQCY1E5BJzY2aTWo2Adl0UrXopGrRSdWiT74MyBNqngDyhppvAvKEmieAPKHmm06qFp1ULTqpWvTJP0bNBOQGyI2aGyA3aiYgk5p/yUnVopOqRSdViz75xwCZ1NwAmdRMQCY1TwD5LzmpWnRSteikatEnX6bmN6mZgLyhZgIyqblRcwNkUvOEmj/JSdWik6pFJ1WLPlkG5E+mZgJyA2RSMwGZ1ExAJjVvAPmTnVQtOqladFK1CH/kLwZkUrMJyI2aJ4BMav4lJ1WLTqoWnVQtwh95AcikZgKySc0TQG7UTEBu1ExAbtTcAJnUTEA2qfmmk6pFJ1WLTqoW4Y/8RYDcqJmA3Kj5TUC+Sc0TQCY1b5xULTqpWnRStQh/5AUgk5oJyCY1N0AmNW8AeUPNDZAbNX+Tk6pFJ1WLTqoW4Y98EZAbNROQSc0bQG7UvAFkUjMB+SY1E5BJzQRkUrPppGrRSdWik6pFn7wEZFLzhpoJyKTmBsikZgIyAZnUPKFmAnKj5jcBmdR800nVopOqRSdViz75ZWomIDdqJiCTmknNjZongExq3gDyhpoJyKTmCSCTmjdOqhadVC06qVqEP/JFQDapmYBMap4AMqm5AfKEmhsgk5obIJOaCciNmm86qVp0UrXopGrRJy8BmdQ8oeYJIG8AmdRsUnMDZBOQSc0NkEnNppOqRSdVi06qFn2yDMikZgIyAXlCzRNAJjUTkEnNE2omIJOaGzVvqJmA3Kj5ppOqRSdVi06qFuGPvABkUvMEkEnNG0A2qbkBMqmZgDyhZgLyhJoJyKRmAjKpeeOkatFJ1aKTqkWffBmQGzUTkBs1E5BJzQ2QJ4DcqHlCzQ2QSc0EZFLzhppNJ1WLTqoWnVQtwh95Acik5g0gk5oJyKRmE5BJzQTkRs0TQCY1E5An1NwAmdRsOqladFK16KRqEf7IC0AmNROQSc0E5P9JzQ2QSc0NkEnNBOSb1ExAnlDzxknVopOqRSdVi/BH/mJAJjUTkEnNDZBJzQ2QSc0TQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+kZlJzo2YTkBsgm4BMat5Q800nVYtOqhadVC36ZJmaTUBugDyh5kbNjZongLyh5gk1TwCZ1LxxUrXopGrRSdWiT74MyBNq3lAzAbkBMqm5ATKpmYBMam6ATEA2AZnUTGo2nVQtOqladFK16JN/DJBJzY2aCcikZlIzAZnUvKHmBsikZgJyA+RGzRsnVYtOqhadVC365B+j5gbIE0C+Sc0NkBsgb6jZdFK16KRq0UnVok++TM03qZmATGomNTdAJjUTkEnNDZBJzQRkUjOpmYBMaiYgk5oJyDedVC06qVp0UrXok2VAfhOQSc0E5EbNE2pugExqJiCTmgnIpOYGyA2QSc03nVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16H8uslYEv4AEJgAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

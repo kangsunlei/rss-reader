@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>解构 Clawdbot：本地架构、记忆管理、Agent 编排与上下文组装原理</title>
+        <title>Chat 模式是和 AI 最好的交互范式吗？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>解构 Clawdbot：本地架构、记忆管理、Agent 编排与上下文组装原理</h2>
-        <p>2/3/2026, 12:45:00 AM</p>
+        <h2>Chat 模式是和 AI 最好的交互范式吗？</h2>
+        <p>2/4/2026, 12:04:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度解构了本地优先 AI Agent 运行时 Clawdbot 的核心架构、分层记忆管理机制及基于 ReAct 的动态编排原理。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提出了“意图信息密度匹配”概念，探讨了 Chat 模式及其他 AI 交互范式的本质，强调好的 AI 设计应根据意图复杂度选择合适的交互密度。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了 Clawdbot（现名 OpenClaw）的技术实现方案。作为一个本地优先（Local-First）的 AI Agent 环境，它通过守护进程、Node.js 运行时和系统原生工具链，实现了对本地文件、浏览器及 Shell 的深度控制。核心亮点在于其仿生学的记忆管理系统，将记忆分为工作记忆（Session）、情景记忆（Daily Logs）和语义记忆（Curated Memory），并利用 USER.md 和 MEMORY.md 区分用户画像与知识积累。此外，文章还展示了其复杂的 System Prompt 分区组装逻辑，以及如何通过 ReAct 模式和子智能体（Sub-Agents）处理复杂任务，并指出了本地 Agent 在 Token 消耗和模型依赖方面的挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入分析了为什么 Chat 模式在 AI 交互中表现出色，核心在于其通过高频、小块的信息交换实现了人机意图的精准对齐。作者提出了“意图信息密度匹配”这一原创概念，认为 AI 交互的成败取决于用户意图的复杂度与 AI 理解能力之间的平衡。通过对比 Cursor 的代码补全、Granola 的会议笔记以及传统“一键生成”模式，文章总结出：复杂意图需要高频交互来减少熵增，而简单或高容错场景才适合大颗粒度生成。最后，作者为 AI 功能设计提供了评估意图复杂度、选择交互密度及设计校准机制的实践建议。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Clawdbot 采用本地优先架构，赋予 Agent 系统级操作特权。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过直接运行在 Host 机器并接管浏览器实例，Agent 能够突破沙盒限制，执行文件管理、脚本运行及绕过反爬虫验证的网页自动化任务。</span>
+                        <strong style="color: #1e40af">提出了“意图信息密度匹配”作为评价 AI 交互的核心标准。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 好的交互设计需确保用户传达的意图密度与 AI 提取的意图密度相匹配，当两者差距过大时，AI 输出就会偏离预期，导致用户认知负荷爆炸。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">设计了仿生学的三层记忆模型，实现隐私与长期记忆的平衡。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将记忆分为高频变动的 Session、用户可见的 Daily Logs 和提炼后的 MEMORY.md，模拟人类从海马体到皮层的记忆固化过程。</span>
+                        <strong style="color: #1e40af">Chat 模式的本质是通过多轮对话不断减少 AI 理解用户意图的熵。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 大模型本质是预测下一个 token，每一轮“你来我往”的交互都是对 AI 预测路径的实时调整，使 AI 的认知逐渐向用户真实意图靠拢。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用 USER.md 与 MEMORY.md 实现了用户画像与知识库的解耦。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> USER.md 存储用户偏好和价值观（你是谁），MEMORY.md 存储项目决策和客观知识（我们知道什么），确保 Agent 既专业又懂用户。</span>
+                        <strong style="color: #1e40af">成功的 AI 交互不限于 Chat，但都具备高频意图同步的特征。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 如 Cursor 的 Tab 补全和 Granola 的并行记录，都是在用户提供丰富上下文的基础上进行增强，通过高频同步保持人和 AI 的认知一致性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用分区组装的 System Prompt 设计，支持动态环境感知。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 提示词根据当前工作区、工具集、时间及 promptMode 动态生成，确保 Agent 在不同场景（如主会话或子 Agent）下拥有最适宜的指令上下文。</span>
+                        <strong style="color: #1e40af">“一键生成”模式的失败往往源于意图传达不全和认知负荷过载。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 缺乏中间校准过程的大颗粒度输出，容易让用户陷入繁琐的后期修改，该模式仅适用于意图简单、标准化或容错度极高的特定场景。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">USER.md = 'Who you are' (你是谁)；MEMORY.md = 'What we know' (我们知道什么)。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Text &gt; Brain：如果想记住某事，就把它写进文件。‘脑内笔记’无法在会话重启后存活。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Be genuinely helpful， not performatively helpful. 跳过‘很高兴为您服务’之类的废话，直接行动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">它不是黑盒 SaaS，而是全透明、可魔改的本地运行时。你可以像写代码一样定制自己的‘第二大脑’。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每次人的输入都在减少 AI 理解用户意图的熵。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当两者匹配度高时，AI 输出就符合期望；当差距过大时，AI 输出就会偏离预期。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Chat 模式的本质就是：它能和 AI 进行高密度的意图交互。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">好的 AI 交互设计，本质上都在解决人机意图信息密度匹配问题。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,32 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">83</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6518</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2761</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">本地优先架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">记忆管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ReAct 编排</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示词工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 交互设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">意图信息密度</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户体验 (UX)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人机协作</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/8fb9eeb9" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/d2be358e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/8fb9eeb9">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATUSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyA3ajYBmdRMQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8oSaCcgE5Ak1E5BJzY2aTWo2Adl0UrXopGrRSdWiT74MyBNqngDyhJo31ExAJjUTkCfUPAHkCTXfdFK16KRq0UnVok/+Y4BMaiYgk5oJyKRmAjKpmYBMav4lJ1WLTqoWnVQt+uQfp+YNIJOaCcikZgLyX3JSteikatFJ1aJPvkzNb1IzAXlCzQ2QSc2Nmhsgk5on1PxJTqoWnVQtOqla9MkyIH8yNROQGyCTmgnIpGYCMql5A8if7KRq0UnVopOqRfgjfzEgN2reAHKj5gkgk5p/yUnVopOqRSdVi/BHXgAyqZmAbFLzBJBJzQTkCTUTkBs1N0AmNROQTWq+6aRq0UnVopOqRfgjLwDZpOYGyBNqJiCTmt8E5JvUPAFkUvPGSdWik6pFJ1WL8EdeADKpeQLIJjUTkEnNBGRSMwF5Q80NkBs1f5OTqkUnVYtOqhZ9sgzIpOYJNU8AuVGzSc0EZFIzAXkDyI2aCcikZgIyqdl0UrXopGrRSdUi/JEvAnKjZgJyo2YCcqPmCSA3am6A3Kj5JiA3ar7ppGrRSdWik6pFnywDMql5Q80TaiYgk5obNd8E5A01E5BJzRNAJjVvnFQtOqladFK16JOXgDwBZFIzqZmATGp+E5A31NwAmdTcAJnUTEBu1ExqNp1ULTqpWnRSteiTLwPyBJBJzQRkUnOj5gbIpOYNNTdANgGZ1NwAmdRsOqladFK16KRqEf7IHwzIE2omIN+kZgIyqZmATGqeADKpmYDcqPmmk6pFJ1WLTqoWffISkEnNBGRSMwG5UfOb1DwBZFIzAbkBMqmZgNwAmdRMQG6ATGreOKladFK16KRq0Sd/GDUTkEnNDZBJzQ2QCcikZgIyqXlCzQ2QSc0EZFLzhppNJ1WLTqoWnVQt+uTL1ExAJjUTkEnNDZBJzQRkUnOj5gkgk5pJzQ2QSc0E5AbIpGZSMwGZ1Gw6qVp0UrXopGrRJ384IDdqJiCTmieATGomNTdAJjUTkBsgm4DcAJnUvHFSteikatFJ1SL8kb8YkCfUTECeUDMBmdQ8AWRS8wSQTWreOKladFK16KRq0ScvAflNaiY1N0AmIJOaJ4DcANkEZFLzhppvOqladFK16KRq0SfL1GwCcgNkUjOpmYBMQCY1E5BJzRNA3lDzhJobIDdq3jipWnRSteikatEnXwbkCTVvAJnUvKFmAjKpmYBMam6ATEA2AflNJ1WLTqoWnVQt+uQfo+YJNU+omYBMat5QcwNkUjMB+X86qVp0UrXopGrRJ/9xQCY1N0A2qbkBcgPkDTWbTqoWnVQtOqla9MmXqfkmNROQN4A8oeYGyKRmAjKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/CciNmhsgN2qeADKpmYBMaiYgk5obIDdAJjXfdFK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8BcW5EK1iPoc0AAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/d2be358e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAToSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJAn1DwBZFIzAXlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBNAJjU3QCYgk5oJyKTmRs0mNZuAbDqpWnRSteikatEnXwbkCTVPAJnUTEAmNZOaJ9Q8AeQJNU8AeULNN51ULTqpWnRSteiTvwyQJ4B8k5oJyKTmb3JSteikatFJ1aJP/meATGq+Ccj/yUnVopOqRSdViz75MjV/MiCTmgnIjZobNTdAJjVPqPmTnFQtOqladFK16JNlQP5NaiYgk5oJyBNqJiCTmgnIpOYNIH+yk6pFJ1WLTqoW4Y/8hwGZ1GwC8oSaGyCTmr/JSdWik6pFJ1WL8EdeADKpmYBsUnMDZFIzAZnUTEAmNROQSc0EZFJzA2RSMwHZpOabTqoWnVQtOqla9MlLajapuQHyTWomIJOaCcik5gbIDZA31DwBZFLzxknVopOqRSdVi/BHXgDyhJongExqNgG5UTMBeULNDZAbNf8lJ1WLTqoWnVQtwh9ZBGRSMwG5UfMGkEnNBORGzQRkUjMBmdRMQL5JzQRkUjMBmdRsOqladFK16KRq0ScvAZnUTEDeADKpmYBMaiYgTwCZ1NyomYDcqPlNQCY133RSteikatFJ1aJPvkzNDZAJyKTmRs0EZFJzA2RSMwGZ1LwB5A01E5BJzRNAJjVvnFQtOqladFK16JMvAzKpmdRMQCYgN2pugNyoeQLIE2pugExqboBMaiYgN2omNZtOqhadVC06qVr0yZepeUPNE2omIJOaCcik5g01N0A2AZnU3ACZ1Gw6qVp0UrXopGrRJy+pmYC8oWYCMqm5AfKEmgnIpGYCMqmZgExqbtS8oWYCcqPmm06qFp1ULTqpWvTJS0AmNU8AuVEzAZnUPAFkUnMDZFIzAZnUTEBugExqJiA3QCY1E5AbIJOaN06qFp1ULTqpWvTJLwMyqbkBcgPkRs0NkEnNDZBJzRNqboBMaiYgk5o31Gw6qVp0UrXopGrRJ79MzQRkUjOpuQEyqZmATGo2AZnUTGpugExqJiA3QCY1k5oJyKRm00nVopOqRSdViz75wwF5Q80TQG7U3ACZ1ExAboBsAnIDZFLzxknVopOqRSdVi/BH/sOATGomIE+oeQLIpOYJIJOaJ4BsUvPGSdWik6pFJ1WLPnkJyG9SM6n5JiBPANkEZFLzhppvOqladFK16KRq0SfL1GwCcgNkUjOpmYC8oeYJIG+oeULNDZAbNW+cVC06qVp0UrXoky8D8oSaTUBu1NyomYBMaiYgk5obIBOQTUB+00nVopOqRSdViz75ywB5Asik5kbNBGRS84aaGyCTmgnIv+mkatFJ1aKTqkWf/GXUTECeADKpmYBsUnMD5AbIG2o2nVQtOqladFK16JMvU/NNaiYgN2omIJOaJ9TcAJnUTEAmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwGZ1ExA3gAyqbkBMqmZgExqJiCTmhsgN0AmNd90UrXopGrRSdUi/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWifwAg5Us/fiYe/gAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

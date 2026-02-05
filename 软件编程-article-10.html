@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何高效的长时间运行智能体</title>
+        <title>TCP 如何将往返时间（RTT）和抖动转化为丢包</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何高效的长时间运行智能体</h2>
-        <p>2/3/2026, 8:14:00 AM</p>
+        <h2>TCP 如何将往返时间（RTT）和抖动转化为丢包</h2>
+        <p>2/4/2026, 5:02:03 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Anthropic 针对长时间运行智能体提出的双层架构方案，通过模拟人类工程师的协作模式解决跨上下文窗口的衔接难题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文解释了 TCP 如何利用 RTT 和抖动来计算重传超时（RTO），从而有效地将过度的网络延迟转化为丢包的逻辑决策。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 AI 智能体在处理需持续数小时或数天的复杂任务时，因上下文窗口限制而导致的“遗忘”和失控问题。作者借鉴软件工程师的轮班协作经验，提出了由“初始化智能体”和“编码智能体”构成的双层方案。初始化智能体负责搭建环境、制定细粒度 JSON 功能清单；编码智能体则在后续会话中进行增量开发，并通过 Git 提交历史和进度文件实现状态同步。该方法强调了结构化数据、小步快跑的增量交付以及端到端测试在提升智能体长周期任务稳定性中的核心作用。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了网络时间指标与 TCP 协议行为之间的关系。它将 RTT 定义为一个动态变量，并引入“基准 RTT”作为网络最佳状态的参考点。抖动被描述为由于拥塞或排队而在该基准之上产生的额外延迟。文章的核心解释了 TCP 如何利用平滑往返时间（SRTT）和 RTT 变差（RTTVAR）动态学习这些模式，以计算重传超时（RTO）。最终，它证明了丢包通常是协议在抖动超过 RTO 窗口时做出的基于时间的决策，而非确认的数据包物理消失。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">智能体在长周期任务中常因上下文耗尽导致“一次性做太多”或“过早宣布完成”的失败模式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于模型在离散会话中缺乏持久化记忆，容易在复杂项目中迷失方向。通过限制单次会话的交付范围，并要求智能体在结束前整理出“干净状态”，可以有效避免半成品堆积。</span>
+                        <strong style="color: #1e40af">RTT 是一个动态观测值而非固定常量，需要多次测量才能建立基准。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 单次 RTT 测量无法区分路径延迟和临时拥塞；因此，TCP 必须随时间观察 RTT，以识别代表网络最佳状态的最小基准。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用“初始化+编码”的双层智能体架构，通过明确的分工实现跨会话的稳定衔接。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 初始化智能体仅运行一次，负责建立 init.sh 和功能清单等基础设施；编码智能体则在后续每一轮会话中读取这些状态，确保新会话能像接力赛一样无缝继续工作。</span>
+                        <strong style="color: #1e40af">抖动代表了数据包到达时间相对于已建立基准 RTT 的不规则正向偏差。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 抖动是由排队或路由器调度等瞬态网络状况引起的，只有在与基准 RTT 比较时才有意义，它充当了“额外延迟”的组成部分。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用结构化的 JSON 功能列表和 Git 提交历史作为智能体协作的“交接棒”。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比 Markdown，JSON 格式更能约束模型不随意篡改任务结构。结合 Git 的版本回溯能力，智能体可以清晰地了解前序工作的进展，并在发现环境异常时优先进行修复而非盲目堆砌代码。</span>
+                        <strong style="color: #1e40af">TCP 利用平滑 RTT 和 RTT 变差来动态调整其对不断变化的网络状况的预期。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过维护 SRTT（加权平均值）和 RTTVAR（波动测量值），TCP 构建了一个统计模型，使其能够区分正常波动与潜在的网络故障。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">引入浏览器自动化工具（如 Puppeteer）进行端到端测试，以验证智能体工作的真实有效性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 智能体往往会高估代码的正确性，仅靠单元测试不足以发现 UI 层的逻辑漏洞。强制要求智能体使用自动化工具模拟真实用户操作，能显著提升其在 Web 全栈开发中的交付质量。</span>
+                        <strong style="color: #1e40af">重传超时（RTO）是网络延迟被正式重新归类为丢包的关键阈值。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> TCP 通过在 SRTT 上增加一个安全余量（基于 RTTVAR）来计算 RTO；如果确认包（ACK）未在此窗口内到达，协议将假定数据包已丢失并触发重传。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">TCP 中的丢包从根本上说是一个基于时间的决策，而不是确认的数据物理消失。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 TCP 无法“看到”网络，它完全依赖 RTO 定时器；在 RTO 过期后到达的数据包会被视为已丢失，即使它最终到达了目的地。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">长时间运行智能体的核心问题在于：它们只能在离散的会话中工作，而每一次新会话开始时，几乎'忘记'了之前发生的一切。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">让每一次会话都只做'可交付的增量开发'，并在结束时把环境整理到一个'干净状态'。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们发现 JSON 比 Markdown 更安全：模型更不容易'修改'结构化数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果项目运行有问题，智能体会优先修复问题，而不是继续堆新功能，以避免问题更加严重。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体在没有真正验证的情况下，就把功能标记为完成。使用 Puppeteer MCP 后，Claude 能发现很多'代码看不出来'的问题。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">RTT 不是一个固定数字。它一直在变化。即使你与同一台服务器通信，RTT 也会在不同数据包之间发生变化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">抖动是在基准 RTT 之上增加的额外延迟。简单来说，基准 RTT 显示了网络在没有故障时的处理能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">TCP 看不到路由器、队列或链路，它也不知道数据包去了哪里。TCP 只看得到时间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">丢包是一个时间决策，而不是一个确定性事件。数据包稍后可能仍会到达，但一旦 RTO 过期，TCP 就已经采取了行动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当抖动大到延迟跨越 RTO 边界时，TCP 就会将延迟解释为丢包。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">奇舞精选</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">奇舞精选</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3136</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Syeda Maham Fahim</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2198</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agents</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude SDK</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动化测试</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TCP/IP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">延迟</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RTT</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">抖动</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/b886e096" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/8c5f92ed" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/b886e096">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATVSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAXlCzRtAJjU3QCY1TwD5TWreOKladFK16KRq0SfL1GwCcqPmDSBPqHlCzQTkRs2Nmk1ANp1ULTqpWnRSteiTLwPyhJo3gNyomdQ8AeQJNd8E5Ak133RSteikatFJ1aJP/nJAbtRMQCY1E5BJzaTmCSA3av4lJ1WLTqoWnVQt+uQfo2YCcgPkCSCTmifUTEAmNX+zk6pFJ1WLTqoWffJlav4kaiYgk5obNU+omYBMat5Q8yc5qVp0UrXopGrRJ8uA/EuATGomIJOaCcikZgIyqbkB8ic7qVp0UrXopGoR/shfDMiNmhsgk5ongLyh5l9yUrXopGrRSdWiT14CMql5AsikZgLyhJon1LyhZgIyqZmA3ADZpOYGyKTmjZOqRSdVi06qFuGPfBGQSc0NkEnNBGRSMwGZ1ExAJjUTkDfUbALym9S8cVK16KRq0UnVok9eAnKj5gbIpGYCcgNkUvOGmgnIjZobIJOaCcgmNU8A2XRSteikatFJ1aJPXlIzAZmAPAFkUjMBeQLIJjU3QCY1E5An1NwAmYBMaiYg33RSteikatFJ1aJPXgIyqZmA3KiZgExANqmZgDwBZFJzA+Sb1LyhZtNJ1aKTqkUnVYs+eUnNBGRSMwGZgNyouQHyhpoJyKRmAvKGmieATGomIG8AmdS8cVK16KRq0UnVok9eAjKpuVEzAbkBMqm5ATKpeULNG2omIDdAJjXfpGYCsumkatFJ1aKTqkWfLANyo+YJNROQSc2fBMgNkE1qngDyTSdVi06qFp1ULfrky9RMQCY1E5AJyBNAbtTcALlR84SaGyATkEnNBGRS84aaTSdVi06qFp1ULcIfeQHIpOYJIDdqboBMam6ATGpugDyhZgIyqbkBsknNBORGzRsnVYtOqhadVC365CU13wTkRs0NkEnNNwGZ1GxSMwGZ1ExAJjUTkE0nVYtOqhadVC3CH/kiIDdqJiCTmgnIpOYNIJOaGyCTmgnIjZoJyKTmm4DcqHnjpGrRSdWik6pFn7wE5EbNBOQJIJuA/CY1TwDZpGZSMwHZdFK16KRq0UnVIvyRvxiQJ9TcAHlDzQ2QGzVPAJnUPAFkUvPGSdWik6pFJ1WLPnkJyG9Sc6NmAjIBuVFzA2RS801AJjU3QG7UfNNJ1aKTqkUnVYs+WaZmE5AbNROQSc0mNROQGzVvqHlCzRNqNp1ULTqpWnRSteiTLwPyhJongExq3gByo2ZSMwF5A8gbQCY1E5BJzaaTqkUnVYtOqhZ98pdTcwNkUjMBmdRMQCYgN2qeUDMBmdRMQCY1T6iZgExq3jipWnRSteikatEn/xggk5obNROQSc0EZFIzAblRc6PmRs0NkP/TSdWik6pFJ1WLPvkyNf8nIE+oeQLIjZobIJOaCcikZgJyo2YC8k0nVYtOqhadVC36ZBmQ3wTkRs0NkAnIE2omIJvUTEBu1DyhZtNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+AyvKOT/eux57AAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/8c5f92ed">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATQSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA+RGzQRkUjMBmdQ8AeQJNROQ36TmjZOqRSdVi06qFn2yTM0mIE+oeULNE0Bu1ExqNqnZBGTTSdWik6pFJ1WLPvkyIE+oeQLIpGYC8oSaGzVPAHlCzRNAnlDzTSdVi06qFp1ULfrkf0bNBGQCcgNkUjMBmdRMQCY1f5OTqkUnVYtOqhZ98pcB8oaaJ4BMaiYg/ycnVYtOqhadVC365MvU/CY1N0AmNROQJ9TcqLkBMql5Qs2f5KRq0UnVopOqRZ8sA/InATKpmYBMaiYgk5oJyKRmAjKpeQPIn+ykatFJ1aKTqkX4I/9hQDapuQEyqXkCyKTmb3JSteikatFJ1SL8kReATGomIJvUvAHkCTU3QG7U3ACZ1ExANqn5ppOqRSdVi06qFuGPvABkUnMD5EbNvwnIjZo3gHyTmieATGreOKladFK16KRqEf7IC0CeUHMD5Ak1TwCZ1DwB5Ak1N0Bu1PyXnFQtOqladFK16JMvU3MDZFLzBJAbNW8AmdRMQCY1E5A3gNyomYBMaiYgk5pNJ1WLTqoWnVQt+uQlNTdAbtTcAJnUTGomIG8AmdTcqJmA3Kj5TUAmNd90UrXopGrRSdWiT5YBmdS8oWYCsgnIpGYCMql5A8gbaiYgk5ongExq3jipWnRSteikatEnLwGZ1LwB5Ak1N0Bu1ExAJjUTkCfU3ACZ1NwAmdRMQG7UTGo2nVQtOqladFK16JOX1DwB5Ak1E5AbIDdqbtS8oeYGyCYgk5obIJOaTSdVi06qFp1ULfrkJSCTmk1AboDcqJmAbFIzAZnU3Kh5Q80E5EbNN51ULTqpWnRStQh/5AUgT6h5A8iNmt8EZFIzAXlCzQTkCTUTkEnNBGRS88ZJ1aKTqkUnVYs+WabmBsikZgJyo2YC8gaQSc0E5EbNE2pugExqJiCTmjfUbDqpWnRSteikatEnXwbkBsik5gk1E5AbNZuATGomNTdAJjUTkBsgk5pJzQRkUrPppGrRSdWik6pFn/wyNTdAbtTcqJmAPAHkRs0NkEnNBOQGyCYgN0AmNW+cVC06qVp0UrUIf+Q/DMikZgJyo+YNIJOaJ4BMap4AsknNGydVi06qFp1ULcIfeQHIb1LzBpAbNROQ36RmAjKpmYA8oeabTqoWnVQtOqla9MkyNZuA3ACZ1NyomYDcqHkDyBtqnlBzA+RGzRsnVYtOqhadVC365MuAPKHmDSBPqHkCyKRmAjKpuQEyAdkE5DedVC06qVp0UrXok7+MmjeATGomNROQSc0bam6ATGomIP+mk6pFJ1WLTqoWffKXAXKjZgIyqZmAfJOaGyA3QN5Qs+mkatFJ1aKTqkWffJmab1IzAZnUTEBugDyh5gbIpGYCMqmZ1ExAJjUTkEnNBOSbTqoWnVQtOqla9MkyIL8JyKRmAnKj5gbIpOYGyKRmAjKpmYBMam6A3ACZ1HzTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gFKOD4rUVyATwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

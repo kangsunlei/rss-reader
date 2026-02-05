@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>2026 年 AI 发展趋势展望：从交互范式到 Agent 生态的全面变革</title>
+        <title>AI/BI 仪表板性能优化的 10 大最佳实践（第一部分）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,79 @@
         </style>
     </head>
     <body>
-        <h2>2026 年 AI 发展趋势展望：从交互范式到 Agent 生态的全面变革</h2>
-        <p>2/3/2026, 1:00:00 PM</p>
+        <h2>AI/BI 仪表板性能优化的 10 大最佳实践（第一部分）</h2>
+        <p>2/4/2026, 10:40:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者对 2026 年 AI 领域提出了 11 项深度预测，涵盖交互范式、垂直应用、toA 市场、Agent 协议及社会化营销等多个维度。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本技术指南通过优化设计、SQL 引擎并发和数据布局，为提升 Databricks AI/BI 仪表板性能提供了一个全方位的框架。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">该推文详细展望了 2026 年 AI 的发展方向。核心观点包括：1. 交互将转向“对话优先”和“弱界面化”，Agent 将作为 API/Skills 嵌入现有平台；2. 垂直领域应用将爆发，通用 SaaS 面临挑战，Infra 成为盈利核心；3. “toA”（面向 Agent）的产品和服务（如 Agent 的 LinkedIn/Marketplace）将正式落地；4. 预测 Transformer 架构可能被颠覆；5. Agent 间的通用通信协议和以任务驱动的人机协作群组将流行。此外，作者还强调了信息过滤、AI 网红及私域社区在未来营销中的关键作用。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了一种 Databricks AI/BI 性能优化的综合方法，超越了简单的 SQL 调优。它详细描述了仪表板刷新的端到端过程——从浏览器的客户端处理和仪表板的编排层，到 Databricks SQL 的智能工作负载管理以及 Lakehouse 的存储效率。作者强调，性能是多个层级共同作用的结果。本系列的第一部分重点讨论两个关键策略：利用多页面设计来管理查询并发，以及实施智能默认过滤器以加速“首次渲染”体验并减少初始数据扫描量。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">在仪表板技术栈的四个层级中采用全方位的方法。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 性能不仅仅关乎 SQL；它涉及浏览器引擎、仪表板编排、SQL Warehouse 并发以及 Lakehouse 存储布局的协同工作。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">将仪表板组织成多个页面或标签页，以控制查询执行。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将可视化图表分组到标签页中，只有当前活动页面的查询会被触发，从而减少并发峰值，防止队头阻塞，并提高缓存命中率。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">实施智能默认过滤器以优化“首次渲染”体验。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 设置合理的默认值（如过去 30 天）可以防止系统在初始加载时扫描整个数据集，确保为用户提供快速且信息丰富的首屏印象。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">利用确定性图块和 Serverless SQL 功能实现更好的扩展。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 避免使用像 NOW() 这样的非确定性函数可以最大限度地提高结果缓存命中率，而 Serverless SQL 的智能工作负载管理可以在无需手动调整集群的情况下处理突发流量。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">仪表板性能问题很少源于单一环节。它们通常是仪表板设计、Warehouse 并发与缓存以及数据布局共同作用的结果。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个可见的图块都是一个潜在的触发器：它在首次加载时运行，并且在过滤器/参数更改、刷新以及用户返回页面时可能会重新运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">仪表板的第一印象取决于它的首次渲染——即从打开仪表板到看到有意义结果所需的时间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">关键的设计原则很简单：为落地体验进行优化。让首次渲染既快速又包含丰富信息，然后让用户有意识地扩大查询范围。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">标签页将这些重新执行限制在活动页面内，从而减少了突发流量和队头阻塞。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Yangyi(@Yangyixxxx)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Yangyi</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1420</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1062</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI展望</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">交互范式</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">toA</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">垂直应用</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Databricks</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI/BI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">仪表板优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SQL Warehouse</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2018670808194011395" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/001909fd" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2018670808194011395">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/001909fd">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATXSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyA3aiYgk5obIJOaGyBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXlDzQRkUvNNajap2QRk00nVopOqRSdViz75MiBPqHkCyCYgm4A8oeYJIE+o+aaTqkUnVYtOqhZ98o8DMql5Q80E5EbNBGRS8y85qVp0UrXopGrRJ/8YNROQCcikZlJzA2RScwPkv+SkatFJ1aKTqkWffJma/yc1N0Bu1Lyh5gbIpOYJNX+Sk6pFJ1WLTqoWfbIMyJ8EyKTmRs0EZFIzAZnUTEAmNW8A+ZOdVC06qVp0UrUIf+QvBuRGzQRkUnMD5EbNE0AmNf+Sk6pFJ1WLTqoWffISkEnNBGSTmknNBOQ3AblRM6mZgExqJiCb1HzTSdWik6pFJ1WLPnlJzQRkUvMEkEnNBOQJIN+k5gkgN0DeUPMEkEnNGydVi06qFp1ULcIf+SIgm9RMQJ5Q8waQJ9TcALlR8zc5qVp0UrXopGrRJ8uATGomIDdq3lAzAdmkZgIyqZmAvAHkRs0EZFIzAZnUbDqpWnRSteikahH+yAtAJjUTkEnNE0Bu1ExA3lDzBpAbNd8E5EbNN51ULTqpWnRStQh/ZBGQSc0NkEnNDZBJzRNAJjUTkEnNE0C+Sc0EZFLzBJBJzRsnVYtOqhadVC3CH3kByBtqJiA3ap4AMql5A8gTam6ATGpugExqJiA3ar7ppGrRSdWik6pFn/wyNU+omYBMajYBeUPNDZBNQCY1N0AmNZtOqhadVC06qVr0yUtqJiCbgNwAmdRMam6ATGpugExqJiCTmhs1b6iZgNyo+aaTqkUnVYtOqhZ98hKQSc0NkEnNjZobIBOQSc0EZFIzAblRMwGZ1ExAboBMaiYgN0AmNROQGyCTmjdOqhadVC06qVr0yZcBmdQ8AeRGzQ2QGyCTmhsgk5on1NwAmdRMQCY1b6jZdFK16KRq0UnVok9+GZAbNTdAboBMaiYgk5oJyBNAJjWTmhsgk5oJyA2QSc2kZgIyqdl0UrXopGrRSdWiT36ZmgnIBOQJIJOaCcik5kbNG0AmNROQGyCbgNwAmdS8cVK16KRq0UnVIvyRvxiQJ9RMQCY1E5BJzQRkUvMEkEnNE0A2qXnjpGrRSdWik6pFn7wE5DepmdQ8AeQJNROQGyCbgExq3lDzTSdVi06qFp1ULfpkmZpNQG6ATGpu1ExAnlDzBJA31Dyh5gbIjZo3TqoWnVQtOqla9MmXAXlCzSYgN2qeADKpmYBMam6ATEA2AblRs+mkatFJ1aKTqkWf/OPU3ACZ1NyomYBMat5QcwNkUjMBeQLIpOaNk6pFJ1WLTqoWffIfA+QNIJvU3AC5AfKGmk0nVYtOqhadVC365MvUfJOaCciNmhsgT6i5ATKpmYBMaiY1E5BJzQRkUjMB+aaTqkUnVYtOqhZ9sgzIbwJyo+YGyI2aJ4BMaiYgk5oJyKTmBsgNkEnNN51ULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteh/lIs3SpfoyVsAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
