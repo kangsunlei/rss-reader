@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>百亿级 ES 集群调优：删了 10 亿+数据，查询延迟从 5s 到 200ms……</title>
+        <title>为什么你的 UI 不更新：调试 React 应用中的陈旧数据和缓存问题</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>百亿级 ES 集群调优：删了 10 亿+数据，查询延迟从 5s 到 200ms……</h2>
-        <p>2/4/2026, 11:15:00 PM</p>
+        <h2>为什么你的 UI 不更新：调试 React 应用中的陈旧数据和缓存问题</h2>
+        <p>2/5/2026, 5:32:01 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过一个百亿级 ES 集群的实战案例，详细介绍了通过分片优化、索引瘦身、JVM 调优及查询重构将延迟从 5s 降至 200ms 的全过程。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">一份通过系统地调试五个缓存层和本地状态陷阱，来识别并解决 React 应用中 UI 数据陈旧问题的全面指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章围绕某电商平台百亿级日志分析系统的性能危机展开，系统性地总结了 Elasticsearch 调优的四大核心策略。首先是分片管理，通过冷热分离和科学的分片计算公式解决 IO 瓶颈；其次是索引优化，利用 ILM 策略和禁用无意义字段降低存储成本；第三是 JVM 深度调优，强调了 31GB 堆内存的临界点以优化 GC 效率；最后是查询层面的重构，通过限制时间窗口、使用过滤器及设置强制超时来提升响应速度并保障集群稳定性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文针对开发者经常遇到的困扰——尽管数据修改成功，但 React UI 却未能更新的问题进行了探讨。文章引入了一个结构化的思维模型，通过识别五个不同的缓存层（React Query 客户端缓存、Next.js fetch 服务端缓存、浏览器 HTTP 缓存、CDN/托管缓存以及 Service Workers），帮助开发者摆脱“凭直觉猜测”的困境。作者还强调了一个常见的“非缓存”陷阱，即重复的 React 本地状态。针对每一层，指南都提供了具体的症状、“快速检查”调试技巧（如检查 DevTools 网络请求头或使用缓存清除查询参数）以及代码层面的解决方案（如显式缓存失效和设置 “no-store” 策略）。最后，文章提供了一个“10 秒调试指南”，帮助开发者根据网络请求行为快速定位问题层。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">科学计算分片数量与大小是解决 IO 瓶颈的关键。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 单分片不应超过 50GB，应根据节点数和总数据量动态平衡分片分布，防止单节点分片过载导致的随机读延迟爆炸。</span>
+                        <strong style="color: #1e40af">重复的本地状态是导致 UI 陈旧的一个常见“非缓存”原因。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 props 初始化状态（例如 useState(user.name)）仅会发生一次；除非通过 useEffect 显式同步，否则后续的 prop 更新不会触发状态变更。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JVM 堆内存设置存在“31GB 禁忌线”以优化指针压缩。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 堆内存需保持在 31GB 以内以利用压缩指针（Compressed OOPs），超过此值会导致指针膨胀，反而降低缓存效率并引发频繁 GC。</span>
+                        <strong style="color: #1e40af">React Query 在数据修改后需要精确的查询键失效处理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 成功的 API 响应不会自动更新客户端缓存。开发者必须手动使 UI 所使用的精确查询键失效，以触发重新获取数据。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">索引瘦身与生命周期管理（ILM）可大幅降低存储成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过禁用非搜索字段的索引、缩短热数据滚动周期并定期清理陈旧数据，可以在保证核心业务查询的同时，显著减少磁盘占用。</span>
+                        <strong style="color: #1e40af">Next.js App Router 引入了不可见的服务端缓存层。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使数据库已更新，数据缓存（Data Cache）和全路由缓存（Full Route Cache）仍可能提供陈旧数据，这需要使用 “no-store” 或 revalidatePath 等策略来确保数据的实时性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">查询优化应从“全量扫描”转向“精准过滤”模式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 避免使用通配符查询和超大结果集，通过强制超时拦截、缓存过滤和跳过精确计数（track_total_hits）来保障系统稳定性。</span>
+                        <strong style="color: #1e40af">CDN 和托管缓存经常导致“仅限生产环境”的 Bug。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 中间层会在请求到达服务器之前返回缓存的响应。可以通过检查 “Age” 请求头或使用唯一的查询参数绕过边缘节点来识别这些问题。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">对于复杂的缓存堆栈，系统的调试工作流至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过检查是否存在网络请求以及响应是否新鲜，开发者可以快速将问题范围缩小到本地状态、客户端缓存或服务器/CDN 层。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">堆内存必须≤31GB，建议通过公式计算：堆内存=min(31GB， 物理内存/2)</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正的架构优化，不是堆硬件，而是用脑子打仗！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">单分片超过 50GB（IO 瓶颈直接拉垮查询性能）</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">强制设置 index.routing.allocation.total_shards_per_node=3（防止单节点分片过载）</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你的 UI 不会“随机”拒绝更新。在大多数情况下，它只是在渲染缓存数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">React Query 不根据端点 URL 进行缓存。查询键是缓存数据的唯一标识。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Next.js 可以通过缓存结果来提速……但即使你的数据库有了新值，你可能仍然看到的是旧值。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缓存本身不是问题。UI 数据陈旧发生在缓存存在但你并非有意选择使用它时。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果新的 URL 显示了新鲜数据，那么边缘节点很可能缓存了原始 URL。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,30 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1398</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Oluwadamisi Samuel</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2322</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Elasticsearch</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大数据</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM 调优</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">索引优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">React</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Next.js</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">React Query</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/8021d714" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/827ad3e6" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/8021d714">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIjZoJyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AflNQCY1E5BJzY2aTWo2Adl0UrXopGrRSdWiT74MyBNqngDyhppvAvKEmieAPKHmm06qFp1ULTqpWvTJP0bNBOQGyI2aGyA3aiYgk5p/yUnVopOqRSdViz75xwCZ1NwAmdRMQCY1TwD5LzmpWnRSteikatEnX6bmN6mZgLyhZgIyqblRcwNkUvOEmj/JSdWik6pFJ1WLPlkG5E+mZgJyA2RSMwGZ1ExAJjVvAPmTnVQtOqladFK1CH/kLwZkUrMJyI2aJ4BMav4lJ1WLTqoWnVQtwh95AcikZgKySc0TQG7UTEBu1ExAbtTcAJnUTEA2qfmmk6pFJ1WLTqoW4Y/8RYDcqJmA3Kj5TUC+Sc0TQCY1b5xULTqpWnRStQh/5AUgk5oJyCY1N0AmNW8AeUPNDZAbNX+Tk6pFJ1WLTqoW4Y98EZAbNROQSc0bQG7UvAFkUjMB+SY1E5BJzQRkUrPppGrRSdWik6pFn7wEZFLzhpoJyKTmBsikZgIyAZnUPKFmAnKj5jcBmdR800nVopOqRSdViz75ZWomIDdqJiCTmknNjZongExq3gDyhpoJyKTmCSCTmjdOqhadVC06qVqEP/JFQDapmYBMap4AMqm5AfKEmhsgk5obIJOaCciNmm86qVp0UrXopGrRJy8BmdQ8oeYJIG8AmdRsUnMDZBOQSc0NkEnNppOqRSdVi06qFn2yDMikZgIyAXlCzRNAJjUTkEnNE2omIJOaGzVvqJmA3Kj5ppOqRSdVi06qFuGPvABkUvMEkEnNG0A2qbkBMqmZgDyhZgLyhJoJyKRmAjKpeeOkatFJ1aKTqkWffBmQGzUTkBs1E5BJzQ2QJ4DcqHlCzQ2QSc0EZFLzhppNJ1WLTqoWnVQtwh95Acik5g0gk5oJyKRmE5BJzQTkRs0TQCY1E5An1NwAmdRsOqladFK16KRqEf7IC0AmNROQSc0E5P9JzQ2QSc0NkEnNBOSb1ExAnlDzxknVopOqRSdVi/BH/mJAJjUTkEnNDZBJzQ2QSc0TQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+kZlJzo2YTkBsgm4BMat5Q800nVYtOqhadVC36ZJmaTUBugDyh5kbNjZongLyh5gk1TwCZ1LxxUrXopGrRSdWiT74MyBNq3lAzAbkBMqm5ATKpmYBMam6ATEA2AZnUTGo2nVQtOqladFK16JN/DJBJzY2aCcikZlIzAZnUvKHmBsikZgJyA+RGzRsnVYtOqhadVC365B+j5gbIE0C+Sc0NkBsgb6jZdFK16KRq0UnVok++TM03qZmATGomNTdAJjUTkEnNDZBJzQRkUjOpmYBMaiYgk5oJyDedVC06qVp0UrXok2VAfhOQSc0E5EbNE2pugExqJiCTmgnIpOYGyA2QSc03nVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16H8uslYEv4AEJgAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/827ad3e6">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmhsgk5oJyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXlCzQRkUnMD5AbIpOZGzSY1m4BsOqladFK16KRq0SdfBuQJNU8AuVFzo+YGyKTmCSBPqHkCyBNqvumkatFJ1aKTqkWf/GPUTEA2AXlCzQRkUvMvOaladFK16KRq0Sf/GCCTmgnIjZpNQP6fnFQtOqladFK16JMvU/Ob1NyoeQPIpOZGzQ2QSc0Tav4kJ1WLTqoWnVQt+mQZkD8JkEnNBGRSMwGZ1ExAJjUTkEnNG0D+ZCdVi06qFp1ULfrkJTV/EiCTmk1AJjU3aiYgk5obNX+Tk6pFJ1WLTqoWffISkEnNBGSTmknNBOQGyKRmAnKjZgJyo2ZSMwGZ1ExANqn5ppOqRSdVi06qFuGPvABkUnMD5EbNDZBJzQ2QJ9R8E5BvUvMEkEnNGydVi06qFp1ULcIf+YMBmdTcAJnUTEBu1ExA3lBzA+RGzd/kpGrRSdWik6pF+COLgDyh5g0gT6iZgExqngAyqZmAfJOaCcikZgIyqdl0UrXopGrRSdWiT14CMql5A8iNmhs1E5AbNROQSc2NmgnIjZrfBGRS800nVYtOqhadVC3CH/kPAZnU3AB5Qs0NkEnNBGRScwPkm9RMQCY1TwCZ1LxxUrXopGrRSdUi/JEXgNyoeQLIjZoJyI2aCcgTaiYgT6i5ATKpuQEyqZmA3Kj5ppOqRSdVi06qFn3ykpoJyA2QSc2k5gbIE0CeUDMBeULNDZBNQCY1N0AmNZtOqhadVC06qVr0yUtAnlAzAZnUTEBu1ExAJjU3QCYgT6iZgExqbtS8oWYCcqPmm06qFp1ULTqpWvTJMjU3QJ5QcwPkBsik5kbNE0AmNROQGyCTmgnIDZBJzQTkBsik5o2TqkUnVYtOqhZ98svU3AB5Qs0EZFJzo+YGyI2aJ9TcAJnUTEAmNW+o2XRSteikatFJ1SL8kReATGomIDdqNgF5Q80E5Ak1TwCZ1ExAnlBzA2RSs+mkatFJ1aKTqkWffJmaN4BMap5QcwNkAjKpeQLIpGYCcgNkE5AbIJOaN06qFp1ULTqpWoQ/8hcDcqNmAjKpuQEyqZmATGqeADKpeQLIJjVvnFQtOqladFK16JOXgPwmNZOaN4A8AeQGyCYgk5o31HzTSdWik6pFJ1WLPlmmZhOQGyCTmgnIE2o2AXlDzRNqboDcqHnjpGrRSdWik6pFn3wZkCfUvAFkUjMBmdQ8AWRSMwGZ1NwAmYBsAvKbTqoWnVQtOqla9Mk/Rs0TQG7UTGomIJOaN9TcAJnUTED+SydVi06qFp1ULfrkHwNkUvMGkG9ScwPkBsgbajadVC06qVp0UrXoky9T801qnlBzA2RSMwGZ1NwAmdRMQCY1k5oJyKRmAjKpmYB800nVopOqRSdViz5ZBuQ3AZnUTEDeADKpuQEyqZmATGomIJOaGyA3QCY133RSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aL/AbNFSi7shNRkAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
