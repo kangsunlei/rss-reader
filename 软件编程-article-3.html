@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>大规模落地智能体软件开发的框架</title>
+        <title>RFC 规范中的 CNAME 排序如何导致 Cloudflare 1.1.1.1 故障</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,81 @@
         </style>
     </head>
     <body>
-        <h2>大规模落地智能体软件开发的框架</h2>
-        <p>2/6/2026, 10:53:40 AM</p>
+        <h2>RFC 规范中的 CNAME 排序如何导致 Cloudflare 1.1.1.1 故障</h2>
+        <p>2/7/2026, 11:32:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Addy Osmani 推荐了 OpenAI 转向智能体软件开发的实用框架，强调了质量门禁、可观测性以及人工所有权的重要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 的 1.1.1.1 服务在一次内存优化后发生故障，该优化无意中重新排列了 DNS 响应中的 CNAME 记录，导致依赖特定记录顺序的 glibc 等旧版客户端解析失败。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Addy Osmani 重点介绍了一个针对团队规模化 AI 辅助编程的战略框架，该框架最初由 Greg Brockman 分享，源自 OpenAI 的内部转型经验。该框架倡导“智能体优先（Agent-first）”的方法，即让智能体成为处理技术任务的首选工具。关键的可执行步骤包括：为团队设立“智能体负责人（Agent Captains）”；维护“AGENTS.md”文件以记录智能体的交互与失败案例；以及构建具有高质量接口的代码库，以提升智能体兼容性。框架特别强调了人工问责制，以防止“AI 废料（AI slop）”的产生，并指出需要构建新的基础设施来追踪智能体轨迹并实现可观测性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析了 Cloudflare 1.1.1.1 DNS 服务的一次重大故障，该故障由旨在减少内存消耗的常规更新引起。通过更改构建 DNS 响应的内部逻辑，Cloudflare 意外地将 CNAME 记录移动到了应答部分的末尾（位于最终 A 记录之后）。虽然现代解析器通常与顺序无关，但旧版实现（最著名的是 glibc 中的 getaddrinfo 函数）在别名未置于地址之前时会解析失败。这次事件是海勒姆定律（Hyrum's Law）的教科书级案例，即系统的可观测行为会成为事实上的契约。作为回应，Cloudflare 已向 IETF 提交了一份新的规范提案，旨在正式确定 DNS 记录排序，以防止未来出现类似的互操作性问题。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">内存优化导致 DNS 响应结构发生了细微但具有破坏性的变化。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了减少内存分配，Cloudflare 的代码开始将 CNAME 附加到现有应答列表的末尾，而不是置于开头，导致 CNAME 记录出现在 DNS 响应中最终 IP 地址之后。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">glibc 等旧版 DNS 客户端依赖特定的记录顺序进行解析。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然许多现代系统与顺序无关，但 glibc 的 getaddrinfo 会按顺序迭代，并期望 CNAME 记录出现在最终答案之前，这导致在发布期间出现了解析失败。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">该事件凸显了分布式系统中模糊的 RFC 规范所带来的风险。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 较旧的 DNS 标准并未明确规定响应部分内的记录顺序，导致服务器端优化与客户端解析逻辑之间出现了分歧。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">海勒姆定律解释了为什么技术上“有效”的更改仍可能导致灾难性故障。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当用户群足够大时，系统的每一个可观测行为（即使是合同或标准中未承诺的行为）最终都会被生态系统的某些部分所依赖。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Cloudflare 正在寻求正式的标准化以永久解决歧义。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该公司已向 IETF 提交了一份互联网草案，明确定义应如何处理 DNS 响应中的 CNAME 记录，旨在将“最佳实践”转变为正式要求。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然大多数现代软件认为 DNS 响应中的记录顺序无关紧要，但 Cloudflare 团队发现某些实现期望 CNAME 记录出现在所有其他记录类型之前。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为了节省一些内存分配和拷贝，代码被更改为将 CNAME 附加到现有应答列表。结果，1.1.1.1 返回的响应有时会将 CNAME 记录显示在底部。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当一个 API 的用户达到足够数量时，你在契约中承诺了什么并不重要：你系统的所有可观测行为都会被某人所依赖。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Cloudflare 提议了一项 RFC，明确定义了如何正确处理 DNS 响应中的 CNAME 记录。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该更改于 2025 年 12 月 2 日引入，12 月 10 日发布到测试环境，并于 2026 年 1 月 7 日开始部署。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Addy Osmani(@addyosmani)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Addy Osmani</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">83</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Renato Losio</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">252</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">690</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 辅助编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DNS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">故障复盘</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RFC 标准</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2019726180442870003" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/2e592562" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2019726180442870003">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2e592562">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATeSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRSMwF5Qs0E5EbNDZAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgDwBZFJzA+QJNROQJ9RMQJ5QswnIppOqRSdVi06qFn3yZUCeUPOEmgnIBGRScwNkUnOj5v8JyBNqvumkatFJ1aKTqkWf/HFAJjUTkCfU3ACZ1ExAJjUTkEnNf8lJ1aKTqkUnVYs++ePUTEBugNwAmdTcAHkDyKTmLzupWnRSteikatEnX6bmN6mZgNyoeULNBGRSMwH5JjX/kpOqRSdVi06qFn2yDMhvAjKpuVEzAZnUTEAmNW+omYA8AeRfdlK16KRq0UnVIvyRPwzIjZo3gNyomYC8oeYvO6ladFK16KRq0ScvAZnUTEBu1ExAnlAzAZmA3KiZgNyo+U1AJjU3QCY1E5AbNW+cVC06qVp0UrUIf+SLgExqJiA3am6ATGomIJOaCcikZgIyqXkDyDepeQLIpOaNk6pFJ1WLTqoWffJlat4AMqmZ1ExAboBsAjKpmYBMat4A8gSQGzWbTqoWnVQtOqlahD/yApAbNd8E5EbNJiCTmjeATGpugNyoeQLIpOaNk6pFJ1WLTqoW4Y8sAjKpuQEyqZmA3Kh5AsikZhOQGzXfBORGzTedVC06qVp0UrXok18G5AbIpOYNIE8AeULNpOYGyKTmBsiNmknNBGQCcqPmjZOqRSdVi06qFn2yTM0E5EbNDZAn1ExqJiBvqLkB8gSQN4BMav6fTqoWnVQtOqla9MmXqZmATEBu1ExAngAyqZmA3KiZgNyouQFyo+YGyBNqJiCTmk0nVYtOqhadVC3CH1kEZFLzBJAbNW8AmdTcAJnUPAHkDTU3QG7UTEAmNZtOqhadVC06qVr0yZcBmdTcqHkDyI2aCciNmgnIpOZGzQ2QJ4BMaiYgE5DfdFK16KRq0UnVok9eAjKp2QRkUjMBmdRMQCYgk5pvAjKpmdRMQN5QMwGZ1HzTSdWik6pFJ1WLPnlJzQ2QN9RMQCY1bwCZ1ExAJjUTkG8CMqn5l51ULTqpWnRSteiTZUBu1DwB5AbIE2omIBOQSc0EZBOQJ4D8y06qFp1ULTqpWoQ/8ocBuVEzAXlCzQ2QSc0TQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+k5gkgk5obIN8E5Akgk5on1ExAJjWbTqoWnVQtOqla9MkyNZuAPKHmBsikZlJzA+QNNROQGzWb1ExAJjVvnFQtOqladFK16JMvA/KEmifUTEAmNW8AuVEzAZnUPAHkDTUTkEnNpGbTSdWik6pFJ1WLPvnjgDyhZgLyBpAbIJOaSc0EZFJzA2QCMqm5ATKpeeOkatFJ1aKTqkWf/MeomYBMaiY1N0AmNU8AmYBMap4AMqm5ATKp+aaTqkUnVYtOqhZ98mVqvknNE0AmNU8AmdQ8oWYCMql5A8ikZgIyqdl0UrXopGrRSdWiT5YB+U1AJjU3am6ATGomIG8AeUPNv+ykatFJ1aKTqkX4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/A/jqMVwouqIFAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
