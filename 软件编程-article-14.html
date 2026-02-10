@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>React 中文周刊 #263 - 实测 AI 调试 React：能替代高级开发者吗？</title>
+        <title>Flink ClickHouse Sink：生产级高可用写入方案｜得物技术</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>React 中文周刊 #263 - 实测 AI 调试 React：能替代高级开发者吗？</h2>
-        <p>2/7/2026, 3:57:00 AM</p>
+        <h2>Flink ClickHouse Sink：生产级高可用写入方案｜得物技术</h2>
+        <p>2/9/2026, 10:36:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本期周刊聚焦 AI 在 React 调试中的局限性，并汇总了框架迁移、编译器优化陷阱及 React 19 生态适配等前沿动态。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了得物技术针对 Flink 写入 ClickHouse 的生产级优化方案，通过本地表直写、数据量攒批及动态节点发现等手段解决开源 Sink 的性能与稳定性痛点。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文为《React 中文周刊》第 263 期，核心内容围绕 AI 辅助开发的实测反馈展开，指出 AI 目前尚无法替代高级开发者处理复杂的 React 调试任务。周刊详细介绍了 Inngest 团队从 Next.js 迁移到 TanStack Start 的技术取舍，探讨了 React Compiler 在处理类对象时可能出现的优化失效问题，并分享了 Gatsby 支持 React 19 的更新。此外，文中还涵盖了 2025 State of JS 调查结果、Vercel Bug 悬赏计划以及多款实用的 React 组件库和工具，为前端开发者提供了全面的生态资讯。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了 Flink 官方 ClickHouse Sink 在高并发场景下的三大痛点：内存占用不可控、不支持动态分表及分布式表写入性能瓶颈。针对这些问题，得物技术开发了一套高可用写入方案。核心改进包括：引入基于字节大小（metaSize）的攒批机制以防止 OOM；实现本地表直写并结合动态节点发现与故障剔除，提升吞吐并降低延迟；设计有界队列与线程池并发控制实现背压传导；通过递归重试与 Checkpoint 强刷机制，确保了 At-Least-Once 的数据一致性语义。此外，方案还支持按应用维度的动态路由与分表策略，满足了大规模多租户场景的需求。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 在复杂 React 调试场景中表现有限，尚无法替代高级开发者。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过对 Claude 的实测发现，AI 在处理隐蔽 Bug 时表现平平，难以理解复杂的上下文逻辑，目前仍需有经验的开发者进行深度把控。</span>
+                        <strong style="color: #1e40af">采用本地表直写替代分布式表写入以提升性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过绕过 ClickHouse 分布式表的网络转发逻辑，利用客户端实现的负载均衡和动态节点发现，显著提升了写入吞吐量并降低了系统延迟。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">React Compiler 的自动优化存在边界，类对象可能导致优化失效。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于类实例的特殊性，React Compiler 难以对其进行有效的自动 memo 优化，建议在 render 阶段优先使用纯数据驱动的模型。</span>
+                        <strong style="color: #1e40af">引入基于数据量（字节）的攒批触发机制控制内存。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 解决了官方 Sink 仅按记录数攒批导致的内存不可控问题，通过精确计算字节大小并结合随机抖动超时，有效防止了大日志场景下的 OOM 风险及惊群效应。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">前端框架生态持续演进，TanStack Start 成为 Next.js 的有力竞争者。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Inngest 团队的迁移案例展示了开发者在特定场景下对更轻量、更灵活框架的追求，反映了 React 全栈开发方案的多样化趋势。</span>
+                        <strong style="color: #1e40af">构建动态节点发现与异常自动剔除的高可用体系。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 系统实时从 ClickHouse 系统表获取集群拓扑，并结合 APM 监控指标（如磁盘使用率、连接数）自动隔离故障节点，确保了生产环境下的写入稳定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">性能排查需警惕非技术性“乌龙”，如表情符号导致的加载延迟。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文中分享了一个表情符号导致页面卡顿 10 秒的案例，强调了性能分析工具和二分查找法在排查此类诡异 Bug 中的关键作用。</span>
+                        <strong style="color: #1e40af">强化 Checkpoint 语义保证数据的一致性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Checkpoint 触发时阻塞等待所有异步写入的 Future 完成，结合递归重试策略，在保证高性能异步写入的同时，实现了 At-Least-Once 的数据一致性语义。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 能替代有经验开发者 debug 吗？现在还远远做不到。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">组件 render 阶段，尽量用数据驱动的模型，别用行为太多的 class 对象。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然关于 Gatsby '已死' 的声音一直在，但它非但没死，官网刚上线新版本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个表情符号把整个 dashboard 搞崩，页面加载暴慢到 10 秒。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ClickHouse 推荐直接写本地表，原因：避免分布式表的网络分发，直接写入目标节点，减少中间环节故障点，比分布式表写入更安全。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用 metaSize（字节数）而非记录数控制批次，内存控制更精确。1MB 的记录攒 10 条 = 10MB，避免大日志记录撑爆内存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">递归重试是更好的选择：Checkpoint 时所有数据要么全部成功，要么全部失败，重启后不会有部分数据重复的问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">基础超时 + 10% 随机抖动（避免惊群效应），目的在于避免多个 TM 同时触发 flush，造成写入流量峰值。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">印记中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">印记中文</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1733</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">37 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9027</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">React</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Coding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">React Compiler</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Flink</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ClickHouse</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大数据架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">实时计算</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">写入优化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/2f732df8" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/f20403ee" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/2f732df8">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATYSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4DcqJmATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkDeATGpugNwAmdTcqNmkZhOQTSdVi06qFp1ULfrky4A8oeYJIDdqJiA3aiYgk5oJyKRmAvKEmieAPKHmm06qFp1ULTqpWvTJP0bNBORGzQRkUjMBmdRMQCY1E5BJzb/kpGrRSdWik6pFn/xjgExqJiATkEnNBGRSMwGZ1ExA/p+cVC06qVp0UrXoky9T8ycBuVEzAZnUTEAmNTdqboBMap5Q8zc5qVp0UrXopGrRJ8uA/ElqJiCTmgnIpGYCMqmZgExqJiCTmjeA/M1OqhadVC06qVqEP/IfBmRSswnIpOYNIJOaf8lJ1aKTqkUnVYvwR14AMqmZgGxS8wSQSc0E5EbNBOQJNTdAJjUTkE1qvumkatFJ1aKTqkWffJmaCciNmm8CMqm5ATKpeQPIDZA31DwBZFLzxknVopOqRSdVi/BHXgAyqXkCyBNqboDcqLkBMqmZgDyh5gbIjZr/kpOqRSdVi06qFuGPvABkUvMGkEnNDZAbNd8EZFIzAfkmNROQSc0EZFKz6aRq0UnVopOqRZ98GZA3gExqvgnIjZpJzQTkRs1vAjKp+aaTqkUnVYtOqhZ98svUTEAmNTdAJjUTkAnIpOZGzTcBeUPNBGRS8wSQSc0bJ1WLTqoWnVQt+mQZkE1AJjW/Ccgbam6ATGpugExqJiA3aiY1m06qFp1ULTqpWvTJMjU3QJ5QMwGZ1ExqNqmZgNyouQGyCcik5gbIpGbTSdWik6pFJ1WLPlkG5EbNDZA3gDyhZgLyhJoJyKTmRs0baiYgN2q+6aRq0UnVopOqRfgjLwCZ1ExAnlBzA2RS8ycBmdRMQJ5QMwF5Qs0EZFIzAZnUvHFSteikatFJ1aJP/jA1N0BugExqngDyhpon1NwAmdRMQCY1b6jZdFK16KRq0UnVok/+cmqeAHKj5kbNDZAJyKRmUnMDZFIzAbkBMqmZ1ExAJjWbTqoWnVQtOqlahD/yApBJzQ2QN9RMQCY1E5BJzQ2QSc0TQCY1E5BvUjMBeULNGydVi06qFp1ULcIf+Q8D8oSaCcgTaiYgk5ongExqngCySc0bJ1WLTqoWnVQt+uQlIL9JzaRmAjKpeULNDZAbIJuATGreUPNNJ1WLTqoWnVQt+mSZmk1AboBMap5Q84SaJ4C8oeYJNTdAbtS8cVK16KRq0UnVok++DMgTat4AMqmZgNyouQEyqZmATGpugExANgH5TSdVi06qFp1ULfrkH6PmCTUTkEnNpGYCMql5Q80NkEnNBORPOqladFK16KRq0Sf/OCCTmjeAbFJzA+QGyBtqNp1ULTqpWnRSteiTL1PzTWomIJOaGyCTmifU3ACZ1ExAJjWTmgnIpGYCMqmZgHzTSdWik6pFJ1WLPlkG5DcBeUPNDZBJzQ2QSc0EZFIzAZnU3AC5ATKp+aaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9D1EwTR8QiIdxAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/f20403ee">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATSSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEAmNTdAJjUTkEnNDZBJzRNAfpOaN06qFp1ULTqpWvTJMjWbgNyomYDcAJnU3ACZ1DyhZgJyo+ZGzSYgm06qFp1ULTqpWvTJlwF5Qs0baiYgk5obNU8AuVHzTUCeUPNNJ1WLTqoWnVQt+uQvB2RS8waQSc0EZFJzA+RGzb/kpGrRSdWik6pFn/xjgDwB5DepmYBMav5mJ1WLTqoWnVQt+uTL1PwmNd+k5gk1E5BJzRtq/iQnVYtOqhadVC36ZBmQPwmQSc2NmgnIpGYCMqmZgExqJiCTmhsgf7KTqkUnVYtOqhbhj/zFgDyh5puAPKHmX3JSteikatFJ1aJPXgIyqXkCyKRmAvKEmgnIBORGzQRkUvOEmgnIDZBNam6ATGreOKladFK16KRqEf7IFwGZ1ExAbtS8AWRSMwG5UTMBuVGzCchvUvPGSdWik6pFJ1WLPlkG5AbIpOYGyKTmCTUTkBs1T6i5ATKpmYBsUvMEkE0nVYtOqhadVC3CH/mLAblRMwGZ1GwCMqmZgDyh5gbIjZoJyI2aN06qFp1ULTqpWvTJMiCTmgnIjZoJyKTmRs0mIDdqboB8k5o31Gw6qVp0UrXopGrRJ18G5EbNBGRSMwF5Q80E5EbNBOQNNU8AmdRMQN4AMql546Rq0UnVopOqRZ/8MjUTkEnNBOQNIJOaSc0E5A01E5AbIJOab1IzAdl0UrXopGrRSdWiT14CcqNmAjKpuVHzBJBJzQ2QSc0E5AkgN0A2qXkCyDedVC06qVp0UrXok5fUfBOQSc0E5AbIjZobNW+ouQEyAZnUTEAmNW+o2XRSteikatFJ1SL8kReATGomIE+ouQFyo2YCcqNmAvKGmgnIpOYGyCY1E5AbNW+cVC06qVp0UrUIf+QXAXlDzQTkRs0bQN5Q8wSQGzUTkEnNBGRSMwGZ1LxxUrXopGrRSdUi/JEvAvKEmhsgk5oJyBtqJiA3aiYgN2omIJOabwJyo+aNk6pFJ1WLTqoWffISkBs1E5BJzQTkRs2NmgnIG2omIE+oeQLIJjWTmgnIppOqRSdVi06qFuGP/MWATGreAPKGmhsgN2qeADKpeQLIpOaNk6pFJ1WLTqoWffISkN+k5gbIpOYGyKRmAnKj5puATGpugNyo+aaTqkUnVYtOqhZ9skzNJiA3ap4A8oaaCciNmjfUPKHmBsikZtNJ1aKTqkUnVYs++TIgT6h5AsikZgLyBJAn1ExA3gDyBpBJzaRmAjKpeeOkatFJ1aKTqkWf/OXUTEBu1NwAuQFyo+YJNROQSc0EZFLzJzmpWnRSteikatEn/xg1E5An1NwAmdRMQG7U3Ki5UXMD5P90UrXopGrRSdWiT75Mzf9JzQRkUnMD5AbIjZobIJOaCcikZgJyo2YC8k0nVYtOqhadVC36ZBmQ3wRkUjMBuQHyhpoJyCY1E5AbNU+o2XRSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aL/AA8dQShAGQW0AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
