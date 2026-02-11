@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>构建 Prometheus：后端聚合如何实现吉瓦级 AI 集群</title>
+        <title>LinkedIn 如何为数千个服务构建下一代服务发现系统</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>构建 Prometheus：后端聚合如何实现吉瓦级 AI 集群</h2>
-        <p>2/9/2026, 4:48:38 PM</p>
+        <h2>LinkedIn 如何为数千个服务构建下一代服务发现系统</h2>
+        <p>2/10/2026, 4:30:21 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Meta 的后端聚合 (BAG) 架构通过提供中心化、高容量的以太网超级主干，连接区域数据中心和多种网络架构，从而实现了吉瓦级 AI 集群。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">LinkedIn 将其服务发现系统从基于 Zookeeper 的系统迁移到由 Kafka 和 xDS 驱动的架构，实现了亚秒级延迟和大规模水平扩展。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Meta 的 1 吉瓦 AI 集群 Prometheus 的架构，重点阐述了后端聚合 (BAG) 的关键作用。BAG 作为一个中心化的以太网超级主干层，连接了多个数据中心和区域，支持数万个 GPU。它利用 Jericho3 ASIC 等模块化硬件，桥接了不同的架构技术，特别是解耦调度架构 (DSF) 和非调度架构 (NSF)。该设计强调拍比特 (petabit) 级的带宽、弹性拓扑（平面与分散）以及通过 eBGP/UCMP 实现的高级路由。一个关键的技术亮点是使用深缓存 (deep-buffer) 交换机来管理长距离跨建筑连接的延迟和拥塞，确保大规模 AI 工作负载的无损性能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 LinkedIn 的“下一代服务发现”（NGSD）。文章解释了为什么之前基于 Zookeeper 的架构因扩展性瓶颈（如 Zookeeper 强一致性模型导致的“读取风暴”和会话超时）而达到极限。新架构将写入路径（使用 Kafka 处理高吞吐量事件）与读取路径（使用基于 Go 的 Observer 组件）解耦。通过采用 xDS 协议和 gRPC 流，LinkedIn 转向了优先考虑可用性的最终一致性模型。文章还详细介绍了复杂的“双模式”迁移策略（双读/写）和自动化依赖分析，这使得 LinkedIn 能够在不停机的情况下迁移数千个微服务，同时将中值延迟提高了 10 倍。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">BAG 作为多区域 AI 集群的中心化超级主干。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它聚合了区域网络和 Meta 的骨干网，支持创建像 Prometheus 这样具有吉瓦级容量和拍比特级 BAG 间带宽的超大集群。</span>
+                        <strong style="color: #1e40af">Zookeeper 的强一致性模型成为大规模服务发现的瓶颈。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着集群规模的增长，Zookeeper 的单请求队列在部署期间导致了读取风暴和会话超时，引发级联故障和站点不可用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">该架构桥接了包括 DSF 和 NSF 在内的异构网络架构。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> BAG 作为一个通用的互连层，允许不同的二层架构技术通过专门的边缘 Pod 和训练交换机进行无缝通信。</span>
+                        <strong style="color: #1e40af">新架构分离了读写路径，以优化可用性和规模。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Kafka 处理高容量的服务注册（写入），而基于 Go 的 Observer 通过 gRPC 流向客户端推送更新（读取），从而实现了水平扩展。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">深缓存交换机对于管理长距离跨建筑延迟至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然区域架构使用浅缓存，但 BAG 层之间较长的距离需要深缓存硬件，以有效支持 PFC 等无损拥塞控制协议。</span>
+                        <strong style="color: #1e40af">采用 xDS 协议实现了行业标准的多语言支持和可扩展性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用 xDS，LinkedIn 可以原生支持 gRPC 和 Envoy 代理，从而更轻松地与服务网格集成，并使基础设施具备前瞻性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">弹性拓扑和高级路由减轻了大范围的故障域影响。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过利用分散连接拓扑以及带有非等价多路径 (UCMP) 的 eBGP，系统确保了路径多样性、高效的负载均衡和稳健的故障处理。</span>
+                        <strong style="color: #1e40af">“双模式”迁移策略对于实现零停机转换至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 应用程序并行运行新旧系统，在切换数据源之前，使用后台验证线程来比较数据的正确性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">自动化依赖分析识别了数千个服务中的迁移阻碍因素。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 定时任务分析 Zookeeper 监听器，以确定哪些客户端仍在从旧系统读取数据，从而实现优先级排序和安全的写入路径迁移。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">BAG 是一个基于以太网的中心化超级主干网络层，其主要功能是互连跨多个数据中心和区域的多个主干层架构。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Prometheus 的基础设施将跨越单个大区域内的多个数据中心建筑，互连数万个 GPU。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">BAG 间的容量达到拍比特级别（例如，每个区域对 16-48 Pbps）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">更长的 BAG 到 BAG 电缆距离决定了我们在 BAG 角色中使用深缓存交换机。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过利用模块化硬件、高级路由和弹性拓扑，BAG 在前所未有的规模上确保了性能和可靠性。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Zookeeper 是一个强一致性系统，这意味着它强制执行严格的顺序而非可用性……当队列中有大量积压的读取请求时，写入请求就无法被处理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LinkedIn 将可用性置于一致性之上，因为服务发现数据只需要最终趋于一致。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Observer 是水平可扩展的，并且是用 Go 编写的……一个 Observer 可以维持 40，000 个客户端流，同时每秒发送 10，000 次更新。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LinkedIn 实施了双模式策略，应用程序同时运行新旧系统，在后台验证新流程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这意味着中值延迟提高了 10 倍，99 分位延迟提高了 6 倍。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Engineering at Meta</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Engineering at Meta</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">812</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3012</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据中心网络</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPU 集群</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">后端聚合</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络拓扑</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Service Discovery</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">System Architecture</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Zookeeper</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kafka</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">xDS Protocol</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/832433c3" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/aa0e36bc" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/832433c3">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATjSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnt6MRH8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aJPXgLyK6m5AfKEmieA3KiZgDyhZgLyK6l546Rq0UnVopOqRZ8sU7MJyBNqboBMQCY1m9RsUrMJyKaTqkUnVYtOqhZ98mVAnlDzBJAn1ExAnlDzBJAn1DwB5Ak133RSteikatFJ1aJP/jFAJjUTkBs1E5AbNROQSc3f5KRq0UnVopOqRZ/8Y9RMQG7UTEAmNTdA/iUnVYtOqhadVC365MvU/J/UTEAmNTdA3lBzA2RS84Sa38lJ1aKTqkUnVYs+WQbk/6RmAjKpmYBMam7UTEAmNROQSc0bQH5nJ1WLTqoWnVQtwh/5gwGZ1NwAmdQ8AWRS8wSQSc3f5KRq0UnVopOqRfgjLwCZ1ExANqm5ATKpuQEyqZmAvKHmBsikZgKySc03nVQtOqladFK16JNlQCY1TwCZ1ExAJjU3QCY1k5o31DwB5AbIG2qeADKpeeOkatFJ1aKTqkX4Iy8AmdQ8AeQJNROQSc0E5EbNE0CeUHMD5EbNn+SkatFJ1aKTqkWfvKTmCSBPqJmAvKFmAjKpuVEzAZnUTEDeAHKjZgIyqZmATGo2nVQtOqladFK16JOXgDyh5gbIBGRS8ztRMwG5UfMrAZnUfNNJ1aKTqkUnVYs++TI1E5AbNU8A2QRkUrMJyBtqJiCTmieATGreOKladFK16KRq0SdfBmRS8wSQSc2NmhsgN2pugDyh5gbIpOYGyKRmAnKjZlKz6aRq0UnVopOqRfgji4A8oeYJIJOaGyA3aiYgb6i5AXKj5gbIjZobIJOaTSdVi06qFp1ULfrkJSA3aiYgE5An1ExAJjWTmifU3ACZ1ExAJjU3at5QMwG5UfNNJ1WLTqoWnVQtwh95Acik5g0gk5oJyKRmArJJzQ2QSc0E5Ak1E5An1ExAJjUTkEnNGydVi06qFp1ULfrkfwbkBsik5kbNBORGzQ2QGzVPqLkBMqmZgExq3lCz6aRq0UnVopOqRfgjLwCZ1NwAeULNBGRSMwGZ1ExAnlAzAblR8wSQSc0E5Ak1N0AmNZtOqhadVC06qVr0yZcBmdTcAJmATGreUDMBmdRMQCY1N0AmNROQGyCbgNwAmdS8cVK16KRq0UnVIvyRPxiQSc0E5A01N0AmNU8AmdQ8AWSTmjdOqhadVC06qVr0yUtAfiU1k5oJyKRmAnKjZgLyBJBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAJjWb1LwB5A01T6i5AXKj5o2TqkUnVYtOqhZ98mVAnlDzTWomIE8AmdRMQCY1N0AmIJuA3KjZdFK16KRq0UnVok/+MkBu1NwAmdRMaiYgk5o31NwAmdRMQJ4AMql546Rq0UnVopOqRZ/85dTcqLkB8k1qboDcAHlDzaaTqkUnVYtOqhZ98mVqvknNBOQNIE+ouQEyqZmATGomNROQSc0EZFIzAfmmk6pFJ1WLTqoWfbIMyK8EZFIzAblRM6l5A8ikZgIyqZmATGpugNwAmdR800nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4DdglTImn+/f4AAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/aa0e36bc">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6OVNszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzQRkUjMBmdQ8AeQJNROQ36TmjZOqRSdVi06qFn2yTM0mIE8AmdRMQJ5QMwG5UTOp2aRmE5BNJ1WLTqoWnVQt+uTLgDyh5gkgT6jZpOYGyBNqngDyhJpvOqladFK16KRq0Sf/c0AmNTdA3gAyqZmATGr+T06qFp1ULTqpWvTJXwbIjZongExqJiB/k5OqRSdVi06qFn3yZWr+JGomIDdA3lBzA2RS84SaP8lJ1aKTqkUnVYs+WQbk36RmArJJzQTkBsik5g0gf7KTqkUnVYtOqhZ98pKavwmQSc2NmgnIpOZGzX/JSdWik6pFJ1WL8EdeADKpmYBsUnMDZFLzBJBJzQRkUjMBmdTcAJnUTEA2qfmmk6pFJ1WLTqoW4Y8sAvKEmt8EZFJzA2RSMwGZ1NwA+SY1TwCZ1LxxUrXopGrRSdUi/JEXgNyomYC8oeYGyKRmAvKEmgnIE2pugNyo+S85qVp0UrXopGoR/si/CMiNmjeATGomIJOaCcikZgIyqZmAfJOaCcikZgIyqdl0UrXopGrRSdWiT14CMqmZgExqngByo+YNNROQSc2NmgnIjZrfBGRS800nVYtOqhadVC3CH/kiIDdqngByo+YGyI2aCcik5gbIN6mZgExqngAyqXnjpGrRSdWik6pF+CMvAJnU3AB5Q80EZFIzAZnUTEC+Sc0NkEnNDZBJzQTkRs03nVQtOqladFK16JMvAzKpuQEyqXkCyKTmCTU3QG7U3ADZBGRScwNkUrPppGrRSdWik6pFnywDsgnIE2omIJOaGyBPqJmATGpu1LyhZgJyo+abTqoWnVQtOqla9MkyNROQGyA3ap4AMqmZgExq3gAyqZmA3ACZ1ExAboBMaiYgN0AmNW+cVC06qVp0UrXoky9T84SaCcikZgIyqZmA3AC5UTMBmdQ8oeYGyKRmAjKpeUPNppOqRSdVi06qFn3yZUAmNU+ouVHzhJoJyKTmCSCTmknNDZBJzQTkBsikZlIzAZnUbDqpWnRSteikatEnX6ZmAvIEkEnNDZAbIDdAbtTcAJnUTEBugGwCcgNkUvPGSdWik6pFJ1WL8Ef+w4BMaiYgk5pNQCY1TwCZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5pJzRtAbtRMQG6AbAIyqXlDzTedVC06qVp0UrXok2VqNgG5AXKjZgIyqbkBMql5Asgbap5QcwPkRs0bJ1WLTqoWnVQt+uTLgDyhZhOQGyCTmknNBGRSMwGZ1NwAmYBsAvKbTqoWnVQtOqla9Mn/jJoJyI2aCcikZlIzAZnUvKHmBsikZgLybzqpWnRSteikatEnfxk1E5AngGxScwPkBsgbajadVC06qVp0UrXoky9T801qbtTcqLkBcqPmBsikZgIyqZnUTEAmNROQSc0E5JtOqhadVC06qVr0yTIgvwnIpGYCMqm5AXKj5gbIpGYCMqmZgExqboDcAJnUfNNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+AYNSSjS7zEuNAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Martin Fowler 碎片集：AI 对编程的影响与认知负债</title>
+        <title>又出 P0 事故！被分页查询坑惨了……</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,79 @@
         </style>
     </head>
     <body>
-        <h2>Martin Fowler 碎片集：AI 对编程的影响与认知负债</h2>
-        <p>2/9/2026, 7:35:47 PM</p>
+        <h2>又出 P0 事故！被分页查询坑惨了……</h2>
+        <p>2/10/2026, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">软件专家 Martin Fowler 分享了一系列短篇散文，探讨了 AI 对认知负债的影响、源代码的未来以及编程的乐趣。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了后端开发中分页查询因“锚点不稳定”导致的数据重复与丢失问题，并提供了游标分页、时间戳过滤及 ES 优化等实战解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">在这条推文中，Martin Fowler 宣布在其网站上发布了一组新的“碎片集”（短篇散文）。这些文章重点关注 AI 与软件开发的交集，涵盖了由 AI 引入的“认知负债”、编程乐趣可能丧失、源代码的演进，以及关于管理开源项目中 AI 生成贡献的实用建议。此外，还包括一篇关于向不同年龄段人群解释 Transformers 的科普文章。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章针对后端开发中极易被忽视的分页查询稳定性陷阱进行了深度复盘。核心问题在于传统的 `LIMIT offset， size` 模式依赖于结果集的行数偏移，当系统在高并发下发生数据增删时，偏移量会失效，从而引发数据重复或丢失，甚至导致资损级 P0 事故。作者详细对比了三种主流方案：基于“时间戳+唯一键”的游标分页（彻底解决重复但不支持跳页）、固定时间窗口的时间戳过滤（实现简单但有滞后性）、以及 Elasticsearch 的 `Search_after` 优化。最后，文章强调了建立工程规范和代码评审（CR）机制在规避此类基础技术风险中的关键作用。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">传统 Offset 分页的失效源于结果集行数的动态变化。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当新数据插入或旧数据删除时，结果集的物理偏移量会随之改变，导致下一页查询可能包含上一页已读过的数据或跳过未读数据。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">游标分页（Cursor Pagination）是解决滑动加载场景的最优解。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过放弃 offset，改用上一页最后一条数据的唯一标识（如时间戳+ID）作为查询起点，可以确保分页锚点不受数据增删的影响。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">排序字段的唯一性是确保分页数据一致性的前提条件。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 如果排序字段（如 create_time）不唯一，数据库在多次查询时可能产生不同的排序结果，必须引入 ID 等唯一键作为辅助排序项。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">针对不同业务场景应灵活选择分页策略以平衡性能与功能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> C 端滑动加载优先用游标分页，B 端需跳页且数据量小时可用 LIMIT，海量数据导出则应使用 ES 的 Search_after 机制。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分页的依据是「当前查询结果集的行数偏移」。而新数据插入或旧数据的删除会直接改变结果集的行数，进而导致下一页的偏移量失效。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心是放弃「偏移量（offset）」，改用「上一页最后一条数据的标记」作为分页锚点，彻底摆脱结果集变化的影响。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">技术方案解决单次问题，建立工程规范（需求 - 编码 - 测试 - 监控）将个人经验转化为团队标准。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CR 分页查询代码重点关注排序项是否唯一、是否游标分页、分页是否有防重措施等，避免重复踩坑。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Martin Fowler(@martinfowler)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Martin Fowler</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">253</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3229</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 软件开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">认知负债</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源代码</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Transformers</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分页查询</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MySQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Elasticsearch</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">游标分页</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2020944738241872053" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/b3abfbf6" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2020944738241872053">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/b3abfbf6">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEevWSAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUg/5KaCciNmgnIjZongExqJiBPqJmA/Etq3jipWnRSteikatEny9RsAvIGkEnNBOQGyKTmBsiNmgnIE2o2Adl0UrXopGrRSdWiT74MyBNqnlAzAZnU3KiZgNwAuVHzLwF5Qs03nVQtOqladFK16JM/DsikZgIyqfkmIJOaCcik5r/kpGrRSdWik6pFn/xxap4AcqNmAnKjZgLyBJBJzV92UrXopGrRSdWiT75MzV+m5gbIpGYC8k1qfpOTqkUnVYtOqhZ9sgzIvwRkUnOjZgJyA2RS84aaCcgTQH6zk6pFJ1WLTqoW4Y/8YUDeUHMD5EbNBOQNNX/ZSdWik6pFJ1WLPnkJyKRmAnKjZgLyhJo3gExqbtRMQL4JyKTmBsikZgJyo+aNk6pFJ1WLTqoW4Y8sAnKjZgIyqbkBMqmZgExqJiCTmjeATGpugHyTmieATGreOKladFK16KRq0ScvAZnUTEBu1NwAmdQ8AeQJIJOaN4BMat4A8gSQGzWbTqoWnVQtOqla9MlLap4AMqmZgExqnlDzBJAngExqbtTcAJnUbFJzA2RS88ZJ1aKTqkUnVYvwR34RIDdqJiCTmgnIjZoJyI2aGyA3ar4JyI2abzqpWnRSteikahH+yBcBmdTcAJnUTEAmNROQJ9TcALlR8wSQSc0NkBs1N0CeUPPGSdWik6pFJ1WL8EcWAZnUvAFkUjMBmdT8PwH5f1IzAXlCzRsnVYtOqhadVC365CUgTwC5UTOpmYBMaiYgk5obIJOaGyA3am6A3Ki5AfKEmgnIpGbTSdWik6pFJ1WL8Ee+CMhvomYCcqPmDSBvqLkBcqNmAjKp2XRSteikatFJ1aJPvkzNBGRSMwGZ1ExAbtTcAHkDyKTmRs0NkCeATGomIBOQf+mkatFJ1aKTqkWfvARkUnOj5kbNBORGzQRkE5A3gExqJjUTkDfUTEAmNd90UrXopGrRSdWiT15ScwPkRs2NmifUTECeUDMBmdRMQL4JyKTmNzupWnRSteikatEny4BMam6APKHmDTVPqJmAbALyBJDf7KRq0UnVopOqRfgjfxiQGzU3QCY1E5BJzQRkUvMEkEnNE0A2qXnjpGrRSdWik6pFn7wE5F9Sc6NmAvIEkEnNJiBPAJnUPKFmAjKp2XRSteikatFJ1aJPlqnZBOQJIDdqboDcAHlDzQTkRs0mNd90UrXopGrRSdWiT74MyBNqnlAzAbkBMqmZ1DyhZgIyqXkCyBtqJiBPqHnjpGrRSdWik6pFn/xxQG7UTEBugDwB5AbIpGZSMwGZ1NwAmYBMam6AbDqpWnRSteikatEn/3FAJjUTkEnNBGRS8wSQCcik5gkgk5obIJOabzqpWnRSteikatEnX6bmm9RMQG6APKFmAjKpeULNBGRS8waQSc0EZFKz6aRq0UnVopOqRZ8sA/IvAblRMwGZ1ExAJjWbgLyh5jc7qVp0UrXopGoR/kjVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrR/wCA3S9Me74rygAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

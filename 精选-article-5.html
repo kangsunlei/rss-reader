@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>美团开源 LongCat-Flash-Lite：实现轻量化 MoE 高效推理</title>
+        <title>Yelp 如何构建 “Yelp Assistant”</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>美团开源 LongCat-Flash-Lite：实现轻量化 MoE 高效推理</h2>
-        <p>2/8/2026, 9:10:00 AM</p>
+        <h2>Yelp 如何构建 “Yelp Assistant”</h2>
+        <p>2/9/2026, 4:31:03 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">美团开源 68.5B MoE 模型 LongCat-Flash-Lite，通过创新 N-gram Embedding 架构实现极低激活参数与超高速推理，在 Agent 与编程任务中表现卓越。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Yelp 如何将其 AI 助手从 RAG 原型转变为高性能、生产级系统的工程案例研究。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了美团 LongCat 团队开源的 LongCat-Flash-Lite 模型。该模型采用“非典型 MoE”设计，将近一半参数（31.4B）分配给 N-gram 嵌入层，配合专用缓存、内核融合及推测解码技术，实现了以 3B 级激活参数达到 80B 级性能的效果。在推理效率上，其 API 可达 500-700 token/s。评测显示其在 Agent 工具调用和代码修复（SWE-Bench）等实战场景中显著领先同类模型。文章还提供了基于 Transformers 和 SGLang 的生产级部署指南及 Function Calling 实战示例，并宣布该模型采用 MIT 协议开源。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章探讨了 Yelp Assistant 的架构演进，重点关注从基础的检索增强生成（RAG）原型到稳健生产环境的转变。它详细介绍了四个关键的数据策略转变：通过混合流式/批处理流水线确保数据新鲜度；将结构化事实与非结构化评论分离；利用文本和嵌入实现混合图片检索；以及通过统一的内容获取 API 实现集中访问。此外，它还描述了将单体 LLM 解构为用于护栏和关键词生成的专用模型；通过并行化和分层模型优化推理效率，将延迟从 10 秒降低到 3 秒以下；以及建立使用 LLM-as-a-judge 的多维度评估框架。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">创新 N-gram Embedding 架构改变了传统 MoE 的堆叠专家路径。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 46% 的参数投入嵌入层，利用 O(1) 查找复杂度降低计算开销，在保持高稀疏度的同时有效减少了专家模块间的通信与调度负担。</span>
+                        <strong style="color: #1e40af">从单体 LLM 方案转向由专用模型组成的解构流水线，用于特定任务分析和最终生成。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用较小的微调模型处理护栏、关键词生成和来源选择，同时保留 GPT-4o 等大模型进行最终合成，Yelp 在高质量推理与显著降低的运营成本和延迟之间取得了平衡。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">系统级推理加速优化大幅降低了 I/O 延迟并提升了 GPU 利用率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 N-gram Cache 专用缓存机制、定制 CUDA 内核融合（如 RMSNorm 融合）及 PDL 技术，解决了嵌入查找与动态调度中的性能瓶颈。</span>
+                        <strong style="color: #1e40af">实施混合数据策略，将结构化权威事实与非结构化主观内容分离，以确保更高的 Grounding 准确性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将商家属性存储在 Cassandra 中，将评论存储在 Lucene 搜索索引中，可以防止轶事证据覆盖官方数据（如营业时间），从而减少幻觉并提高助手回答的可靠性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">推测解码与稀疏激活的深度协同进一步压低了推理延迟。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 3 步投机推理扩大实际批次大小，并针对草案模型优化规避 N-gram 查找开销，充分发挥了低激活参数模型的吞吐优势。</span>
+                        <strong style="color: #1e40af">通过并行执行、流式响应和分层模型推理优化服务效率，以满足生产环境的延迟要求。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 转向使用 FastAPI 实现服务器发送事件（SSE），并并行化处理问题分析和数据获取等独立任务，使 Yelp 能够减少感知等待时间，并将总延迟从 10 秒削减至 3 秒以下。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">模型在 Agent 工具调用与 Coding 场景中展现出极强的实战性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 τ²-Bench 行业场景和 SWE-Bench 代码修复测试中均取得高分，证明其在理解复杂指令、修复 Bug 及跨语言开发方面的卓越能力。</span>
+                        <strong style="color: #1e40af">开发一个稳健的多维度评估框架，利用专用的 LLM-as-a-judge 模型独立对正确性、语气和符合品牌的风格进行评分。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将质量分解为不同的准则，团队可以根据检索到的证据客观衡量逻辑正确性，同时与营销团队共同设计主观语气原则，以确保品牌语调的一致性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">将提示词（Prompt）视为版本化代码，并使用动态组合来防止提示词膨胀并保持成本效率。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Yelp 不使用静态的大规模提示词，而是使用模块化区块，并在运行时仅检索相关的 Few-shot 示例，从而保持较低的 Token 数量，并防止边缘情况的修复降低系统整体性能。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">无需堆专家，30B 参数投入 Embedding，推理速度提升显著，Agent 与 Coding 能力碾压同级模型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">尽管模型总参数量达 685 亿，但通过动态激活机制，每次推理仅激活 29 亿～45 亿参数。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">N-gram 嵌入层不仅能提升模型能力，其结构特性还为推理加速提供了新方向。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在输入 4K，输出 1k 的典型负载下，LongCat API 可提供 500-700 token/s 的生成速度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LongCat-Flash-Lite 以更少激活参数实现大幅领先，特别适合构建高效 AI Agent 系统。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">关于营业时间的陈旧回答比没有回答更糟糕，而且单一的通用索引很难在“大海捞针”中找到特定的事实。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将所有内容都视为通用文本会导致检索不可靠；它会让评论中的轶事覆盖营业时间等权威字段。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Yelp 优化了服务，将延迟从原型阶段的 10 秒以上降低到生产环境中的 3 秒以下。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">检索永无止境……你必须设计好检索系统，以便在不重写整个流水线的情况下对其进行演进。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">提示词膨胀会悄悄抹去成本优势。当你修复有关语气、拒绝回答和引用格式的边缘情况时，系统提示词不可避免地会增长。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +68,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">魔搭ModelScope社区</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">魔搭ModelScope社区</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2986</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2642</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MoE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">N-gram Embedding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推理优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码生成</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 生产落地</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">延迟优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/8c9c3344" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/4ead9a68" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/8c9c3344">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATCSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTECeUHMDZFJzA2RS8wSQ36TmjZOqRSdVi06qFn2yTM0mIDdqJiCTmhsgE5AbNROQSc2kZgJyo+ZGzSYgm06qFp1ULTqpWvTJlwF5Qs0bam6ATGpugDwBZFLzTUCeUPNNJ1WLTqoWnVQt+uQvB2RS8waQGyA3aiYgN2r+JSdVi06qFp1ULfqkfpWaCcik5m92UrXopGrRSdWiT75Mzd9EzQRkUvOEmgnIpOYNNX+Sk6pFJ1WLTqoWfbIMyJ8EyKRmAjKpeQLIpGYCMqmZgExqboD8yU6qFp1ULTqpWoQ/8hcDMqm5AXKjZgLyTWr+JSdVi06qFp1ULfrkJSCTmieATGomIG8AmdRMQCYgm9RMQG6AbFJzA2RS88ZJ1aKTqkUnVYvwRxYB2aTmDSBvqJmATGq+CchvUvPGSdWik6pFJ1WLPnkJyKTmDSATkBs1b6j5JiCTmgnIJjVPANl0UrXopGrRSdWiT74MyKTmRs0TQCY1N2reUHMDZFIzAXlCzQ2QCcikZgLyTSdVi06qFp1ULcIf+UVAJjUTkBs1N0B+k5oJyCY1m4BMajadVC06qVp0UrXok5eATGo2qZmATGomNU8AuVEzAXlDzRNAJjUTkDeATGreOKladFK16KRq0ScvqZmAPAHkBsik5gkgk5obNW+omYDcAJnUfJOaCcimk6pFJ1WLTqoWffISkBs1TwCZ1ExAJjUTkEnNG0CeAHIDZJOaJ4B800nVopOqRSdVi/BHvgjIpOYJIJvUTEBu1DwBZFJzA+RGzQRkUvMEkEnNppOqRSdVi06qFuGPvABkUjMBmdRMQG7UTEAmNTdAbtTcAHlCzQRkUnMDZJOaCciNmjdOqhadVC06qVr0yUtqngAyqbkBcgPkRs0NkE1AJjWb1ExAJjUTkEnNBGTTSdWik6pFJ1WLPvllap5QMwGZ1NwAmdTcqLkBMqmZgExAJjUTkEnNE2pu1ExAvumkatFJ1aKTqkWfvATkDSBPqJmA3KiZgNwAmdS8oeYJIJvUTGomIJtOqhadVC06qVr0yUtq3lDzf1IzAZmA3ACZ1NwAuVHzBJBJzf/ppGrRSdWik6pFn7wE5DepuVFzo2YCMqm5ATKp+SYgk5obIDdqvumkatFJ1aKTqkWfLFOzCciNmt+kZgJyo+YNNU+ouQEyqdl0UrXopGrRSdWiT74MyBNqngAyqZmA3KiZgNyomdRMQN4A8gaQSc1vOqladFK16KRq0Sd/OTVvAJnUTEAmIDdqnlAzAZnUTEAmNU+omYBMat44qVp0UrXopGrRJ/8YIDdqJiA3aiYgk5oJyI2aGzU3am6A/J9OqhadVC06qVr0yZep+ZsAmdTcALlRcwNkUjMBmdRMQG7UTEC+6aRq0UnVopOqRZ8sA/KbgExqJiDfpGYCsknNBORGzRNqNp1ULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteg/j+ktPJtGjfAAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/4ead9a68">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATeSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnU3ACZ1ExA3lAzAZnUPAHkN6l546Rq0UnVopOqRZ8sU7MJyI2aJ9RMQJ5QMwG5UTMBuVFzo2YTkE0nVYtOqhadVC365MuAPKFmE5BJzaTmBsgEZFIzAZnUfBOQJ9R800nVopOqRSdViz75ywF5A8gbQCY1E5AbNf+Sk6pFJ1WLTqoWffKPUTMB+ZOomYBMav5mJ1WLTqoWnVQt+uTL1PxJgExqJiCTmjfUTEAmNW+o+ZOcVC06qVp0UrXok2VA/mRqJiCTmgnIpGYCMqmZgExqJiCTmhsgf7KTqkUnVYtOqhbhj/zFgExqJiA3ap4AMqmZgDyh5l9yUrXopGrRSdWiT14CMql5AsikZgLyBJBJzQTkCSCTmgnIjZoJyA2QTWpugExq3jipWnRSteikatEnXwZkUvOEmgnIpGYCcqPmCTUTkEnNE2pu1ExA3gDym06qFp1ULTqpWvTJS2pu1ExAngByA2RSMwGZ1ExAJjWbgExqJiCb1DwBZNNJ1aKTqkUnVYvwR14AMqn5PwF5Q80EZFJzA2RSMwF5Qs0NkBs1E5AbNW+cVC06qVp0UrUIf+SLgNyomYDcqHkDyKTmCSCTmgnIJjWbgExqNp1ULTqpWnRSteiTX6ZmAnKjZgLyhJongHyTmieATGomIG8AmdS8cVK16KRq0UnVok+WAbkBMqm5AXKjZgJyo2YCMqm5AXKjZgJyA2RS801qJiCbTqoWnVQtOqla9MlLQCY1TwCZ1ExqJiCb1NwAeQLIDZBNap4A8k0nVYtOqhadVC365CU1E5BJzRNAbtRMQJ4AMql5Qs0Tam6ATEAmNROQSc0bajadVC06qVp0UrUIf+QFIDdqboDcqJmATGomIDdqJiA3aiYgN2omIJOaGyCb1ExAbtS8cVK16KRq0UnVIvyRXwRkUjMBuVGzCcg3qXkCyI2aCcikZgIyqZmATGreOKladFK16KRqEf7IFwF5Q80E5EbNBOQJNTdAJjUTkBs1E5BJzTcBuVHzxknVopOqRSdViz55CciNmhsgN0AmNTdANgF5Q80TQDapmdRMQDadVC06qVp0UrUIf+QvBuQNNU8AuVFzA+RGzRNAJjVPAJnUvHFSteikatFJ1aJPXgLym9Q8oeYGyKTmCTXfBGRScwPkRs03nVQtOqladFK16JNlajYBuVHzBJA31ExAbtS8oeYJNTdAJjWbTqoWnVQtOqla9MmXAXlCzRNAbtTcqJmA3KiZ1ExA3gDyBpBJzaRmAjKpeeOkatFJ1aKTqkWf/OXUTECeADKpmYBMQG7UPKFmAjKpmYBMav4kJ1WLTqoWnVQt+uQfo2YCMqm5AfKEmgnIjZobNTdqboD8n06qFp1ULTqpWvTJl6n5TUAmNTdAJjUTkBsgN2pugExqJiCTmgnIjZoJyDedVC06qVp0UrXok2VAfhOQSc0TaiYgT6iZgGxSMwG5UfOEmk0nVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36D2ZRRDelkChtAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
