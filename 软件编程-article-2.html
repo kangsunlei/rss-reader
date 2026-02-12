@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>使用 Azure Cosmos DB 和 Vercel AI SDK 构建 AI 驱动的应用 - Azure Cosmos DB 博客</title>
+        <title>如何构建能够记住用户偏好且不破坏上下文的 AI 智能体</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>使用 Azure Cosmos DB 和 Vercel AI SDK 构建 AI 驱动的应用 - Azure Cosmos DB 博客</h2>
-        <p>2/10/2026, 6:27:15 PM</p>
+        <h2>如何构建能够记住用户偏好且不破坏上下文的 AI 智能体</h2>
+        <p>2/11/2026, 5:58:05 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了使用 Vercel AI SDK 进行编排，并利用 Azure Cosmos DB 进行高性能数据存储，从而构建对话式 AI 助手的技术指南。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过分离推理与执行，并实现结构化的长期记忆准入流水线，为构建个性化 AI 智能体提供了一个架构框架。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文展示了如何集成 Vercel AI SDK 与 Azure Cosmos DB 以创建现代化的智能体 AI 应用。文章解释了 Vercel AI SDK 如何通过与供应商无关的接口简化流式传输、多步推理和工具调用等复杂任务。通过将其与 Azure Cosmos DB 的低延迟 NoSQL 能力以及 “Azure Cosmos DB Agent Kit” 相结合，开发者可以构建遵循单例客户端、参数化查询和 RU 监控等最佳实践的生产级助手。该指南包括实用的架构概览、使用 Zod 的工具定义示例，以及产品目录助手的参考实现。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 AI 个性化中的常见失败案例——即用原始对话历史撑爆上下文窗口——并提出了一种稳健的替代架构。作者主张采用“系统优先”而非“提示词优先”的方法，利用三个核心组件：用于编排的智能体开发套件 (ADK)、用于安全工具集成的模型上下文协议 (MCP) 以及经过筛选的长期记忆服务。作者强调了短期上下文、会话状态和长期记忆之间的区别，认为只有持久、可复用且安全的信息才应被持久化。通过将 AI 智能体视为“规划者”而非“执行者”，并通过协议强制执行严格的边界，开发者可以构建出易于维护、可扩展且适用于生产环境的安全智能体。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Vercel AI SDK 抽象了 LLM 编排和工具调用的复杂性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该 SDK 处理发送提示词、解析工具调用、执行函数并将结果反馈给模型的迭代循环，显著减少了开发者的样板代码。</span>
+                        <strong style="color: #1e40af">个性化应被视为系统架构问题，而非提示词工程技巧。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 简单地将历史记录添加到提示词中会导致上下文膨胀和不可预测的行为。结构化的方法将推理与执行分离，并将记忆作为系统的一等公民组件进行管理。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Azure Cosmos DB 为实时 AI 推理提供高性能数据基础。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作为全球分布式 NoSQL 数据库，它允许 AI 智能体以低延迟查询和聚合运营数据，从而实现针对大型产品目录的自然语言交互。</span>
+                        <strong style="color: #1e40af">有效的智能体状态管理需要区分上下文、会话状态和长期记忆。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 短期上下文处理当前任务，会话状态管理临时工作流决策，而长期记忆存储跨多次交互持久存在的用户偏好。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Azure Cosmos DB Agent Kit 自动执行生产级最佳实践。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它作为一个 AI 编程助手，引导开发者使用单例客户端、参数化查询和字段投影，确保应用具备可扩展性、安全性和成本效益。</span>
+                        <strong style="color: #1e40af">模型上下文协议 (MCP) 充当了智能体与外部工具之间的关键边界。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 类似于操作系统调用，MCP 允许智能体了解存在哪些功能，而运行时则保持对这些工具实际执行时机和方式的控制。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">多步推理使 AI 智能体能够解决复杂的多部分用户查询。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过利用智能体循环，助手可以链式执行多个工具调用（例如查询不同类别并比较价格），然后向用户交付综合的最终答案。</span>
+                        <strong style="color: #1e40af">记忆准入流水线对于防止上下文污染和确保数据隐私至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在持久化数据之前，系统必须验证信息是否持久、可复用且安全。这可以防止存储敏感的个人身份信息 (PII) 或无关的特定会话噪音。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">将智能体的“规划者”角色与运行时的“执行者”角色分离可以提高安全性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 智能体生成结构化意图，但运行时控制副作用。这允许对发送电子邮件等不可逆操作进行人工干预审批和审计追踪。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">产品目录的 “搜索栏和过滤器” 时代正在结束。用户期待对话式体验。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Vercel AI SDK 是 JavaScript 和 TypeScript 开发者从原型转向生产级 AI 体验最快的方式之一。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Azure Cosmos DB SDK 是你的数据引擎。Vercel AI SDK 是你的 AI 引擎。两者结合，将数据库转变为对话式体验。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent Kit 不仅仅是强制执行规则 —— 它还教你可扩展的模式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果没有 AI SDK，你需要手动构建聊天补全 API 调用、解析 JSON 工具调用响应并处理重试 —— 这一切都要从零开始。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">个性化是一个系统问题，而不是提示词问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个有用的心智模型是将智能体视为规划者，而不是执行者。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型从不直接与数据库或服务对话。它对动作进行推理，而 ADK 协调执行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">同样地，智能体知道存在哪些功能，MCP 定义了如何调用这些功能，而运行时控制它们何时以及是否执行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">记忆是个性化成败的关键。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Microsoft for Developers</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sajeetharan Sinnathurai</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Nataraj Sundar</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1586</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2563</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vercel AI SDK</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Azure Cosmos DB</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体 AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TypeScript</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 编排</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型上下文协议 (MCP)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">长期记忆</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/d8457c50" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/27c6b057" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/d8457c50">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATbSURBVO3BQY4bSRAEwfAC//9lXx3zVECjk7MjIczwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAnKj5gkgk5oJyKTmBsik5gkgP0nNGydVi06qFp1ULfpkmZpNQG7UTEAmIDdqnlDzhJoJyI2aGzWbgGw6qVp0UrXopGrRJ18G5Ak1b6i5ATIBmdTcAHlCzTcBeULNN51ULTqpWnRSteiTvxyQSc0TaiYgk5pJzRNAbtT8S06qFp1ULTqpWvTJPwbIpOYGyBNAJjVPqJmATGr+ZidVi06qFp1ULfrky9T8JDVPqJmA3Kh5Qs0EZFLzhprf5KRq0UnVopOqRZ8sA/KbAJnUTEAmNROQSc0EZFIzAZnUTEAmNTdAfrOTqkUnVYtOqhZ98pKa30zNBOQNIJOaCcgNkEnNjZq/yUnVopOqRSdViz55Ccik5gkgk5oJyBNAvknNE2omIDdANqm5ATKpeeOkatFJ1aKTqkWf/DAgk5oJyKTmBsiNmgnIDZBJzQTkRs2Nmhs1E5A3gPykk6pFJ1WLTqoW4R95AciNmhsgT6i5AXKjZgLyhpobIJOaCcgmNU8AmdS8cVK16KRq0UnVok9eUnMDZFJzo+YGyI2aCcgTaiYgk5obIJOaCcgTam6ATEAmNROQbzqpWnRSteikatEnX6ZmAvIEkEnNE2omIJOaGzUTkEnNDZBvUvOGmk0nVYtOqhadVC365CUgk5pNam6AbALyTWqeADKpmYC8AWRS88ZJ1aKTqkUnVYs+eUnNBOQJNROQGzU3ajapmYDcqJmA3ACZ1HyTmgnIppOqRSdVi06qFn3yEpAbNW+omYBMap4AMqmZ1ExAngByA2STmieAfNNJ1aKTqkUnVYs+WaZmAjKpeQLIpGYC8pPUPKHmBsgEZFIzAZnUvKFm00nVopOqRSdVi/CPvABkUvMEkBs1E5A31NwAmdRMQG7UTEAmNTdANqmZgNyoeeOkatFJ1aKTqkWfvKTmm4DcqJmATGpugExqJiBPAJnUbFIzAZnUTEAmNROQTSdVi06qFp1ULcI/8kVAJjVvAHlCzRtAbtRMQG7UTEAmNd8E5EbNGydVi06qFp1ULfrkJSBPAJnUTECeUPObqXkCyCY1k5oJyKaTqkUnVYtOqhZ98pKaTWqeAPKEmgnIjZoJyARkUnMD5EbNE0AmNf+nk6pFJ1WLTqoWffISkJ+k5kbNBGQCcqPmCTXfBGRScwPkRs03nVQtOqladFK16JNlajYBuVFzo2aTmgnIjZo31Dyh5gbIpGbTSdWik6pFJ1WLPvkyIE+oeQLIjZobIE+omdRMQN4A8gaQSc2kZgIyqXnjpGrRSdWik6pFn/zl1ExAJiCTmhs1E5AJyI2aJ9RMQCY1E5BJzW9yUrXopGrRSdWiT/5xar5JzQTkRs2Nmhs1N0D+TydVi06qFp1ULfrky9T8JkCeUDMBmYDcqLkBMqmZgExqJiA3aiYg33RSteikatFJ1aJPlgH5SUAmNROQSc0E5AbIjZoJyCY1E5AbNU+o2XRSteikatFJ1SL8I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/Ae4cSSZtphBKAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/27c6b057">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATCSURBVO3BQY4bSRAEwfAC//9lXx3zVECjk6PRIszwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAvKGmjeATGomIE+omYD8JDVvnFQtOqladFK16JNlajYBeUPNE0Bu1NwAuVEzAXlCzSYgm06qFp1ULTqpWvTJlwF5Qs0TaiYgE5BJzQTkCSCTmr8JyBNqvumkatFJ1aKTqkWf/OOAPAHkCTUTkAnIjZoJyKTm/+SkatFJ1aKTqkWf/OPUTEBu1ExAJjVPqJmAPAFkUvMvO6ladFK16KRq0SdfpuZvUnOj5gbIpGYCMqmZgHyTmt/kpGrRSdWik6pFnywD8pOATGomIJOaCcik5pvUTECeAPKbnVQtOqladFK16JOX1PwmQCY1m4BMaiYgN0CeUPMvOaladFK16KRq0ScvAZnUTEBu1ExAnlAzAZmATGreUPOTgExqboBMaiYgN2reOKladFK16KRqEf6RF4BMap4AcqPm/wTIN6l5Asik5o2TqkUnVYtOqhZ98pKaCcgTaiYgE5BJzRNAbtRMQG7UTEAmNROQSc0bQJ4AcqNm00nVopOqRSdViz55CcgTap5QMwGZ1LwB5EbNBGRSc6PmBsikZpOaGyCTmjdOqhadVC06qVqEf2QRkEnNBOQNNb8ZkBs13wTkRs03nVQtOqladFK1CP/IC0AmNROQN9TcALlRcwNkUnMDZFLzBJBJzQ2QGzU3QJ5Q88ZJ1aKTqkUnVYvwj7wA5G9SswnIpOYJIH+TmgnIE2reOKladFK16KRqEf6RRUAmNU8AmdRMQG7UTEBu1DwB5EbNDZAbNTdAbtTcAJnUbDqpWnRSteikatEnLwF5Asik5gbIjZon1DwBZFLzBJAngExqJjUTkAnIpOYnnVQtOqladFK16JOX1ExA3lDzTUAmNTdqJiCTmhs1N0CeADKpmYBMQH7SSdWik6pFJ1WLPnkJyKRmAjKpmYBMaiYgk5oJyKTmCSCTmgnIG0AmNZOaCcgbaiYgk5pvOqladFK16KRq0ScvqXkCyKRmAjKpuVEzAfkmNROQbwIyqfnNTqoWnVQtOqla9MkyIJOaN4BMaiYgk5oJyI2aGzUTkE1AngDym51ULTqpWnRSteiTZWreUPOTgDyhZgIyqXlDzRNAngByo+aNk6pFJ1WLTqoWffISkJ+k5pvUTEA2AXkCyKTmCTUTkEnNppOqRSdVi06qFn2yTM0mIE8AmdRMQG6A3AB5Q80E5EbNv+SkatFJ1aKTqkWffBmQJ9Q8oWYCMgG5UfMEkEnNBGRS8wSQN9RMQCY133RSteikatFJ1aJP/nFAJjUTkEnNE0BugNwAmdRMaiYgk5obIBOQSc0NkEnNGydVi06qFp1ULfrkfwbIpGaTmieATEAmNU8AmdTcAJnUfNNJ1aKTqkUnVYs++TI136TmCSBPqJmATGqeUDMBmdS8AWRSMwGZ1Gw6qVp0UrXopGrRJ8uA/CQgT6i5ATIB2QTkDTW/2UnVopOqRSdVi/CPVC05qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFv0HCe0YXWhXvxkAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
