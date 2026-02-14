@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>深入理解 Go 语言中的逃逸分析 —— 结合示例代码详解</title>
+        <title>如何使用 Go 构建生产级分布式聊天室 [完整手册]</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>深入理解 Go 语言中的逃逸分析 —— 结合示例代码详解</h2>
-        <p>2/12/2026, 6:31:12 PM</p>
+        <h2>如何使用 Go 构建生产级分布式聊天室 [完整手册]</h2>
+        <p>2/13/2026, 4:21:47 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一份关于 Go 逃逸分析的全面技术指南，解释了编译器如何管理栈和堆分配，以及开发者如何通过控制内存生命周期来优化性能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">一份关于使用 Go 构建弹性生产级分布式聊天服务器的全面技术手册，重点关注并发、TCP 网络和数据库级持久化。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 Go 的逃逸分析机制，即编译器如何决定将内存分配在栈上还是堆上。文章通过解释 Goroutine 栈、栈帧以及 “向下共享”（向被调用者传递指针）与 “向上共享”（向调用者返回指针）的概念，建立了一个清晰的思维模型。作者强调，虽然 Go 会自动管理内存，但理解这些决策对于性能调优至关重要，因为堆分配会增加垃圾回收（GC）的开销。该指南还提供了使用编译器标志查看逃逸决策的实际操作说明，并演示了如缓冲区复用等优化技术，以减少性能关键代码路径中的分配。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">这份详细指南介绍了使用 Go 构建实时聊天系统的架构和实现阶段。它超越了基础教程，融入了生产级特性，如用于数据持久化的预写日志 (WAL) 和快照、用于网络弹性的基于 Token 的会话管理，以及用于安全处理状态转换的中心化事件循环。文章强调了 Go “通过通信来共享内存”的哲学，展示了如何利用 goroutine 和 channel 管理数千个并发连接，同时通过非阻塞缓冲写入防止慢速客户端影响系统性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">逃逸分析是一种由编译器驱动的优化，用于决定变量的放置位置。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Go 编译器会根据能否证明某个值仅在当前函数调用中被需要，自动决定该值是可以留在栈上，还是必须 “逃逸” 到堆中。</span>
+                        <strong style="color: #1e40af">利用 Go 的 CSP 模型通过中心化事件循环管理状态。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用 channel 将所有加入、离开和广播事件汇集到单个 goroutine 中，系统避免了复杂的互斥锁竞争，并确保了消息的全序排列。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“向下共享” 模式是栈安全的，可以避免堆分配。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将指针传递给调用栈中更深层的函数是安全的，因为原始栈帧保持活跃状态，允许在调用者返回时立即回收内存。</span>
+                        <strong style="color: #1e40af">实现使用预写日志 (WAL) 和快照的两层持久化策略。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> WAL 通过对每条消息执行 fsync 提供即时持久性，而定期快照则截断日志，以确保服务器崩溃或重启后能够快速恢复。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“向上共享” 模式会触发堆分配，以确保数据持久性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当函数返回指向局部变量的指针时，该值必须移动到堆中，因为其原始栈帧已失效，需要垃圾回收器来管理其生命周期。</span>
+                        <strong style="color: #1e40af">利用缓冲 channel 将服务器与慢速网络客户端隔离。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为每个客户端分配一个缓冲的输出 channel，可以防止单个滞后的连接阻塞主广播循环，从而维持其他用户的高吞吐量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">编译器标志为内部逃逸分析过程提供了透明度。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用如 `-gcflags='all=-m -l'` 的标志允许开发者查看编译器的优化决策，从而能够将特定的代码模式与堆分配联系起来。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在热点路径中复用缓冲区是减轻 GC 压力的主要策略。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过让调用者提供可复用的缓冲区，而不是让被调用者每次都分配新缓冲区，开发者可以显著减少短命的堆对象和延迟抖动。</span>
+                        <strong style="color: #1e40af">使用基于 Token 的会话管理应对网络不可靠性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 系统独立于活跃的 TCP 连接跟踪用户会话，允许用户在无需重新认证的情况下重新连接并检索错过的历史记录，模拟了真实移动应用的行为。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果编译器能够证明一个值仅在当前函数调用中被需要，它可以将其保留在栈上。如果无法证明，该值就会 “逃逸” 并被放置在堆中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">向下共享意味着函数将指针或引用传递给它调用的函数。指针向调用栈深处移动，但它指向的值仍然属于一个活跃的栈帧。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">向上共享意味着函数返回一个指针…… 该值不再能与那个单一的栈帧绑定。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你可以将逃逸分析看作是将你的代码选择转化为 GC 工作量的东西。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实际的收获不是要避免使用指针，而是要对生命周期深思熟虑。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Go 鼓励一种不同的方法：不要通过共享内存来通信，而要通过通信来共享内存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">广播 channel 充当同步点，确保消息的全序排列。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">仅追加写入速度很快，因为磁盘不需要寻址到不同的位置。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果我们无法写入 WAL，就无法保证持久性。与其通过接受无法持久化的消息来欺骗用户，不如拒绝启动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果没有这个缓冲区，一个慢速客户端就会阻塞整个广播。有了缓冲区，如果慢速客户端跟不上进度，它们只会错过消息。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,30 +63,30 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Eti Ijeoma</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Destiny Erhabor</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2499</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">39 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9709</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Go</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">逃逸分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">垃圾回收</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Go</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TCP/IP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/281e7457" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/9ea8c19b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/281e7457">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATeSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GqSsyaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCcikZgIyqbkBMqmZgExqboBMap4A8pvUvHFSteikatFJ1aJPlqnZBORGzY2aGyA3QCY1T6iZgNyouVGzCcimk6pFJ1WLTqoWffJlQJ5Q8waQJ9TcAJmAPKHmm4A8oeabTqoWnVQtOqla9Mk/DsikZgLyBJAbNU8AuVHzX3JSteikatFJ1aJP/s8BeQLIpOYJNROQSc2/7KRq0UnVopOqRZ98mZrfBGSTmjfUTEAmNW+o+ZucVC06qVp0UrXok2VA/iQ1E5BJzQRkUjMBmdRMQCY1E5BJzQRkUnMD5G92UrXopGrRSdWiT15S8zcBcgPkm4DcAJnU3Kj5l5xULTqpWnRSteiTl4BMap4AMqmZgDyh5gbIDZBNaiYgN0A2qbkBMql546Rq0UnVopOqRfgjLwB5Qs0bQG7U3AB5Qs0EZFLzTUB+k5o3TqoWnVQtOqla9MlLam6ATEBu1ExAbtQ8oWYCMqnZBGRSMwHZpOYJIJtOqhadVC06qVr0yR+m5kbNBOQGyDepuQEyqZmAPKHmBsgEZFIzAfmmk6pFJ1WLTqoWffISkEnNpOYGyCY1E5AngDyh5gbIN6l5Q82mk6pFJ1WLTqoWffJlQG7UTEAmNU8AmdRMQCY1E5BJzQTkDTVPAJnUTEDeADKpeeOkatFJ1aKTqkWfvKTmCTVPAJnU3KiZgExqJiCb1ExAboBMar5JzQRk00nVopOqRSdViz5ZBuQGyKTmRs0E5A0gk5oJyBtAboBsUvMEkG86qVp0UrXopGrRJy8BmdQ8AeQGyKRmAjKpeQLIpOZGzRNqboBMQCY1E5BJzRtqNp1ULTqpWnRStQh/5AUgN2omIJOaCcikZgLyhJo3gDyhZgIyqbkBsknNBORGzRsnVYtOqhadVC365CU1N0AmNROQSc0EZFLzBJAn1ExqJiA3QCY1m9RMQCY1E5BJzQRk00nVopOqRSdVi/BHfhGQSc0EZFIzAZnUTEDeUDMBuVEzAblRMwGZ1HwTkBs1b5xULTqpWnRSteiTl4B8E5AbIG+ouVEzAXlCzRNANqmZ1ExANp1ULTqpWnRSteiTl9RsUvMEkEnNBOQJIJOaGyCTmhsgN2qeADKp+ZNOqhadVC06qVr0yUtAfpOaN9RMQCY1T6j5JiCTmhsgN2q+6aRq0UnVopOqRZ8sU7MJyI2aCcikZgIyqXlCzQTkRs0bap5QcwNkUrPppGrRSdWik6pFn3wZkCfUPAFkUjMBeQLIjZpJzQTkDSBvAJnU/KaTqkUnVYtOqhZ98o9TMwGZ1DyhZgIyAblR84SaCcikZgIyqXlCzQRkUvPGSdWik6pFJ1WLPvmPA/JNaiYgN2pu1NyouQHyJ51ULTqpWnRSteiTL1PzN1HzBJAbIDdqboBMaiYgk5oJyI2aCcg3nVQtOqladFK16JNlQH4TkEnNBGQCcqNmUjMBmdRMQDapmYDcqHlCzaaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9D5SjN1Bjj4vgAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/9ea8c19b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATVSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ7UaIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIn6RmAjKpmYDcqJmAvKFmAjKpeQLIn6TmjZOqRSdVi06qFn2yTM0mIDdqbtRMQCYgT6iZgNyomYDcqLlRswnIppOqRSdVi06qFn3yZUCeUPMGkDfUTEAmIJOaCcik5puAPKHmm06qFp1ULTqpWvTJLwfkRs0E5AbIpGYCMgGZ1ExAbtT8S06qFp1ULTqpWvTJP0bNBOQJNd+kZgIyqfnNTqoWnVQtOqla9MmXqfmbqJmATEBu1ExAbtRMQCY1b6j5m5xULTqpWnRSteiTZUB+MzUTkDeATGomIJOaGyB/s5OqRSdVi06qFuGP/GJANqm5AbJJzb/kpGrRSdWik6pFn7wEZFLzBJBJzQRkk5oJyDepmYDcANmk5gbIpOaNk6pFJ1WLTqoW4Y+8AGRSMwF5Q80NkDfUTECeUPNNQP4kNW+cVC06qVp0UrXoky9TMwG5UTMBuVEzAZnUvKFmAvIEkEnNBGSTmieAbDqpWnRSteikahH+yCIgk5oJyKTmCSA3aiYgk5ongExqboBMaiYgT6i5AXKjZgJyo+aNk6pFJ1WLTqoWffKHqZmAPKHmCTUTkEnNE0AmNTdAvknNG2o2nVQtOqladFK16JOXgExqboBMaiYgk5pNaiYgN2omIG+oeQLIpGYC8gaQSc0bJ1WLTqoWnVQt+uQlNU+omYBMaiYgT6iZgDyh5g01E5AbIJOab1IzAdl0UrXopGrRSdWiT14CsgnIpOYJIDdqJiA3QJ4AcgNkk5ongHzTSdWik6pFJ1WLPlmm5gbIE0AmNROQSc0EZALyhpon1NwAmYBMaiYgk5o31Gw6qVp0UrXopGoR/sgLQCY1E5An1NwAeULNDZBJzQ2QGzUTkEnNDZBNaiYgN2reOKladFK16KRq0ScvqXlCzQ2QJ9Q8AWRSswnIpGaTmgnIpGYCMqmZgGw6qVp0UrXopGoR/sj/CMik5gbIjZoJyKRmAjKpmYDcqJmA3KiZgExqvgnIjZo3TqoWnVQtOqla9MlLQDYBuVEzAfkmNROQJ9Q8AWSTmknNBGTTSdWik6pFJ1WL8Ed+MSB/EzU3QG7UPAFkUvMEkEnNGydVi06qFp1ULfrkJSB/kpobNTdAJjUTkEnNBGRS801AJjU3QG7UfNNJ1aKTqkUnVYs+WaZmE5AbNROQSc2k5kbNjZoJyI2aN9Q8oeYGyKRm00nVopOqRSdViz75MiBPqHkCyKRmAjKpuQFyo2ZSMwF5A8gbQCY1k5oJyKTmjZOqRSdVi06qFn3yy6mZgExqJiA3aiYgE5AbNU+omYBMaiYgk5q/yUnVopOqRSdViz75x6iZgExqJiATkEnNBGRSMwG5UXOj5kbNDZD/00nVopOqRSdViz75MjW/iZongNyouQEyqZmATGomIDdqJiDfdFK16KRq0UnVok+WAfmTgExqJjU3aiYgT6iZgGxSMwG5UfOEmk0nVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36DyX7RilU8kNtAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

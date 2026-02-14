@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>小米开源首代机器人 VLA 大模型，刷新多项 SOTA！</title>
+        <title>通过上下文打包解决上下文窗口限制</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>小米开源首代机器人 VLA 大模型，刷新多项 SOTA！</h2>
-        <p>2/12/2026, 3:01:00 AM</p>
+        <h2>通过上下文打包解决上下文窗口限制</h2>
+        <p>2/13/2026, 5:57:38 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">小米开源首个 47 亿参数具身智能大模型 Xiaomi-Robotics-0，通过“大脑+小脑”架构实现高泛化性与实时流畅的机器人动作控制。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文展示了如何通过实现“上下文打包”（context packing）来克服本地 LLM 的上下文窗口限制，这是一种利用辅助模型总结对话历史的技术。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了小米发布的开源 VLA（视觉-语言-动作）模型 Xiaomi-Robotics-0。该模型针对传统 VLA 模型推理延迟高、动作迟钝的痛点，创新性地采用了 Mixture-of-Transformers (MoT) 混合架构，将负责理解的视觉语言大脑（VLM）与负责精准执行的动作小脑（DiT）相结合。通过跨模态预训练和包含异步推理、Λ-shape 注意力掩码在内的后训练技术，该模型在 LIBERO、CALVIN 等多个仿真及真机测试中刷新了 SOTA 记录。小米已全面开源该模型的代码、权重及技术主页，旨在降低具身智能研究门槛并推动行业生态发展。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者探讨了运行本地 LLM 的技术限制，特别是随着对话历史增长，小型模型会出现失效或变慢的“上下文窗口”瓶颈。本文没有简单地增加上下文大小（这通常会降低性能），而是提出了“上下文打包”。这种架构模式涉及监控 Token 使用情况，并在达到阈值时使用辅助的轻量级 LLM 总结现有历史。文章提供了使用 Docker Model Runner 的完整实现指南，包括用于多模型编排的 Docker Compose 配置，以及用于 Token 估算和历史替换的 Node.js 代码，在实际场景中有效地将 Token 数量减少了 95% 以上。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用 MoT 混合架构兼顾逻辑理解与精细物理控制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型将多模态 VLM 作为理解指令和空间关系的“大脑”，嵌入多层 DiT 作为生成高频动作块的“小脑”，通过流匹配技术确保了机器人动作的精准度与连贯性。</span>
+                        <strong style="color: #1e40af">上下文窗口是涵盖所有输入和输出的有限资源。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 上下文窗口包括系统提示词、用户消息、历史记录和生成的响应。超过此限制会导致错误，而逼近限制通常会导致性能显著下降和模型注意力丧失。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">设计两阶段进化训练配方平衡通用能力与专项技能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 首先通过跨模态预训练对齐 VLM 的特征空间与动作空间，随后冻结大脑专项训练 DiT 小脑，使模型在掌握复杂体力活的同时，依然保留强大的视觉问答和逻辑推理能力。</span>
+                        <strong style="color: #1e40af">手动增加上下文大小是一种局部且往往有缺陷的解决方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然像 Docker Model Runner 这样的工具允许增加上下文大小，但小型模型很难在大窗口下保持连贯性。此外，更大的上下文窗口会消耗更多内存，并显著降低 Token 生成速度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">引入异步推理与特殊掩码机制解决真机部署的延迟与惯性问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过异步推理脱离同步约束保障动作流畅，利用 Clean Action Prefix 确保轨迹连续，并配合 Λ-shape Attention Mask 强制模型关注当前反馈，显著提升了机器人的反应灵敏度。</span>
+                        <strong style="color: #1e40af">上下文打包利用递归摘要来维持长期记忆。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用辅助的小型模型将之前的交互压缩为摘要，开发者可以用精简版本替换冗长的历史记录。这为新的相关信息释放了上下文窗口，同时不会丢失核心意图。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">基于阈值的触发器对于高效的上下文管理至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该实现使用 Token 限制（例如 5120 个 Token）来决定何时触发摘要过程。这确保了只有在上下文窗口接近其容量时，才会产生调用摘要模型的开销。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如何让机器人既有'博学的大脑'，又有'敏捷的身手'？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Xiaomi-Robotics-0 是一个拥有 47 亿参数、兼具视觉语言理解与高性能实时执行能力的开源 VLA 模型。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种'大脑+小脑'的组合，让我们的模型既能听懂指令，又能像人类一样，在动作执行时保持极高的物理灵活性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们始终相信开源的力量，具身智能技术的爆发不可能靠一个组织的努力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在积木拆解和叠毛巾这种长周期、高度挑战的任务中，机器人展现出了极高的手眼协调性。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">“在使用本地语言模型时，上下文窗口是一个不可避免的约束，特别是在小型模型和资源有限的机器上。”</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">“模型越小，处理大上下文并保持专注就越困难。”</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">“我们决定从某个 Token 限制开始，对之前的消息历史进行总结，并用生成的摘要替换这些历史。”</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">“历史记录已压缩：4886 tokens → 153 tokens（减少了 96.87%）。”</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">“使用 Docker Model Runner 和 Agentic Compose，你可以实现这种模式来支持冗长的对话，而不会让你的模型不堪重负。”</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">小米技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">小米技术</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Docker</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Yiwen Xu</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1923</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1685</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">具身智能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">VLA 模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">小米机器人</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Mixture-of-Transformers</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文窗口</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文打包</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Docker</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">本地 AI</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/cfb65648" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/98e47eee" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/cfb65648">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpobIG+oeQLIpGYC8oSaCcivpOaNk6pFJ1WLTqoWfbJMzSYgT6i5AXIDZFIzAZnU3KjZpGYTkE0nVYtOqhadVC365MuAPKHmCSCTmgnIpOYNNROQSc0E5Ak1TwB5Qs03nVQtOqladFK16JN/DJBvAjKpmYBMaiYgk5p/yUnVopOqRSdViz75nwEyqbkBMqmZgExqJiD/JydVi06qFp1ULfrky9T8SmqeADKpmdRMQJ5QcwNkUvOEmj/JSdWik6pFJ1WLPlkG5E8CZFLzBJBJzQTkBsik5g0gf7KTqkUnVYtOqhbhj/zFgNyo+ZMAmdT8S06qFp1ULTqpWoQ/8gKQSc0EZJOa3wnIpGYCMqm5ATKpmYBsUvNNJ1WLTqoWnVQtwh9ZBGRSMwGZ1ExAJjUTkBs1E5BJzQRkUjMBmdRMQCY1N0C+Sc0TQCY1b5xULTqpWnRStQh/5DcCMqmZgExqJiCTmhsgk5oJyCY1N0Bu1PxNTqoWnVQtOqla9MmXAZnUTGomIJOaJ4BsUnMDZFIzAXkDyI2aCcikZgIyqdl0UrXopGrRSdUi/JEXgDyh5gkgN2qeAHKj5g0gN2q+CciNmm86qVp0UrXopGrRJ8vUTEAmIJOaCcikZgIyAZnUTEAmNU8AmdS8AeQNNROQSc0TQCY1b5xULTqpWnRSteiT3wzIDZAbNROQJ4BMaiY1E5An1NwAmdTcAJnUTEBu1ExqNp1ULTqpWnRSteiTL1NzA2RS8wSQN9RsUnMDZBOQSc0NkEnNppOqRSdVi06qFn3ykpobIJOaJ4BMaiY1E5BJzRNAnlAzAZnU3Kh5Q80E5EbNN51ULTqpWnRSteiTl4BMaiY1b6i5ATKpuQFyo+YJIJOaCcgNkEnNBOQGyKRmAnIDZFLzxknVopOqRSdViz75xYBMaiYgT6i5ATKpeQPIpOYJNTdAJjUTkEnNG2o2nVQtOqladFK16JMvA/KGmgnIJiCTmieATGomNTdAJjUTkBsgk5pJzQRkUrPppGrRSdWik6pFn3yZmgnIE0BugExqvknNDZBJzQTkBsgmIDdAJjVvnFQtOqladFK1CH/kLwbkCTUTkBs1N0AmNU8AmdQ8AWSTmjdOqhadVC06qVqEP/ICkF9JzQ2Qv5maCcikZgLyhJpvOqladFK16KRq0SfL1GwCcgNkUjMBmdTcAJnUvAHkDTVPqPmdTqoWnVQtOqla9MmXAXlCzRtAJjUTkEnNpGYCcqNmAjKpuQEyAdkEZFLzTSdVi06qFp1ULfrkf0bNDZBJzQ2QSc0bam6ATGomIDdAbtS8cVK16KRq0UnVok/qCsg3qbkBcgPkDTWbTqoWnVQtOqla9MmXqfkmNROQCcg3qbkBMqmZgExqJjUTkEnNBGRSMwH5ppOqRSdVi06qFn2yDMivBGRSMwF5Q80TQCY1E5BJzQRkUnMD5AbIpOabTqoWnVQtOqlahD9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9B/LjztA9+sP0gAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/98e47eee">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATfSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GqSsyaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCciNmhsgm9RMQCY1TwD5TWreOKladFK16KRq0SfL1GwCcqPmDTUTkEnNG2omIDdqbtRsArLppGrRSdWik6pFn3wZkCfUvAFkUvOEmgnIG2q+CcgTar7ppGrRSdWik6pFn/zjgNwAmdRMQG7UvAHkRs1/yUnVopOqRSdViz75j1EzAZmATGomIDdAJjVPqJmATGr+ZSdVi06qFp1ULfrky9T8JiBPAHlCzQRkUjOpmYBMat5Q8zc5qVp0UrXopGrRJ8uA/ElqJiCTmgnIpGYCMql5AsikZgIyqbkB8jc7qVp0UrXopGoR/sg/DMiNmk1ANqn5LzmpWnRSteikatEnLwGZ1DwBZFIzAXlCzQTkCTUTkDfUTEBugGxScwNkUvPGSdWik6pFJ1WL8Ee+CMgbap4AMqm5AXKjZgIyqfkmIL9JzRsnVYtOqhadVC365CUgk5o31ExAJjUTkBsgN2omIBOQN4BMaiYgm9Q8AWTTSdWik6pFJ1WLPvkyNROQSc2NmifUTECeUDMBmdTcAJnUTECeUHMDZAIyqZmAfNNJ1aKTqkUnVYvwRxYBeULNDZBJzRtAbtTcAJnUTEA2qdkEZFKz6aRq0UnVopOqRfgjLwCZ1NwAuVFzA2RSMwH5TWomIDdqngAyqZmAbFLzxknVopOqRSdViz5ZBmRSM6l5AsikZgIyqbkBMqm5AfKEmgnIDZBJzTepmYBsOqladFK16KRq0Sd/GJBJzaRmAjKpuQEyqZmATGreAHIDZJOaJ4B800nVopOqRSdViz5ZpmYTkBsgk5pNat5QcwNkAjKpmYBMat5Qs+mkatFJ1aKTqkX4Iy8AmdRMQCY1N0AmNTdAnlAzAdmkZgIyqbkBsknNBORGzRsnVYtOqhadVC3CH/mDgExqJiCTmhsgk5oJyI2aCcgbap4AcqNmAjKpmYBMaiYgk5o3TqoWnVQtOqla9MkvAzKpmYBMaiYgk5on1GxSMwGZgExqJiCTmifU3KiZgHzTSdWik6pFJ1WLPnkJyBNqngAyqZmA3AB5Qs2kZgLyhJongGxSM6mZgGw6qVp0UrXopGrRJy+p2aTmN6mZgDwBZFJzA+RGzRNAJjV/0knVopOqRSdViz55CchvUnOj5gbIBGRSMwG5UfNNQCY1N0Bu1HzTSdWik6pFJ1WLPlmmZhOQGzU3QCY1E5An1ExAbtS8oeYJNTdAJjWbTqoWnVQtOqla9MmXAXlCzRNAJjU3QCY1E5An1ExA3gDyBpBJzaRmAjKpeeOkatFJ1aKTqkWf/OPUTEDeUDMBmYDcqHlCzQRkUjMBmdT8TU6qFp1ULTqpWvTJ/xk1E5BJzRNqJiA3am7U3Ki5AfInnVQtOqladFK16JMvU/Ob1ExAbtRMQCY1E5AJyI2aGyCTmgnIpGYCcqNmAvJNJ1WLTqoWnVQt+mQZkN8E5EbNBOQJIDdqJiCb1ExAbtQ8oWbTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gfThEwsQt142QAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
