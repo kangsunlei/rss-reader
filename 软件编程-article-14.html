@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>小红书发布 SWE-Bench Mobile：当 AI Agent 面对亿级用户 App 代码库，最高通过率仅 12%？</title>
+        <title>两种实现 LLM 快速推理的不同策略</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>小红书发布 SWE-Bench Mobile：当 AI Agent 面对亿级用户 App 代码库，最高通过率仅 12%？</h2>
-        <p>2/14/2026, 4:36:00 AM</p>
+        <h2>两种实现 LLM 快速推理的不同策略</h2>
+        <p>2/15/2026, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">小红书联合高校发布首个工业级移动端 AI 编程基准 SWE-Bench Mobile，揭示了当前 AI Agent 在处理真实复杂 App 代码库时仅 12% 的极低通过率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入技术分析了 Anthropic 和 OpenAI 为实现 LLM 高速推理而采取的不同策略，重点关注批处理经济学和专用硬件。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了由小红书 Nexus AI 团队联合多所顶尖高校发布的 SWE-Bench Mobile 评测基准。该基准填补了移动端 AI 编码评估的空白，采用小红书真实的亿级用户 App 代码库（14GB Mono Repo）作为测试环境，涵盖了 PRD 和 Figma 设计稿等真实多模态输入。评测结果显示，目前最强的 AI Agent 组合在真实移动端任务中的成功率仅为 12%，且随着任务复杂度增加，表现呈断崖式下跌。研究进一步发现，Agent 的工程化框架设计对性能的影响远超底层模型，且简单的防御性编程提示策略在代码生成中比复杂的思维链更有效。文章强调，现阶段 AI Agent 的定位应为人类开发者的 Copilot，而非独立开发者。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者对比了 Anthropic 和 OpenAI 提供的“快速模式”，揭示了两种截然不同的技术方案。Anthropic 的方法可能涉及低批次大小（low-batch-size）推理，即通过牺牲 GPU 的整体吞吐量来为单个用户提供即时处理，这实际上是以更高成本为完整的 Opus 4.6 模型提供了“快速通道”。相反，OpenAI 利用了 Cerebras 巨大的晶圆级芯片，该芯片拥有 44 GB 的片上 SRAM。这使得模型可以完全驻留在记忆中，绕过了将数据从外部存储移动到 GPU 的传统瓶颈。然而，这种硬件限制迫使 OpenAI 使用更小、经过蒸馏的“Spark”模型，该模型速度显著加快但能力较弱。文章结论认为，对于复杂的 AI 任务，以速度换取更高的错误率往往会对用户生产力产生负面影响。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">移动端编码任务存在语料稀缺、多模态耦合及复杂的性能优化等独特挑战。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比 Web 和后端，移动端使用的 Swift/Kotlin 语料较少，且涉及 UI 布局、手势交互与底层数据的深度结合，对模型的综合能力要求极高。</span>
+                        <strong style="color: #1e40af">Anthropic 通过减小批次大小来消除用户等待时间，从而实现快速推理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过立即处理请求而不是等待填满批次，Anthropic 降低了用户延迟。这种方法保持了模型质量，但由于牺牲了 GPU 吞吐效率，成本显著增加。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Agent 的工程化框架（Scaffolding）设计对性能的影响甚至超过了底层模型本身。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实验显示同款模型在不同 Agent 框架下成功率差异可达 3 倍，证明工具调用、上下文管理和迭代策略是决定 AI 编码能力的关键因素。</span>
+                        <strong style="color: #1e40af">OpenAI 利用 Cerebras 晶圆级芯片来克服记忆到计算的瓶颈。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Cerebras 芯片使用海量的片上 SRAM（44 GB）来存储模型权重。通过消除从外部存储流式传输数据的缓慢过程，其推理速度比传统 GPU 快达 15 倍。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI Agent 在处理大型代码库时缺乏全局观，跨文件推理能力仍是核心瓶颈。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 约 45% 的失败源于实现不完整，Agent 往往只能修改部分文件而忽略了关联模块，导致其在复杂工业级任务中表现不佳。</span>
+                        <strong style="color: #1e40af">专用芯片上的硬件记忆限制使得必须使用更小、经过蒸馏的模型。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于目前的 Cerebras 硬件限制在 44 GB SRAM，它无法容纳全尺寸的前沿模型。因此，OpenAI 必须使用“Spark”，即其主模型的蒸馏版且能力较弱的版本，以适配硬件。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">代码生成任务中，简单的防御性编程提示词比复杂的思维链（CoT）更有效。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 研究发现复杂的 Prompt 可能导致模型过度解读而跑偏，而强调边缘情况处理的防御性编程策略能显著提升测试通过率。</span>
+                        <strong style="color: #1e40af">纯粹的推理速度通常不值得以降低模型推理能力为代价。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者认为，AI 智能体的效用由准确性而非速度决定。一个速度更快但错误率高出 20% 的模型，在调试上浪费的用户时间往往比在生成过程中节省的时间更多。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在面对真实的企业级大型 App 开发任务时，目前能够达到的任务成功率也仅为 12%。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent 的架构设计比模型本身更重要。同样的模型，在不同框架下能产生 3 倍的性能差距。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大多数失败源于‘顾头不顾腚’。Agent 修改了部分但并非所有必需的文件，缺乏全局观。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">目前的 Agent 只能做‘copilots’，且必须有人工监督才能可靠落地。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">简单的‘防御性编程’策略效果最佳。通过强调边缘情况处理，测试通过率提升了 7.4%。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Anthropic 的快速模式由低批次大小推理支持，而 OpenAI 的快速模式则由特殊的怪兽级 Cerebras 芯片支持。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">其核心思路是拥有一块 SRAM 足够大的芯片来容纳整个模型，从而使推理完全在记忆中进行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">OpenAI 在这方面的成就更具技术震撼力……但我赞赏 Anthropic 找到了一种巧妙的方法在发布前抢占先机。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 智能体的有用性主要取决于它们犯错的频率，而不是纯粹的速度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">以增加 20% 的错误为代价换取 6 倍的速度是一笔糟糕的交易，因为用户的大部分时间都花在处理错误上，而不是在等待。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Sean Goedecke</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sean Goedecke</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3107</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1688</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SWE-Bench Mobile</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">移动端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码生成</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">基准测试</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 推理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cerebras</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPU 架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">批处理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型蒸馏</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/84253f20" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/1c67e564" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/84253f20">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATbSURBVO3BwY4sRRAEwfDS/P8vO3tMLiW1OmfhQZjhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQ36TmBsgTam6ATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkDfUPAFkUjMBmdTcqNmkZhOQTSdVi06qFp1ULfrky4A8oeYJIJOaN9Q8AWRSMwF5Qs0TQJ5Q800nVYtOqhadVC36pP4GyKTmCSCTmgnIpOa/5KRq0UnVopOqRZ/8xwCZ1ExAbtRMQCY1TwD5PzmpWnRSteikatEnX6bmN6mZgExq3gAyqblRcwNkUvOEmn+Tk6pFJ1WLTqoWfbIMyJ8EyKTmRs0EZFIzAZnUvAHk3+ykatFJ1aKTqkX4I38wIDdqJiA3aiYgN2qeADKp+S85qVp0UrXopGrRJy8BmdRMQDapmdS8oWYCMqm5AXKjZlIzAZnUTEA2qfmmk6pFJ1WLTqoW4Y+8AORGzRNAJjU3QN5QcwNkUvMGkG9S8wSQSc0bJ1WLTqoWnVQtwh/5IiBPqJmA3Ki5ATKpuQEyqZmAPKHmBsiNmj/JSdWik6pFJ1WL8EdeAPKEmhsgk5oJyBNqJiA3aiYgk5oJyKRmAvJNaiYgk5oJyKRm00nVopOqRSdVi/BHfhGQGzUTkCfUvAHkRs0NkBs13wTkRs03nVQtOqladFK16JOXgExqJiA3am7UTEAmNTdAJjUTkEnNNwF5Q80EZFLzBJBJzRsnVYtOqhadVC36ZBmQGzVPAHlDzRNANqm5ATKpuQEyqZmA3KiZ1Gw6qVp0UrXopGrRJ8vUTEBugNyomYBMQCY1b6i5AXKj5gbIJiCTmhsgk5pNJ1WLTqoWnVQt+uSXAZnUTEAmIJuA3ACZ1NyomYBMam7UvKFmAnKj5ptOqhadVC06qVqEP/ICkBs1m4BMaiYgN2qeADKpmYBMaiYgT6iZgDyhZgIyqZmATGreOKladFK16KRq0SfL1ExAJjUTkE1qngByo2YCMql5Qs0NkEnNBGRS84aaTSdVi06qFp1ULcIfeQHIpOafBGRSMwG5UXMD5EbNE0AmNROQJ9TcAJnUbDqpWnRSteikahH+yAtAJjUTkBs1E5A31DwB5EbNE0AmNROQb1IzAXlCzRsnVYtOqhadVC3CH/mDAZnUTEBu1NwAmdRMQCY1TwCZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5pJzQRkUjMBeULNBOQGyCYgk5o31HzTSdWik6pFJ1WLPlmmZhOQGyA3QCY1E5BJzY2aJ4C8oeYJNTdAbtS8cVK16KRq0UnVok++DMgTat5QMwGZgExqngAyqZmATGpugExANgH5TSdVi06qFp1ULfqk/gbIpGZSMwGZ1Lyh5gbIpGYC8k86qVp0UrXopGrRJ/8zaiYgN0C+Sc0NkBsgb6jZdFK16KRq0UnVok++TM03qblRMwF5Qs0EZFJzA2RSMwGZ1ExqJiCTmgnIpGYC8k0nVYtOqhadVC3CH3kByG9SMwG5UfMEkBs1N0AmNROQSc0EZFIzAXlDzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXoL5kkWQqJ5f3EAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/1c67e564">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS/SURBVO3BQW4kwREEwfDC/P/LLh7zVECjc6ilFGb4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkN6mZgExqNgGZ1DwB5Ak1E5DfpOaNk6pFJ1WLTqoWfbJMzSYgTwB5Qs0EZFJzA+QJNROQJ9RsArLppGrRSdWik6pFn3wZkCfUPKHmDSBPALlR85uAPKHmm06qFp1ULTqpWvTJHwdkUvOb1ExAJjUTkEnN/5KTqkUnVYtOqhZ98sepeQLIpOYNIG8AmdT8ZSdVi06qFp1ULfrky9T8S9Q8AWRS8wSQb1LzLzmpWnRSteikatEny4D8JiCTmgnIpGYCMql5Asik5kbNBOQJIP+yk6pFJ1WLTqoW4Y/8YUAmNf9NQN5Q85edVC06qVp0UrXok5eATGomIDdqJiBPqLkBMqmZgExqJiCTmt8EZFJzA2RSMwG5UfPGSdWik6pFJ1WL8EdeADKpuQFyo+YGyI2aGyCTmt8E5JvUPAFkUvPGSdWik6pFJ1WLPlkG5Ak1N0AmNW+omYBMap4AMqmZgExq3gDyBJAbNZtOqhadVC06qVr0yTI1E5BJzQRkUjOpmYDcqHkDyBNqbtTcAJnUbFJzA2RS88ZJ1aKTqkUnVYvwR14AcqPmCSA3aiYgb6jZBORGzTcBuVHzTSdVi06qFp1ULcIfeQHIpOYNIJOaCciNmhsgN2pugExqngAyqbkBcqPmBsgTat44qVp0UrXopGoR/sgXAZnUPAFkUvMEkEnNBORGzRNA/pvUTECeUPPGSdWik6pFJ1WL8EdeALJJzQ2QJ9RMQG7U3AC5UXMD5EbNDZAbNTdAJjWbTqoWnVQtOqlahD+yCMikZgJyo2YCMqmZgLyh5gbIpOYJIG+ouQFyo2YCMqnZdFK16KRq0UnVIvyRLwIyqZmATGq+CciNmhsgk5o3gNyomYBMaiYgT6jZdFK16KRq0UnVok9eAjKpmdS8AeRGzQRkUvMEkE1AJjWTmgnIG2omIJOabzqpWnRSteikatEnL6m5ATKpmdRMQCY1N0AmNTdqngAyqZmAfBOQSc2/7KRq0UnVopOqRfgji4A8oeYGyI2aGyBPqLkB8oaaCchvUvNNJ1WLTqoWnVQtwh/5w4BMam6A3KiZgExqJiCTmieATGqeALJJzRsnVYtOqhadVC365CUgv0nNE0AmNROQGzWbgDwBZFLzhJoJyKRm00nVopOqRSdViz5ZpmYTkN8EZFIzAXlDzQTkRs1fclK16KRq0UnVok++DMgTap5QMwGZ1ExAbtQ8oWYCMql5AsgbaiYgk5pvOqladFK16KRq0Sd/HJBJzSYgN0BugExqJjUTkEnNDZAJyKTmBsik5o2TqkUnVYtOqhZ98n9OzQTkRs0TQCYgk5ongExqboBMar7ppGrRSdWik6pFn3yZmm9SMwGZ1NwAeQLIpOYJNROQSc0bQCY1E5BJzaaTqkUnVYtOqhZ9sgzIbwIyqblRcwNkUjMBeQPIG2r+ZSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoP4vo4GXahNkAAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
