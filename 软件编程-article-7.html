@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>构建智能体化 MLOps：结合 A2A 与 MCP 的分层协议策略</title>
+        <title>OpenAI 如何利用 Postgres 扩展至 8 亿用户</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>构建智能体化 MLOps：结合 A2A 与 MCP 的分层协议策略</h2>
-        <p>2/16/2026, 9:00:00 AM</p>
+        <h2>OpenAI 如何利用 Postgres 扩展至 8 亿用户</h2>
+        <p>2/16/2026, 4:30:36 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过结合用于智能体间通信的 Agent-to-Agent (A2A) 协议与用于标准化工具和数据访问的 Model Context Protocol (MCP)，提出了一种 MLOps 的分层架构策略。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析了 OpenAI 如何通过激进的读负载卸载、连接池和故障预防策略，扩展单主 PostgreSQL 架构以支持 8 亿 ChatGPT 用户。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了一种专为软件开发“智能体时代”设计的复杂架构模式，并将其具体应用于 MLOps。文章提倡采用分层方法，将智能体通信与能力执行解耦。Agent-to-Agent (A2A) 协议作为通信总线，使专业智能体能够通过“智能体卡片”进行发现和协作，而无需硬编码依赖。同时，Model Context Protocol (MCP) 充当通用接口——即“AI 界的 USB-C”——允许智能体通过标准化的服务器-客户端模型访问工具、数据和资源。通过将此模式应用于包含编排、验证和部署智能体的 MLOps 工作流，作者展示了如何从僵化的单体流水线转向敏捷的多智能体系统。提供的 Python 样板代码展示了 MCP 服务器和客户端的实现，以及智能体将自然语言查询转换为结构化任务列表和工具使用计划的逻辑，最终促进了一个更具扩展性和互操作性的 AI 生态系统。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了 OpenAI 决定扩展 PostgreSQL 而非立即进行数据库分片的非常规决策。尽管负载增长了 10 倍，他们仍通过关注三大支柱实现了 99.999% 的可用性：最小化主库负载、优化查询与连接以及防止级联故障。关键技术实现包括使用 PgBouncer 进行连接池管理、将写密集型工作负载迁移到 Azure Cosmos DB，以及实施缓存锁定以防止惊群效应。文章还探讨了他们如何管理 PostgreSQL 的架构限制（如 MVCC 和模式变更），以及未来通过级联复制扩展到 50 个以上只读副本的计划。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">分层 A2A 和 MCP 协议为多智能体自动化创建了一个稳健且具有互操作性的框架。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将 A2A 作为通信层，MCP 作为能力层，架构师可以构建智能体能够动态发现彼此及其所需工具的系统，从而减少供应商锁定并提高系统灵活性。</span>
+                        <strong style="color: #1e40af">通过优先处理只读副本卸载和严格优化，将单主 PostgreSQL 架构扩展到 8 亿用户是可行的。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将绝大部分读取流量路由到近 50 个副本，并仅在主库上保留必要的写相关读取，OpenAI 在处理 10 倍负载增长的同时，避免了数据库分片带来的即时复杂性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将编排逻辑与执行逻辑解耦对于构建可扩展的智能体系统至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该架构将编排智能体执行的高层规划与专业智能体处理的底层工具执行分开，允许更复杂的工作流在不重写核心通信逻辑的情况下进行演进。</span>
+                        <strong style="color: #1e40af">实施 PgBouncer 进行连接池管理显著降低了延迟，并解决了 Azure PostgreSQL 5，000 个连接的限制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在 Kubernetes 中部署 PgBouncer 作为代理层，OpenAI 将平均连接时间从 50ms 降低到 5ms，使系统能够高效复用连接，并在流量激增期间抵御大规模连接风暴。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">智能体卡片和标准化原语实现了多供应商环境下的无缝发现和交互。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> A2A 使用智能体卡片来描述能力和请求类型，而 MCP 则标准化了工具、资源和提示词。两者结合，使来自不同系统的智能体能够利用 JSON-RPC 和 SSE 等标准 Web 技术进行有效协作。</span>
+                        <strong style="color: #1e40af">缓存锁定和租约机制对于防止由缓存突发失效引起的级联故障至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当发生缓存未命中时，仅允许一个请求从数据库获取数据以重新填充缓存。这防止了成千上万个并发请求压垮数据库的“惊群”效应。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">从静态流水线向动态智能体团队的转变增强了 MLOps 工作流的适应性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统的 MLOps 流水线通常是僵化且难以修改的。智能体驱动的方法允许动态协调，智能体可以通过组合不同的能力来适应新需求，而不需要对流水线进行全面重新部署。</span>
+                        <strong style="color: #1e40af">针对模式变更和 MVCC 限制保持严格的操作纪律，是确保大规模数据库达到五个九可用性的必要条件。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> OpenAI 对模式变更强制执行 5 秒超时，且仅允许轻量级操作。他们还将写密集型工作负载迁移到 Cosmos DB 等系统，以减轻 PostgreSQL 的写放大和表膨胀问题。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">通过热备机和探索级联复制来进一步扩展读取能力，从而实现高可用性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过为主库使用热备机，并与 Azure 合作开发级联复制（即副本将数据转发给其他副本），OpenAI 可以在不超载主库网络带宽的情况下，扩展到超过 100 个只读实例。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">A2A 提供了通信总线，而 MCP 则充当了智能体能力的通用语言。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分层智能体架构的力量在于其适应和演进的能力，它超越了僵化的单体系统，转向敏捷的智能体驱动运营。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 常被描述为“AI 集成的 USB-C”，它提供了一个通用接口，允许 AI 应用在无需自定义胶水代码的情况下接入外部数据源和工具。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">随着 AI 智能体的演进，这种从静态执行到动态协调的转变是我们旨在展示的核心原则。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">使用分层 A2A-MCP 模式并不局限于 MLOps；其原则适用于任何需要动态协作和灵活访问能力的领域。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">OpenAI 的工程团队选择了一条不同的道路。他们决定看看究竟能把 PostgreSQL 推到什么极限。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该系统在处理每秒数百万次查询的同时，保持复制延迟接近于零。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">团队的成功并非源于采用最新的分布式数据库技术，而是源于对工作负载特性的深度理解并消除瓶颈。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">OpenAI 的经验表明，PostgreSQL 能够比传统观念认为的更可靠地支持更大规模的读密集型工作负载。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当多个请求在同一个缓存键上未命中时，只有一个请求会获取锁并从 PostgreSQL 获取数据以重新填充缓存。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,30 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Shashank Kapoor, Sanjay Surendranath Girija, Lakshit Arora</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">24 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5809</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2139</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MLOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多智能体系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Model Context Protocol (MCP)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent-to-Agent (A2A)</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">PostgreSQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库扩展性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">连接池</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/6c8348e5" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/5cc23a11" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/6c8348e5">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATySURBVO3BQQ4kR5LAQDJQ//8yt49+SiBRUT2S1s3sD9a65LDWRYe1LjqsddFhrYsOa110WOuiw1oXHda66LDWRYe1LjqsddFhrYsOa110WOuiw1oXffiSyt9U8YbKVPFE5UnFGypvVEwqf1PFNw5rXXRY66LDWhd9uKziJpU3VKaKSeVJxROVJxVTxU0VN6ncdFjrosNaFx3WuujDj6m8UfGGylTxpGJSeaPiDZU3Kt5QeaPilw5rXXRY66LDWhd9+I9RmSomlaliUpkqJpWpYlKZKiaVqeK/5LDWRYe1LjqsddGH/5iKSeWJylQxqUwVk8pUMan8f3JY66LDWhcd1rrow49V/E0q31CZKiaVqeJJxROVqeKNin+Sw1oXHda66LDWRR8uU/lfqphUpopJZaqYVKaKSWWqmFSmim+o/JMd1rrosNZFh7Uu+vClin8SlTcqfqliUpkqnlT8mxzWuuiw1kWHtS6yP/iCylQxqdxU8UsqU8Wk8kbFE5WpYlK5qeKXDmtddFjrosNaF9kfXKTypGJSmSq+oTJVTCpPKiaVqeIbKr9U8YbKVPGNw1oXHda66LDWRfYHX1B5o+KJypOKSWWqmFSeVDxR+UbFE5UnFf8mh7UuOqx10WGti+wPvqAyVUwqb1Q8UXmjYlKZKr6hMlVMKr9UMalMFZPKVHHTYa2LDmtddFjrog9fqphUpopJ5Q2VqWJSeaNiUnlS8aRiUnlS8TepTBW/dFjrosNaFx3WuujDj6k8qZhUpopJZaqYVCaVqeINlaniGyrfqJhUpoo3VKaKbxzWuuiw1kWHtS6yP/iCylQxqUwVk8pUMam8UTGpvFHxROWNiicqU8UTlaliUnlS8UuHtS46rHXRYa2LPvxYxaTyRGWqmFSeqPwvVTxRuUllqniiMlXcdFjrosNaFx3WuujDj6k8qXii8qRiUvmGyhsVk8pU8aTiGxWTypOKXzqsddFhrYsOa1304S+reKIyVXyj4pdUpopJ5YnKVDGpPFGZKiaVJypTxTcOa110WOuiw1oXffjLVN5QmSomlaliUpkqJpWpYlJ5UvFGxROVqWJSmSq+UXHTYa2LDmtddFjrIvuDL6hMFW+oPKl4onJTxaTyRsUbKlPFpPJGxROVqeKmw1oXHda66LDWRR9+TGWqmCqeqDyp+IbKpDJVvKEyVUwqT1RuUnmiMlV847DWRYe1LjqsdZH9wb+YyhsVk8pUMalMFZPKVPGGylTxhspNFd84rHXRYa2LDmtd9OFLKn9TxVTxRGVSmSreUHmicpPKVPGNil86rHXRYa2LDmtd9OGyiptUnqi8UfGNijdUvlHxRsUTlScV3zisddFhrYsOa1304cdU3qi4qeIbFZPKVDGpTBVPVCaVm1T+psNaFx3Wuuiw1kUf/mMqJpWp4onKVDFVTCpTxTcqnqhMFZPK/9JhrYsOa110WOuiD/8xKr+kclPFE5UnKt+ouOmw1kWHtS46rHXRhx+r+KWKN1SmiqnijYonKlPFpDJVTBWTylQxqUwVk8ovHda66LDWRYe1LvpwmcrfpDJVTCpTxaQyVUwqU8UTlaliUpkqJpWp4onKE5Wp4pcOa110WOuiw1oX2R+sdclhrYsOa110WOuiw1oXHda66LDWRYe1LjqsddFhrYsOa110WOuiw1oXHda66LDWRYe1Lvo/cN5TPdHVISUAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/5cc23a11">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATjSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyBvqHkCyKRmAvKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCfUTEAmNTdAJjUTkCfUbFKzCcimk6pFJ1WLTqoWffJlQJ5Q8wSQSc2kZgIyqZnUTEAmNU8AeULNE0CeUPNNJ1WLTqoWnVQt+uQfA+QJIDdqJiCTmgnIpGYCMqn5l5xULTqpWnRSteiTf4yaJ4BMaiYgk5oJyKRmAvL/5KRq0UnVopOqRZ98mZr/EpAngExqJiBPqLkBMql5Qs2f5KRq0UnVopOqRZ8sA/InUzMBmdRMQCY1E5AbIJOaN4D8yU6qFp1ULTqpWoQ/8hcDcqNmE5AbNTdAJjX/kpOqRSdVi06qFuGPvABkUjMB2aTmCSBvqJmAPKHmBsikZgKySc03nVQtOqladFK1CH/ki4DcqPlNQG7UTEAmNW8A+SY1TwCZ1LxxUrXopGrRSdUi/JEXgNyouQEyqZmAPKHmDSCTmgnIE2pugNyo+ZucVC06qVp0UrUIf+QFIN+k5gbIJjUTkEnNBGRSMwH5JjUTkEnNBGRSs+mkatFJ1aKTqkWf/DI1N0AmIG+omYBMaiYgT6iZgNyo+U1AJjXfdFK16KRq0UnVok+WqZmATECeUPNNQCY13wTkDTUTkEnNE0AmNW+cVC06qVp0UrUIf+SLgExqboA8oWYCMqm5ATKpuQHyhJobIJOaGyCTmgnIjZpvOqladFK16KRq0ScvAblRMwG5UXMD5EbNDZBJzQ2QJ9TcANkEZFJzA2RSs+mkatFJ1aKTqkWfLFMzAZnUPAFkUjMBmdTcqJmA3KiZgExqJiCTmhs1b6iZgNyo+aaTqkUnVYtOqhZ98suATGomIJOaCcgTQCY1k5obIJOaCcikZgJyA2RSMwG5ATKpmYDcAJnUvHFSteikatFJ1aJPvkzNBORGzQTkm4BMaiY1E5BJzRNqboBMaiYgk5o31Gw6qVp0UrXopGrRJ18G5A01E5BJzQRkUvMGkBsgk5pJzQ2QSc0E5AbIpGZSMwGZ1Gw6qVp0UrXopGrRJ1+mZgLyBJBJzRNAJjU3QCY1TwCZ1ExAboBsAnIDZFLzxknVopOqRSdVi/BH/mJAbtTcAJnUTEAmNROQSc0TQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+kZlIzAbkBMqm5UTMBuQGyCcik5g0133RSteikatFJ1aJPlqnZBOQGyBNqngAyqXkCyBtqnlBzA+RGzRsnVYtOqhadVC365MuAPKHmDTU3QCY1N2omIJOaCcik5gbIBGQTkN90UrXopGrRSdWiT/5xQG6ATGpu1ExAJjVvqLkBMqmZgPyXTqoWnVQtOqla9Ek9AmSTmhsgN0DeULPppGrRSdWik6pFn3yZmm9SMwF5Qs0E5Ak1N0AmNROQSc2kZgIyqZmATGomIN90UrXopGrRSdWiT5YB+U1AJjUTkBsgN2qeADKpmYBMaiYgk5obIDdAJjXfdFK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8BhL1BSXDseicAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

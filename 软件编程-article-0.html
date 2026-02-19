@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何在 Spring Boot 中构建自己的熔断器——并真正理解 Resilience4j</title>
+        <title>提升 GitHub Copilot 表现的 4 个上下文工程技巧</title>
         <style>
             body {
                 padding: 12px;
@@ -15,80 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>如何在 Spring Boot 中构建自己的熔断器——并真正理解 Resilience4j</h2>
-        <p>2/16/2026, 9:09:29 PM</p>
+        <h2>提升 GitHub Copilot 表现的 4 个上下文工程技巧</h2>
+        <p>2/18/2026, 6:12:03 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本技术指南通过演示如何在 Spring Boot 中从零开始构建一个线程安全、调度驱动的实现，解释了熔断器模式的内部机制。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 介绍了四种实用的上下文工程技术，旨在进一步提升 Copilot 的准确性与性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了熔断器模式，这是分布式系统的一种基础韧性机制。它超越了高层库（如 Resilience4j）的使用，转而探索状态管理和并发底层的工程挑战。作者概述了一个由“关闭”、“开启”和“半开”状态组成的健壮状态机，并强调其主要目标是资源保护——防止故障依赖项耗尽线程池和连接池。
-
-内容的核心是一个实际的 Java 实现。它详细说明了如何使用原子原语进行故障追踪，以及如何使用同步块确保确定的状态转换。一个关键的架构亮点是使用 ScheduledExecutorService 来处理从“开启”到“半开”的转换，这使得基于时间的轮询逻辑脱离了关键请求路径。文章还强调了明确故障分类的重要性，认为只有基础设施层面的错误才应触发熔断，而特定于领域的异常应被忽略，以避免掩盖应用程序的 Bug。最后，它演示了如何通过配置 Bean 将其干净地集成到 Spring Boot 中，同时保持核心代码与框架无关。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">熔断器充当稀缺系统资源的积极守卫。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与被动的超时机制不同，熔断器监控故障模式以暂时禁用发生故障的集成点。这可以防止单个缓慢的服务消耗所有可用线程和网络连接，从而阻止局部问题演变为全系统范围的停机。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">线程安全和序列化转换对状态完整性至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于熔断器运行在高并发执行路径上，必须避免竞态条件。该实现使用原子计数器进行指标统计，并使用同步块进行状态写入，以确保转换保持原子性并在所有线程间可见。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">调度驱动的恢复模型优化了执行热点路径。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将冷却期委托给 ScheduledExecutorService，熔断器避免了在每个请求期间检查时间戳。这种设计保持了“开启”状态下“快速失败”逻辑的精简，并确保恢复尝试是受控的而非投机性的。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">明确的故障分类可防止掩盖领域层缺陷。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者强调，只有像超时或 5xx 错误这样的基础设施级故障才应影响熔断器的状态。必须排除业务规则违规或客户端验证错误，以确保韧性层不会隐藏合法的应用程序 Bug。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">构建自己的熔断器——即使你从不将其投入生产——也会迫使你理解真正保护系统的机制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">“开启”状态的价值在于它完全拒绝参与故障的传播。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">读取可以是乐观的，但写入和转换必须序列化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个在并发下表现失常的熔断器比根本没有熔断器更糟糕。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">恢复应该是受控且可预测的，而不是投机性的。</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">这条推文是一个关于上下文工程（context engineering）技术系列推文的开篇。它强调，当提供合适的上下文信息时，Copilot 的能力将得到极大释放。文中预告将分享四种具体技术，以优化 AI 在开发工作流中的准确性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Jessica Patel</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHub(@github)</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHub</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4210</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">175</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spring Boot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">熔断器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java 并发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">容错</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Copilot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者生产力</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示词工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/fa14d5a7" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/status/2024185157532733884" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/fa14d5a7">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS2SURBVO3BQW4kwREEwfDC/P/LLh7zVECjc6ilFGb4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkN6mZgGxSMwGZ1DwB5Ak1E5DfpOaNk6pFJ1WLTqoWfbJMzSYg/zIgT6iZgDyhZhOQTSdVi06qFp1ULfrky4A8oeYJNROQSc0NkAnIG2p+E5An1HzTSdWik6pFJ1WLPvnjgExqJiCTmknNBGRSMwGZ1ExAJjUTkEnN/5KTqkUnVYtOqhZ98sepmYDcALlR8wSQN4BMav6yk6pFJ1WLTqoWffJlan6TmjeA3KiZgExqJiDfpOZfclK16KRq0UnVok+WAflNQCY1E5BJzQRkUjMB2aRmAvIEkH/ZSdWik6pFJ1WLPnlJzV+m5gkgN0BugDyh5i85qVp0UrXopGrRJy8BmdRMQG7UTECeUDMBeQLIpOZGzQTkm4BMam6ATGomIDdq3jipWnRSteikahH+yBcBmdRMQCY13wTkRs0TQCY1N0C+Sc0TQCY1b5xULTqpWnRSteiTl4BMap5QcwNkUjMBeULNbwIyqXkDyBNAbtRsOqladFK16KRq0SfLgDwB5EbNjZoJyKTmBsiNmgnIpOZGzQ2QSc0mNTdAJjVvnFQtOqladFK1CH9kEZBJzQRkUjMBeULNBORGzQTkRs0TQG7UfBOQGzXfdFK16KRq0UnVIvyRF4DcqHkCyKRmAnKj5gbIjZobIJOaJ4BMam6A3Ki5AfKEmjdOqhadVC06qVqEP7IIyKTmBsgTap4AMqmZgDyh5gbIf5OaCcgTat44qVp0UrXopGrRJy8BuQHyhpongExqnlAzAZmA3Ki5AXKj5gbIE2omIJOaTSdVi06qFp1ULcIfeQHIG2pugNyo2QRkUvMGkDfU3AC5UTMBmdRsOqladFK16KRq0ScvqZmAPAFkUjOpeQPIpOYNIJOaGzU3QJ4AMqmZgExAftNJ1aKTqkUnVYs+eQnIpGYCcqPmBsiNmhs1E5BJzaRmE5BJzaRmAvKGmgnIpOabTqoWnVQtOqla9MlLat4AMqmZ1ExAJiCTmm9SMwH5JiCTmn/ZSdWik6pFJ1WLPlkGZFLzBJAbNROQCcg3AdkE5Akg/7KTqkUnVYtOqhZ9skzNG2reUHMD5Akgk5oJyKTmDTVPAHkCyI2aN06qFp1ULTqpWvTJS0B+k5o31NwAmdRsAvIEkEnNE2omIJOaTSdVi06qFp1ULfpkmZpNQP6bgGxSMwG5UbNJzTedVC06qVp0UrXoky8D8oSaJ9TcAHlCzQ2QSc0EZFLzBJA31ExAnlDzxknVopOqRSdViz7544BMaiY1E5AngNwAuQEyqZnUTEAmNTdAJiCTmhsgm06qFp1ULTqpWvTJ/zk1E5BJzRtAJiCTmieATGpugExqvumkatFJ1aKTqkWffJmab1JzA2RS8wSQGzVPqJmATGreADKpmYBMajadVC06qVp0UrXok2VAfhOQvwTIG2r+ZSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoPYswSV7kHinwAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/status/2024185157532733884">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

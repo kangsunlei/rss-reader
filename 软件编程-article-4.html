@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>理想的微前端平台</title>
+        <title>如何在 Spring Boot 中构建自己的熔断器——并真正理解 Resilience4j</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,22 @@
         </style>
     </head>
     <body>
-        <h2>理想的微前端平台</h2>
-        <p>2/16/2026, 3:45:00 PM</p>
+        <h2>如何在 Spring Boot 中构建自己的熔断器——并真正理解 Resilience4j</h2>
+        <p>2/16/2026, 9:09:29 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Luca Mezzalira 通过四大支柱决策框架定义了理想的微前端平台，强调组织自主权以及从可复用性向独立性的转变。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本技术指南通过演示如何在 Spring Boot 中从零开始构建一个线程安全、调度驱动的实现，解释了熔断器模式的内部机制。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于 Luca Mezzalira (AWS) 的演讲，探讨了微前端 (MFE) 的演进与实现。文章认为，MFE 不仅仅是运行时组件，更是旨在促进团队自主权的业务子域的技术体现。Mezzalira 引入了一个由四大支柱组成的“决策框架”：定义（垂直与水平拆分）、组合（客户端与服务端）、路由和通信。一个核心见解是区分了组件（优化可复用性但增加了耦合）与 MFE（优化独立性和快速流动）。文章还强调了平台工程在提供护栏方面的作用，例如性能预算和自动化依赖更新，以在分布式架构中维持良好的开发者体验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了熔断器模式，这是分布式系统的一种基础韧性机制。它超越了高层库（如 Resilience4j）的使用，转而探索状态管理和并发底层的工程挑战。作者概述了一个由“关闭”、“开启”和“半开”状态组成的健壮状态机，并强调其主要目标是资源保护——防止故障依赖项耗尽线程池和连接池。
+
+内容的核心是一个实际的 Java 实现。它详细说明了如何使用原子原语进行故障追踪，以及如何使用同步块确保确定的状态转换。一个关键的架构亮点是使用 ScheduledExecutorService 来处理从“开启”到“半开”的转换，这使得基于时间的轮询逻辑脱离了关键请求路径。文章还强调了明确故障分类的重要性，认为只有基础设施层面的错误才应触发熔断，而特定于领域的异常应被忽略，以避免掩盖应用程序的 Bug。最后，它演示了如何通过配置 Bean 将其干净地集成到 Spring Boot 中，同时保持核心代码与框架无关。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +38,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">微前端应被视为业务子域的技术体现。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将前端架构与领域驱动设计 (DDD) 对齐，可确保边界清晰，并使团队能够端到端地掌控特定业务能力，而无需频繁的跨团队协作。</span>
+                        <strong style="color: #1e40af">熔断器充当稀缺系统资源的积极守卫。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与被动的超时机制不同，熔断器监控故障模式以暂时禁用发生故障的集成点。这可以防止单个缓慢的服务消耗所有可用线程和网络连接，从而阻止局部问题演变为全系统范围的停机。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">微前端的目标是优化独立性和快速流动，而非可复用性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然组件通过复用来关注 UI 的一致性，但复用本身就是一种耦合。MFE 优先考虑封装和状态同地化，以允许团队快速且独立地部署变更。</span>
+                        <strong style="color: #1e40af">线程安全和序列化转换对状态完整性至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于熔断器运行在高并发执行路径上，必须避免竞态条件。该实现使用原子计数器进行指标统计，并使用同步块进行状态写入，以确保转换保持原子性并在所有线程间可见。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">任何成功的微前端实现都需要一个基础的“决策框架”。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 架构师必须定义 MFE 如何拆分（垂直与水平）、如何组合（CSR 与 SSR）、应用壳如何处理路由以及独立单元之间如何通信。</span>
+                        <strong style="color: #1e40af">调度驱动的恢复模型优化了执行热点路径。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将冷却期委托给 ScheduledExecutorService，熔断器避免了在每个请求期间检查时间戳。这种设计保持了“开启”状态下“快速失败”逻辑的精简，并确保恢复尝试是受控的而非投机性的。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">微前端主要是为了扩展人员系统的组织选择。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 遵循康威定律，MFE 通过允许开发者专注于特定领域来减轻其认知负荷，从而实现更快的入职和更频繁的生产部署。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">平台团队必须提供自动化护栏来管理分布式复杂性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比于人工监管，应使用 Dependabot 等工具进行库更新，使用性能预算控制包大小，并使用架构单元测试 (ts-arch) 来防止领域泄漏并维持系统健康。</span>
+                        <strong style="color: #1e40af">明确的故障分类可防止掩盖领域层缺陷。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者强调，只有像超时或 5xx 错误这样的基础设施级故障才应影响熔断器的状态。必须排除业务规则违规或客户端验证错误，以确保韧性层不会隐藏合法的应用程序 Bug。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +57,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">微前端是业务子域的技术体现。它们允许使用相同或不同的技术进行独立实现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">复用是一种耦合形式。试想一下，当你复用一个组件并想要修改它时……在分布式系统中，这可能会变得非常棘手。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分布式系统旨在扩展组织，而不仅仅是技术。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">应用壳应尽可能保持原生。如果能避免使用框架则更好。它应该是上下文无关的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在第一线产生的摩擦是一份礼物。它不是负面的。它基本上是在告诉你一些事情，而你需要理解在哪里去修复它。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">构建自己的熔断器——即使你从不将其投入生产——也会迫使你理解真正保护系统的机制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">“开启”状态的价值在于它完全拒绝参与故障的传播。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">读取可以是乐观的，但写入和转换必须序列化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个在并发下表现失常的熔断器比根本没有熔断器更糟糕。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">恢复应该是受控且可预测的，而不是投机性的。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,31 +65,30 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Luca Mezzalira</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Jessica Patel</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">31 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7537</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4210</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微前端</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">领域驱动设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">团队拓扑</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">平台工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spring Boot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">熔断器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Java 并发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">容错</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/e8c1cb9c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/fa14d5a7" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/e8c1cb9c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS+SURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHZAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBORGzQTkm9RMQCY1TwD5TWreOKladFK16KRq0SfL1GwCcqNmAvKGmgnIpOYJNROQGzU3ajYB2XRSteikatFJ1aJPvgzIE2r+MiBPqPkmIE+o+aaTqkUnVYtOqhZ98o8DMqmZgNyomYBMat4AcqPmv+SkatFJ1aKTqkWf1CNAJjVPqJmATGr+ZSdVi06qFp1ULfrky9T8JWomIDdAJjUTkEnNpGYCMql5Q81fclK16KRq0UnVok+WAfmXqZmAvAFkUjMBmdTcAPnLTqoWnVQtOqlahD/yDwMyqbkBMqm5AXKjZgLyhJr/kpOqRSdVi06qFn3yEpBJzRNAJjUTkDeA3ACZ1Exq3lAzAbkBsknNDZBJzRsnVYtOqhadVC3CH1kE5A01m4D8JjWbgPwmNW+cVC06qVp0UrXok5eA3Kh5A8ik5gbIpGYCMqmZgExqJiCTmhsgk5oJyCY1TwDZdFK16KRq0UnVok+WqXkCyI2aN4BMaiYgk5oJyKTmBsikZgLyhJobIBOQSc0E5JtOqhadVC06qVr0yTIgk5oJyKTmBsik5gk1N2pu1ExAJjU3QL5JzRtqNp1ULTqpWnRSteiTZWqeAHKjZgJyo+YNIN+k5gkgk5oJyBtAJjVvnFQtOqladFK16JOX1ExAJjWTmieA3Ki5AfKGmgnIjZoJyA2QSc03qZmAbDqpWnRSteikatEnXwbkDTUTkBsgN2q+CcgNkE1qngDyTSdVi06qFp1ULfrkJSA3at4AMql5Qs0E5EbNBGRS84SaGyATkEnNBGRS84aaTSdVi06qFp1ULcIfeQHIN6n5S4DcqJmATGpugGxSMwG5UfPGSdWik6pFJ1WLPnlJzQ2QSc0E5AbIpGYC8oSabwIyqdmkZgIyqZmATGomIJtOqhadVC06qVqEP/JFQN5QMwGZ1ExAJjUTkEnNDZAbNROQGzUTkEnNNwG5UfPGSdWik6pFJ1WLPnkJyI2aCciNmgnIpOZGzQTkDTUTkCfUPAFkk5pJzQRk00nVopOqRSdVi/BH/mFAJjU3QCY1E5A31NwAuVHzBJBJzRNAJjVvnFQtOqladFK16JOXgPwmNW+omYDcqJmATGq+Ccik5gbIjZpvOqladFK16KRq0SfL1GwCcqPmBsiNmhsgk5oJyI2aN9Q8oeYGyKRm00nVopOqRSdViz75MiBPqHkCyKRmUjMBuQHyhJoJyBtA3gAyqZnUTEAmNW+cVC06qVp0UrXok3+cmjeAPAHkRs0TaiYgk5oJyKTmLzmpWnRSteikatEn/zFAJjVvqJmATGomIDdqbtTcqLkB8v90UrXopGrRSdWiT75MzW9SMwF5A8gNkBs1N0AmNROQSc0E5EbNBOSbTqoWnVQtOqla9MkyIL8JyKRmUnMDZFJzA2RSMwHZpGYCcqPmCTWbTqoWnVQtOqlahD9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9D+YDTAwS+xwJAAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/fa14d5a7">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS2SURBVO3BQW4kwREEwfDC/P/LLh7zVECjc6ilFGb4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkN6mZgGxSMwGZ1DwB5Ak1E5DfpOaNk6pFJ1WLTqoWfbJMzSYg/zIgT6iZgDyhZhOQTSdVi06qFp1ULfrky4A8oeYJNROQSc0NkAnIG2p+E5An1HzTSdWik6pFJ1WLPvnjgExqJiCTmknNBGRSMwGZ1ExAJjUTkEnN/5KTqkUnVYtOqhZ98sepmYDcALlR8wSQN4BMav6yk6pFJ1WLTqoWffJlan6TmjeA3KiZgExqJiDfpOZfclK16KRq0UnVok+WAflNQCY1E5BJzQRkUjMB2aRmAvIEkH/ZSdWik6pFJ1WLPnlJzV+m5gkgN0BugDyh5i85qVp0UrXopGrRJy8BmdRMQG7UTECeUDMBeQLIpOZGzQTkm4BMam6ATGomIDdq3jipWnRSteikahH+yBcBmdRMQCY13wTkRs0TQCY1N0C+Sc0TQCY1b5xULTqpWnRSteiTl4BMap5QcwNkUjMBeULNbwIyqXkDyBNAbtRsOqladFK16KRq0SfLgDwB5EbNjZoJyKTmBsiNmgnIpOZGzQ2QSc0mNTdAJjVvnFQtOqladFK1CH9kEZBJzQRkUjMBeULNBORGzQTkRs0TQG7UfBOQGzXfdFK16KRq0UnVIvyRF4DcqHkCyKRmAnKj5gbIjZobIJOaJ4BMam6A3Ki5AfKEmjdOqhadVC06qVqEP7IIyKTmBsgTap4AMqmZgDyh5gbIf5OaCcgTat44qVp0UrXopGrRJy8BuQHyhpongExqnlAzAZmA3Ki5AXKj5gbIE2omIJOaTSdVi06qFp1ULcIfeQHIG2pugNyo2QRkUvMGkDfU3AC5UTMBmdRsOqladFK16KRq0ScvqZmAPAFkUjOpeQPIpOYNIJOaGzU3QJ4AMqmZgExAftNJ1aKTqkUnVYs+eQnIpGYCcqPmBsiNmhs1E5BJzaRmE5BJzaRmAvKGmgnIpOabTqoWnVQtOqla9MlLat4AMqmZ1ExAJiCTmm9SMwH5JiCTmn/ZSdWik6pFJ1WLPlkGZFLzBJAbNROQCcg3AdkE5Akg/7KTqkUnVYtOqhZ9skzNG2reUHMD5Akgk5oJyKTmDTVPAHkCyI2aN06qFp1ULTqpWvTJS0B+k5o31NwAmdRsAvIEkEnNE2omIJOaTSdVi06qFp1ULfpkmZpNQP6bgGxSMwG5UbNJzTedVC06qVp0UrXoky8D8oSaJ9TcAHlCzQ2QSc0EZFLzBJA31ExAnlDzxknVopOqRSdViz7544BMaiY1E5AngNwAuQEyqZnUTEAmNTdAJiCTmhsgm06qFp1ULTqpWvTJ/zk1E5BJzRtAJiCTmieATGpugExqvumkatFJ1aKTqkWffJmab1JzA2RS8wSQGzVPqJmATGreADKpmYBMajadVC06qVp0UrXok2VAfhOQvwTIG2r+ZSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoPYswSV7kHinwAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
