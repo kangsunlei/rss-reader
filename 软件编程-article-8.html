@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>直观对比：Gemini 3 Pro vs. Gemini 3.1 Pro</title>
+        <title>Cloudflare 2026 年 2 月 20 日故障报告</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,81 @@
         </style>
     </head>
     <body>
-        <h2>直观对比：Gemini 3 Pro vs. Gemini 3.1 Pro</h2>
-        <p>2/20/2026, 5:56:34 AM</p>
+        <h2>Cloudflare 2026 年 2 月 20 日故障报告</h2>
+        <p>2/21/2026, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Addy Osmani 分享了一段侧边对比视频演示，展示了 Google 的 Gemini 3 Pro 与 3.1 Pro 模型在性能和功能上的差异。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 详细说明了 2026 年 2 月发生的一起持续 6 小时的故障，该故障由自动化 BYOIP 清理任务中的逻辑漏洞引起，导致 25% 的客户 BGP 前缀被意外撤回。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这条推文通过视频对比了 Google 专业级 AI 模型的两个迭代版本：Gemini 3 Pro 和 Gemini 3.1 Pro。发布者为 Google Cloud AI 总监，视频证据很可能突出了模型在处理速度、推理准确性或多模态响应质量方面的提升。对于关注 Gemini 模型家族快速演进的开发者来说，这提供了一个直接的基准参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本次复盘分析了影响 Cloudflare 自有 IP (BYOIP) 服务的一次重大服务中断。该事件由 Addressing API 中一个新的自动化清理子任务漏洞触发。由于对空查询参数的处理不当，系统将针对特定删除的请求误判为删除所有 BYOIP 前缀及其关联服务绑定的指令。这导致了 BGP 撤回和“BGP 路径收敛（Path Hunting）”行为，使得服务无法访问。由于部分服务配置从边缘服务器中被完全清除，必须进行手动恢复，从而阻碍了恢复进程。Cloudflare 概述了补救措施，包括 API Schema 标准化、引入运行状态快照以及用于防止大规模意外网络变更的“熔断机制”。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">API 参数处理中的逻辑漏洞触发了大规模意外删除。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 一个自动化任务发送了带有空 pending_delete 标志的 GET 请求。服务器将空字符串解释为请求所有前缀而非特定子集，导致系统将所有 BYOIP 前缀排队等待删除。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">边缘侧服务绑定的删除显著延迟了恢复工作。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然部分客户可以通过重新发布前缀来自行修复，但其他客户的基础服务配置（如 Magic Transit 或 CDN 绑定）已被清除。恢复这些配置需要向每台机器进行全局配置推送，延长了故障持续时间。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">预发布环境和测试未能模拟自主服务级变更。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 现有测试侧重于手动用户驱动的 API 操作。它们未考虑到后台任务运行器可能在没有明确用户输入的情况下独立执行数据变更的场景，凸显了基础设施服务自动化测试覆盖范围的缺失。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Cloudflare 正在实施“熔断机制”以限制网络变更的影响范围。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为防止未来出现失控进程，Cloudflare 计划监控 BGP 撤回速率。如果变更发生得太快或范围太广，系统将自动触发熔断器以禁用部署，直到进行人工调查。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">将运行状态与配置状态分离对于快速回滚至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过转向在生产部署中使用数据库状态快照的系统，即使底层权威数据库损坏或配置错误，工程师也可以近乎即时地恢复到已知的良好状态。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于客户端传递的 pending_delete 没有值，此处 Query().Get("pending_delete") 的结果将是一个空字符串 ("")，因此 API 服务器将其解释为对所有 BYOIP 前缀的请求。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统将其解释为所有返回的前缀都已排队等待删除。随后，新的子任务开始系统地删除所有 BYOIP 前缀及其所有相关的依赖对象。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">虽然我们的工程师成功测试了客户会遵循的确切流程，但测试并未涵盖任务运行器服务独立执行用户数据变更的场景。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们将改进监控，以检测变更是否发生得太快或范围太广（例如快速撤回或删除 BGP 前缀），并在发生这种情况时禁用快照部署。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这次故障本身并非全球性的，但影响范围和冲击力大得令人无法接受，这进一步强化了“橙色代码：减小故障范围”作为优先事项的重要性。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Addy Osmani(@addyosmani)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Addy Osmani</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">David Tuber</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">24</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2765</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Gemini 3 Pro</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Gemini 3.1 Pro</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Google AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型对比</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">BGP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">复盘报告</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网站可靠性工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API 设计</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2024724842931687653" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/d67d5cd8" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2024724842931687653">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAX3SURBVO3BQW4ERxLAQLKg/3+Z62OeGmjMSC4vMsL+wVqXOKx1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZEfPqTylyomld9U8YbKk4pJ5Y2KN1T+UsUnDmtd5LDWRQ5rXeSHL6v4JpU3KiaVqeKJyqQyVUwqU8WkMqlMFZ9QmSqeVHyTyjcd1rrIYa2LHNa6yA+/TOWNit+k8gmVNyreUJkqJpVvUnmj4jcd1rrIYa2LHNa6yA//cRVvVLyhMlVMKk9UpopJZaqYVKaKSeX/yWGtixzWushhrYv88B+n8qTiicpUMVVMKm9UPKmYVJ6oTBX/Tw5rXeSw1kUOa13kh19W8ZsqJpVvUvkmlaliqnhDZap4o+Imh7UucljrIoe1LvLDl6n8JZWpYlKZKj5RMak8UZkqJpWpYlKZKj6hcrPDWhc5rHWRw1oX+eFDFf+miknlEypPVL6p4g2VqeJJxX/JYa2LHNa6yGGti9g/+IDKVPFE5d9U8YbKVDGpPKl4ojJVPFF5o+KJylQxqbxR8YnDWhc5rHWRw1oX+eFDFZPKGxWTylQxqUwVk8pUMalMFZPKVDGpTBWTyqTypGJSmSqeVHyTyr/psNZFDmtd5LDWRX74soonKk8qJpWp4knFv6niExWTyhOVNyo+UTGpfNNhrYsc1rrIYa2L/PBlKk8qnqhMFU9UpopJZaqYVN6oeEPlmyo+oTJVPFGZVH7TYa2LHNa6yGGti/zwL1N5ovKGylQxqUwVk8oTlaliUpkqJpWpYlKZKp6oPKl4ojJVTBV/6bDWRQ5rXeSw1kXsH/whlaniEypPKp6oTBWTylTxhsobFW+oTBWTypOKJypTxW86rHWRw1oXOax1kR8+pPIJlaliUnlS8ZdUpoonFZPKGypTxf+zw1oXOax1kcNaF/nhQxWTyjdVTCqfUHmiMlU8UZkqJpWpYlJ5UvGkYlKZKiaVJypvqEwVnzisdZHDWhc5rHWRH76sYlL5hMoTlTcqJpWp4onKGxWfUJkqJpUnKk9UPlHxTYe1LnJY6yKHtS7ywy+rmFSmikllqnii8qRiUpkqJpU3KiaVb6r4popJZaqYVJ6oTBWfOKx1kcNaFzmsdZEf/ljFGypTxRsqT1T+TRWTyhsVT1QmlaliUnmi8psOa13ksNZFDmtd5Ic/pvKk4o2KT6h8U8UnKiaVN1SeVEwqb1T8psNaFzmsdZHDWhf54UMqU8UnVJ5UTCpTxROVqeKJyhOVqWJSmSqeqDypmFR+U8WkMlV802GtixzWushhrYv88GUqb1R8k8pvqnij4o2KNyr+UsVvOqx1kcNaFzmsdZEfvqziDZWpYlKZKp5UTCpPVKaKT6hMFZPKN1VMKt+k8kbFJw5rXeSw1kUOa13kh1+m8omKJxVPKr5JZar4popJZar4TRVPVKaKbzqsdZHDWhc5rHUR+wcfUHlS8URlqphUnlS8oTJVTCpTxW9SmSreULlJxScOa13ksNZFDmtdxP7Bf5jKGxWTypOKSeWNijdUpopJ5UnFGypTxaQyVfymw1oXOax1kcNaF/nhQyp/qeJJxaTypOITFZPKE5WpYqr4JpWp4maHtS5yWOsih7Uu8sOXVXyTyn+ZylTxROWbKt5QeaLypOITh7UucljrIoe1LvLDL1N5o+ITKlPFJ1SmiknlScWkMlV8k8onKp6o/KbDWhc5rHWRw1oX+eH/nMobFd+kMlU8qZhUpoonKlPFpDJVTCpTxVQxqXzTYa2LHNa6yGGti/zwH1cxqUwVk8pUMalMFZPKVPGGylTxCZWp4g2VN1R+02GtixzWushhrYv88MsqblIxqUwVk8pU8YbKE5WpYqqYVKaKSWWq+ITKXzqsdZHDWhc5rHWRH75M5S+pPFGZKqaKN1S+qeKNir9U8ZcOa13ksNZFDmtdxP7BWpc4rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kf8BjrbFg8gHSmkAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/d67d5cd8">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATOSURBVO3BQY4kRxIEQdNA/f/Lun10XgJIpFeTM2si+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQFyo2YCMqmZgExqngDyhJoJyG9S88ZJ1aKTqkUnVYs+WaZmE5An1LwB5AbIpOZGzSY1m4BsOqladFK16KRq0SdfBuQJNU8AmdRMQJ5QMwGZ1ExAJjUTkCfUPAHkCTXfdFK16KRq0UnVok/qH4DcALkBMqmZgExq/iYnVYtOqhadVC365C8D5EbNBGRSswnI/5OTqkUnVYtOqhZ98mVq/mRAbtTcqLkBMql5Qs1/yUnVopOqRSdViz5ZBuTfpGYCsknNBGRSMwGZ1LwB5L/spGrRSdWik6pF+CN/MCBPqHkDyI2aGyCTmr/JSdWik6pFJ1WLPnkJyKRmArJJzaRmAjKpuQFyo+ZGzQRkUjOpmYBMaiYgm9R800nVopOqRSdViz75MjUTkEnNE0DeAHKjZgIyqZmATGpugNwAeUPNE0AmNW+cVC06qVp0UrUIf+QFIDdq3gAyqXkCyBNqJiBvqLkBcqPmT3JSteikatFJ1aJP/mOATGomIJOaCcg3qZmATGomIG8AuVEzAZnUTEAmNZtOqhadVC06qVr0yUtqboDcqLkB8oaaCcgNkCfUTEBu1PwmIJOabzqpWnRSteikatEnLwGZ1DwB5EbNBOQNNROQSc03AXlDzQRkUvMEkEnNGydVi06qFp1ULcIfeQHIE2pugNyouQHyhJoJyKRmAvKEmhsgk5obIJOaCciNmm86qVp0UrXopGrRJy+peQLIjZo31ExAnlAzAXlCzQ2QTUAmNTdAJjWbTqoWnVQtOqla9MkyIE+ouQHyhJobNTdAnlAzAZnU3Kh5Q80E5EbNN51ULTqpWnRStQh/5AUg36RmAvKEmgnIjZongExqJiBPqJmAPKFmAjKpmYBMat44qVp0UrXopGrRJ8vUTEAmNU8AmdRMQCY1N2qeAHKj5gk1N0AmNROQSc0bajadVC06qVp0UrXok18G5Ak1bwB5Qs2kZgIyAZnUTGpugExqJiA3QCY1k5oJyKRm00nVopOqRSdViz75l6mZgExAbtTcqJmATGomIJOaSc0NkEnNBOQGyCYgN0AmNW+cVC06qVp0UrUIf+QPBuQJNROQJ9RMQCY1TwCZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5pJzQTkBsik5gkgN0A2AZnUvKHmm06qFp1ULTqpWvTJMjWbgNwAmdR8k5ongLyh5gk1N0Bu1LxxUrXopGrRSdWiT74MyBNqvgnIjZobIJOaCcik5gbIBGQTkN90UrXopGrRSdWiT+ofgExqJjUTkEnNG2pugExqJiD/ppOqRSdVi06qFn3ylwPyhJobIJvU3AC5AfKGmk0nVYtOqhadVC365MvUfJOaCcik5gbIBGRSc6PmBsikZgIyqZnUTEAmNROQSc0E5JtOqhadVC06qVr0yTIgvwnIG2omIDdqboBMaiYgk5oJyKTmBsgNkEnNN51ULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteh/gF0zP/rIkSYAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
