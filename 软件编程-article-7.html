@@ -1,0 +1,99 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>在 RubyMine 中构建 LLM 友好的 MCP 工具：分页、过滤与错误设计 | RubyMine 博客</title>
+        <style>
+            body {
+                padding: 12px;
+                margin: 0;
+                line-height: 1.8;
+            }
+            img { max-width: 100%; }
+        </style>
+    </head>
+    <body>
+        <h2>在 RubyMine 中构建 LLM 友好的 MCP 工具：分页、过滤与错误设计 | RubyMine 博客</h2>
+        <p>2/25/2026, 12:02:38 PM</p>
+        <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
+        <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
+            </h3>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本技术指南探讨了在 RubyMine 生态系统中构建 LLM 友好型 MCP 工具的工程挑战与设计模式，重点关注分页、过滤和错误恢复。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
+            </h3>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 RubyMine 的模型上下文协议 (MCP) 服务端中 Rails 工具集的实现。文章针对与大语言模型 (LLM) 交互时的固有局限性，特别是上下文窗口限制、工具调用限制和工具发现上限，提出了解决方案。为了克服这些问题，作者详细介绍了如何使用带有缓存键的偏移分页来确保数据一致性，强调了通过强大的服务端过滤来减少 Token 消耗的必要性，并设计了“面向恢复”的错误消息。此外，文章强调工具描述和 JSON Schema 应被视为功能性提示词，引导 LLM 高效准确地使用工具，确保 AI 助手能够有效处理复杂的 Rails 项目。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">实现分页以管理 LLM 严格的上下文窗口限制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 像 GitLab 这样的大型代码库会超出上下文限制；分页允许 LLM 分块处理数据，防止数据丢失并降低模型遗漏关键信息的风险。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">使用带有缓存键的偏移分页来获取稳定的 IDE 状态快照。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 IDE 数据通常在请求之间被缓存且保持静态，结合缓存键的偏移分页可确保一致性，并允许 LLM 检测底层数据是否发生了变化。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">设计强大的服务端过滤以保持在工具调用限制内。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 助手通常在一定次数的工具调用后停止执行；服务端过滤缩小了搜索空间，使 LLM 能够以更少的迭代和更小的上下文找到答案。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">编写面向恢复的错误消息，引导 LLM 的后续步骤。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 错误消息不应仅仅报告失败，而应明确指示 LLM 如何修复参数，从而防止不必要的重试和资源耗尽。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">优化工具描述和 Schema，使其发挥有效提示词的作用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 详细的描述、使用示例和清晰的输出 Schema 能引导 LLM 遵循预期模式，帮助其理解每个工具的“为什么”和“怎么做”，避免盲目尝试。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当工具调用发生错误时，除了告知模型出了什么问题，明确说明如何从中恢复也至关重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">目标是使它们尽可能对 LLM 友好。这意味着提供清晰的工具描述和示例，并在发生错误时明确告知模型如何恢复。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">分页使模型能够逐步处理数据，并在获取到必要信息后及早停止，而无需遍历整个数据集。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型利用这些信息来理解如何使用工具，因此提供简洁的描述和示例以引导模型走向预期的使用模式至关重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">处理大量数据的工具应致力于在尽可能少的调用中最大限度地缩小搜索空间。</li>
+            </ul>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The JetBrains Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Daniel Domjan</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2021</span></div>
+            </div>
+            
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
+                    <span style="color: #64748b; font-size: 14px;">标签：</span>
+                    <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 设计模式</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RubyMine</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API 设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工具</span>
+                    </span>
+                </div>
+            
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
+        <a href="https://www.bestblogs.dev/article/87af927e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
+        </a>
+    </div>
+    </div></p>
+        <a href="https://www.bestblogs.dev/article/87af927e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATSSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzJwEyqZmAPKFmAvKb1LxxUrXopGrRSdWiT5ap2QTkCSBPqHkCyBNqNqnZBGTTSdWik6pFJ1WLPvkyIE+oeQLIpGYTkEnNBOQGyBNqngDyhJpvOqladFK16KRq0Sd/GSBPqJmA3AC5ATKpmYBMav4mJ1WLTqoWnVQt+uQvp+YGyKRmE5D/k5OqRSdVi06qFn3yZWr+S4A8oeZGzQ2QSc0Tav4kJ1WLTqoWnVQt+mQZkH+TmgnIpOZGzQRkUjMBmdRMQCY1bwD5k51ULTqpWnRStQh/5D8MyBtqngAyqXkCyKTmb3JSteikatFJ1SL8kReATGomIJvU3AB5Qs0EZFJzA+RGzQ2QSc0EZJOabzqpWnRSteikatEnX6ZmAjKpeQLIE2reADKpmdQ8AeQGyBtqngAyqXnjpGrRSdWik6pFn3wZkEnNBGRSMwGZ1ExAJjVvqLkB8oSaSc0E5EbNN6nZdFK16KRq0UnVok9+GZAn1DwBZFJzA2RSMwGZ1ExAJjUTkDeA3KiZgExqJiCTmk0nVYtOqhadVC3CH1kEZFJzA2STmgnIpGYCcqPmCSA3ar4JyI2abzqpWnRSteikahH+yAtAJjUTkEnNJiCTmk1AJjU3QL5JzQRkUvMEkEnNGydVi06qFp1ULfrklwGZ1NwAmdTcALlRcwNkUjMBeULNDZBJzQ2QSc0E5EbNpGbTSdWik6pFJ1WLPnlJzQTkDSCTmgnIjZongExq3lBzA2QTkEnNDZBJzaaTqkUnVYtOqhZ98hKQN4BMaiYgTwCZ1NyomYBMam7UTEAmNTdq3lAzAblR800nVYtOqhadVC365JepmYDcqLkBMqm5ATKpmdRMQCY1E5BJzQTkBsikZgJyA2RSMwG5ATKpeeOkatFJ1aKTqkWfLFMzAZmATGpugDwBZFIzqZmAPAFkUvOEmhsgk5oJyKTmDTWbTqoWnVQtOqlahD/yApBJzRNAJjWbgExqJiCTmgnIE2qeADKpmYA8oeYGyKRm00nVopOqRSdViz75MiA3aiYgN2pugNwAuQFyo+YGyKRmAnIDZBOQGyCTmjdOqhadVC06qVqEP/IfBuRGzTcBmdQ8AWRS8wSQTWreOKladFK16KRq0ScvAflNaiY13wTkCSCbgExq3lDzTSdVi06qFp1ULfpkmZpNQG6ATGqeADKpuVHzBJA31Dyh5gbIjZo3TqoWnVQtOqla9MmXAXlCzRtANqmZgExqJiCTmhsgE5BNQH7TSdWik6pFJ1WLPvnLqHkCyBNqJiCTmjfU3ACZ1ExA/k0nVYtOqhadVC365H9OzQ2Qb1JzA+QGyBtqNp1ULTqpWnRSteiTL1PzTWomIJOaCcik5kbNBGRScwNkUjMBmdRMaiYgk5oJyKRmAvJNJ1WLTqoWnVQt+mQZkN8E5Ak1E5An1NwAmdRMQCY1E5BJzQ2QGyCTmm86qVp0UrXopGoR/kjVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRP2Q8NEeSpv8DAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="index.html#?category=1">返回目录</a>
+    </body>
+    <script>
+        document.body.style.fontSize = Math.max(window.document.body.clientWidth / 30, 14) + 'px';
+    </script>
+    </html>
