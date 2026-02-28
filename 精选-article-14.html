@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>智能体可观测性赋能智能体评估</title>
+        <title>如何写出好的 Skill ？拆解 skill-creator 背后的设计！</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>智能体可观测性赋能智能体评估</h2>
-        <p>2/22/2026, 3:53:54 AM</p>
+        <h2>如何写出好的 Skill ？拆解 skill-creator 背后的设计！</h2>
+        <p>2/22/2026, 2:27:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了智能体可观测性（通过 Runs、Traces 和 Threads）如何作为评估 AI 智能体非确定性推理的基础设施。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过拆解 Codex 的 skill-creator 设计，提出了一套以简洁为核心、三层架构为基础、自由度光谱为准则的 AI Skill 编写方法论。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章指出，AI 智能体代表了传统软件的根本转变，因为其行为由非确定性推理而非固定代码路径驱动。因此，调试工作从检查堆栈跟踪转向分析推理轨迹。作者介绍了三种可观测性原语：Runs（单个 LLM 调用）、Traces（完整执行路径）和 Threads（多轮对话上下文）。这些原语支持多层级评估策略：针对特定决策点的单步评估、针对端到端任务完成的全轮评估，以及针对长期上下文维护的多轮评估。核心观点是，生产环境的 Traces 是智能体工程的主要“老师”，提供了构建离线测试套件和支持在线无参考评估所需的原始数据。最终，可观测性与评估被视为交付可靠智能体系统不可或缺的闭环。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 AI Skill（技能）的本质及其设计方法。Skill 被定义为包含指令文档、参考资料和可执行脚本的资源包，是 AI 的“能力插件”。作者强调 Skill 的受众是 AI 而非人类，因此必须遵循“简洁”原则，将上下文视为公共资源。核心设计包含三层渐进式加载架构（元数据触发、正文指导、资源按需调用）以及基于任务脆弱性的“自由度光谱”理论。此外，文章详细介绍了 skill-creator 的自动化脚本工具链（初始化、生成、校验）和六步创建流程，为开发者提供了从理论框架到实操落地的完整指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">调试 AI 智能体需要从检查代码转向检查推理。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 不同于代码是事实来源的传统软件，智能体的行为是在运行时产生的。调试涉及理解智能体在复杂的、多步骤轨迹中为何做出特定决策。</span>
+                        <strong style="color: #1e40af">Skill 是 AI 的结构化能力插件，本质是解决特定任务的资源文件夹。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它不仅包含指令（SKILL.md），还整合了脚本、参考资料和静态资产，使 AI 无需外部搜索即可胜任特定工作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">可观测性建立在三个原语之上：Runs、Traces 和 Threads。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Runs 捕获单个 LLM 调用，Traces 将这些调用链接成完整的执行轨迹，而 Threads 则将多个 Traces 分组，以维护长期用户交互中的上下文。</span>
+                        <strong style="color: #1e40af">遵循“简洁”的根本约束，将上下文窗口视为稀缺的公共资源。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 已具备基础智能，Skill 应仅补充其未知的核心信息，通过反模式清单和祈使语气减少歧义并节省 Token。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">评估必须在对应于可观测性原语的不同粒度上进行。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 团队应使用单步测试进行单元测试决策，使用全轮测试进行端到端任务验证，并使用多轮测试确保对话会话中的上下文持久性。</span>
+                        <strong style="color: #1e40af">采用三层渐进式信息加载架构，实现高效的信息熵管理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> L1 元数据负责触发，L2 正文负责操作手册，L3 捆绑资源负责工具支持，确保不同信息在最合适的时机进入上下文。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">生产环境 Traces 是构建离线评估数据集的主要来源。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在生产环境 Traces 中发现的真实失败模式允许开发人员提取状态并创建特定的测试用例，从而闭合运行时观察与系统化离线测试之间的环路。</span>
+                        <strong style="color: #1e40af">引入“自由度光谱”准则，平衡 AI 的灵活性与输出的可靠性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对格式敏感的“脆弱操作”采用低自由度的脚本锁死，对创造性任务采用高自由度的文字引导，确保复杂任务的确定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">对于非确定性智能体，离线评估是必要但非充分的。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于用户输入是不可预测的，因此需要在线评估（无参考评分）和对生产数据的即时分析，以确保智能体在实际环境中的表现可靠。</span>
+                        <strong style="color: #1e40af">通过自动化脚本构建质量保障链，将设计思想转化为可执行流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用初始化、生成和校验三个脚本，夹住中间的创造性编写步骤，确保 Skill 从命名到格式均符合工业级规范。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">失败的是智能体的推理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 智能体打破了确定性和代码作为事实来源的假设。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">生产环境不仅是捕捉遗漏 Bug 的地方，也是你发现离线测试内容的地方。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体行为仅在运行时产生，且仅能通过可观测性捕获。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">交付可靠智能体的团队已经接受了从调试代码到调试推理的转变。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skill 的读者是 AI，不是人类开发者。每一个多余的文件都是噪音。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">上下文窗口是一种公共产品。AI 本身已经很聪明了，你只需要补充它不知道的东西。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">任务越脆弱（容易出错）→ 自由度越低 → 用脚本锁死；任务越灵活 → 自由度越高 → 用文字引导。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">把所有 'when to use' 信息放在 description 里，不要放在 body 里。body 是触发后才加载的，那时候已经迟了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">好的 Skill 是用最少的 token，在正确的层级，给 AI 最精准的约束，让它在边界内自由发挥。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">LangChain Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">LangChain Accounts</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Datawhale</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Datawhale</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3058</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">37 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9159</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 评估</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LangChain</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Skill Design</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Codex</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">结构化指令</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/b22234a4" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/352c89c1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/b22234a4">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATlSURBVO3BQY4kRxIEQdNA/f/Lun30vQSQSK/mcGgi+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQEyqZmATGpugExqngDyhJoJyG9S88ZJ1aKTqkUnVYs+WaZmE5A3gExqboBMaiYgk5obNZvUbAKy6aRq0UnVopOqRZ98GZAn1DwB5EbNE2pu1DwB5Ak1TwB5Qs03nVQtOqladFK16JO/HJBJzQ2QSc0E5Ak1E5BJzd/kpGrRSdWik6pFn9T/UTMBmdQ8AeS/5KRq0UnVopOqRZ98mZo/CZAn1ExAJjU3am6ATGqeUPMnOaladFK16KRq0SfLgPyT1ExAJjUTkEnNBGRSMwGZ1ExAJjVvAPmTnVQtOqladFK1CH/kXwzIG2p+E5BJzd/kpGrRSdWik6pF+CMvAJnUTEA2qfkmIJOaCcikZgIyqbkBMqmZgGxS800nVYtOqhadVC36ZBmQSc0TQCY1N0A2qZmATGomIJOaGyA3QN5Q8wSQSc0bJ1WLTqoWnVQtwh95AcgTaiYgb6i5ATKpuQEyqZmAPKHmBsiNmn+Tk6pFJ1WLTqoWffJlam7UPAHkBsik5gbIpGYCMqmZgExqJiBvALlRMwGZ1ExAJjWbTqoWnVQtOqla9MkyNROQSc0TQCY1N2omIDdqJiCTmhs1E5AbNb8JyKTmm06qFp1ULTqpWoQ/8ouA3Ki5ATKpmYBMaiYgN2omIJOaGyDfpGYCMql5Asik5o2TqkUnVYtOqhbhj7wA5EbNDZAn1LwBZFJzA+QNNTdAJjU3QCY1E5AbNd90UrXopGrRSdWiT15ScwNkUjOpmYBMap4AsknNBORGzQ2QTUAmNTdAJjWbTqoWnVQtOqla9MmXqZmATGomNROQJ9TcAJmAvKFmAjKpuVHzhpoJyI2abzqpWnRSteikatEnLwF5Qs0NkEnNDZAbIE+oeQLIpGYCcgNkUjMBuQEyqZmA3ACZ1LxxUrXopGrRSdWiT5apmYDcAJnUTEAmNZOaCciNmgnIE0AmNU+ouQEyqZmATGreULPppGrRSdWik6pF+CMvAJnU3ACZ1ExAJjUTkG9SMwF5Qs0TQCY1E5An1NwAmdRsOqladFK16KRq0SdfBmRSMwG5AXKj5gbIjZoJyKTmCSCTmgnIDZBNQG6ATGreOKladFK16KRqEf7IvxiQGzVvAJnUTEAmNU8AmdQ8AWSTmjdOqhadVC06qVr0yUtAfpOaSc0E5Akgk5obIDdANgGZ1Lyh5ptOqhadVC06qVr0yTI1m4DcALkB8oaaN4C8oeYJNTdAbtS8cVK16KRq0UnVok++DMgTajap2QRkUjMBmdTcAJmAbALym06qFp1ULTqpWvTJfwyQJ9RMaiYgk5o31NwAmdRMQP5JJ1WLTqoWnVQt+uQvo2YC8oSaCcg3qbkBcgPkDTWbTqoWnVQtOqla9MmXqfkmNROQJ9RMQCY1E5BJzQ2QSc0EZFIzqZmATGomIJOaCcg3nVQtOqladFK1CH/kBSC/Sc0E5EbNbwIyqZmATGomIJOaCcgbar7ppGrRSdWik6pF+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pF/wM3Rk4w6bTRLAAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/352c89c1">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGaCxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRSMwGZ1DwBZFLzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgDwB5AbIpGYC8gSQJ9RMQJ5QswnIppOqRSdVi06qFn3yZUCeUPOEmgnIpOYNNTdq/ktAnlDzTSdVi06qFp1ULfrkjwMyqZmAvAHkDTUTkEnN/5OTqkUnVYtOqhZ98sepmYDcqHkCyI2aCcgTQCY1f9lJ1aKTqkUnVYs++TI1/zIgk5pJzRNqJiDfpOZfclK16KRq0UnVok+WAflNQCY1E5A3gExqJiCTmhs1E5AngPzLTqoWnVQtOqla9MlLav4SIE+omYBMaiYgN0CeUPOXnFQtOqladFK16JOXgExqJiA3aiYgT6iZgExqJiCTmifU/CYgk5obIJOaCciNmjdOqhadVC06qVr0yT9GzRtqngDyhJobNTdAboDcALlRc6NmArLppGrRSdWik6pFnywDMqm5ATKpmYDcqJmAvKFmAnIDZFIzAZnUvAHkCSA3ajadVC06qVp0UrUIf+QFIJOaCcgbaiYgN2pugDyhZgIyqXkDyKTmBsiNmieATGreOKladFK16KRqEf7IFwH5JjU3QCY1N0AmNU8AuVHzTUBu1HzTSdWik6pFJ1WL8EdeAPKEmhsgk5obIN+kZgIyqXkCyKTmBsiNmhsgT6h546Rq0UnVopOqRZ8sUzMBmYBMaiY1E5BJzRNqJiBvqLkB8gSQN4BMav5LJ1WLTqoWnVQt+uQlNROQN4BMar5JzQ2QJ9TcALlRcwPkCTUTkEnNppOqRSdVi06qFuGPvADkCTVPALlRcwPkDTVvAHlDzQ2QGzUTkEnNppOqRSdVi06qFn3ykpobIBOQJ9RMQG6AfBOQSc2NmhsgTwCZ1ExAJiC/6aRq0UnVopOqRZ+8BGRS84SaGyA3QG7UTEAmNROQTUAmNZOaCcgbaiYgk5pvOqladFK16KRq0ScvqblRcwNkUjOpuQEyqZmAPKHmRs0E5JuATGr+ZSdVi06qFp1ULcIfWQRkUvMEkBs1N0DeUHMD5A01E5DfpOabTqoWnVQtOqlahD/yhwG5UTMBmdTcAJnUTEAmNU8AmdQ8AWSTmjdOqhadVC06qVr0yUtAfpOaJ4BMav5LQJ4AMql5Qs0EZFKz6aRq0UnVopOqRZ8sU7MJyCYgk5oJyA2QN9RMQG7UbFLzTSdVi06qFp1ULfrky4A8oeYJNTdAJjU3am6ATGomIJOaJ4C8oWYC8oSaN06qFp1ULTqpWvTJHwdkUjOpeQLIE0BugExqJjUTkEnNDZAJyKTmBsimk6pFJ1WLTqoWffJ/DsgTaiYgk5ongExAJjVPAJnU3ACZ1HzTSdWik6pFJ1WLPvkyNd+kZgLyBpAbIJOaJ9RMQCY1bwCZ1ExAJjWbTqoWnVQtOqla9MkyIL8JyKTmCSA3aiYgbwB5Q82/7KRq0UnVopOqRfgjVUtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRf8DqO4cVh1/PfAAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
