@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Vercel 宣布 Vercel Queues 开启公测，助力构建可靠的 AI 应用</title>
+        <title>MySQL 9.6 变更外键约束与级联处理机制</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,78 @@
         </style>
     </head>
     <body>
-        <h2>Vercel 宣布 Vercel Queues 开启公测，助力构建可靠的 AI 应用</h2>
-        <p>2/27/2026, 9:59:18 PM</p>
+        <h2>MySQL 9.6 变更外键约束与级联处理机制</h2>
+        <p>2/28/2026, 8:34:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Vercel CEO Guillermo Rauch 推出了 Vercel Queues，这是一种全新的基础设施原语，旨在为 AI Agent 和现代 Web 应用提供持久性和自动扩缩容能力。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">MySQL 9.6 将外键和级联管理从 InnoDB 引擎移至 SQL 层，确保这些操作最终能被记录在二进制日志中，从而实现可靠的 CDC 和复制。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Guillermo Rauch 宣布 Vercel Queues 进入公测阶段，解决了 Vercel 历史上呼声最高的需求之一。该服务核心围绕 send 和 handleBatch 两个 API，旨在为构建“坚不可摧的软件”奠定基础。Rauch 强调了它在提升 AI Agent 和应用可靠性方面的关键作用，提供了内置的持久性和自动扩缩容功能。在私测阶段，该基础设施经过了三次迭代优化以确保生产级质量，并作为 Vercel Workflow 的底层原语提供支持。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 MySQL 9.6 在外键（FK）约束方面的重大架构转变。历史上，InnoDB 在内部处理外键验证和级联，这意味着这些变更从未记录在二进制日志中，常导致下游系统出现数据漂移。通过将此逻辑移至 SQL 层，MySQL 9.6 确保了变更数据捕获（CDC）流水线和分析平台的完全可见性。尽管 Oracle 报告称其性能与旧方法持平，但社区对缺乏官方文档以及 Oracle 领导下 MySQL 开发路线图的透明度表示担忧。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">外键强制执行已从存储引擎移至 SQL 层。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这一架构变化允许 MySQL SQL 引擎直接跟踪和验证约束，而不是完全将任务委托给 InnoDB 的内部机制。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">级联操作现在明确记录在 MySQL 二进制日志中。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 此前，级联删除或更新对 binlog 是“隐藏”的。此次更新确保了副本和 CDC 流水线等下游系统能够接收到完整的数据变更集。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">Oracle 声称这一转变对工作负载的性能影响微乎其微。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管执行逻辑的位置发生了变化，但基准测试表明，吞吐量和延迟与之前基于存储引擎的强制执行模型几乎完全一致。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">社区对文档和透明度提出了重大担忧。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 专家指出，官方 MySQL 9.6 发行说明中忽略了这一重大架构变更，这加剧了人们对 Oracle 对社区版投入程度的担忧。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于这些变更对 SQL 引擎和二进制日志是隐藏的，下游系统（如 CDC 流水线和分析平台）可能会遗漏它们。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">二进制日志终于完整讲述了数据所发生的一切。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MySQL 9.6 的发行说明完全没有提到外键的变更……老实说，我觉得这种情况非常令人担忧。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">基于 SQL 引擎的外键强制执行和级联性能与 InnoDB 的方法几乎完全一致。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch(@rauchg)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Guillermo Rauch</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">78</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Renato Losio</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">470</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">572</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vercel</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vercel Queues</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Serverless</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MySQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">InnoDB</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">外键</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CDC</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2027503835787497973" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/f6110ead" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2027503835787497973">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/f6110ead">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4DcqJmATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkDeAvKFmAjKpuVGzSc0mIJtOqhadVC06qVr0yZcBeULNE0Bu1NwAuQEyqZmATGomIE+oeQLIE2q+6aRq0UnVopOqRZ/844BMam6ATGomIDdAJjUTkEnNv+SkatFJ1aKTqkWf/GPUTEAmIDdqJiCTmieA/D85qVp0UrXopGrRJ1+m5jcBuVHzhJoJyKTmRs0NkEnNE2r+JCdVi06qFp1ULfpkGZD/kpoJyA2QSc0EZFIzAZnUTEAmNW8A+ZOdVC06qVp0UrXok5fU/EmATGpu1HyTmgnIpOZGzd/kpGrRSdWik6pF+CMvAJnUTEA2qXkCyKTmBsikZgIyqZmATGpugExqJiCb1HzTSdWik6pFJ1WL8Ef+IUBu1ExAJjUTkEnNBGRScwPkm9Q8AWRS88ZJ1aKTqkUnVYvwR14AMqm5AXKjZgJyo+YGyKTmDSBPqLkBcqPmb3JSteikatFJ1aJPlgF5Qs2Nmm8CMqm5UTMBmdRMQN4AcqNmAjKpmYBMajadVC06qVp0UrXok2VqJiCTmhsgN2omIDdqJiA3QG7UTGomIDdqfhOQSc03nVQtOqladFK16JOX1ExAngByo2YCMqm5ATKpmYBMar4JyBtqJiCTmieATGreOKladFK16KRqEf7ILwIyqbkB8oSaCcik5gkgb6i5ATKpuQEyqZmA3Kj5ppOqRSdVi06qFn2yDMik5gbIpGZSMwF5Qs0E5EbNG2pugGwCMqm5ATKp2XRSteikatFJ1aJPvgzIE0CeUHMD5EbNBOQJNROQSc2NmjfUTEBu1HzTSdWik6pFJ1WL8EdeADKpuQEyqXkDyCY1TwCZ1ExAnlAzAXlCzQRkUjMBmdS8cVK16KRq0UnVok/+Y0DeUPMEkDeATGqeUHMDZFIzAZnUvKFm00nVopOqRSdViz75MiBPqLkBMgG5UfMGkBsgk5pJzQ2QSc0E5AbIpGZSMwGZ1Gw6qVp0UrXopGrRJ1+mZgIyqZmA3Kj5JiA3am6ATGomIDdANgG5ATKpeeOkatFJ1aKTqkX4I38xIJOaCcikZhOQSc0TQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+kZlLzBpBJzQTkCSCbgExq3lDzTSdVi06qFp1ULfpkmZpNQG6APAHkCTVvAHlDzRNqboDcqHnjpGrRSdWik6pFn3wZkCfUvKFmAjKpmYA8AWRSMwGZ1NwAmYBsAvKbTqoWnVQtOqla9Mk/BsikZgJyA2RSM6mZgExq3lBzA2RSMwH5L51ULTqpWnRSteiTfxyQGzUTkAnIN6m5AXID5A01m06qFp1ULTqpWvTJl6n5JjU3QG6ATGpugExqboBMaiYgk5pJzQRkUjMBmdRMQL7ppGrRSdWik6pFnywD8puA3KiZgExqJiA3am6ATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXof7K9PU2FcOkBAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
