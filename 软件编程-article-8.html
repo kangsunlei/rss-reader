@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>海量小文件 + 多云协同：地瓜机器人 JuiceFS 存储优化之路</title>
+        <title>Uber 的混合云数据：工程师如何解决极大规模复制挑战</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>海量小文件 + 多云协同：地瓜机器人 JuiceFS 存储优化之路</h2>
-        <p>3/1/2026, 2:16:00 AM</p>
+        <h2>Uber 的混合云数据：工程师如何解决极大规模复制挑战</h2>
+        <p>3/2/2026, 3:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文分享了地瓜机器人利用 JuiceFS 解决机器人研发中海量小文件处理、多云协同及 AI 训练性能瓶颈的存储架构优化实践。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Uber 通过重构任务分配和并行化元数据操作，优化了其基于 HiveSync 和 Distcp 的数据复制平台，使其能够处理每日超过 1 PB 的流量。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细介绍了地瓜机器人在机器人数据管理与模型训练场景下的存储演进历程。针对传感器图像、点云等海量小文件导致的元数据瓶颈，以及多云环境下数据流通效率低等痛点，地瓜机器人通过对比测试，选定 JuiceFS 作为核心存储方案。文章重点阐述了从社区版向企业版迁移的动因，包括利用高性能元数据引擎解决亿级文件检索延迟，以及通过分布式缓存将训练任务启动时间从 20 分钟缩短至 3 分钟。此外，作者还分享了在 Kubernetes 环境下的写入模式选择、网络拓扑优化及版本管理等实战调优经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Uber 的 HiveSync 团队如何克服 Hadoop 开源 Distcp 框架中的重大扩展瓶颈，以支持混合云架构。随着每日复制量从 250 TB 增长到超过 1 PB，团队实施了多项架构增强措施：将资源密集型准备任务移至 YARN Application Master，并行化文件列表（Listing）和提交（Commit）过程，并利用 “Uber jobs” 处理小型传输以减少容器开销。这些优化使提交延迟降低了 90%，并实现了 300 PB 数据向云端的无缝迁移，展示了在极大规模下维护高吞吐量数据管道所需的工程创造力。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">机器人研发场景中，传统对象存储在处理海量小文件时存在严重的元数据性能瓶颈。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传感器数据和模型文件规模达亿级，标准 S3 的 API 延迟（10-30ms）直接制约了训练与推理环节的 QPS，影响研发效率。</span>
+                        <strong style="color: #1e40af">将资源密集型准备任务迁移到 Application Master 显著减少了 HDFS 客户端争用和延迟。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将 Copy Listing 和 Input Splitting 从 HiveSync 服务器移动到 YARN Application Master，Uber 将作业提交延迟降低了 90%，有效地将中央服务器与繁重的元数据操作解耦。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JuiceFS 的元数据与数据分离架构有效解决了超大规模目录的检索与管理难题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过树形存储架构而非扁平 KV 存储，使单目录 1.2 亿文件的深分页查询延迟从 3.8 秒降至 210 毫秒，支持千亿级文件存储。</span>
+                        <strong style="color: #1e40af">并行化文件列表和提交等元数据操作极大地提高了端到端复制的性能和可靠性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 团队实现了在保持严格块顺序的同时同步处理多个文件，这使得 p99 列表延迟降低了 60%，最大提交延迟降低了 97%。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">分布式缓存机制是提升多机多卡 AI 训练效率的关键手段。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在训练节点构建分布式缓存池，使缓存命中率从 45% 提升至 92%，显著降低了跨节点带宽占用并缩短了任务启动时间。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">在生产调优中需权衡数据一致性与写入性能，并优化网络拓扑。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 建议采用 write-through 模式保障数据可靠性，并将元数据引擎与计算节点规划在同一 Region 以减少跨区域带来的延迟上升。</span>
+                        <strong style="color: #1e40af">利用针对小型数据集的 “Uber job” 功能优化了 YARN 资源利用率并减少了调度开销。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于 512 MB 以下的传输，直接在 Application Master 的 JVM 中运行 Copy Mapper 任务，每天减少了 26.8 万次容器启动，显著提高了集群效率并减少了小型作业的调度延迟。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JuiceFS 采用元数据与数据分离的架构设计，实现了存储的弹性扩展，避免对单一云服务商的依赖。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">单目录 1.2 亿文件的深分页查询（偏移量 50 万条），延迟从原来的 3.8 秒降至 210 毫秒。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">多机协同训练的缓存命中率从原来的 45% 提升至 92%，跨节点带宽占用率降至 15% 以下。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">JuiceFS 的运维成本极低，地瓜机器人当前仅需一名工程师即可负责整个云平台与存储系统的运维工作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">克隆操作仅复制文件的元数据，数据则只额外存储变更部分，节省底层存储空间并便于版本控制。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Uber 的 HiveSync 团队通过将准备任务移至 Application Master 并并行化列表和提交过程，针对多 PB 级工作负载优化了该架构。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于较小的作业……Hadoop 的 Uber job 功能直接在 Application Master 的 JVM 中运行 Copy Mapper 任务，每天减少了大约 26.8 万次容器启动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这些优化将增量复制能力提升了五倍，使 HiveSync 在 Uber 从本地迁移到云端的过程中无故障地复制了超过 300 PB 的数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">工程团队指出，在我们的规模下，即使是微小的改进也能带来显著的收益。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +60,30 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4757</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Leela Kumili</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">536</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JuiceFS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">机器人研发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">海量小文件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多云协同</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Hadoop</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Distcp</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据复制</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">混合云</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Uber Engineering</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/9a54eef0" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/cc991c25" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/9a54eef0">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATXSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHZAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBOQJNROQSc0EZFLzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgDyhZgIyAXlCzQ2QJ9RMQJ5QswnIppOqRSdVi06qFn3yZUCeUPOEmgnIE2omIDdqbtT8JiBPqPmmk6pFJ1WLTqoWffKPAzKpeQLIjZoJyKRmAjKpmYBMav5LTqoWnVQtOqla9Mk/Ts0NkEnNpOYNIG8AmdT8y06qFp1ULTqpWvTJl6n5TUDeAHKj5gkg36TmLzmpWnRSteikatEny4D8JiCTmgnIDZBJzQTkBsik5kbNBOQJIH/ZSdWik6pFJ1WLPnlJzV8CZFIzAdmkZgJyA+QJNf+Sk6pFJ1WLTqoWffISkEnNBORGzQTkCTUTkAnIpOYNIJOabwIyqbkBMqmZgNyoeeOkatFJ1aKTqkX4Iy8AmdTcAJnUTEAmNROQGzU3QCY1vwnIN6l5Asik5o2TqkUnVYtOqhZ9sgzIjZoJyKRmAjKpmYDcAJnUTEAmNU8AmdRMQCY1bwB5AsiNmk0nVYtOqhadVC3CH/kiIDdqngAyqZmATGomIJvUvAFkUnMD5EbNE0AmNW+cVC06qVp0UrUIf2QRkBs1E5BJzQRkUjMBeULNDZAbNTdAbtR8E5AbNd90UrXopGrRSdUi/JFFQG7UbAJyo+YGyKRmAnKj5gkgk5obIDdqboA8oeaNk6pFJ1WLTqoWffISkEnNDZBJzQ2QSc0TQCY1N0Bu1NwAeQLIG0AmNf9PJ1WLTqoWnVQtwh95AciNmr8EyI2aCcgTam6A3Ki5AXKj5gbIpGbTSdWik6pFJ1WL8Ee+CMgTaiYgT6iZgExqboBMat4A8oaaGyA3aiYgk5pNJ1WLTqoWnVQt+mQZkCfUTEAmNZuAvAFkUnOj5gbIE0AmNROQCchvOqladFK16KRq0ScvAZnUbAIyqbkBMqm5AXID5A0gk5pJzQTkDTUTkEnNN51ULTqpWnRSteiTl9TcALlRc6PmBsik5gk1N0AmNROQbwIyqfnLTqoWnVQtOqlahD+yCMikZgLym9RMQG7U3AB5Q80E5Dep+aaTqkUnVYtOqhZ9skzNjZpNQCY1m4BMaiYgk5o31DwB5AkgN2reOKladFK16KRq0ScvAflNap4AcqPmNwF5Asik5gk1E5BJzaaTqkUnVYtOqhZ9skzNJiBPAJnUTEAmIDdqJiBvqJmA3KjZpOabTqoWnVQtOqla9MmXAXlCzRNqboBMajapmYBMap4A8oaaCcgTat44qVp0UrXopGrRJ/84IJOaSc0E5EbNBOQGyA2QSc2kZgIyqbkBMgGZ1NwA2XRSteikatFJ1aJP/uOA3KiZgNyoeQLIBGRS8wSQSc0NkEnNN51ULTqpWnRSteiTL1PzTWomIJOaGyBPAJnUPKFmAjKpeQPIpGYCMqnZdFK16KRq0UnVok+WAflNQCY1E5AbNU8AeQPIG2r+spOqRSdVi06qFuGPVC05qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFv0PqbMpXmZGBVwAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/cc991c25">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATRSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHZAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRSMwGZ1NwAuVHzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgHwTkEnNBOQGyBNqJiBPqNkEZNNJ1aKTqkUnVYs++TIgT6h5Qs0EZFJzo2YCcgPkRs1vAvKEmm86qVp0UrXopGrRJ/84IJOaCcgbaiYgk5oJyKRmAjKp+S85qVp0UrXopGrRJ/84NROQSc0TQJ4A8gaQSc2/7KRq0UnVopOqRZ98mZrfpOYGyKTmCTVPAPkmNX/JSdWik6pFJ1WLPlkG5DcBmdRMQCY1E5BJzQRkUjMBmdTcqJmAPAHkLzupWnRSteikatEnL6n5y9RMQJ5QMwGZ1ExAboA8oeZfclK16KRq0UnVok9eAjKpmYDcqJmAPKHmCTUTkCfUTEC+Ccik5gbIpGYCcqPmjZOqRSdVi06qFn3yy9RMQCY1m4BMaiY1N0AmNTdqboDcALkBcqPmRs0EZNNJ1aKTqkUnVYs+WQbkCTU3QJ5QM6mZgExqvgnIpOYNIE8AuVGz6aRq0UnVopOqRfgji4BMam6ATGqeAHKjZgIyqZmAPKHmDSCTmhsgN2qeADKpeeOkatFJ1aKTqkX4I78IyCY1bwB5Qs0NkBs13wTkRs03nVQtOqladFK1CH9kEZBJzRNAJjUTkBs1E5BJzRNAbtQ8AWRScwPkRs0NkCfUvHFSteikatFJ1aJPXgLyBJBJzQ2QSc0bQCY1N2qeAPIEkDeATGr+n06qFp1ULTqpWvTJ/xmQGzVPALlRMwGZ1ExAnlBzA+RGzQ2QJ9RMQCY1m06qFp1ULTqpWoQ/sgjIE2omIDdqJiBPqLkBcqPmCSBvqLkBcqNmAjKp2XRSteikatFJ1aJPlqm5ATIBmdTcAJnUTEC+Ccik5kbNDZAngExqJiATkN90UrXopGrRSdWiT14CMqmZgLwBZFJzo+YGyKTmRs0E5Akgk5pJzQTkDTUTkEnNN51ULTqpWnRSteiTl9TcqJmATGpu1LwBZFJzo2YCMqmZgHwTkEnNX3ZSteikatFJ1aJPlgGZ1DwB5Ak1N2pugExqJjUTkE1AngDyl51ULTqpWnRStQh/5B8GZJOaCcikZgIyqXkCyKTmCSCb1LxxUrXopGrRSdWiT14C8pvU3Ki5AfKEmk1AngAyqXlCzQRkUrPppGrRSdWik6pFnyxTswnIG0AmNROQCcg3qZmA3KjZpOabTqoWnVQtOqla9MmXAXlCzRNqJiBvqLkBMqmZgExqngDyhpoJyBNq3jipWnRSteikatEn/zggk5on1NwAuQFyA2RSM6mZgExqboBMQCY1N0A2nVQtOqladFK16JP/OCCTmhsgN2qeADIBmdQ8AWRScwNkUvNNJ1WLTqoWnVQt+uTL1HyTmgnIG2omIBOQSc0TaiYgk5o3gExqJiCTmk0nVYtOqhadVC36ZBmQ3wRkUvMEkEnNNwF5Q81fdlK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8B4zInVyOKMCUAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

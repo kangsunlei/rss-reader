@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>从上下文到长期记忆：大模型记忆工程的架构设计与实践</title>
+        <title>驱动你 X (Twitter) 帖子的算法</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>从上下文到长期记忆：大模型记忆工程的架构设计与实践</h2>
-        <p>2/25/2026, 7:46:00 AM</p>
+        <h2>驱动你 X (Twitter) 帖子的算法</h2>
+        <p>2/25/2026, 4:30:28 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文系统阐述了大模型记忆工程的必要性，并提出了基于“记忆操作系统（MemOS）”架构的分层管理、主动调度及脑图组织方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">深入探讨 X 开源推荐引擎的技术细节，详细介绍其 Rust/Python 架构、基于 Grok 的 Transformer 评分机制以及用于实时信息流生成的阶段式流水线。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章指出“记忆”是继参数调优和上下文工程之后，大模型在企业级落地中的核心工程化挑战。作者李志宇博士提出了“记忆操作系统（MemOS）”的概念，旨在解决大模型的短时遗忘与知识碎片化问题。核心技术路径包括：将记忆划分为参数化、激活和明文三层以模拟人脑机制；将传统 RAG 的被动检索升级为主动调度，利用交互空档预热“记忆立方（Memory Cube）”以降低延迟；以及采用介于简单分块与复杂图谱之间的“记忆脑图”来组织信息。该框架旨在为开发者提供“记忆即服务”，推动 AI 从工具向具备长期进化能力的智能体演进。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文对 xAI 最近开源的 “为你推荐” (For You) 信息流算法进行了全面分析。文章将系统分解为四个主要的架构支柱：负责编排的 Home Mixer、负责高速内存数据摄取的 Thunder、负责机器学习驱动检索和排序的 Phoenix，以及 Candidate Pipeline 框架。工作流程包括获取用户上下文、通过相似度搜索从站内和站外候选池中获取内容，并应用基于 Grok 的 Transformer 模型来预测参与度。最终排名由各种预测行为（如点赞、回复和屏蔽）的加权总和决定，确保在积极参与和消极信号过滤之间实现微妙的平衡。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">记忆是模型演进的关键维度，将成为大模型面向应用场景的核心变量。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在大模型参数规模和后训练收益递减的背景下，全局记忆与个性化被视为突破瓶颈的关键，是实现智能体持续演化的基础。</span>
+                        <strong style="color: #1e40af">系统采用模块化的四部分架构，以平衡编排、实时摄取和机器学习排序。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将关注点分离到 Home Mixer、Thunder、Phoenix 和 Candidate Pipeline，系统实现了高扩展性，并允许工程师在不重写核心流水线逻辑的情况下更新评分模型。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">建立三层记忆建模体系，平衡参数化记忆、激活记忆与明文记忆的读写效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴人脑机制，将权重固化的隐性记忆、KV Cache 的显性记忆与外部存储的明文记忆分层调度，以实现时延与容量的最优解。</span>
+                        <strong style="color: #1e40af">内容来源结合了站内帖子和通过基于机器学习的相似度搜索发现的站外候选内容。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 系统使用双塔模型为用户和帖子创建嵌入，通过点积相似度搜索从用户未关注的账号中寻找相关内容。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">从被动式检索转向主动式调度，利用交互碎片时间预热记忆单元。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过触发器和预测模型，在用户输入或阅读的空档期提前准备“记忆立方”，将阻断式的 RAG 流程转化为异步并行的预处理过程。</span>
+                        <strong style="color: #1e40af">排序由基于 Grok 的 Transformer 驱动，用于预测特定的用户参与概率。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该模型不是输出单一的相关性分数，而是输出点赞或屏蔽等多种行为的概率，然后对这些概率进行加权以计算最终排序分数。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用“记忆脑图”作为信息组织形态，平衡构建成本与语义检索精度。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 脑图结构介于简单文本分块与高成本知识图谱之间，能有效提取事件逻辑脉络，并通过“图+向量”混合检索提升召回准确性。</span>
+                        <strong style="color: #1e40af">选择 Rust 和内存存储对于满足亚毫秒级延迟要求至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 凭借 62.9% 的 Rust 代码库以及 Thunder 组件的内存帖子存储，系统最大限度地减少了外部数据库调用，以确保在大规模情况下提供响应迅速的用户体验。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">评分机制使用加权总和公式来区分不同类型的用户交互。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将预测概率乘以特定权重，该算法可以优先处理分享等高价值行为，同时严厉惩罚举报或静音等负面信号。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">记忆正在成为继参数调优和上下文工程之后的下一个工程化核心。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型决定上限，应用夯实下限。我们坚持由模型驱动去攻克原创理论，确保框架持续抬升性能天花板。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与其让碎片时间白白流逝，不如化整为零，把记忆管理、调度与预热工作嵌入每一个空隙。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能始于记忆，张量链接未来。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">记忆体被定义为可独立打包、下载、安装的最小单元，既可以是个人经验资产，也可以是企业知识沉淀。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这个推荐系统揭示了一个基于 Grok Transformer 模型构建的系统，它几乎用机器学习取代了所有手工制定的规则。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Thunder 是一个内存帖子存储……它可以在亚毫秒级时间内返回结果，因为所有内容都驻留在内存中，而不是在外部数据库中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">基于 Grok 的 Transformer 直接从用户参与序列中学习哪些信号重要，而不是由人类来决定。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最终分数 = Σ (行为权重 * 该行为的预测概率)</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Candidate Pipeline 框架将流水线的执行逻辑与各个阶段的业务逻辑分离开来。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,32 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">38 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9347</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1483</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大模型记忆</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MemOS</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG 优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent 架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">记忆分层</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推荐系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">机器学习</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Rust</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Transformer 模型</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/fa264a88" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/480e1e0c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/fa264a88">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS9SURBVO3BQW4kwREEwfDC/P/LLh7zVECjcyiuFGb4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkN6mZgGxSMwGZ1DwB5Ak1E5DfpOaNk6pFJ1WLTqoWfbJMzSYgb6i5ATIBeQLIE2omIE+o2QRk00nVopOqRSdViz75MiBPqHlCzQTkBsikZgIyqXlCzW8C8oSabzqpWnRSteikatEn/zggk5obNROQJ4BMaiYgk5oJyKTmf8lJ1aKTqkUnVYs++cepeQLIjZongLwBZFLzLzupWnRSteikatEnX6bmL1HzBJBJzQRkUjMB+SY1f8lJ1aKTqkUnVYs+WQbkNwGZ1ExAJjUTkEnNN6mZgDwB5C87qVp0UrXopGrRJy+p+UuATGo2AbkBcgPkCTX/kpOqRSdVi06qFn3yEpBJzQTkRs0E5Ak1N0Bu1NyouQHyTUAmNTdAJjUTkBs1b5xULTqpWnRSteiTX6ZmAjKpeQLIjZoJyBNAJjU3am6A3AC5AXKj5kbNBGTTSdWik6pFJ1WLPlkG5AbIDZBNQCY1T6h5A8ik5g0gTwC5UbPppGrRSdWik6pFnyxTcwNkUjMBmdQ8AeQGyBNqJiCTmhs1N0AmNZvU3ACZ1LxxUrXopGrRSdUi/JEXgNyouQHyhJongExqboDcqLkBcqPmm4DcqPmmk6pFJ1WLTqoW4Y/8IiCTmgnIpGYCMqm5ATKpeQLIjZongExqboDcqLkB8oSaN06qFp1ULTqpWoQ/sgjIG2omIE+oeQPIpOYJIP9NaiYgT6h546Rq0UnVopOqRZ8sU/MEkAnIpOYGyA2QJ9RMQJ5QcwPkRs0NkCfUTEAmNZtOqhadVC06qVqEP7IIyBtqJiA3aiYgk5oJyBtqngDyhpobIDdqJiCTmk0nVYtOqhadVC365MvU3ACZgExqJiATkEnNG2omIBOQSc2NmhsgTwCZ1ExAJiC/6aRq0UnVopOqRZ+8BGRSMwG5UXMD5EbNE2omIDdqJiBPAJnUTGomIG+omYBMar7ppGrRSdWik6pFn7yk5pvUTEAmIN8EZFIzAfkmIJOav+ykatFJ1aKTqkWfLAPyBJAn1PwmNROQTUCeAPKXnVQtOqladFK16JNlan4TkEnNBORGzQTkRs0EZFLzhpongDwB5EbNGydVi06qFp1ULfrkJSC/Sc0NkBs1E5BJzQRkE5AngExqnlAzAZnUbDqpWnRSteikatEny9RsAvKEmifUTEAmNROQN9RMQG7UbFLzTSdVi06qFp1ULfrky4A8oeYJNROQJ9RMap5QMwGZ1DwB5A01E5An1LxxUrXopGrRSdWiT/5xQG7UvAHkBsgNkEnNpGYCMqm5ATIBmdTcANl0UrXopGrRSdWiT/7PAHlDzRNAJiCTmieATGpugExqvumkatFJ1aKTqkWffJmab1KzSc0NkEnNE2omIJOaN4BMaiYgk5pNJ1WLTqoWnVQt+mQZkN8E5Ak1E5AbIJuAvKHmLzupWnRSteikahH+SNWSk6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatF/AFQaCHMHGHbTAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/480e1e0c">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATCSURBVO3BQY4cSRIEQdNA/f/Lujz6KYBEevU0uSaCf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXok5eA/CQ1TwCZ1DwBZFLzBJAn1ExAfpKaN06qFp1ULTqpWvTJMjWbgLyh5gbIpGZSMwGZ1Nyo2aRmE5BNJ1WLTqoWnVQt+uTLgDyh5gkgk5oJyKTmJwF5Qs0TQJ5Q800nVYtOqhadVC365B8DZFIzAbkBcqNmAnKjZgIyqfmXnFQtOqladFK16JN/jJo31Dyh5gbI/5OTqkUnVYtOqhZ98mVqfhKQSc0bQG7U3Ki5ATKpeULNb3JSteikatFJ1aJPlgH5L6mZgExqJiBPqJmATGomIJOaN4D8ZidVi06qFp1ULfrkJTW/CZBJzQTkDSBPqJmATGpu1PxNTqoWnVQtOqlahH/kBSCTmgnIJjVvAHlCzQTkCTU3QCY1E5BNar7ppGrRSdWik6pFn/wwNROQGzUTkBs1b6iZgExq3gByA+QNNU8AmdS8cVK16KRq0UnVIvwjLwB5Qs0NkDfUTEAmNROQSc0NkCfU3AC5UfM3OaladFK16KRq0SdfpuYGyKTmCSA3aiYgTwCZ1ExAJjUTkDeA3KiZgExqJiCTmk0nVYtOqhadVC36ZJmaJ9RMQG7U3AB5A8gTaiYgN2p+EpBJzTedVC06qVp0UrXokx8GZFJzo+YJNROQSc1/CcgbaiYgk5ongExq3jipWnRSteikahH+kUVAvknNDZAbNU8AeUPNDZBJzQ2QSc0E5EbNN51ULTqpWnRSteiTZWqeAHKj5gbIb6LmBsgmIJOaGyCTmk0nVYtOqhadVC365CUgm9RMQCY1T6iZgExqJiCTmgnIpGYCMqm5UfOGmgnIjZpvOqladFK16KRq0SfL1DwBZAIyqdmk5kbNBGRSMwGZ1ExAboBMaiYgN0AmNROQGyCTmjdOqhadVC06qVr0yQ8DcqNmAvIGkEnNE2omIJOaJ9TcAJnUTEAmNW+o2XRSteikatFJ1aJPvgzIjZoJyKRmAjKpuQHyTUAmNZOaGyCTmgnIDZBJzaRmAjKp2XRSteikatFJ1aJPfjkgk5oJyI2aCcgbam6ATGomIDdANgG5ATKpeeOkatFJ1aKTqkX4R/5iQCY1E5An1DwBZFLzBJBJzRNANql546Rq0UnVopOqRZ+8BOQnqZnUbAIyqZmA3ADZBGRS84aabzqpWnRSteikatEny9RsAnID5Ak1TwCZ1DwB5A01T6i5AXKj5o2TqkUnVYtOqhZ98mVAnlDzm6iZgExqJiCTmhsgE5BNQH7SSdWik6pFJ1WLPvnHqbkBMqm5UTMBmdS8oeYGyKRmAvJfOqladFK16KRq0Sf/GDVvAPlJam6A3AB5Q82mk6pFJ1WLTqoWffJlar5JzQTkRs2NmgnIjZobIJOaCcikZlIzAZnUTEAmNROQbzqpWnRSteikatEny4D8JCCTmgnIjZoJyKTmCSCTmgnIpGYCMqm5AXIDZFLzTSdVi06qFp1ULcI/UrXkpGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWvQ/o54vNBwrWcEAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
