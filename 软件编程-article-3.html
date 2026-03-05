@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>我们如何为 GitHub Enterprise Server 重建高可用搜索架构</title>
+        <title>关于 Claude Code 和 Opus 4.6 性能的反馈</title>
         <style>
             body {
                 padding: 12px;
@@ -15,78 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>我们如何为 GitHub Enterprise Server 重建高可用搜索架构</h2>
-        <p>3/3/2026, 6:45:12 PM</p>
+        <h2>关于 Claude Code 和 Opus 4.6 性能的反馈</h2>
+        <p>3/4/2026, 9:27:51 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub Enterprise Server 将其搜索架构从单一的扩展 Elasticsearch 集群迁移到通过跨集群复制 (CCR) 同步的独立集群，以增强高可用性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Levelsio 报告称 Claude Code 的智能化程度和实用性显著下降，迫使他回归手动编码。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 GitHub Enterprise Server (GHES) 为解决其搜索组件中长期存在的高可用性 (HA) 问题而进行的重大架构转变。此前，GHES 使用跨越主节点和副本节点的单一 Elasticsearch 集群，如果主分片在维护期间迁移到只读副本，往往会导致系统锁定或数据损坏。为了解决这个问题，GitHub 工程团队转向了领导者/跟随者模型，其中每个 GHES 实例都作为一个独立的单节点 Elasticsearch 集群运行。通过利用 Elasticsearch 的跨集群复制 (CCR)，数据在 Lucene 段级别进行持久化复制。文章解释了此次迁移的技术挑战，包括需要自定义引导逻辑和自动跟随策略，以管理原生 CCR 之外的索引生命周期。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">之前的“扩展集群”架构由于不受控的分片移动导致了可用性风险。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Elasticsearch 可能会将主分片移动到只读副本节点，在维护期间创建循环依赖，即副本等待一个健康的集群，而集群在没有副本的情况下无法恢复。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">为每个 GHES 实例转换到独立的单节点集群消除了循环依赖。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过转向具有独立集群的领导者/跟随者模型，GitHub 确保关键数据保留在主节点上，并且对一个节点的维护不会锁定整个搜索系统。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Elasticsearch 跨集群复制 (CCR) 提供了一种在 Lucene 段级别复制数据的原生且持久的方式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CCR 在数据持久化到 Lucene 段后进行复制，确保只有持久存储的信息被复制，这符合 GitHub Enterprise Server 根深蒂固的领导者/跟随者模式。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">需要自定义编排来管理完整的索引生命周期，包括引导和自动跟随策略。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 CCR 仅处理文档复制，GitHub 设计了用于故障转移、索引删除和升级的自定义工作流，以确保现有和未来的索引在节点之间得到正确管理。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果他们没有严格按照正确的顺序执行维护或升级步骤，搜索索引可能会损坏并需要修复，或者可能会被锁定并在升级期间引发问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Elasticsearch 可能会将主分片（负责接收/验证写入）移动到副本。如果该副本随后因维护而关闭，GitHub Enterprise Server 可能会陷入锁定状态。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过这种模式，我们正转向使用多个‘单节点’ Elasticsearch 集群。现在，每个 Enterprise Server 实例都将作为独立的单节点 Elasticsearch 集群运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Elasticsearch 仅处理文档复制，而我们负责索引生命周期的其余部分。</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者表达了对 Claude Code（提到 Opus 4.6 版本）的挫败感，称其变得非常“愚笨”，无法处理以前能轻松解决的任务。这是关于知名开发者在使用 AI 编程助手时，感知到模型性能退化或表现不一致的一个典型案例。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">81</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The GitHub Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">David Tippett</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">@levelsio(@levelsio)</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">@levelsio</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">978</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">111</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高可用性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Elasticsearch</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Enterprise</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 退化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件开发</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/22b388d1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/status/2029307862493618290" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/22b388d1">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATDSURBVO3BQY4bSRAEwfAC//9lXx3zVECjk6PRIszwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAvKEmgnIJjUTkEnNE0B+kpo3TqoWnVQtOqla9MkyNZuA3KiZgExqJiCTmhsgk5on1ExAbtTcqNkEZNNJ1aKTqkUnVYs++TIgT6jZBGRS84SaGyA3ar4JyBNqvumkatFJ1aKTqkWf/OOAPAHkCTUTkEnNDZAbNf8nJ1WLTqoWnVQt+uR/Rs0TQH6SmgnIpOZfdlK16KRq0UnVok++TM1vAuRGzQRkUvOEmgnIpOYNNb/JSdWik6pFJ1WLPlkG5DcBMqmZgLwBZFIzAZnUTEAmNTdAfrOTqkUnVYtOqhZ98pKafwmQSc0mIDdAJjU3av4lJ1WLTqoWnVQt+uQlIJOaJ4BMaiYgTwCZ1NwAmdRsUjMBuQGySc0NkEnNGydVi06qFp1ULcI/sgjIpOYGyKTmBsikZgJyo+YNIJOabwLyk9S8cVK16KRq0UnVok++DMikZlJzA+QJNROQvwnIpGYCsknNE0A2nVQtOqladFK16JOXgExqJiBvqHkCyKRmAjKpeULNDZBJzQTkCTU3QCYgk5oJyDedVC06qVp0UrXokx8G5EbNBOQJNROQSc0EZFIzAblRcwPkm9S8oWbTSdWik6pFJ1WLPvkyNROQGyCTmr9JzQTkDTVPAJnUTEDeADKpeeOkatFJ1aKTqkWfLAPyhJoJyARkUjMBuVHzk9RMQG6ATGq+Sc0EZNNJ1aKTqkUnVYs+eUnNG0Bu1ExAJjW/CZAbIJvUPAHkm06qFp1ULTqpWvTJMiCTmhs1N0AmNROQN9Q8oeYJNTdAJiCTmgnIpOYNNZtOqhadVC06qVqEf+QFIDdqJiCTmjeA3KiZgHyTmgnIpOYGyCY1E5AbNW+cVC06qVp0UrUI/8hfBGRSMwG5UTMBeULNDZA31DwB5EbNBGRSMwGZ1ExAJjVvnFQtOqladFK1CP/IFwGZ1ExAbtRMQJ5QMwGZ1DwBZFIzAblRMwGZ1HwTkBs1b5xULTqpWnRSteiTl4A8AWRScwPkDSCTmieAvKHmCSCb1ExqJiCbTqoWnVQtOqla9MlLar5JzQ2QGzUTkEnNBGRSMwGZgExqboDcqHkCyKTmbzqpWnRSteikatEnLwH5SWreUDMBmdQ8oeabgExqboDcqPmmk6pFJ1WLTqoWfbJMzSYgN2pugExqngAyqZmA3Kh5Q80Tam6ATGo2nVQtOqladFK16JMvA/KEmieATGomNU8AeULNBOQNIG8AmdRMaiYgk5o3TqoWnVQtOqla9Mk/Ts0E5EbNpOYGyATkRs0TaiYgk5oJyKTmNzmpWnRSteikatEn/3NqJiCTmgnIE2omIDdqbtTcqLkB8jedVC06qVp0UrXoky9T85PU/CQgN2pugExqJiCTmgnIjZoJyDedVC06qVp0UrXok2VAfhKQSc0baiYgN2omIJvUTEBu1DyhZtNJ1aKTqkUnVYvwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9B2awLzSzaN3fAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/status/2029307862493618290">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
