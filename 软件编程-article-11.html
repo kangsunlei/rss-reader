@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>OpenAI 开源 Symphony：从 AI 编程助手进化为自主开发智能体</title>
+        <title>Kubernetes 自愈机制是如何工作的？通过破坏真实集群来理解自愈</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,81 @@
         </style>
     </head>
     <body>
-        <h2>OpenAI 开源 Symphony：从 AI 编程助手进化为自主开发智能体</h2>
-        <p>3/5/2026, 10:00:03 AM</p>
+        <h2>Kubernetes 自愈机制是如何工作的？通过破坏真实集群来理解自愈</h2>
+        <p>3/6/2026, 2:43:26 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">OpenAI 开源 Symphony 项目，通过智能体自主监控看板并完成开发全流程，实现从“盯着 AI 写代码”到“管理 AI 任务”的范式转变。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">一个动手实践教程和开源实验室（KubeLab），通过在真实的 3 节点集群中故意制造七种常见故障场景，来教授 Kubernetes 的自愈机制。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">OpenAI 推出的 Symphony 是一个旨在实现软件开发流程自动化的开源项目。它针对“人工需持续监督 AI 编程”的痛点，提出了一种新思路：让 AI 智能体自主监控项目看板任务，自动执行开发工作，并提供包含 CI 状态、代码审查反馈、复杂度分析及演示视频在内的“工作证明”。该系统支持安全的代码合并，允许工程师从繁琐的代码监工转变为高层级的任务管理者。项目提供了完整的技术规范和 Elixir 参考实现，是 AI 智能体在工程领域落地的里程碑。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 KubeLab，这是一个旨在弥合 Kubernetes 理论知识与实际排错经验之间鸿沟的模拟环境。它引导读者完成七个真实的故障模拟，包括 Pod 删除、节点驱逐、CPU 限制（Throttling）、OOMKills 和数据库故障。针对每个场景，作者解释了底层的 Kubernetes 机制（如 ReplicaSets、cgroups 和 CFS 调度器），识别了默认设置失效的常见“生产陷阱”，并提供了具体的修复方案，如 PodDisruptionBudgets 和反亲和性规则。该指南还强调了可观测性，教授读者如何解读 Grafana 中的信号，并使用特定的 kubectl 命令在压力巨大的生产事故中诊断问题。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">动手进行故障模拟对于工程师弥合 K8s 理论知识与生产级排错技能之间的差距至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用 KubeLab 触发真实故障，工程师可以培养关键的肌肉记忆，从而在压力巨大的事故中识别出 OOMKills 或级联故障等模式，确保他们能够有效应对凌晨 3 点的生产告警。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">CPU 限制通常会触发 Linux CFS 调度器在进程超过分配的时间片时对其进行限制，从而引入“隐形”延迟。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 内核通过在周期的剩余时间内冻结容器的 cgroup 来强制执行限制，这使得应用程序看起来很慢，即使 kubectl top 显示的使用率低于上限，这在调试过程中经常误导开发人员。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">内存限制由 Linux 内核 OOM killer 强制执行，它会使用 SIGKILL 和退出代码 137 终止进程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 SIGKILL 无法由应用程序处理，它会绕过优雅关闭和 preStop 钩子，可能导致交易丢失和静默重启循环，如果没有基于重启率的适当告警，这些问题将难以察觉。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">就绪探针必须经过精心设计，以避免在数据库等外部依赖项暂时不可用时发生级联故障。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 如果探针检查外部服务，单个依赖项故障可能导致 Kubernetes 将所有健康的 Pod 从服务轮询中移除，从而将微小的延迟演变为整个应用程序的停机，而不是允许优雅降级。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">实现真正的高可用性需要将副本数量与 Pod 反亲和性以及 PodDisruptionBudgets 相结合，以在节点级故障中幸存。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 如果调度器将所有 Pod 放置在同一个物理节点上，仅设置多个副本是不够的；反亲和性可确保 Pod 分布在集群中，以便在维护或硬件问题期间维持服务。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我注意到许多在生产环境中运行 Kubernetes 的工程师从未真正观察过它的自愈过程……而这正是凌晨 3 点的事故找上门的时候。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Pod 变慢不是因为它坏了，而是因为它在 80% 的时间里都被冻结了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">健康的 Pod 很少重启。一小时内多次重启通常意味着容器达到了内存限制，正在经历死亡并重新启动的循环。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">就绪探针应该只测试 Pod 自身控制的内容……永远不要将就绪状态与外部服务的可用性挂钩。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种肌肉记忆（事件、端点、重启计数器）正是你在凌晨 3 点出现问题时所依赖的东西。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHubDaily(@GitHub_Daily)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHubDaily</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">354</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Osomudeya Zudonu</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">14 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3448</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Symphony</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自主开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DevOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SRE</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自愈</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2029497156554342760" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/80714945" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2029497156554342760">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/80714945">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATLSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyBvqNkE5Ak1E5DfpOaNk6pFJ1WLTqoWfbJMzSYgT6h5A8gbaiY1m9RsArLppGrRSdWik6pFn3wZkCfUPAFkUnMD5EbNBGRS8wSQJ9Q8AeQJNd90UrXopGrRSdWiT/5xQCY1N0AmNROQSc0EZFIzAZnU/EtOqhadVC06qVr0yT9OzQTkRs2Nmhs1E5D/JydVi06qFp1ULfrky9T8l4C8AeRGzY2aGyCTmifU/ElOqhadVC06qVr0yTIgfzI1E5An1ExAJjUTkEnNG0D+ZCdVi06qFp1ULfrkJTV/MjUTkDeATGpu1ExAJjU3av4mJ1WLTqoWnVQtwh95AcikZgKySc0NkEnNDZBJzQTkDTU3QCY1E5BNar7ppGrRSdWik6pFn7yk5gk1E5AbNROQSc2k5jepeQLIDZA31DwBZFLzxknVopOqRSdVi/BH/iBAnlAzAblRcwNkk5obIDdq/iYnVYtOqhadVC365CUgk5oJyBNqboDcqJmA3AC5UXMDZFIzAXkDyI2aCcikZgIyqdl0UrXopGrRSdWiT5YBeULNDZAbIJvUPKFmAnKj5jcBmdR800nVopOqRSdViz55Sc0EZFIzAZmA3Ki5ATKpuQHyXwLyhpoJyKTmCSCTmjdOqhadVC06qVr0yUtAJjUTkDeAbFIzAXkCyBNqboBMam6ATGomIDdqJjWbTqoWnVQtOqla9MlLam7UPAFkUnMD5AbIjZpNam6AbAIyqbkBMqnZdFK16KRq0UnVok+WAblRc6NmAvIEkCeATGqeUDMBmdTcqHlDzQTkRs03nVQtOqladFK1CH/kBSA3aiYgk5ongPwmNTdAJjUTkCfUTECeUDMBmdRMQCY1b5xULTqpWnRSteiTZWo2AZnUPAHkDSA3ap5QcwNkUjMBmdS8oWbTSdWik6pFJ1WL8EdeADKpmYA8oWYTkBs1E5BJzQTkRs0TQCY1E5An1NwAmdRsOqladFK16KRqEf7IC0AmNTdA3lBzA+RGzRNAJjU3QCY1E5BvUjMBeULNGydVi06qFp1ULcIf+YsBmdRMQCY1E5BJzRNAJjVPAJnUPAFkk5o3TqoWnVQtOqla9MlLQH6TmknNBOQGyKTmCSA3QDYBmdS8oeabTqoWnVQtOqla9MkyNZuA3ACZ1ExA3gAyqXkCyBtqnlBzA+RGzRsnVYtOqhadVC365MuAPKHmm9Q8oWYCMqmZgExqboBMQDYBuVGz6aRq0UnVopOqRZ/8Y4DcALlRMwGZ1ExAJjVvqLkBMqmZgDwBZFLzxknVopOqRSdViz75x6iZgGwCsknNDZAbIG+o2XRSteikatFJ1aJPvkzNN6mZgNyomYC8oeYGyKRmAjKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/CcikZgJyo2YCcqPmBsikZgIyqZmATGpugNwAmdR800nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4HuWE3MsSKpt4AAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

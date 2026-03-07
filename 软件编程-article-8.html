@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>预防 IP 欺骗与处理虚假滥用报告</title>
+        <title>如何自建邮件服务器</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,81 @@
         </style>
     </head>
     <body>
-        <h2>预防 IP 欺骗与处理虚假滥用报告</h2>
-        <p>3/5/2026, 1:35:49 PM</p>
+        <h2>如何自建邮件服务器</h2>
+        <p>3/6/2026, 4:10:41 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">用户寻求关于预防 IP 欺骗的技术建议，并询问托管服务商是否能核实基于伪造数据包的滥用报告的真实性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">一份关于如何使用 Postfix 和 Docker 自建简化版 SMTP 服务器的全面实用指南，重点在于通过 DNS、SPF、DKIM 和 DMARC 掌握现代邮件送达率。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">在遭受了一次针对 22 端口查询的 IP 欺骗反射攻击后（如引用推文所述），@levelsio 正在咨询预防 IP 欺骗的技术手段。他还提出了一个关键的基础设施问题：托管服务商在处理自动化滥用报告时，能否区分真实流量和伪造流量，因为这类报告往往会导致受害者服务中断。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文为开发者提供了一份详细路线图，旨在通过自建邮件基础设施摆脱“大厂”邮件服务商。作者提出了一种“非对称”设计：使用自建的 Postfix 服务器发送事务性邮件，同时利用域名注册商的转发功能接收邮件，从而避免了 IMAP 和邮箱管理的复杂性。指南涵盖了固定 IP 和 25 端口访问等关键基础设施要求，提供了使用 Docker 的容器化部署策略，并详细解释了反向 DNS、SPF、DKIM 和 DMARC 等核心认证协议的配置，以确保高送达率和发件人信誉。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">采用非对称 SMTP 架构以简化自建需求。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过仅使用自建服务器发送邮件并依靠注册商转发接收邮件，可以省去对 IMAP 和复杂邮箱管理的需求，从而显著减少攻击面。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">获取拥有固定 IP 的 VPS，并确保服务商未封禁 25 端口。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 住宅 IP 通常会被列入黑名单或是动态 IP，不适合用于邮件服务。从 VPS 提供商处获取干净、静态的 IP 对于长期建立可靠的发件人信誉至关重要。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">实现 DNS 和反向 DNS 的“完美闭环”以确保服务器合法性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 域名的 A 记录必须指向服务器 IP，且该 IP 的 PTR 记录必须指向该域名，这满足了主流邮件服务商过滤垃圾邮件的主要检查项。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">配置 SPF、DKIM 和 DMARC 以验证外发邮件并防止欺骗。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些协议使用基于 DNS 的授权和加密签名来证明发件人身份，并确保 From 标头与经过身份验证的域名一致，这对于绕过现代垃圾邮件过滤器至关重要。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">需理解由于信誉机制的存在，技术上的完美配置并不意味着能立即获得高送达率。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使配置完美，新服务器也经常面临“灰名单”或退信。与 Google 等主流服务商建立信任需要耐心，并在数天或数周内保持持续、合法的发送行为。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于想到又要增加一个对大厂的依赖就令人沮丧，我决定违背常规建议，自己动手搭建邮件服务器。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">发送邮件真正需要的其实只有 SMTP。IMAP 是用来访问邮件的，而不是发送邮件。所以从一开始我就决定跳过 IMAP。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在任何情况下，都不要让 Postfix 容器的 587 端口监听连接到公网的网络接口，因为那将是一个巨大的安全风险。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DMARC 通过确保 From 地址来自经过 DKIM 和 SPF 验证的同一域名来解决这个问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 是助手，而不是自主可靠的程序员。我是高级开发人员；LLM 的作用是加速我的工作，而不是取代我的判断。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">@levelsio(@levelsio)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">@levelsio</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Miguel Grinberg's Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Miguel Grinberg</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">127</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5334</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IP 欺骗</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">反射攻击</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">托管基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DDoS 防护</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SMTP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Postfix</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Docker</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">邮件送达率</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DNS 配置</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2029551458023051324" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/2facdf2d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2029551458023051324">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2facdf2d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS3SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GqSsyaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCcgmNU8AmdRMQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8oaaN4BMaiY1E5AbNROQJ9RsArLppGrRSdWik6pFn3wZkCfUPKFmAjIB2QRkUjOp+U1AnlDzTSdVi06qFp1ULfrkHwfkRs0TQN4AMqmZgExq/ktOqhadVC06qVr0yT9OzRNAbtRMQG6AvAFkUvMvO6ladFK16KRq0SdfpuZPAvKGmhsgk5oJyDep+ZucVC06qVp0UrXok2VAfhOQSc2NmgnIDZBJzRtqJiBPAPmbnVQtOqladFK16JOX1PzN1ExAnlAzAZnUTEBugDyh5l9yUrXopGrRSdWiT14CMqmZgNyomYA8oWYCMqmZ1DwBZFLzm4BMam6ATGomIDdq3jipWnRSteikahH+yAtANql5Asik5gbIpOY3AfkmNU8AmdS8cVK16KRq0UnVok9eUnMD5EbNBOQJNTdAboBMap4AMqmZgExq3gDyBJAbNZtOqhadVC06qVr0yUtAJjVPALlRcwPkRs0NkAnIpGYCMqm5UXMDZFKzSc0NkEnNGydVi06qFp1ULcIfWQTkDTUTkEnNDZBJzQRkUjMBuVFzA+RGzTcBuVHzTSdVi06qFp1ULcIfWQRkUjMBmdQ8AWRS801AbtQ8AWRScwPkRs0NkCfUvHFSteikatFJ1aJPXgIyqdkEZFLzBJAbNU+ouQHyBJA3gExq/qSTqkUnVYtOqhbhjywCcqPmm4DcqJmATGpugNyouQFyo+YGyI2aGyCTmk0nVYtOqhadVC365A8DMqmZgExqJiCTmifUTEBu1DwB5Akgk5pJzQRkAjKp+U0nVYtOqhadVC3CH/lFQJ5Q8waQGzUTkCfUvAHkRs0EZFIzAXlCzaaTqkUnVYtOqhZ98hKQSc0Tam6A3Kh5Qs0TaiYgTwCZ1ExqJiBvqJmATGq+6aRq0UnVopOqRZ+8pOYGyBtqJiATkEnNDZAbNROQSc0E5JuATGr+ZidVi06qFp1ULfpkGZBJzQ2QN9RMQJ5Q8wSQTUCeAPI3O6ladFK16KRqEf7IPwzIjZoJyI2aJ4BMap4AMql5AsgmNW+cVC06qVp0UrXok5eA/CY1TwCZ1PxJQJ4AMql5Qs0EZFKz6aRq0UnVopOqRZ8sU7MJyBNqboBMaiYgk5oJyBtqJiA3ajap+aaTqkUnVYtOqhZ98mVAnlDzhJo3gExqnlAzAZnUPAHkDTUTkCfUvHFSteikatFJ1aJP/nFAJjUTkDeA3AC5ATKpmdRMQCY1N0AmIJOaGyCbTqoWnVQtOqla9Mn/OTU3at4AMgGZ1DwBZFJzA2RS800nVYtOqhadVC365MvUfJOaCcikZhOQSc0TaiYgk5o3gExqJiCTmk0nVYtOqhadVC36ZBmQ3wTkCSBPqNkE5A01f7OTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9D2vtFk1W96qqAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

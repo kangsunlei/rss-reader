@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>关于伪造大规模扫描滥用攻击的技术资源</title>
+        <title>当 ReadDirectoryChangesW 报告发生删除时，如何获取有关已删除对象的更多信息？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,75 @@
         </style>
     </head>
     <body>
-        <h2>关于伪造大规模扫描滥用攻击的技术资源</h2>
-        <p>3/5/2026, 2:11:20 PM</p>
+        <h2>当 ReadDirectoryChangesW 报告发生删除时，如何获取有关已删除对象的更多信息？</h2>
+        <p>3/6/2026, 5:43:38 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一份后续资源，解释了伪造大规模扫描滥用的机制及其对服务器所有者的影响。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了如何使用 ReadDirectoryChangesExW 获取已删除文件的元数据，从而解决标准 Win32 目录监控中固有的竞态条件和局限性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这条推文提供了一个详细技术博客的链接，解释了“伪造大规模扫描滥用”现象。文中描述了攻击者如何在进行大规模网络扫描时伪造受害者的 IP 地址，导致受害者收到大量来自第三方网络的滥用投诉。这直接解释了前一条推文中提到的问题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 Windows 系统编程中的一个常见挑战：如何在文件被删除后获取其信息。标准的 ReadDirectoryChangesW 函数仅提供被删除项的名称，由于文件已不存在，开发人员无法查询其属性或大小。虽然许多开发人员尝试通过维护目录的内存缓存来解决此问题，但这种方法容易受到竞态条件的影响——特别是当文件被快速创建又立即删除时。作者强调 ReadDirectoryChangesExW 是更好的解决方案。通过使用 ReadDirectoryNotifyExtendedInformation 标志，该 API 会返回一个 FILE_NOTIFY_EXTENDED_INFORMATION 结构，其中包含事件发生时文件的属性和大小，从而确保即使对于已不存在的项目也能进行准确跟踪。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">标准的 ReadDirectoryChangesW 仅提供已删除项的名称，缺少被删除对象的属性或文件大小等关键元数据。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当文件被删除时，通知是在删除完成后发出的，这使得无法使用 GetFileAttributesEx 等标准函数查询文件属性，因为该项在磁盘上已不存在。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">在内存中维护目录结构的缓存是实时应用中跟踪文件更改的一种常见但有缺陷的权变方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发人员通常使用 FindFirstFile 构建缓存并进行增量更新，但这种方法会遇到竞态条件，即文件可能在应用程序成功查询其属性之前就被添加并删除了。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">ReadDirectoryChangesExW 函数通过在监控过程中直接在事件结构中提供扩展通知信息，提供了一个健壮的解决方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过请求 ReadDirectoryNotifyExtendedInformation，开发人员可以接收到 FILE_NOTIFY_EXTENDED_INFORMATION 结构，其中包含删除或添加发生瞬间的文件属性和逻辑大小，从而有效地避开了外部查询或复杂缓存的需求。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ReadDirectoryChangesW 函数无法恢复有关已删除项的信息。你得到的只有该项的名称。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果一个项被添加后立即被删除，那么当你调用 GetFileAttributes 时，它已经不在那里了，所以你实际上并不知道它是什么。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">幸运的是，还有 ReadDirectoryChangesExW。如果你请求 ReadDirectoryNotifyExtendedInformation，你就会得到一系列 FILE_NOTIFY_EXTENDED_INFORMATION 结构……</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这些信息在添加和删除时都会提供，因此你只需查看 FILE_ACTION_REMOVED 上的 FileAttributes，即可判断它是文件还是文件夹。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">@levelsio(@levelsio)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">@levelsio</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Old New Thing</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Raymond Chen</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">57</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">346</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">滥用报告</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IP 欺骗</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全研究</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Win32 API</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文件系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ReadDirectoryChangesW</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Windows 开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">竞态条件</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2029560394562351152" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/81ddb533" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2029560394562351152">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/81ddb533">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATMSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA+QNNU8AmdRMQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8oaaN4C8oWaTmk1ANp1ULTqpWnRSteiTLwPyhJongExqboBMam7UTEAmNTdAnlDzBJAn1HzTSdWik6pFJ1WLPvnLAZnUTEDeAHKjZgIyqfmbnFQtOqladFK16JO/DJBJzQRkUvNNQP5PTqoWnVQtOqla9MmXqfk3AXkDyI2aGzU3QCY1T6j5k5xULTqpWnRSteiTZUD+TWomIJOaCcik5kbNBGRSMwGZ1LwB5E92UrXopGrRSdWiT15S8zdTMwGZ1NyomYBMam7U/JecVC06qVp0UrUIf+QFIJOaCcgmNW8AmdRMQG7UTEBu1NwAmdRMQDap+aaTqkUnVYtOqhbhj3wRkBs1bwDZpOabgHyTmieATGreOKladFK16KRqEf7IC0AmNTdA3lAzAXlCzQ2QSc0E5Ak1N0Bu1PyXnFQtOqladFK1CH/kBSA3am6A3KiZgExqJiCTmgnIpOYNIJOaCcg3qZmATGomIJOaTSdVi06qFp1ULfpkmZoJyKTmRs0EZFLzhppNaiYgN2p+E5BJzTedVC06qVp0UrXok5fUfJOaCciNmk1AJjVvAHlDzQRkUvMEkEnNGydVi06qFp1ULfrkDwPkDSCTmgnIpOZGzQTkCTU3QCY1N0AmNROQGzWTmk0nVYtOqhadVC36ZBmQSc2NmgnIpOYNIJOab1JzA2QTkEnNDZBJzaaTqkUnVYtOqhZ98hKQGyA3aiY1E5AbNROQGyCTmjfUTEAmNTdq3lAzAblR800nVYtOqhadVC365JepmYBMaiY1N0AmNTdAboBMaiY1E5BJzQTkBsikZgJyA2RSMwG5ATKpeeOkatFJ1aKTqkWfLFMzAZmA3AB5Qs0TaiYgN0Bu1Dyh5gbIpGYCMql5Q82mk6pFJ1WLTqoWffIvU/MEkCeAPKHmBsgEZFIzqbkBMqmZgNwAmdRMaiYgk5pNJ1WLTqoWnVQt+uSXqZmATGomIDdAJjXfpOYGyKRmAnIDZBOQGyCTmjdOqhadVC06qVqEP/IfBmRSMwGZ1DwBZFIzAZnUPAFkUvMEkE1q3jipWnRSteikatEnLwH5TWomNTdqJiA3am6A3ADZBGRS84aabzqpWnRSteikatEny9RsAnID5DepeQLIG2qeUPMEkEnNGydVi06qFp1ULfrky4A8oeab1ExAbtRMQCY1E5BJzQ2QCcgmIJOaSc2mk6pFJ1WLTqoWffI/p+YJNROQSc0bam6ATGomIDdAbtS8cVK16KRq0UnVok/+MmomIBOQP4maGyA3QN5Qs+mkatFJ1aKTqkWffJmab1LzhJoJyBtqboBMaiYgk5pJzQRkUjMBmdRMQL7ppGrRSdWik6pFnywD8puA3KiZgExqJiA3am6ATGomIJOaCcik5gbIDZBJzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXoH5WeRR6TL4MUAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
