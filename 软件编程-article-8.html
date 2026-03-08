@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何自建邮件服务器</title>
+        <title>AI 生成 Rust 版 SQLite 重写项目的警示与思考</title>
         <style>
             body {
                 padding: 12px;
@@ -15,81 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>如何自建邮件服务器</h2>
-        <p>3/6/2026, 4:10:41 PM</p>
+        <h2>AI 生成 Rust 版 SQLite 重写项目的警示与思考</h2>
+        <p>3/7/2026, 1:59:43 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一份关于如何使用 Postfix 和 Docker 自建简化版 SMTP 服务器的全面实用指南，重点在于通过 DNS、SPF、DKIM 和 DMARC 掌握现代邮件送达率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">讨论了一个由 AI 生成但性能极差的 Rust 版 SQLite 项目，强调了 AI 生成代码中“看似合理”与“实际正确/高效”之间的差距。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文为开发者提供了一份详细路线图，旨在通过自建邮件基础设施摆脱“大厂”邮件服务商。作者提出了一种“非对称”设计：使用自建的 Postfix 服务器发送事务性邮件，同时利用域名注册商的转发功能接收邮件，从而避免了 IMAP 和邮箱管理的复杂性。指南涵盖了固定 IP 和 25 端口访问等关键基础设施要求，提供了使用 Docker 的容器化部署策略，并详细解释了反向 DNS、SPF、DKIM 和 DMARC 等核心认证协议的配置，以确保高送达率和发件人信誉。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用非对称 SMTP 架构以简化自建需求。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过仅使用自建服务器发送邮件并依靠注册商转发接收邮件，可以省去对 IMAP 和复杂邮箱管理的需求，从而显著减少攻击面。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">获取拥有固定 IP 的 VPS，并确保服务商未封禁 25 端口。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 住宅 IP 通常会被列入黑名单或是动态 IP，不适合用于邮件服务。从 VPS 提供商处获取干净、静态的 IP 对于长期建立可靠的发件人信誉至关重要。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实现 DNS 和反向 DNS 的“完美闭环”以确保服务器合法性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 域名的 A 记录必须指向服务器 IP，且该 IP 的 PTR 记录必须指向该域名，这满足了主流邮件服务商过滤垃圾邮件的主要检查项。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">配置 SPF、DKIM 和 DMARC 以验证外发邮件并防止欺骗。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些协议使用基于 DNS 的授权和加密签名来证明发件人身份，并确保 From 标头与经过身份验证的域名一致，这对于绕过现代垃圾邮件过滤器至关重要。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">需理解由于信誉机制的存在，技术上的完美配置并不意味着能立即获得高送达率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 即使配置完美，新服务器也经常面临“灰名单”或退信。与 Google 等主流服务商建立信任需要耐心，并在数天或数周内保持持续、合法的发送行为。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于想到又要增加一个对大厂的依赖就令人沮丧，我决定违背常规建议，自己动手搭建邮件服务器。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">发送邮件真正需要的其实只有 SMTP。IMAP 是用来访问邮件的，而不是发送邮件。所以从一开始我就决定跳过 IMAP。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在任何情况下，都不要让 Postfix 容器的 587 端口监听连接到公网的网络接口，因为那将是一个巨大的安全风险。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DMARC 通过确保 From 地址来自经过 DKIM 和 SPF 验证的同一域名来解决这个问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 是助手，而不是自主可靠的程序员。我是高级开发人员；LLM 的作用是加速我的工作，而不是取代我的判断。</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">该推文分享了一个技术案例：一名开发者利用 LLM 完成了 SQLite 的 Rust 重写项目。尽管该项目在功能实现上看起来非常完备，但实际运行性能却极其糟糕。作者借此提醒开发者，AI 倾向于生成“看起来合理（Plausible）”的代码而非“正确（Correct）”的代码。在使用 AI 辅助编程时，开发者必须具备定义清晰验收标准的能力，并亲自验证代码的性能与正确性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Miguel Grinberg's Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Miguel Grinberg</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5334</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Viking(@vikingmute)</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Viking</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">161</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SMTP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Postfix</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Docker</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">邮件送达率</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DNS 配置</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Rust</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SQLite</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码质量</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/2facdf2d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/status/2030282246557782421" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/2facdf2d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS3SURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GqSsyaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaCcgmNU8AmdRMQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8oaaN4BMaiY1E5AbNROQJ9RsArLppGrRSdWik6pFn3wZkCfUPKFmAjIB2QRkUjOp+U1AnlDzTSdVi06qFp1ULfrkHwfkRs0TQN4AMqmZgExq/ktOqhadVC06qVr0yT9OzRNAbtRMQG6AvAFkUvMvO6ladFK16KRq0SdfpuZPAvKGmhsgk5oJyDep+ZucVC06qVp0UrXok2VAfhOQSc2NmgnIDZBJzRtqJiBPAPmbnVQtOqladFK16JOX1PzN1ExAnlAzAZnUTEBugDyh5l9yUrXopGrRSdWiT14CMqmZgNyomYA8oWYCMqmZ1DwBZFLzm4BMam6ATGomIDdq3jipWnRSteikahH+yAtANql5Asik5gbIpOY3AfkmNU8AmdS8cVK16KRq0UnVok9eUnMD5EbNBOQJNTdAboBMap4AMqmZgExq3gDyBJAbNZtOqhadVC06qVr0yUtAJjVPALlRcwPkRs0NkAnIpGYCMqm5UXMDZFKzSc0NkEnNGydVi06qFp1ULcIfWQTkDTUTkEnNDZBJzQRkUjMBuVFzA+RGzTcBuVHzTSdVi06qFp1ULcIfWQRkUjMBmdQ8AWRS801AbtQ8AWRScwPkRs0NkCfUvHFSteikatFJ1aJPXgIyqdkEZFLzBJAbNU+ouQHyBJA3gExq/qSTqkUnVYtOqhbhjywCcqPmm4DcqJmATGpugNyouQFyo+YGyI2aGyCTmk0nVYtOqhadVC365A8DMqmZgExqJiCTmifUTEBu1DwB5Akgk5pJzQRkAjKp+U0nVYtOqhadVC3CH/lFQJ5Q8waQGzUTkCfUvAHkRs0EZFIzAXlCzaaTqkUnVYtOqhZ98hKQSc0Tam6A3Kh5Qs0TaiYgTwCZ1ExqJiBvqJmATGq+6aRq0UnVopOqRZ+8pOYGyBtqJiATkEnNDZAbNROQSc0E5JuATGr+ZidVi06qFp1ULfpkGZBJzQ2QN9RMQJ5Q8wSQTUCeAPI3O6ladFK16KRqEf7IPwzIjZoJyI2aJ4BMap4AMql5AsgmNW+cVC06qVp0UrXok5eA/CY1TwCZ1PxJQJ4AMql5Qs0EZFKz6aRq0UnVopOqRZ8sU7MJyBNqboBMaiYgk5oJyBtqJiA3ajap+aaTqkUnVYtOqhZ98mVAnlDzhJo3gExqnlAzAZnUPAHkDTUTkCfUvHFSteikatFJ1aJP/nFAJjUTkDeA3AC5ATKpmdRMQCY1N0AmIJOaGyCbTqoWnVQtOqla9Mn/OTU3at4AMgGZ1DwBZFJzA2RS800nVYtOqhadVC365MvUfJOaCcikZhOQSc0TaiYgk5o3gExqJiCTmk0nVYtOqhadVC36ZBmQ3wTkCSBPqNkE5A01f7OTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9D2vtFk1W96qqAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/status/2030282246557782421">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
