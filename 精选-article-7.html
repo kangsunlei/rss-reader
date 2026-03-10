@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>构建 Cursor 的经验教训</title>
+        <title>玩转 OpenClaw，你需要了解的：核心架构、运作原理、Agent 部署步骤</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>构建 Cursor 的经验教训</h2>
-        <p>3/6/2026, 4:30:17 PM</p>
+        <h2>玩转 OpenClaw，你需要了解的：核心架构、运作原理、Agent 部署步骤</h2>
+        <p>3/9/2026, 9:27:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本次技术深度探讨研究了 Cursor 背后的工程设计，重点关注 RL 驱动的模型、大规模沙箱基础设施，以及从手动编码到 AI 意图管理的范式转变。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入解析了 AI Agent 框架 OpenClaw 的核心架构、内存管理机制及多智能体协作原理，并提供了详尽的硬件部署建议与实战案例。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文全面分析了 Cursor 团队构建其最新 AI 编程工具（特别是 Composer 1.5 模型）所采用的技术策略。文章详细介绍了如何利用大规模强化学习 (RL) 来实现高速交互和精确的语义搜索能力，而这些是现成模型所缺乏的。讨论还延伸到了编排数百万个用于训练的 CPU 沙箱所面临的巨大基础设施挑战，以及克服上下文窗口限制所需的“自我总结”机制。此外，它预测了软件工程的根本转变，即开发者将从编写语法转向管理能够自我测试和维护整个代码库的自主智能体。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章从开发者视角深度剖析了爆火的 AI Agent 框架 OpenClaw。作者指出 OpenClaw 的核心优势在于推动了 Agent 架构的共识，并天然支持多 Agent 协作。内容涵盖了从源码层面解读 Agent 的 8 个核心配置文件（如 AGENTS.md、SOUL.md）及其瞬态启动流程；详细解释了 Session 的懒加载、压缩（Compaction）与修剪（Pruning）等内存优化策略，以解决 LLM 上下文瓶颈。此外，文章对比了 sessions_send 与 sessions_spawn 两种通信机制的差异，并针对自部署场景给出了 Mac 硬件选型建议、安全风险预警以及包括 RAG tutor、本地文生图在内的多个 Good Case 分享。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">强化学习 (RL) 是高性能、交互式编程模型的主要驱动力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 除了标准的微调，大规模 RL 允许像 Composer 1.5 这样的模型掌握复杂的递归调用和精确的语义搜索，使其能够在几分钟内而非几小时内解决查询。</span>
+                        <strong style="color: #1e40af">OpenClaw 的核心价值在于建立了 Agent 架构的行业共识，降低了交流成本。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过标准化 Agent 的 skills 管理、身份赋予和 Session 管理，开发者可以跳过基础架构讨论，直接聚焦于具体落地案例和算法优化。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">扩展 AI 训练需要对数百万个 CPU 支持的沙箱进行定制化编排。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 标准云服务商通常无法支持大规模 RL 训练的强度，这迫使 AI 团队构建专有基础设施来管理和监控数百万个并发执行环境。</span>
+                        <strong style="color: #1e40af">Agent 采用瞬态实例机制，通过 8 个核心 Markdown 文件定义其完整人格与边界。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 并非长驻进程，而是随会话加载。AGENTS.md 定义能力，SOUL.md 注入灵魂，TOOLS.md 划定禁区，确保了配置的实时生效与灵活性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“自我总结”机制允许 AI 智能体有效绕过上下文窗口限制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过训练模型在 RL 过程中为“未来的自己”编写进度摘要，智能体即使在达到技术上下文限制时，也能在长程任务中保留关键信息。</span>
+                        <strong style="color: #1e40af">内存管理通过持久化压缩与内存级修剪策略，有效平衡了 LLM 的上下文消耗。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 系统会自动将旧消息总结为 summary 写入 JSONL 文件，并在发送给 LLM 前临时裁剪冗余的工具执行结果，防止挤爆 Context 窗口。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">软件工程正从手动代码编写演变为“意图管理”学科。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着 AI “解决”了编程中的语法和调试方面，工程师的角色转向高层设计，并利用管理直觉引导自主智能体完成复杂的工作流。</span>
+                        <strong style="color: #1e40af">多 Agent 协作应灵活运用同步通信与任务委派两种模式，并遵循扁平化管理原则。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> sessions_send 用于已存在会话的上下文同步，sessions_spawn 用于独立任务的委派。建议 Agent 间保持双向沟通，以提升整体交付质量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">未来的工程团队需要关注“面向模型的 DevX”，以确保智能体的自主性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了使智能体能够高效工作，公司必须专门为 AI 优化其开发环境，确保模型可以在没有人工帮助的情况下独立启动服务、运行测试并与应用程序交互。</span>
+                        <strong style="color: #1e40af">部署 OpenClaw 必须高度重视安全风险，建议采取严格的数据隔离与权限管控。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 Agent 具备文件操作权限，开发者应按“数据全公开”的最坏打算预估风险，避免将私密内容发送给机器人，并严防习惯性操作带来的疏忽。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心竞争力在于通过大规模强化学习 (RL) 进行极深度的训练。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正的变革在于“自我测试”能力……从“人类负责验证”转向“模型负责验证”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">编程作为一个步骤在六个月内就被“解决”了；工程师的角色将更像是使用直觉引导 AI 智能体的管理者。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该模型在三天内提交了数千段代码，展示了超越个人人类极限的执行力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">未来，整个代码库可以是“自动驾驶”的，AI 会自动为安全扫描、技术债和功能积压分配预算。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">OpenClaw 的优势在于共识的推广……我们再聊的话题就是：怎么保活、怎么进一步替换 rag 算法库、怎么部署多 Agent。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果选择部署 OpenClaw，就按最坏的打算(数据全 Open)去对待自己机器上的数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">要做和 AI 能力正交的事情……那些跟 AI 交互留下来的长期数据，都将会变成我们未来更好驱动 AI 的私人宝贵数据。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent 不是常驻进程，而是 per-session 的瞬态实例。每个对话都是一次完整的加载-执行-销毁循环。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在交付不及格的情况下，很容易就做出‘AI 能力还不行’的判断。实际大概率是因为 LLM 还不够 SOTA。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2656</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">43 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">10592</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">强化学习</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenClaw</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多智能体协同</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/video/1fcd0e1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            播放完整视频
+        <a href="https://www.bestblogs.dev/article/df3015cc" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/video/1fcd0e1">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAToSURBVO3BQY4cSRIEQdNA/f/Lujz6KYBEevU0uSaCf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXok5eA/CQ1TwCZ1DwBZFLzBJAn1ExAfpKaN06qFp1ULTqpWvTJMjWbgDwBZJOaCcik5kbNJjWbgGw6qVp0UrXopGrRJ18G5Ak1TwD5LwGZ1ExAnlDzBJAn1HzTSdWik6pFJ1WLPvnHqLkBMqmZgDyhZgIyqZmATGr+JSdVi06qFp1ULfrkHwNkUjOpmYBMap4AMqmZgPw/OaladFK16KRq0SdfpuYnqXlCzQ2QN9TcAJnUPKHmNzmpWnRSteikatEny4D8JkAmNROQSc2NmgnIDZBJzRtAfrOTqkUnVYtOqhZ98pKav5maN9TcqJmATGpu1PxNTqoWnVQtOqlahH/kBSCTmgnIJjWbgNyomYBMaiYgk5obIJOaCcgmNd90UrXopGrRSdWiT/5jaiYgk5obIE+omdTcAJnUTEAmNTdAboC8oeYJIJOaN06qFp1ULTqpWoR/5BcBcqPmBsikZgJyo+YGyKRmAjKpuQFyo+ZvclK16KRq0UnVok/+Y0AmNd+k5gkgk5oJyKRmAvIGkBs1E5BJzQRkUrPppGrRSdWik6pFn3wZkBs1E5A31NwAuVEzqZmATGomIDdqfhKQSc03nVQtOqladFK16JNfTs0TQCY1k5obIJOaSc0E5Akgb6iZgExqngAyqXnjpGrRSdWik6pFn7wEZFLzhpoJyBtAbtTcAHlDzQ2QSc0NkEnNBORGzaRm00nVopOqRSdViz755dRMQG7UTEBugNyomYBMap4AsgnIpOYGyKRm00nVopOqRSdViz5ZBmRSMwGZgExqJiBPAJnUvAHkBsiNmhs1b6iZgNyo+aaTqkUnVYtOqhZ9skzNBOQJIJOaJ4BsUvNNQCY1E5AbIJOaCcgNkEnNGydVi06qFp1ULfrklwNyo+YGyKTmDSBPqJnU3ACZ1ExAJjVvqNl0UrXopGrRSdWiT/5jaiYgk5oJyI2aCcgEZFJzA2RSMwGZ1ExAJjUTkEnNBOQGyKRmUjMBmdRsOqladFK16KRq0Sc/TM2NmgnIG2pugExqJjU3aiYgk5oJyA2QTUBugExq3jipWnRSteikahH+kb8YkBs1E5A31NwAuVEzAZnUPAFkk5o3TqoWnVQtOqlahH/kBSA/Sc0mIJvUTECeUDMBmdRMQJ5Q800nVYtOqhadVC36ZJmaTUBugExqJiCTmknNBGRScwPkRs0E5Ak1T6h5Asik5o2TqkUnVYtOqhZ98mVAnlDzBpA31ExAJjWTmgnIpGZSMwGZgGwCMqmZ1Gw6qVp0UrXopGrRJ/8YNROQGyCTmknNDZBJzQRkUnOj5gbIpGYCcgPkRs0bJ1WLTqoWnVQt+uQfA+QGyKRmAjKpmYA8oeZGzQ2QGyBvqNl0UrXopGrRSdWiT75MzTepuQEyqblRMwF5A8ikZgIyqZnUTEAmNROQSc0E5JtOqhadVC06qVr0yTIgPwnIjZoJyKTmDTUTkEnNBGRSMwGZ1NwAuQEyqfmmk6pFJ1WLTqoW4R+pWnJSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQt+h/BkVYr6NAgeQAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/df3015cc">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAT1SURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBpAbNROQSc0TQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gaQSc0EZAIyqZmATGpu1GxSswnIppOqRSdVi06qFn3yZUCeUPMEkE1qJiCTmgnIpGYC8oSaJ4A8oeabTqoWnVQtOqla9MlfRs0NkEnNBGRSMwGZ1ExAJjUTkEnN3+SkatFJ1aKTqkWf/M+omYBMaiYgk5oJyKRmAvJ/clK16KRq0UnVok++TM1vAjKpuVFzo2YCMqm5UXMDZFLzhJr/kpOqRSdVi06qFn2yDMi/Sc0EZFIzAZnUTEAmNROQSc0EZFLzBpD/spOqRSdVi06qFuGP/MGAbFJzA+RGzQ2QSc3f5KRq0UnVopOqRfgjLwCZ1ExANqm5AbJJzQRkUjMBmdTcAJnUTEA2qfmmk6pFJ1WLTqoW4Y98EZAn1NwAmdTcAJnUPAFkUjMBmdTcAPkmNU8AmdS8cVK16KRq0UnVIvyRRUAmNROQTWpugDyh5gbIE2pugNyo+ZOcVC06qVp0UrXok5eATGomIDdqJiCTmgnIBORGzQ2QGyCTmgnIpGYC8gaQGzUTkEnNBGRSs+mkatFJ1aKTqkWfvKRmk5oJyKTmBsgNkEnNBGRSc6NmAnKj5jcBmdR800nVopOqRSdVi/BHfhGQSc0EZFIzAZnUfBOQSc0NkG9SMwGZ1DwBZFLzxknVopOqRSdVi/BHFgF5Q80EZFKzCcikZgLyhpobIJOaGyCTmgnIjZpvOqladFK16KRq0ScvAZnUTEBu1ExAJjUTkBs1N0C+Sc0NkE1AJjU3QCY1m06qFp1ULTqpWvTJS2omIJuATGomIBOQSc2k5gbIE2omIJOaGzVvqJmA3Kj5ppOqRSdVi06qFn3yEpAbNU+ouQHyBpAbNU8AmdRMQG6ATGomIDdAJjUTkBsgk5o3TqoWnVQtOqla9MkyNTdANqmZgNyouQEyqZmATGqeUHMDZFIzAZnUvKFm00nVopOqRSdVi/BHXgAyqZmATGomIJOaJ4BMaiYgN2pugDyh5gkgk5oJyBNqboBMajadVC06qVp0UrXok18G5AbIjZpJzY2aCcgNkBs1N0AmNROQGyCbgNwAmdS8cVK16KRq0UnVIvyRPxiQSc0E5Ak1TwCZ1DwBZFLzBJBNat44qVp0UrXopGoR/sgLQH6Tmk1AbtRMQL5JzQRkUjMBeULNN51ULTqpWnRSteiTZWo2AbkBcqPmRs0NkEnNE0DeUPOEmhsgN2reOKladFK16KRq0SdfBuQJNb8JyKRmUjMBmdRMQCY1N0AmIJuA/KaTqkUnVYtOqhZ98pdR84SaCcikZlIzAZnUvKHmBsikZgLybzqpWnRSteikatEn/3NAboB8k5obIDdA3lCz6aRq0UnVopOqRZ98mZpvUjMBmdTcqJmATGomIJOaGyCTmgnIpGZSMwGZ1ExAJjUTkG86qVp0UrXopGrRJ8uA/CYgv0nNDZBJzQRkUjMBmdTcALkBMqn5ppOqRSdVi06qFuGPVC05qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFv0DD2FhLBG+cW8AAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

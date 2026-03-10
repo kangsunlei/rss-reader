@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>装好 OpenClaw，首件要干的必须是这件事！（第 5 讲，干货收藏）</title>
+        <title>深入解析：GitHub 智能体工作流的安全架构</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>装好 OpenClaw，首件要干的必须是这件事！（第 5 讲，干货收藏）</h2>
-        <p>3/8/2026, 7:42:00 AM</p>
+        <h2>深入解析：GitHub 智能体工作流的安全架构</h2>
+        <p>3/9/2026, 4:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文针对 AI Agent 工具 OpenClaw 运行中的安全风险，提出了包含修改确认、自动备份、审计、回滚等在内的六大安全规范，旨在通过 Prompt 约束确保 Agent 行为可控。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 GitHub 智能体工作流（Agentic Workflows）的多层安全架构，详细介绍了隔离、零密钥策略和经过审核的执行如何降低非确定性 AI 智能体带来的风险。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章作者分享了在使用 OpenClaw 过程中的安全治理经验。针对 AI Agent 可能存在的自主安装未知插件、误删配置或泄露敏感信息等风险，作者构建了一套基于 SAFETY.md 的安全框架。该框架涵盖了六个核心维度：建立高/中/低危行为的分级确认机制、触发式自动备份、详细的变更审计日志、异常情况下的回滚流程、敏感数据脱敏存储以及 Skill 安装的白名单审核。通过将这些规范集成到 Agent 的核心配置文件中，实现了对 AI 行为的有效约束和可追溯性，并展示了 Agent 在规范约束下的实际运行效果。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 概述了其通过智能体工作流将 AI 智能体集成到 CI/CD 流水线中的安全优先方法。考虑到智能体具有非确定性且易受提示词注入攻击，该架构将其视为不可信实体。系统建立在四大支柱之上：深度防御、零密钥访问、分阶段写入和全面日志记录。通过利用三层模型（底层、配置和规划），GitHub 将智能体隔离在容器和 chroot 监狱中，确保它们永远不会直接处理敏感 Token。相反，与 LLM 和仓库状态的所有交互都通过受信任的代理和模型上下文协议 (MCP) 网关进行调解。此外，“安全输出”机制在提交之前对所有提议的更改进行缓冲和审核，防止未经授权或恶意的仓库修改。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">建立基于风险等级的行为确认机制，平衡效率与安全。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 Agent 行为分为高、中、低危三个等级，规定高危必须人工确认，中危需告知，低危可直接执行，确保关键操作在人类掌控中。</span>
+                        <strong style="color: #1e40af">实施分层深度防御架构以遏制智能体故障。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 系统使用底层、配置和规划层来强制执行安全性。这确保了即使用户级组件受到损害，内核强制的边界和声明式策略也能防止智能体访问未经授权的资源或系统调用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过 Prompt 强制执行自动备份与回滚机制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Agent 修改关键配置前触发备份，并预设回滚指令模版，防止因 AI 错误操作导致系统失控、飞书失联或配置丢失。</span>
+                        <strong style="color: #1e40af">对智能体采用零密钥策略，防止通过提示词注入泄露凭证。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 智能体被隔离在容器中，无法直接访问环境变量或 Token。相反，它们通过处理身份验证的 API 代理和 MCP 网关进行通信，确保恶意输入无法诱骗智能体暴露敏感密钥。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实施变更记录审计与检查点机制，确保操作透明。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 详细记录 Agent 的每一次文件修改和变更日志，并通过检查点机制防止记录遗漏，为后续的安全审计提供完整证据链。</span>
+                        <strong style="color: #1e40af">利用 chroot 监狱和只读挂载来平衡安全性和开发者实用性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了允许智能体在不损害宿主机的情况下使用编译器和工具，GitHub 将虚拟机文件系统挂载为只读并使用 chroot 监狱。这限制了智能体的可写表面，同时为编码任务提供了必要的环境。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">通过专用的安全输出机制缓冲并审核所有仓库写入。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 智能体不能直接写入仓库；相反，它们通过安全输出 MCP 暂存更改。在对代码库应用任何实际修改之前，这些更改会经过确定性分析，包括操作过滤、内容审核和密钥移除。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">在每个信任边界强制执行全面日志记录，以便进行取证重建。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过记录防火墙、API 代理和 MCP 网关处的活动，GitHub 确保了对智能体执行路径的全程可见性。这支持事后分析，并允许检测异常行为或绕过安全限制的尝试。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">安全第一，安全第一，装好 OpenClaw 以后，首要干的第一件事，就是建立 6 大安全规范。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">高危类：必须确认；中危类：必须告知；低危类：直接执行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最怕把配置搞挂了，飞书失联，失去控制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果公司制定了一套安全规范，你觉得，是 OpenClaw 执行得到位，还是人执行得到位呢？</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们将智能体执行视为 CI/CD 模型的扩展，而不是一个独立的运行时。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体具有非确定性：它们必须消耗不可信的输入，对仓库状态进行推理，并在运行时做出决策。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从一开始，我们就希望工作流智能体对密钥的访问权限为零。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">零密钥智能体需要在安全性和实用性之间进行根本性的权衡。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每一个可以观察到通信的位置，也是一个可以进行调解的位置。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">83</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">架构师之路</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">架构师之路</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The GitHub Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Landon Cox</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1354</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1602</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenClaw</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全治理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">行为审计</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体工作流</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Actions</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 安全</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型上下文协议 (MCP)</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/283f4571" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/3727eb85" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/283f4571">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATqSURBVO3BQY4kRxIEQdNA/f/Lyj76XgJIpFcvZ2gi+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQEyqZmATGpugExqngDyhJoJyG9S88ZJ1aKTqkUnVYs+WaZmE5An1ExAJjUTkBs1E5BJzY2aTWo2Adl0UrXopGrRSdWiT74MyBNqngDyBJAbNROQN4A8oeYJIE+o+aaTqkUnVYtOqhZ9Uv8DyI2aCciNmgnIpOZvclK16KRq0UnVok/+MmqeADKpeULNDZD/kpOqRSdVi06qFn3yZWp+E5An1ExAnlBzo+YGyKTmCTX/JidVi06qFp1ULfpkGZD/JzUTkEnNBGRSMwGZ1ExAJjUTkEnNG0D+zU6qFp1ULTqpWoQ/8gcDcqPmBsik5puATGr+JidVi06qFp1ULfrkJSCTmgnIJjWTmgnIBGRS8waQJ9RMaiYgk5oJyCY133RSteikatFJ1aJPvkzNBGRSMwGZ1ExAJjWTmhsgTwCZ1LwB5AbIG2qeADKpeeOkatFJ1aKTqkX4Iy8AeUPNDZA31GwC8oSaGyA3av4kJ1WLTqoWnVQtwh95AciNmhsgk5ongExqJiCTmgnIpOYJIJOaCcg3qZmATGomIJOaTSdVi06qFp1ULcIfWQTkCTUTkBs1N0AmNb8JyI2abwJyo+abTqoWnVQtOqla9MlLQCY1E5BJzQRkUnMD5Akgk5ongExq3gDyhpoJyKTmCSCTmjdOqhadVC06qVqEP/KLgLyh5gbIG2pugDyh5gbIpOYGyKRmAnKj5ptOqhadVC06qVr0yUtAJjU3ajYBeUPNBOQNNTdANgGZ1NwAmdRsOqladFK16KRq0ScvqZmATGomIJOaGyA3aiYgk5oJyARkUjMBuVEzAZnU3Kh5Q80E5EbNN51ULTqpWnRStQh/5AUgk5o3gExqngAyqbkBcqPmBsikZgLyhJoJyBNqJiCTmgnIpOaNk6pFJ1WLTqoWffJlQCY1TwC5UXMD5Ak1N0AmNU+ouQEyqZmATGreULPppGrRSdWik6pF+CMvAJnU3ACZ1DwBZFJzA2RS8wSQJ9Q8AWRSMwF5Qs0NkEnNppOqRSdVi06qFn3yZUAmNU8AuQEyqbkBcqNmUvMEkEnNBOQGyCYgN0AmNW+cVC06qVp0UrUIf+QPBmRSMwG5UXMDZFIzAZnUPAFkUvMEkE1q3jipWnRSteikatEnLwH5TWomNROQGzUTkEnNpGYCcgNkE5BJzRtqvumkatFJ1aKTqkWfLFOzCcgNkCeAvKHmCSBvqHlCzQ2QGzVvnFQtOqladFK16JMvA/KEmm9S8waQSc0EZFJzA2QCsgnIpOabTqoWnVQtOqla9MlfRs0E5AbIjZpJzQRkUvOGmhsgk5oJyA2QGzVvnFQtOqladFK16JO/DJBJzSYgm9TcALkB8oaaTSdVi06qFp1ULfrky9R8k5oJyARkUjOpmYA8oeYGyKRmAjKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/Ccik5gbIpOYJNTdAJjUTkEnNBGRScwPkBsik5ptOqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0D6ZsUTCchm/OAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/3727eb85">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATkSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaTUAmNROQSc0TQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gSQJ9RMQCY1E5AbNZOaTWo2Adl0UrXopGrRSdWiT74MyBNqngDyBpBJzY2aCcgNkCfUPAHkCTXfdFK16KRq0UnVok/+MWpugExqJiCTmgnIDZBJzQRkUvMvOaladFK16KRq0Sf/GCCTmknNBGRSMwGZ1DwB5P/JSdWik6pFJ1WLPvkyNX8yNROQGyA3aiY1N0AmNU+o+ZOcVC06qVp0UrXok2VA/ktqJiCTmgnIpGYCMqmZgNwAmdS8AeRPdlK16KRq0UnVok9eUvM3ATKpeUPNjZoJyKTmRs3f5KRq0UnVopOqRfgjLwCZ1ExANql5A8hvUnMDZFIzAdmk5ptOqhadVC06qVr0yZepeQLIpOYNIJOaCcik5puA3AB5Q80TQCY1b5xULTqpWnRSteiTLwMyqblRMwG5UTMBmdRMQJ4A8oaaSc0E5EbNN6nZdFK16KRq0UnVok9eUjMB2aRmAjIBmdR8k5oJyKRmAvIGkBs1E5BJzQRkUrPppGrRSdWik6pF+CMvAJnUPAHkDTVvAHlCzQ2QGzXfBORGzTedVC06qVp0UrXoky8DMqmZ1ExAJjVvAJnUTGp+E5A31ExAJjVPAJnUvHFSteikatFJ1aJPlgGZ1ExAbtRMQL4JyI2aCcgTam6ATGpugExqJiA3aiY1m06qFp1ULTqpWvTJS2omIBOQN9RMQG7UTEAmIDdq3lBzA2QTkEnNDZBJzaaTqkUnVYtOqhZ98hKQGzVPALlRcwNkUnMDZAIyqblRMwGZ1NyoeUPNBORGzTedVC06qVp0UrXok2VqJiBPqHkCyBNAJjUTkAnIpGYCMqmZgNwAmdRMQG6ATGomIDdAJjVvnFQtOqladFK16JP/mJobIE+omYBMam7U3ACZ1Dyh5gbIpGYCMql5Q82mk6pFJ1WLTqoW4Y+8AGRS8waQSc0EZFLzBJAbNTdAbtQ8AWRSMwF5Qs0NkEnNppOqRSdVi06qFn3yZUAmNU8AmdRMQDYBmdRMam6ATGomIDdANgG5ATKpeeOkatFJ1aKTqkX4I38xIDdqJiA3aiYgk5oJyKTmCSCTmieAbFLzxknVopOqRSdViz55CchvUjOpeULNG0BugGwCMql5Q803nVQtOqladFK16JNlajYBuQGySc2NmieAvKHmCTU3QG7UvHFSteikatFJ1aJPvgzIE2o2qZmAPKFmAjKpmYBMam6ATEA2AflNJ1WLTqoWnVQt+uQfo2YCMqm5ATKpmdRMQCY1b6i5ATKpmYD8l06qFp1ULTqpWvTJPwbIDZA3gGxScwPkBsgbajadVC06qVp0UrXoky9T801qJiBPqJmAPKHmBsikZgIyqZnUTEAmNROQSc0E5JtOqhadVC06qVr0yTIgvwnIpGYCMqmZgExqJiCTmhsgk5oJyKRmAjKpuQFyA2RS800nVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36H8oVREYQZVxDAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
