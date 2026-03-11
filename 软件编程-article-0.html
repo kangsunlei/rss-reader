@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>GitHub's Squandered Lead in the Agentic Coding Era</title>
+        <title>Datadog 如何将其 Go 智能体二进制文件体积缩减 77%</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>GitHub's Squandered Lead in the Agentic Coding Era</h2>
-        <p>3/9/2026, 11:36:22 PM</p>
+        <h2>Datadog 如何将其 Go 智能体二进制文件体积缩减 77%</h2>
+        <p>3/10/2026, 9:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Gergely Orosz argues that GitHub has lost its early dominance in AI coding as 'agentic coding' becomes increasingly synonymous with competitors like Claude Code.</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Datadog 通过系统性的依赖审计、构建标签的策略性使用，以及消除反射和 plugin 相关的链接器限制，将其 Go 智能体二进制文件体积缩减了 77%。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">In this follow-up tweet， Orosz critiques GitHub's failure to maintain its leadership position in the AI coding space. He points out that the term 'agentic coding'—the current frontier of AI development—is now more closely associated with Claude Code than GitHub Copilot. Referencing his own research at @Pragmatic_Eng， he suggests that GitHub has 'fumbled' its multi-year head start， signaling a significant shift in industry leadership.</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Datadog 为解决其基于 Go 的智能体（Agent）“二进制文件膨胀”问题而发起的一项重大工程计划。该智能体的体积曾从 428 MiB 增长到 1.22 GiB。调查发现，体积增长是由传递依赖、大型第三方 SDK（如 Kubernetes）以及特定的 Go 编译器/链接器行为驱动的。工程师们采用了多管齐下的策略：使用 goda 等工具审计导入、通过构建标签隔离可选功能，以及重构代码以防止包含不必要的包。至关重要的是，他们发现大量使用反射和 plugin 包会禁用链接器的死代码消除（dead-code elimination）功能，从而导致巨大的开销。通过优化这些领域并将修复方案贡献回上游库，他们在不删除任何功能的情况下实现了 77% 的体积缩减。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">如果不进行严格审计，Go 的传递依赖会导致二进制文件体积大幅膨胀。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Go 的依赖模型会引入所有传递导入，这意味着一个微小的改动可能会无意中包含数百个包。为了保持二进制文件的精简，必须进行系统性的审计。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">构建标签和包隔离是排除不必要代码的有效工具。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 //go:build 标签并将功能移至专用包中，允许开发人员在最终构建中排除可选功能，从而显著减少生成的代码占用空间。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">反射会悄悄禁用关键的链接器优化，如死代码消除。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当通过反射使用非常量方法名时，链接器无法在运行时确定需要哪些方法，从而被迫保留每个导出的方法及其依赖项。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">plugin 包会强制执行动态链接行为，从而增加二进制文件体积。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 仅仅导入 plugin 包就会导致 Go 链接器将二进制文件视为动态链接，这会禁用方法级的死代码消除并保留未导出的方法。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">为了解决大型生态系统中的系统性膨胀，通常需要向上游贡献代码。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Datadog 工程师不得不向 Kubernetes 和 Uber-go/dig 等重大项目提交 PR 以消除动态反射，这使整个 Go 社区的二进制文件体积都从中受益。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大多数 Go 二进制文件膨胀源于隐藏的依赖关系、被禁用的链接器优化，以及 Go 编译器和链接器中的微妙行为。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">仅仅将一个函数移到它自己的包中，就从一个未使用它的二进制文件中删除了约 570 个包和约 36 MB 的生成代码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你使用非常量方法名，链接器就无法在构建时知道运行时将使用哪些方法。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">仅仅导入 plugin 包就会导致链接器将二进制文件视为动态链接，从而禁用方法死代码消除。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这些改进是在六个月的时间里实现的，最重要的是，不需要删除任何功能。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,30 +67,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Gergely Orosz(@GergelyOrosz)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Gergely Orosz</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sergio De Simone</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">210</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">515</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agentic Coding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Market Analysis</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Development</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Go</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">二进制优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">依赖管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">链接器</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">反射</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2031152140798840943" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/a0535740" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2031152140798840943">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/a0535740">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATSSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4BMaiYgT6i5AfKEmgnIb1LzxknVopOqRSdViz5ZpmYTkDeATGpu1ExA3lCzSc0mIJtOqhadVC06qVr0yZcBeULNE0DeADKpmdRMQJ4A8oSaJ4A8oeabTqoWnVQtOqla9Mk/Ts0E5AbIpOYGyI2aCcik5l9yUrXopGrRSdWiT/4xaiYgT6iZgNyouQHy/+SkatFJ1aKTqkWffJma3wRkUnMD5A0gk5pJzQ2QSc0Tav4kJ1WLTqoWnVQt+mQZkP+SmgnIpOYNNROQGyCTmjeA/MlOqhadVC06qVqEP/IXAzKpeQPIE2qeADKp+ZecVC06qVp0UrXok5eATGomIJvUTGpugExqJiCTmhsgN0AmNZOaCcikZgKySc03nVQtOqladFK16JMvU3MD5EbNBOQJNROQSc0EZFIzqZmATGpugNwAeUPNE0AmNW+cVC06qVp0UrUIf+SLgExqngAyqbkBMql5AsgmNTdAbtT8TU6qFp1ULTqpWvTJS0Bu1DwBZFJzA2RScwPkDTUTkEnNBOQNIDdqJiCTmgnIpGbTSdWik6pFJ1WLPnlJzQ2QGzU3QG7UvKHmDTUTkBs1vwnIpOabTqoWnVQtOqla9MlLQDapuQFyA2RSM6n5LwF5Q80EZFLzBJBJzRsnVYtOqhadVC365CU1N0AmNU8A2QRkUvMEkCfU3ACZ1NwAmdRMQG7UTGo2nVQtOqladFK16JNlQCY1N0Bu1ExAbtTcqPkmNTdANgGZ1NwAmdRsOqladFK16KRq0ScvAZnUvKFmArIJyKTmDTUTkEnNjZo31ExAbtR800nVopOqRSdVi/BHXgDyhpoJyKTmCSA3am6ATGpugExqJiBPqJmAPKFmAjKpmYBMat44qVp0UrXopGrRJ8vUTECeUDMBeULNBOQGyA2QGzVPqLkBMqmZgExq3lCz6aRq0UnVopOqRfgjLwCZ1DwB5EbNDZAbNTdAbtRMQG7UPAFkUjMBeULNDZBJzaaTqkUnVYtOqhZ98odRMwGZ1GxScwNkUnMDZFIzAbkBsgnIDZBJzRsnVYtOqhadVC3CH/mLAZnUTECeUPMEkEnNE0AmNU8A2aTmjZOqRSdVi06qFn3yEpDfpGZSc6PmBsgTQG6AbAIyqXlDzTedVC06qVp0UrXok2VqNgG5ATKpmYC8AWRS8wSQN9Q8oeYJIJOaN06qFp1ULTqpWvTJlwF5Qs0mNROQJ9RMQCY1E5BJzQ2QCcgmIDdqNp1ULTqpWnRSteiTugIyqZmATGreUHMDZFIzAXkCyKTmjZOqRSdVi06qFn3yjwEyqZnU3AC5AbJJzQ2QGyBvqNl0UrXopGrRSdWiT75MzTepmYBMQCY1N2pugExqboBMaiYgk5pJzQRkUjMBmdRMQL7ppGrRSdWik6pF+CMvAPlNaiYgk5oJyI2aTUAmNROQSc0EZFIzAXlDzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXof7miQC+xaBiKAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
