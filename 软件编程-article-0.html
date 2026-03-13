@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Thinking Machines 发布首批三个模型权重</title>
+        <title>Windows 栈限制检查回顾：x86-32，又称 i386</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,48 @@
         </style>
     </head>
     <body>
-        <h2>Thinking Machines 发布首批三个模型权重</h2>
-        <p>3/11/2026, 11:05:31 PM</p>
+        <h2>Windows 栈限制检查回顾：x86-32，又称 i386</h2>
+        <p>3/12/2026, 10:18:26 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">swyx 宣布备受瞩目的 AI 初创公司 Thinking Machines 发布了首批三组权重（10、25 和 45）。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">对 Windows 中历史悠久的 `_chkstk` 函数进行技术回顾，详细阐述了其针对 x86-32 和 16 位 8086 的独特“被调用者脏栈”（callee-dirty）调用约定和栈探测机制。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这条推文标志着 Thinking Machines 首次正式发布模型权重。Thinking Machines 是由 John Schulman（原 OpenAI）和 Mira Murati 等业界大咖创立的 AI 新公司。swyx 引用了一条将“45 磅杠铃片”与健身语境挂钩的幽默推文，确认了 10、25 和 45 三个版本的“上线”。这标志着该初创公司的一个重要里程碑，意味着它已从隐身/组建阶段转向为社区提供实质性的 AI 资产。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Raymond Chen 的这篇文章探讨了 Windows 上栈限制检查的演变，重点关注 x86-32 (i386) 架构。文章深入探讨了最初的 `_chkstk` 函数，该函数采用了一种非常不寻常的“被调用者脏栈”调用约定，即函数返回时栈空间比调用前更大。作者解释了用于“触碰”每个内存页以触发保护页，从而确保栈有效性的汇编级逻辑。此外，文章通过审视 16 位 8086 的实现，提供了历史背景，强调了早期 Windows 系统中近调用和远调用的复杂性。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">`_chkstk` 函数采用了一种独特的“被调用者脏栈”调用约定来管理栈增长。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与调用者或被调用者清理栈的标准约定不同，`_chkstk` 返回时栈指针已被修改，有效地为调用者分配了空间，同时确保每个内存页都得到正确初始化。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">通过“触碰”每个内存页来触发保护页异常，从而执行栈探测。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该函数遍历请求的分配大小，访问每个 4KB 的页。这种机制确保 Windows 内核能够在应用程序使用空间之前扩展栈的已提交内存并处理栈溢出情况。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">该实现涉及复杂的汇编级指令指针和寄存器操作。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于函数会改变栈指针，它必须手动保存和恢复返回地址以及像 `ecx` 这样的寄存器，并使用 `jmp` 而非标准的 `ret` 来返回到调用者的执行流。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">这些架构模式在 Windows 开发的 16 位 8086 时代就已根深蒂固。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 栈检查的设计从早期的 16 位系统演变而来，当时针对近调用和远调用存在不同的版本，这表明了 Windows 生态系统中的长期连续性和遗留约束。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这是一种不寻常的调用约定，因为它既不是调用者清理，也不是被调用者清理。它是“被调用者脏栈”！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">函数返回时栈空间比调用前更大。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">函数触碰了栈的每个页，调整了栈指针，然后带着调整后的栈指针返回。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这可以参与“最古怪的 x86-32 调用约定”的竞争。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种奇怪的调用约定可以追溯到 16 位 8086 时代。那时，`chkstk` 函数有两个版本，取决于你是进行远调用还是近调用。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,30 +64,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">swyx(@swyx)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">swyx</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Old New Thing</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Raymond Chen</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">54</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">501</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Thinking Machines</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型权重</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 初创公司</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">John Schulman</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Mira Murati</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Windows 内部原理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">x86 汇编</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">栈管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调用约定</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统编程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2031869153406304406" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/cbec0b42" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2031869153406304406">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/cbec0b42">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATESURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBpAbNU8AmdRMQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gaQSc0TQG7U3KjZpGYTkE0nVYtOqhadVC365MuAPKHmCSC/Sc0TQJ5Q8wSQJ9R800nVopOqRSdViz75y6iZgExA3gAyqZmATGomIJOav8lJ1aKTqkUnVYs++csAuVGzCcikZgLyf3JSteikatFJ1aJPvkzNnwTIpGYC8oSaGyCTmifU/JecVC06qVp0UrXok2VA/k1qJiA3QCY1E5BJzQTkBsik5g0g/2UnVYtOqhadVC3CH/mDAblRMwGZ1NwAmdS8AWRS8zc5qVp0UrXopGoR/sgLQCY1E5BNap4AMqm5ATKpmYBMaiYgk5obIJOaCcgmNd90UrXopGrRSdUi/JEvAnKj5gkgk5oJyKRmAjKpuQEyqZmATGpugHyTmieATGreOKladFK16KRqEf7IC0A2qZmATGpugExqJiA3am6APKHmBsiNmj/JSdWik6pFJ1WL8EdeAPKEmr8JkEnNBOSb1ExAJjUTkEnNppOqRSdVi06qFuGP/CIgN2omIDdqJiA3aiYgT6i5AXKj5puA3Kj5ppOqRSdVi06qFn3yZUBu1NyomYBMQG7UPKHmm4C8oWYCMql5Asik5o2TqkUnVYtOqhbhjywCMqm5AfKb1NwAmdRMQJ5QcwNkUnMDZFIzAblR800nVYtOqhadVC365CUgk5on1ExAJjUTkEnNBOQNNW+ouQGyCcik5gbIpGbTSdWik6pFJ1WLPlkGZFJzA2RSMwF5Qs0TQG7U3KiZgExqbtS8oWYCcqPmm06qFp1ULTqpWoQ/8gKQJ9RMQCY1N0Bu1GwCMqmZgExqJiBPqJmAPKFmAjKpmYBMat44qVp0UrXopGrRJ8vU3AB5AsgTQN5QcwNkUvOEmhsgk5oJyKTmDTWbTqoWnVQtOqlahD/yApBJzQ2QGzVPAJnU3ACZ1DwB5EbNE0AmNROQJ9TcAJnUbDqpWnRSteikatEnXwbkDSBPAJnUPAFkUjOpuQEyqZmA3ADZBOQGyKTmjZOqRSdVi06qFuGP/MGATGomIDdqboBMaiYgk5ongExqngCySc0bJ1WLTqoWnVQt+uQlIL9JzaTmDSA3aiYgN0A2AZnUvKHmm06qFp1ULTqpWvTJMjWbgNwAmdTcqHlDzRNA3lDzhJobIDdq3jipWnRSteikatEnXwbkCTVvALkBcqPmBsikZgIyqbkBMgHZBOQ3nVQtOqladFK16JO/jJoJyKTmDTUTkEnNG2pugExqJiD/ppOqRSdVi06qFn1SV0C+Sc0NkBsgb6jZdFK16KRq0UnVok++TM03qXkCyBNqJiCTmhsgk5oJyKRmUjMBmdRMQCY1E5BvOqladFK16KRq0SfLgPwmIJOaJ9Q8oeYGyKRmAjKpmYBMam6A3ACZ1HzTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gHAvDUr7ZnkyAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
