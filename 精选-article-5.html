@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>阻止我过度设计 Claude Code 的可扩展性三角</title>
+        <title>RAG 后的检索：混合搜索、智能体与数据库设计 — Turbopuffer 的 Simon Hørup Eskildsen</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>阻止我过度设计 Claude Code 的可扩展性三角</h2>
-        <p>3/12/2026, 7:01:52 AM</p>
+        <h2>RAG 后的检索：混合搜索、智能体与数据库设计 — Turbopuffer 的 Simon Hørup Eskildsen</h2>
+        <p>3/12/2026, 10:56:01 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Claude Code 的“可扩展性三角”，这是一个在 MCP 服务器、子智能体和技能之间进行选择的框架，旨在优化 AI 开发工作流的成本、质量和架构清晰度。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Turbopuffer 是一个用于非结构化数据的云原生搜索引擎，它利用分层存储架构（从 S3 到 NVMe），为 RAG 和智能体工作流提供经济高效、高并发的检索。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 Claude Code 三大核心扩展机制背后的架构哲学：模型上下文协议（MCP）服务器、子智能体（subagents）和技能（skills）。作者认为，当开发者无法区分这些层级时，往往会出现过度设计。MCP 服务器被定义为使用 JSON-RPC 进行外部系统访问（如数据库、API）的独立进程。子智能体是隔离的 Claude 会话，允许进行模型路由（例如使用 Haiku 处理常规任务）和上下文管理，以减少噪音和成本。技能是基于 Markdown 的简单提示词注入，用于可复用的团队知识。通过将这些工具归类为“三角形”，作者提供了一个决策矩阵，帮助开发者避免常见的反模式——例如将 MCP 用于静态内容，或在 Opus 等昂贵模型上运行常规检查。文章最后提出了一个生产级的组合模型，这三个层级协同工作，构建出一个安全、经济且高度专业化的 AI 编程环境。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 Turbopuffer 的技术起源和架构理念，Turbopuffer 是一个专为 AI 时代设计的搜索引擎。该平台由 Simon Eskildsen 在 Readwise 经历向量搜索的高昂成本后创立，旨在解决 LLM 无法将其所有世界知识压缩到模型权重中的根本局限性。Turbopuffer 的核心创新在于其“S3 优先”架构，该架构将对象存储视为事实来源，并将数据“填充”（puffs）到 NVMe 和 DRAM 中以提高性能，从而消除了对昂贵共识层的需求。这种方法使 Cursor 等客户能够将基础设施成本降低 95%。讨论还强调了向智能体工作负载的转变，这要求搜索引擎能够处理高并发突发和混合检索方法（向量、文本和 SQL），而不是简单的、孤立的查询。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MCP 服务器应保留用于有状态的进程间通信和外部系统访问。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 JSON-RPC 运行，MCP 服务器允许 Claude 与数据库和 API 交互。当任务需要持久连接、安全边界或无法通过简单 CLI 命令处理的实时数据时，最适合使用它们。</span>
+                        <strong style="color: #1e40af">LLM 作为推理引擎运作，而非完整的知识压缩器。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管模型擅长推理，但它们无法将 EB 级别的数据存储在其权重中。它们需要高保真度的外部搜索引擎来提供准确输出所需的“真相”和上下文。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">子智能体通过提供隔离的上下文窗口和模型路由来优化性能和成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用 Haiku 等特定模型启动新会话，子智能体消除了对话噪音并大幅减少了 Token 使用量。这种隔离确保了代码审查或调试等专业任务的高质量输出。</span>
+                        <strong style="color: #1e40af">使用 S3 和 NVMe 的分层存储架构能够实现巨大的成本降低。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将 S3 视为主要的事实来源并避免传统的共识层，数据库可以廉价地扩展存储，同时仅将 NVMe 和 DRAM 用于活跃查询的“填充”。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">技能是注入可复用团队知识和工作流模板的最简单层级。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 技能以 Markdown 文件形式实现，是直接将文本注入当前会话的斜杠命令。它们非常适合处理编码标准或 SQL 命名规范等静态信息，且无需独立进程的开销。</span>
+                        <strong style="color: #1e40af">智能体工作负载正在将搜索从单一调用转变为高并发突发。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 现代 AI 智能体同时发出许多并行查询来解决任务。这种转变要求检索基础设施支持高并发，并降低每次查询的成本以保持经济可行性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">有效的 AI 工程需要针对生产环境对这三种机制进行分层组合。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 一个稳健的配置使用技能来传递知识，使用子智能体处理专业行为，并使用 MCP 服务器获取外部数据。这种分层方法确保了最小权限访问，并将任务复杂度与最具成本效益的模型层级相匹配。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">避免反模式对于防止过度设计和不必要的运营成本至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者应避免为静态内容构建 MCP 服务器、将简单任务路由到昂贵模型，或创建深度嵌套的子智能体链，因为这些做法会增加延迟并掩盖实际的工程工作。</span>
+                        <strong style="color: #1e40af">检索的未来在于结合向量和传统方法的混合搜索。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 纯向量搜索通常不足。开发者越来越需要结合语义、全文、正则表达式和 SQL 风格的过滤，以实现代码搜索等复杂应用所需的精度。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">10 分钟对比 40 小时。同样的输出。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">隔离本身就是特性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 服务器处理通信，但你的服务器处理策略。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">更小的上下文和更便宜的模型相结合，通常能将代码审查成本降低 85-95%。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">可扩展性三角不是一个理论框架。它是一个防止你构建错误事物的实用工具。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型可以学习推理，但无法将世界的知识压缩到几 TB 的权重中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">为什么没有人构建一个数据库，你可以把所有东西都放在对象存储上，然后在使用数据时将其“填充”到 NVMe 中？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">现在可能实现而 15 年前不可能实现的架构是全面采用 NVMe SSD。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体系统正在大幅增加查询量，Simon 预计检索基础设施将适应巨大的并发搜索突发。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你想建立一家真正大型的数据库公司……你需要新的工作负载、新的存储架构以及支持所有查询计划的能力。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +63,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">HackerNoon</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">tyingshoelaces.com</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Latent Space</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Latent.Space</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3096</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">60 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">14956</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型上下文协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 优化</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量数据库</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">S3 存储</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">NVMe</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/36a44b3d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/18a0d718" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/36a44b3d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATYSURBVO3BSY4jSRAEQdMA//9lnT76KYBEOquXMRH8JVVLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkJ6l5A8iNmieATGomIE+omYD8JDVvnFQtOqladFK16JNlajYBeQPIJiCTmhs1m9RsArLppGrRSdWik6pFn3wZkCfUPAFkUjOpmYBMam6ATGomIJOaCcgTap4A8oSabzqpWnRSteikatEn/xggk5pJzQ2QSc0E5AbIpGYCMqn5l5xULTqpWnRSteiTfxyQJ9RMQCY1TwD5PzmpWnRSteikatEnX6bmd1KzCciNmknNDZBJzRNq/iQnVYtOqhadVC36ZBmQ30nNBGRSMwGZ1NyomYDcAJnUvAHkT3ZSteikatFJ1aJPXlLzL1Nzo+ZGzQRkUnOj5m9yUrXopGrRSdUi/CUvAJnUTEA2qXkCyI2aCcikZgLyhJobIJOaCcgmNd90UrXopGrRSdWiT36YmgnIpOYJIE+ouVEzAZnUvAHkBsgbap4AMql546Rq0UnVopOqRfhLFgGZ1ExAbtRMQG7UTEAmNROQGzUTkDfU3AC5UfM3OaladFK16KRq0Se/mZobNW8AmdRMQG7U3ACZ1ExA3gByo2YCMqmZgExqNp1ULTqpWnRStQh/yRcBmdTcAPmTqbkBcqPmm4DcqPmmk6pFJ1WLTqoWffISkEnNDZAbNTdA3lDzOwF5Q80EZFLzBJBJzRsnVYtOqhadVC365DdTcwNkUnMD5AbIpGYCMqmZgDyh5gbIpOYGyKRmAnKjZlKz6aRq0UnVopOqRZ+8pOYJNROQGzVvqJmATEAmNW+ouQGyCcik5gbIpGbTSdWik6pFJ1WLPnkJyKRmUjMBmdRMQCYgk5ongDwBZFJzo2YCMqm5UfOGmgnIjZpvOqladFK16KRq0SdfBmRSc6Nmk5oJyI2aCcikZgIyqZmA3ACZ1ExAboBMaiYgN0AmNW+cVC06qVp0UrXokz8MkCfUPKFmAjIBmdRMQCY1T6i5ATKpmYBMat5Qs+mkatFJ1aKTqkWf/DAgN2pugDwB5EbNDZAbIJOaSc0NkEnNBOQGyKRmUjMBmdRsOqladFK16KRq0SdfpmYCMqmZgNyoeUPNBOQJNTdAJjUTkBsgm4DcAJnUvHFSteikatFJ1SL8JX8xIJOaCcgTap4AMql5Asik5gkgm9S8cVK16KRq0UnVok9eAvKT1ExqbtRMQJ4A8gSQTUAmNW+o+aaTqkUnVYtOqhZ9skzNJiA3QG7UTGqeUPMGkDfUPKHmBsiNmjdOqhadVC06qVr0yZcBeULNG2omIJOaN4BMaiYgk5obIBOQTUB+0knVopOqRSdViz75xwC5AfKEmknNBGRS84aaGyCTmgnI73RSteikatFJ1aJP/ufUTEAmIN+k5gbIDZA31Gw6qVp0UrXopGrRJ1+m5pvU3ACZ1NyomYDcqLkBMqmZgExqJjUTkEnNBGRSMwH5ppOqRSdVi06qFn2yDMhPAvIEkEnNBORGzQ2QSc0EZFIzAZnU3AC5ATKp+aaTqkUnVYtOqhbhL6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36D7deRDGhVuOuAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/18a0d718">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS7SURBVO3BQQ4jRxIEwfAC//9lXx7zVECjk7PSKMzwK1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkT1JzA2RS80tAJjUTkCfUTED+JDVvnFQtOqladFK16JNlajYBeULNDZAbNTdAJjU3ajap2QRk00nVopOqRSdViz75MSBPqHkCyKTmRs0E5AbIG0CeUPMEkCfU/NJJ1aKTqkUnVYs++Y8BcgNkUnMD5EbNBGRS8zc5qVp0UrXopGrRJ385IE+omYBMaiY1N0D+S06qFp1ULTqpWvTJj6n5f1JzA+RGzQTkRs2k5gbIpOYJNf8kJ1WLTqoWnVQt+mQZkH8SIJOaJ4BMaiYgN0AmNW8A+Sc7qVp0UrXopGoRfuVfDMiNmhsgk5obIJOaJ4BMav4mJ1WLTqoWnVQtwq+8AGRSMwHZpOaXgGxScwNkUjMB2aTml06qFp1ULTqpWvTJMiBPqHkCyI2aGyA3an4JyA2QN9Q8AWRS88ZJ1aKTqkUnVYvwK4uAPKHmBsik5gkgN2pugLyh5gbIjZp/k5OqRSdVi06qFuFX/iAgT6iZgLyhZhOQSc0E5JfUTEAmNROQSc2mk6pFJ1WLTqoW4VdeADKpeQPIjZongExqJiCTmjeA3Kj5JSA3an7ppGrRSdWik6pF+JUfAvKEmjeAPKHmBsik5gbIL6mZgExqngAyqXnjpGrRSdWik6pF+JUXgExqJiCb1ExAnlDzBpAn1NwAmdTcAJnUTEBu1PzSSdWik6pFJ1WLPnlJzQTkRs0NkEnNE2omIH+Smhsgm4BMam6ATGo2nVQtOqladFK16JNlam6A3KiZgNyomYBMaiYgN2qeUDMBmdTcqHlDzQTkRs0vnVQtOqladFK1CL/yApAn1LwBZFJzA+QNNTdAJjUTkCfUTECeUDMBmdRMQCY1b5xULTqpWnRSteiTZWpugLyhZgIyqZnUTECeAHKj5gk1N0AmNROQSc0bajadVC06qVp0UrUIv/ICkEnNBGRSMwG5UTMB2aRmAjKpmYDcqHkCyKRmAvKEmhsgk5pNJ1WLTqoWnVQtwq+8AGRScwPkl9TcALlRMwGZ1NwAmdRMQH5JzQTkCTVvnFQtOqladFK1CL/yLwbkRs0NkBs1N0AmNU8AmdQ8AWSTmjdOqhadVC06qVqEX3kByJ+k5gkgk5obIP9PaiYgk5oJyBNqfumkatFJ1aKTqkWfLFOzCcgNkBs1E5AbNZuAvKHmCTVPAJnUvHFSteikatFJ1aJPfgzIE2p+Sc0bQCY1E5BJzQ2QCcgmIJOaSc2mk6pFJ1WLTqoWffKXUfMGkEnNpGYCMql5Q80NkEnNBOQGyI2aN06qFp1ULTqpWvTJXw7IpOZGzQTkl9TcALkB8oaaTSdVi06qFp1ULfrkx9T8kpoJyJ+k5gbIpGYCMqmZ1ExAJjUTkEnNBOSXTqoWnVQtOqla9MkyIH8SkCeATGqeUHMDZFIzAZnUTEAmNTdAboBMan7ppGrRSdWik6pF+JWqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWi/wGQ0EACoD+vlAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
