@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>向量搜索的扩展：量化与套娃式嵌入比较，实现 80% 成本降低</title>
+        <title>一文搞懂爆火的 SKills 原理及实践案例</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>向量搜索的扩展：量化与套娃式嵌入比较，实现 80% 成本降低</h2>
-        <p>3/12/2026, 1:30:00 PM</p>
+        <h2>一文搞懂爆火的 SKills 原理及实践案例</h2>
+        <p>3/13/2026, 12:46:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文对量化和套娃式表征学习（MRL）进行了比较实证分析，旨在优化向量数据库存储，并展示了它们的结合如何能将基础设施成本降低高达 80%。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 AI 辅助开发中“Skills”的核心原理，提出了基于中台思维的 Prompt 复用理念，并详细介绍了逆向建模、问题定位及 AI-CR 等实战案例。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了在生产环境中扩展向量数据库时不断上升的成本，其中高精度 Float32 嵌入和复制因子导致了巨大的 RAM 需求。作者探讨了两种主要的优化策略：量化，它降低了向量分量的比特精度；以及套娃式表征学习（MRL），它通过前置语义信息实现维度降低。通过使用 FAISS (HNSW) 和 HotpotQA 数据集进行的一系列实验，作者评估了存储节省和检索准确性（Recall@10 和 MRR）之间的权衡。研究结果强调，对于大多数 RAG 应用而言，标量量化（int8）是一种高效的“不假思索”的选择，提供了超过 60% 的存储空间减少，且准确性损失可忽略不计。此外，研究表明，将 MRL 与标量量化结合使用可提供最佳的投资回报率（ROI），在保持高性能的同时实现显著的成本节约。相反，二值量化因检索质量急剧下降而被认为过于激进，不适合一般用途。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章将 AI Skills 类比为软件架构中的“中台”，核心在于 Prompt 的复用与工程化沉淀。作者提出 Skills 的设计应遵循“渐进式披露”原则以优化上下文窗口，并强调开发 Skills 的难点在于“向外洞察”问题与“向内觉察”思维过程。在实践层面，文章重点介绍了“逆向建模”方法论，即通过现有代码反推实体、规则和行为，从而引导 AI 进行精准的需求迭代。此外，还展示了利用 MCP 协议打通日志系统进行问题定位，以及工程化的 AI 辅助代码评审（CR）流程，强调了面向 AI 设计系统的重要性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">向量存储成本主要由精度和维度驱动，并因复制而加剧。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 标准的 Float32 嵌入每个维度需要 4 字节。当扩展到数百万个向量，并采用典型的三倍复制因子时，RAM 需求和云基础设施账单成为生产 AI 功能的显著瓶颈。</span>
+                        <strong style="color: #1e40af">Skills 的本质是公共 Prompt 的工程化复用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴中台思维，将高频、通用的 Prompt 封装为 Skills，并按软件工程生命周期分类，实现经验的低成本共享与提效。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">标量量化（int8）为存储优化提供了一个高效的“中间地带”。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将 32 位浮点数转换为 8 位整数，存储空间减少了 63.7%。实验表明，这种转换导致检索指标下降不到 3%，使其成为 RAG 用例中强烈推荐的默认选项。</span>
+                        <strong style="color: #1e40af">设计 Skills 应采用“渐进式披露”以节省上下文。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 运行时资源有限，通过分级加载元信息和语义匹配，只在需要时加载实际内容，避免干扰并减少幻觉。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">套娃式表征学习（MRL）通过截断实现灵活的维度降低。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 经过 MRL 训练的模型将关键语义信息嵌套在向量的早期维度中。这使得开发人员可以截断向量（例如，从 384 维到 128 维）以节省空间，同时保留核心含义和检索能力。</span>
+                        <strong style="color: #1e40af">逆向建模是 AI 辅助需求迭代的核心方法。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过代码反推实体关系、流程和规则，建立显化表达的“图纸”，让 AI 的生成基于确定的逻辑而非模糊的语言。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">结合 MRL 和标量量化为大规模生产应用带来最佳投资回报率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 研究表明，将 256 维 MRL 与 int8 量化结合使用可将成本降低 70.8%，同时保留超过 95% 的原始性能，与单独使用任一技术相比，提供了卓越的平衡。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">尽管存储空间节省巨大，二值量化仍面临“性能断崖”。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管提供了 32 倍的压缩，二值量化仍导致 Recall 和 MRR 大幅下降。与对未缩短的索引使用二值量化相比，使用低维度 MRL 向量与标量量化更为有效。</span>
+                        <strong style="color: #1e40af">开发 Skills 需要“向外洞察”与“向内觉察”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 识别反复出现的价值问题，并复盘自己解决问题的隐性思考过程，将其转化为 AI 可理解的领域知识。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">向量数据库的内存占用主要由两个因素驱动：精度和维度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">标量量化是几乎所有 RAG 用例都应采用的最简单、最有效的基础设施优化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MRL 允许工程师简单地截断向量的尾部，大幅降低其维度，而对检索指标的损失微乎其微。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">二值量化代表着“性能断崖”……在 Recall 上落后标量量化超过 17%，在 MRR 上落后 18.4%。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与对未缩短的索引使用二值量化相比，高度推荐使用较低维度（128 维）与标量量化。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">什么是 Skills？答：公共的 Prompt 就是 Skills！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不是让 AI 知道更多，而是让 AI 在恰当的时间知道恰当的事。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 时代，人类的语言已经成为了一门全新的“编程语言”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的 Prompt 其实就是代码本身。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 时代，系统设计将从面向于人设计转向面向 AI 设计。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -68,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Towards Data Science</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Oleg Tereshin</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2141</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">18 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4418</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量搜索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">嵌入模型</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">量化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">套娃式表征学习</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG 基础设施</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Coding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Skills</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">逆向建模</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/76c5d62d" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/a9529ba9" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/76c5d62d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEBu1ExA3lAzAZnUPAHkN6l546Rq0UnVopOqRZ8sU7MJyI2aCcikZgIyAZnUTEAmNU+omYDcqLlRswnIppOqRSdVi06qFn3yZUCeUPOGmifUbAIyqfkmIE+o+aaTqkUnVYtOqhZ98pcD8oSaCciNmgnIpGZSMwG5UfMvOaladFK16KRq0Sf/GDV/MjUTkEnN3+ykatFJ1aKTqkWffJma3wTkm9RMQCY1k5oJyKTmDTV/kpOqRSdVi06qFn2yDMj/Sc0EZFIzAZnUTEAmNU8AmdRMQCY1N0D+ZCdVi06qFp1ULcIf+YsBuVHzBpBJzQ2QJ9T8S06qFp1ULTqpWvTJS0AmNU8AmdRMQJ5Qs0nNDZAbNROQGyCb1NwAmdS8cVK16KRq0UnVIvyRLwIyqZmATGpugExqJiCTmgnIpGYC8oSabwLym9S8cVK16KRq0UnVok++TM0EZFIzAblRMwGZ1NyouVEzAXkDyKRmArJJzRNANp1ULTqpWnRStQh/5AUgk5obIDdqNgF5Qs0bQCY1E5An1NwAuVEzAblR88ZJ1aKTqkUnVYs+eUnNG2pugNyomYBMat4AcqPmBsg3qXlDzaaTqkUnVYtOqhZ98hKQN4DcqPlNQCY1E5A31DwBZFIzAXkDyKTmjZOqRSdVi06qFn2yTM0mIJOaCcikZgIyqZmA3AB5Qs0E5AbIpOab1ExANp1ULTqpWnRSteiTZUDeUDOpuVEzAZnUPKHmBsgNkBsgm9Q8AeSbTqoWnVQtOqla9MkyNROQN4BMam7UTEAmNU8AmdQ8oeYGyARkUjMBmdS8oWbTSdWik6pFJ1WL8EdeAPKGmgnIpGYC8oaaGyCTmgnIjZoJyKTmBsgmNROQGzVvnFQtOqladFK16JOX1HwTkEnNBOQJIJOaTUAmNZvUTEAmNROQSc0EZNNJ1aKTqkUnVYs++TIgN2pu1ExAbtRMQCY1E5BJzRNqJiATkEnNBGRS84SaGzUTkG86qVp0UrXopGrRJy8BeULNBGRSMwF5Asik5kbNN6l5AsgmNZOaCcimk6pFJ1WLTqoWffKSmjfU3Ki5AfIEkE1AJjU3QG7UPAFkUvN/OqladFK16KRq0ScvAflNar5JzQTkRs03AZnU3AC5UfNNJ1WLTqoWnVQt+mSZmk1AbtRMQJ5Qc6PmBsiNmjfUPKHmBsikZtNJ1aKTqkUnVYs++TIgT6h5AsikZgIyqZmAPKFmUjMBeQPIG0AmNZOaCcik5o2TqkUnVYtOqhZ98pdTMwG5ATKpmYDcALlR84SaCcikZgIyqfmTnFQtOqladFK16JN/nJon1NwAmdRMQG7U3Ki5UXMD5P90UrXopGrRSdWiT75Mzf8JyI2aCcgTQG7U3ACZ1ExAJjUTkBs1E5BvOqladFK16KRq0SfLgPwmIJOaN9TcAJnUTEA2qZmA3Kh5Qs2mk6pFJ1WLTqoW4Y9ULTmpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoW/Qc0qk0W+lbzPwAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/a9529ba9">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS5SURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHZAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRScwPkRs0EZFLzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgDwBZFLzhpobIE+omYA8oWYTkE0nVYtOqhadVC365MuAPKHmCTVPqJmATEBu1Nyo+U1AnlDzTSdVi06qFp1ULfrkHwdkUrNJzRNAJjUTkEnNf8lJ1aKTqkUnVYs++cepuQEyqblRcwNkUjMBeQLIpOZfdlK16KRq0UnVok++TM1fAuQNNTdqJiDfpOYvOaladFK16KRq0SfLgPwmIJOaGzUTkBsgk5oJyKTmRs0E5Akgf9lJ1aKTqkUnVYs+eUnNXwJkUvNNaiYgN0CeUPMvOaladFK16KRq0ScvAZnUTEBu1ExAnlDzBJAn1NwA+SYgk5obIJOaCciNmjdOqhadVC06qVqEP/ICkE1qngAyqXkDyI2aCcik5gbIN6l5Asik5o2TqkUnVYtOqhZ98pKaCcikZgIyqbkBcqPmCSA3aiYgbwCZ1LwB5AkgN2o2nVQtOqladFK1CH/ki4A8oeYGyKTmBsiNmgnIE2reADKpuQFyo+YJIJOaN06qFp1ULTqpWoQ/8ocBeULNE0CeUHMD5EbNNwG5UfNNJ1WLTqoWnVQtwh9ZBOQJNROQSc0E5EbNDZAbNROQGzVPAJnU3AC5UXMD5Ak1b5xULTqpWnRSteiTl4DcqLkBMqmZgGxSMwG5UfMEkCeAvAFkUvP/dFK16KRq0UnVok9eUnMD5EbNjZobIBOQGzVvALlRcwPkRs0NkCfUTEAmNZtOqhadVC06qVqEP/ICkBs1N0DeUHMD5A01bwB5Q80NkBs1E5BJzaaTqkUnVYtOqhZ98pKaCcgE5EbNBGRScwPkRs0TQG6ATGpu1NwAeQLIpGYCMgH5TSdVi06qFp1ULfrkJSCTmhsgN2omIDdqboBMaiYgk5pNQCY1k5oJyBtqJiCTmm86qVp0UrXopGrRJy+p2QRkUjMBuQEyqZmAvKFmAvJNQCY1f9lJ1aKTqkUnVYs+WQbkCSCTmgnIDZBJzQTkRs0TQDYBeQLIX3ZSteikatFJ1SL8kX8YkCfU3AC5UTMBmdQ8AWRS8wSQTWreOKladFK16KRq0ScvAflNar5JzQRkE5AngExqnlAzAZnUbDqpWnRSteikatEny9RsAvKbgNwAeUPNBORGzSY133RSteikatFJ1aJPvgzIE2qeUDMBmdRMQCY1k5obIJOaCcik5gkgb6iZgDyh5o2TqkUnVYtOqhZ98o8DcgPkBsgbQG6ATGomNROQSc0NkAnIpOYGyKaTqkUnVYtOqhZ98h+j5gkgN2reADIBmdQ8AWRScwNkUvNNJ1WLTqoWnVQt+uTL1HyTmgnIpGYCMqmZgExAbtQ8oWYCMql5A8ikZgIyqdl0UrXopGrRSdWiT5YB+U1A/iVA3lDzl51ULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteh/N0kKaE1HnGcAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

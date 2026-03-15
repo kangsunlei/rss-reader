@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AI 对软件维护的经济影响：两种情景</title>
+        <title>Grab 如何使用时间感知型 LRU 优化 Android 上的图像缓存</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,79 @@
         </style>
     </head>
     <body>
-        <h2>AI 对软件维护的经济影响：两种情景</h2>
-        <p>3/13/2026, 5:54:11 PM</p>
+        <h2>Grab 如何使用时间感知型 LRU 优化 Android 上的图像缓存</h2>
+        <p>3/14/2026, 8:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者分析了 AI 对软件维护成本的影响，将如何决定 Amazon 或当前的初创公司是否正在犯战略性错误。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Grab 通过将 Glide 的 LRU 扩展为时间感知型 TLRU 设计，改进了 Android 图像缓存，显著回收了存储空间，同时将命中率影响控制在可接受范围内。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Orosz 在他之前的观点基础上进一步阐述了两种逻辑情景：如果 AI 能显著降低维护成本，那么 Amazon 停用 Chime 的决定就是个错误；然而，如果即使有 AI，维护成本依然高昂，那么初创公司在内部重建复杂的 SaaS 很可能是在犯错。他指出，未来 1-2 年将是关键的学习期，以验证“AI 效率”这场赌注哪一方是正确的。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文解释了 Grab 如何解决固定大小 LRU 图像缓存中的两种相反的故障模式：对于重度用户而言的缓存频繁更新，以及对于轻度用户而言的陈旧的长期存在的条目。团队没有重写缓存基础设施，而是 fork 了 Glide 的 DiskLruCache，并增加了基于时间的过期机制、最后访问持久化以及对现有日志的迁移兼容性。他们的 TLRU 策略结合了 TTL、最小缓存阈值和最大缓存大小，以平衡保留和逐出。推广过程遵循明确的成功标准，包括命中率下降不超过 3 个百分点。报告结果显示，所有用户的存储空间都大幅减少，带来了巨大的总节省，并且没有导致主要的服务器成本回升，使其成为一个实用的移动性能优化案例。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">纯粹基于大小的 LRU 在实际使用中既导致了过度逐出，也导致了逐出不足。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 团队观察到，即使缓存大小从未达到上限，活跃用户也会出现缓存频繁更新，而低活跃用户则会出现缓存条目陈旧并保留数月的情况。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">TLRU 的实现是通过扩展一个经过验证的缓存核心，而不是替换它。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过基于 Glide DiskLruCache 构建，该解决方案继承了成熟的崩溃恢复和线程安全行为，同时增加了时间感知型策略逻辑。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">迁移和回滚兼容性被视为首要约束。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Grab 在迁移期间分配了基线时间戳，并保留了双向日志兼容性，以支持安全回滚。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">推广过程使用了可衡量的类似 SLO 的保障措施。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 一个有界限的命中率下降阈值实现了存储空间的节省，而没有导致不可接受的请求放大。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们的成功标准是，在过渡到 TLRU 期间，缓存命中率下降不超过 3 个百分点 (pp)。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">采用这种方法，95% 的应用用户缓存大小减少了 50MB</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种实现在 Android 生态系统中被广泛采用，并处理复杂的边缘情况</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Gergely Orosz(@GergelyOrosz)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Gergely Orosz</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sergio De Simone</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">471</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">540</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件经济学</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 影响</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Amazon</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SaaS 开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">维护成本</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Android</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TLRU</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Glide</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">移动性能</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2032515581816041546" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/b55a11a2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2032515581816041546">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/b55a11a2">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATbSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIpOYGyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXlCzY2aN4DcqJnUbFKzCcimk6pFJ1WLTqoWffJlQJ5Q8wSQGzU3QCY1m4A8oeYJIE+o+aaTqkUnVYtOqhZ98o8D8gSQN4BMaiYgk5p/yUnVopOqRSdViz75x6m5ATKp2QTkv+SkatFJ1aKTqkWffJma36RmArIJyKTmRs0NkEnNE2r+JCdVi06qFp1ULfpkGZA/mZoJyA2QSc0EZFIzAZnUvAHkT3ZSteikatFJ1aJPXlLzNwEyqXlDzY2aCcik5kbN3+SkatFJ1aKTqkWfvARkUjMB2aRmUrMJyKRmAjKpmYBMaiY1E5BJzQRkk5pvOqladFK16KRqEf7IIiBPqJmATGomIJOaJ4DcqJmATGomIJOaGyDfpOYJIJOaN06qFp1ULTqpWoQ/sgjIjZobIDdqJiCb1NwAeULNDZAbNX+Tk6pFJ1WLTqoWffKHUzMBmdRMQCY1E5AngExqJiCTmgnIG0Bu1ExAJjUTkEnNppOqRSdVi06qFuGPvABkUnMD5EbNBGRSMwG5UXMD5EbNE0Bu1HwTkBs133RSteikatFJ1aJPXlIzAZnUTGomIDdq3gAyqblRMwGZ1LwB5A01E5BJzRNAJjVvnFQtOqladFK16JNfBuQGyCY1E5An1ExAnlBzA2RScwNkUjMBuVEzqdl0UrXopGrRSdWiT36Zmhsgk5oJyKTmBsikZgJyA+QJNTdANgGZ1NwAmdRsOqladFK16KRq0SdfBuQNIJOaCcgTQCY1E5An1ExAJjU3at5QMwG5UfNNJ1WLTqoWnVQt+uQlIJOaCcik5gbIpOabgExqngAyqZmA3ACZ1ExAboBMaiYgN0AmNW+cVC06qVp0UrXokz+MmgnIpOZGzQRkE5BJzRNqboBMaiYgk5o31Gw6qVp0UrXopGrRJ/9nQG7UTEBugExqJiCTmhsgN0AmNZOaGyCTmgnIDZBJzaRmAjKp2XRSteikatFJ1aJPfhmQSc0EZAJyo2YCMgF5Asik5gkgk5oJyA2QTUBugExq3jipWnRSteikahH+yF8MyKRmE5BJzQRkUvMEkEnNE0A2qXnjpGrRSdWik6pFn7wE5DepmdTcAHlDzQTkBsgmIJOaN9R800nVopOqRSdViz5ZpmYTkBsgN2o2qXkCyBtqnlBzA+RGzRsnVYtOqhadVC365MuAPKHmDTU3QG7U3ACZ1ExAJjU3QCYgm4D8ppOqRSdVi06qFn3yH6dmAjKpmdRMQCY1b6i5ATKpmYD8P51ULTqpWnRSteiTfxyQGyCTmgnIN6m5AXID5A01m06qFp1ULTqpWvTJl6n5JjUTkEnNBGSTmhsgk5oJyKRmUjMBmdRMQCY1E5BvOqladFK16KRq0SfLgPwmIE+omYBMQCY1TwCZ1ExAJjUTkEnNDZAbIJOabzqpWnRSteikahH+SNWSk6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatH/AOfHNVi4LfDZAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
