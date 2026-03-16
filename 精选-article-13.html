@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>给“氛围编程”系上安全带：阿里集团 AI 代码评审实践与 Benchmark 开源</title>
+        <title>一文搞懂爆火的 SKills 原理及实践案例</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>给“氛围编程”系上安全带：阿里集团 AI 代码评审实践与 Benchmark 开源</h2>
-        <p>3/13/2026, 12:31:00 AM</p>
+        <h2>一文搞懂爆火的 SKills 原理及实践案例</h2>
+        <p>3/13/2026, 12:46:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了阿里集团基于 Agent 架构的 AI 代码评审实践，探讨了如何通过人机协作与自定义规则规避“氛围编程”风险，并发布了业界首个仓库级上下文感知的评测基准 AACR-Bench。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 AI 辅助开发中“Skills”的核心原理，提出了基于中台思维的 Prompt 复用理念，并详细介绍了逆向建模、问题定位及 AI-CR 等实战案例。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了在 AI 生成代码量激增的背景下，如何通过 AI 代码评审（ACR）保障软件质量。阿里分享了其历时一年半打磨的 Agent 驱动评审系统，该系统超越了传统的 RAG 模式，具备跨文件推理、动态上下文召回和“思维闭环”能力。文章强调，开发者应从 AI 的被动消费者转变为“训练师”，通过定义精准的业务规则和收敛规则作用域来降低误报并提升评审深度。最后，阿里联合南京大学开源了 AACR-Bench，旨在解决现有评测集数据质量低、视野狭窄的问题，为行业提供多语言、多维度的评估标准。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章将 AI Skills 类比为软件架构中的“中台”，核心在于 Prompt 的复用与工程化沉淀。作者提出 Skills 的设计应遵循“渐进式披露”原则以优化上下文窗口，并强调开发 Skills 的难点在于“向外洞察”问题与“向内觉察”思维过程。在实践层面，文章重点介绍了“逆向建模”方法论，即通过现有代码反推实体、规则和行为，从而引导 AI 进行精准的需求迭代。此外，还展示了利用 MCP 协议打通日志系统进行问题定位，以及工程化的 AI 辅助代码评审（CR）流程，强调了面向 AI 设计系统的重要性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 代码评审正从简单的静态扫描演进为具备推理能力的 Agent 协作模式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新一代 AI 评审助手通过“阅读理解-提出假设-寻找证据-判定结论”的思维闭环，能够跨文件发现隐蔽的逻辑漏洞，如复杂的空指针异常。</span>
+                        <strong style="color: #1e40af">Skills 的本质是公共 Prompt 的工程化复用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴中台思维，将高频、通用的 Prompt 封装为 Skills，并按软件工程生命周期分类，实现经验的低成本共享与提效。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“氛围编程”带来的信任膨胀需要通过 AI 评审这一“安全带”来制衡。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者易因 AI 产出高效而放弃逐行审查，导致模型幻觉产生的 Bug 累积。AI 评审能接管基础工作，让渡人类精力聚焦核心业务风险。</span>
+                        <strong style="color: #1e40af">设计 Skills 应采用“渐进式披露”以节省上下文。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 运行时资源有限，通过分级加载元信息和语义匹配，只在需要时加载实际内容，避免干扰并减少幻觉。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">开发者需完成从“被动等待者”到“主动引导者”的身份跨越以提升评审质量。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 无法感知业务 DNA，高质量的评审依赖于开发者清晰的意图描述和自定义规则约束，只有“双向奔赴”才能打破模型能力的瓶颈。</span>
+                        <strong style="color: #1e40af">逆向建模是 AI 辅助需求迭代的核心方法。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过代码反推实体关系、流程和规则，建立显化表达的“图纸”，让 AI 的生成基于确定的逻辑而非模糊的语言。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">编写有效的代码评审规则需通过“收敛作用域”来解决边际效应递减问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过限定物理边界（文件路径）和识别逻辑特征（特定注解或调用）来精准触发规则，可显著降低全局应用规则带来的高误报率。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AACR-Bench 的开源填补了业界缺乏高质量、仓库级 AI 代码评审评测标准的空白。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该基准支持 10 种语言，采用人机结合的标注流水线，问题覆盖率提升 285%，能真实还原复杂的跨文件代码审查过程。</span>
+                        <strong style="color: #1e40af">开发 Skills 需要“向外洞察”与“向内觉察”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 识别反复出现的价值问题，并复盘自己解决问题的隐性思考过程，将其转化为 AI 可理解的领域知识。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">代码 Bug 就像蟑螂：当你发现一只时，阴暗处可能早已潜伏着成百上千只，你不去寻找，隐患依然存在。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 正在接管繁琐的基础评审工作，让开发者能聚焦于发现更复杂的业务风险，以更少的时间发现更多的风险。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">试图让 Agent 在缺乏上下文输入的情况下猜中开发者的心思，这显然是不现实的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正的智能化，始于你决定不再做 AI 的被动消费者，而是成为它的‘训练师’的那一刻。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只有当 AI 学会了你的规矩，它才能从一个‘不太聪明’的旁观者，进化为你身后那个孜孜不倦的金牌守门员。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">什么是 Skills？答：公共的 Prompt 就是 Skills！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不是让 AI 知道更多，而是让 AI 在恰当的时间知道恰当的事。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 时代，人类的语言已经成为了一门全新的“编程语言”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的 Prompt 其实就是代码本身。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 时代，系统设计将从面向于人设计转向面向 AI 设计。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -68,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6921</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">18 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4418</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 代码评审</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent 架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AACR-Bench</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">研发效能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件质量控制</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Coding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Skills</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">逆向建模</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/7a6e51dd" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/a9529ba9" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/7a6e51dd">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BQW4kwREEwfDC/P/Lrj3mqYBG51CkFGb4T6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIT1IzAXlCzRNAJjVPAHlCzQTkJ6l546Rq0UnVopOqRZ8sU7MJyBNqJiA3QG7U3AB5Qs0E5Ak1m4BsOqladFK16KRq0SdfBuQJNU+oeQLIN6n5SUCeUPNNJ1WLTqoWnVQt+uSPAzKpuVEzAbkBcqNmAjKpmYBMav6XnFQtOqladFK16JM/Ts0E5AbIpOYGyA2QN4BMav6yk6pFJ1WLTqoWffJlan4TNROQJ9Q8AeSb1PwmJ1WLTqoWnVQt+mQZkJ8EZFIzAXlCzQTkBsik5kbNBOQJIL/ZSdWik6pFJ1WLPnlJzW8CZJOaCcgNkBsgT6j5S06qFp1ULTqpWvTJS0AmNROQGzUTkCfUTEAmNZvU3ADZBGRScwNkUjMBuVHzxknVopOqRSdViz55Sc03qZmATEAmNTdAngAyqblRcwPkBsgNkBs1N2omIJtOqhadVC06qVr0yUtAJjWTmgnIjZoJyKRmAvKEmgnIjZobIJOaCcik5g0gTwC5UbPppGrRSdWik6pFn3wZkDfU3KiZgNyouQHyhJobNTdAJjWb1NwAmdS8cVK16KRq0UnVIvwnLwC5UfMEkE1qboDcqHkCyI2abwJyo+abTqoWnVQtOqlahP9kEZBNar4JyKTmBsik5gkgk5obIDdqboA8oeaNk6pFJ1WLTqoWffISkCfUPAFkUvMEkEnNDZBJzaTmBsgTQN4AMqn5bzqpWnRSteikatEnL6mZgExqngAyqZmAbFJzA+QJNTdAbtTcAHlCzQRkUrPppGrRSdWik6pF+E++CMikZgLyhpoJyKRmAvKEmjeAvKHmBsiNmgnIpGbTSdWik6pFJ1WLPvkvUzMBmdS8AWQTkEnNjZobIE8AmdRMQCYgP+mkatFJ1aKTqkWfvARkUjOpmYBMaiY1E5AbNTdqboBMaiYgbwCZ1ExqJiBvqJmATGq+6aRq0UnVopOqRZ+8pOYGyA2QSc2k5gbIE0AmNU+omYB8E5BJzW92UrXopGrRSdWiT5YBmdRMQCY1E5AbNU8AmdS8AWQTkCeA/GYnVYtOqhadVC3Cf/KHAblRcwNkUvMEkEnNE0AmNU8A2aTmjZOqRSdVi06qFn3yEpCfpOYJIDdqfhKQJ4BMap5QMwGZ1Gw6qVp0UrXopGrRJ8vUbAKySc0NkEnNBOQNNROQGzWb1HzTSdWik6pFJ1WLPvkyIE+oeULNBOQGyKRmUvOEmgnIpOYJIG+omYA8oeaNk6pFJ1WLTqoWffLHAZnUTEAmNROQN4DcAJnUTGomIJOaGyATkEnNDZBNJ1WLTqoWnVQt+uT/DJBJzQ2QSc0TQCYgk5ongExqboBMar7ppGrRSdWik6pFn3yZmm9SMwG5UXMD5AbIpOYJNROQSc0bQCY1E5BJzaaTqkUnVYtOqhZ9sgzITwIyqZmATECeUDMBeQPIG2p+s5OqRSdVi06qFuE/qVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoPUgUUaiiBiIMAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/a9529ba9">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS5SURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHZAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRScwPkRs0EZFLzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgDwBZFLzhpobIE+omYA8oWYTkE0nVYtOqhadVC365MuAPKHmCTVPqJmATEBu1Nyo+U1AnlDzTSdVi06qFp1ULfrkHwdkUrNJzRNAJjUTkEnNf8lJ1aKTqkUnVYs++cepuQEyqblRcwNkUjMBeQLIpOZfdlK16KRq0UnVok++TM1fAuQNNTdqJiDfpOYvOaladFK16KRq0SfLgPwmIJOaGzUTkBsgk5oJyKTmRs0E5Akgf9lJ1aKTqkUnVYs+eUnNXwJkUvNNaiYgN0CeUPMvOaladFK16KRq0ScvAZnUTEBu1ExAnlDzBJAn1NwA+SYgk5obIJOaCciNmjdOqhadVC06qVqEP/ICkE1qngAyqXkDyI2aCcik5gbIN6l5Asik5o2TqkUnVYtOqhZ98pKaCcikZgIyqbkBcqPmCSA3aiYgbwCZ1LwB5AkgN2o2nVQtOqladFK1CH/ki4A8oeYGyKTmBsiNmgnIE2reADKpuQFyo+YJIJOaN06qFp1ULTqpWoQ/8ocBeULNE0CeUHMD5EbNNwG5UfNNJ1WLTqoWnVQtwh9ZBOQJNROQSc0E5EbNDZAbNROQGzVPAJnU3AC5UXMD5Ak1b5xULTqpWnRSteiTl4DcqLkBMqmZgGxSMwG5UfMEkCeAvAFkUvP/dFK16KRq0UnVok9eUnMD5EbNjZobIBOQGzVvALlRcwPkRs0NkCfUTEAmNZtOqhadVC06qVqEP/ICkBs1N0DeUHMD5A01bwB5Q80NkBs1E5BJzaaTqkUnVYtOqhZ98pKaCcgE5EbNBGRScwPkRs0TQG6ATGpu1NwAeQLIpGYCMgH5TSdVi06qFp1ULfrkJSCTmhsgN2omIDdqboBMaiYgk5pNQCY1k5oJyBtqJiCTmm86qVp0UrXopGrRJy+p2QRkUjMBuQEyqZmAvKFmAvJNQCY1f9lJ1aKTqkUnVYs+WQbkCSCTmgnIDZBJzQTkRs0TQDYBeQLIX3ZSteikatFJ1SL8kX8YkCfU3AC5UTMBmdQ8AWRS8wSQTWreOKladFK16KRq0ScvAflNar5JzQRkE5AngExqnlAzAZnUbDqpWnRSteikatEny9RsAvKbgNwAeUPNBORGzSY133RSteikatFJ1aJPvgzIE2qeUDMBmdRMQCY1k5obIJOaCcik5gkgb6iZgDyh5o2TqkUnVYtOqhZ98o8DcgPkBsgbQG6ATGomNROQSc0NkAnIpOYGyKaTqkUnVYtOqhZ98h+j5gkgN2reADIBmdQ8AWRScwNkUvNNJ1WLTqoWnVQt+uTL1HyTmgnIpGYCMqmZgExAbtQ8oWYCMql5A8ikZgIyqdl0UrXopGrRSdWiT5YB+U1A/iVA3lDzl51ULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteh/N0kKaE1HnGcAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

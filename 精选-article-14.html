@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>你的 AI Agent 真的在受控运行吗？</title>
+        <title>给“氛围编程”系上安全带：阿里集团 AI 代码评审实践与 Benchmark 开源</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>你的 AI Agent 真的在受控运行吗？</h2>
+        <h2>给“氛围编程”系上安全带：阿里集团 AI 代码评审实践与 Benchmark 开源</h2>
         <p>3/13/2026, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文以 OpenClaw 为例，系统阐述了如何通过 Session 审计日志、应用日志和 OTEL 遥测构建 AI Agent 的可观测体系，解决其行为非确定性带来的安全与受控运行难题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了阿里集团基于 Agent 架构的 AI 代码评审实践，探讨了如何通过人机协作与自定义规则规避“氛围编程”风险，并发布了业界首个仓库级上下文感知的评测基准 AACR-Bench。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了 AI Agent 在运行时面临的安全挑战，如指令遗忘、高危工具滥用和攻击面宽广等问题。作者指出，由于 Agent 行为具有非确定性，传统的预防性控制（如策略管道、命令过滤）不足以保证其完全受控。文章提出了一套基于 Logs、Metrics 和 Traces 的可观测性架构，详细介绍了三条数据管道：Session 审计日志用于还原行为链和威胁检测；应用日志用于监控系统运行状态；OTEL 遥测用于实时性能与成本监控。通过多源联动的排查路径，为 AI Agent 从“能用”转向“可信”提供了完整的方法论和技术实践。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了在 AI 生成代码量激增的背景下，如何通过 AI 代码评审（ACR）保障软件质量。阿里分享了其历时一年半打磨的 Agent 驱动评审系统，该系统超越了传统的 RAG 模式，具备跨文件推理、动态上下文召回和“思维闭环”能力。文章强调，开发者应从 AI 的被动消费者转变为“训练师”，通过定义精准的业务规则和收敛规则作用域来降低误报并提升评审深度。最后，阿里联合南京大学开源了 AACR-Bench，旨在解决现有评测集数据质量低、视野狭窄的问题，为行业提供多语言、多维度的评估标准。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI Agent 的非确定性行为使得传统 API 审计模式失效。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 同样的用户输入可能产生不同的工具调用序列，无法通过静态代码审查预判所有路径，必须依赖运行时的可观测性来追溯行为。</span>
+                        <strong style="color: #1e40af">AI 代码评审正从简单的静态扫描演进为具备推理能力的 Agent 协作模式。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新一代 AI 评审助手通过“阅读理解-提出假设-寻找证据-判定结论”的思维闭环，能够跨文件发现隐蔽的逻辑漏洞，如复杂的空指针异常。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">运行时防护存在局限，必须依靠持续可观测性作为补位哨兵。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 预防性控制无法覆盖配置错误、规则遗漏或模型上下文压缩导致的指令遗忘，需通过日志和指标在策略失效时及早发现风险。</span>
+                        <strong style="color: #1e40af">“氛围编程”带来的信任膨胀需要通过 AI 评审这一“安全带”来制衡。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者易因 AI 产出高效而放弃逐行审查，导致模型幻觉产生的 Bug 累积。AI 评审能接管基础工作，让渡人类精力聚焦核心业务风险。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Session 审计日志是还原 Agent 行为链及检测威胁的核心数据源。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过记录每轮对话的结构化数据，可以实现敏感数据外泄检测、高危工具调用监控及精准的成本归因，完整还原 Agent 到底做了什么。</span>
+                        <strong style="color: #1e40af">开发者需完成从“被动等待者”到“主动引导者”的身份跨越以提升评审质量。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 无法感知业务 DNA，高质量的评审依赖于开发者清晰的意图描述和自定义规则约束，只有“双向奔赴”才能打破模型能力的瓶颈。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">OTEL 遥测能够实时监控 Token 消耗增速和会话健康度。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Metrics 指标可以快速识别 Token 激增、会话卡死或 Webhook 错误率异常，为系统运维提供实时的告警能力。</span>
+                        <strong style="color: #1e40af">编写有效的代码评审规则需通过“收敛作用域”来解决边际效应递减问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过限定物理边界（文件路径）和识别逻辑特征（特定注解或调用）来精准触发规则，可显著降低全局应用规则带来的高误报率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">建立“指标发现-日志定位-审计还原”的多源联动排查模式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 OTEL 告警发现异常，利用应用日志缩小范围，最后下钻到 Session 审计日志确认根因，形成完整的审计与运维闭环。</span>
+                        <strong style="color: #1e40af">AACR-Bench 的开源填补了业界缺乏高质量、仓库级 AI 代码评审评测标准的空白。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该基准支持 10 种语言，采用人机结合的标注流水线，问题覆盖率提升 285%，能真实还原复杂的跨文件代码审查过程。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent 的行为是非确定的。这意味着你无法像审计 REST API 那样通过代码审查预判所有行为路径。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">运行时防护相当于“城墙”——能挡住绝大多数已知攻击路径，但无法保证配置永不出错，也无法覆盖未知绕过。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">回答“你的 AI Agent 真的在受控运行吗？”需要同时回答：谁在触发调用、花了多少钱、做了哪些操作、行为是否可追溯。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Token 激增往往不只是成本问题——Prompt 注入导致上下文被恶意填充、工具调用陷入死循环都会表现为曲线陡升。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只有三源联动，才能从“有异常”到“哪里出了问题”再到“Agent 具体做了什么”形成可查证的审计与运维闭环。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">代码 Bug 就像蟑螂：当你发现一只时，阴暗处可能早已潜伏着成百上千只，你不去寻找，隐患依然存在。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 正在接管繁琐的基础评审工作，让开发者能聚焦于发现更复杂的业务风险，以更少的时间发现更多的风险。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">试图让 Agent 在缺乏上下文输入的情况下猜中开发者的心思，这显然是不现实的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正的智能化，始于你决定不再做 AI 的被动消费者，而是成为它的‘训练师’的那一刻。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">只有当 AI 学会了你的规矩，它才能从一个‘不太聪明’的旁观者，进化为你身后那个孜孜不倦的金牌守门员。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">33 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8123</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6921</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenClaw</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全审计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenTelemetry</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 代码评审</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent 架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AACR-Bench</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">研发效能</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件质量控制</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/e2b00eaa" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/7a6e51dd" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/e2b00eaa">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATbSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEBu1ExA3lAzAZnUPAHkN6l546Rq0UnVopOqRZ8sU7MJyI2aCcgTQCY1E5BJzRNqJiA3am7UbAKy6aRq0UnVopOqRZ98GZAn1Lyh5gbIE2pugNyo+SYgT6j5ppOqRSdVi06qFn3ylwMyqblRcwNkUjMBmdTcALlR8y85qVp0UrXopGrRJ/8YIJOaCcik5jepmYBMav5mJ1WLTqoWnVQt+uTL1PzNgExqJiCTmknNBGRS84aaP8lJ1aKTqkUnVYs+WQbk/6RmAjKpmYBMaiYgbwCZ1ExAJjU3QP5kJ1WLTqoWnVQtwh/5iwG5UTMBuVFzA2RSMwF5Qs2/5KRq0UnVopOqRZ+8BGRS8wSQSc0E5A0gk5ongExqnlAzAbkBsknNDZBJzRsnVYtOqhadVC3CH/kiIE+ouQEyqZmA3Ki5ATKpmYDcqNkE5DepeeOkatFJ1aKTqkWffJmaCcgTQCY1N2pugNyoeULNDZBJzQRkk5ongGw6qVp0UrXopGoR/sgLQCY1TwCZ1NwAeUPNNwGZ1ExAnlBzA+RGzQTkRs0bJ1WLTqoWnVQt+uQlNROQJ9RMQJ5Q8wSQSc0TQCY1N0C+Sc0bajadVC06qVp0UrXoky9TMwGZgNyouQEyqZmA3AD5TWqeADKpmYC8AWRS88ZJ1aKTqkUnVYs+WaZmAnKj5gbIjZpNaiYgT6iZgNwAmdR8k5oJyKaTqkUnVYtOqhZ98hKQSc2Nmhsgk5obIDdqfhOQGyCb1DwB5JtOqhadVC06qVr0yTIgk5oJyKTmBsgTajapeUPNDZAJyKRmAjKpeUPNppOqRSdVi06qFuGPvABkUjMBeULNJiC/Sc0EZFJzA2STmgnIjZo3TqoWnVQtOqla9MlLap5QcwPkCTU3am6ATGpugNwAmdRsUjMBmdRMQCY1E5BNJ1WLTqoWnVQtwh/5IiA3ap4A8oSaGyCTmgnIjZoJyI2aCcik5puA3Kh546Rq0UnVopOqRZ+8BORGzQRkAjKpmYBMap4AMql5Qs0E5Ak1TwDZpGZSMwHZdFK16KRq0UnVIvyRvxiQSc0NkEnNBOQNNTdAbtQ8AWRS8wSQSc0bJ1WLTqoWnVQt+uQlIL9JzQ2QN9TcAJnUfBOQSc0NkBs133RSteikatFJ1aJPlqnZBORGzQRkUjMBmYBMaiYgk5oJyI2aN9Q8oeYGyKRm00nVopOqRSdViz75MiBPqHkCyKRmAjKpmYBMQJ5QMwF5A8gbQCY1k5oJyKTmjZOqRSdVi06qFn3yl1MzAbkBcqNmAjIBuVHzhJoJyKRmAjKp+ZOcVC06qVp0UrXok3+MmgnIN6mZgNyouVFzo+YGyP/ppGrRSdWik6pFn3yZmt8EZFIzAZnU3KiZgExAbtTcAJnUTEAmNROQGzUTkG86qVp0UrXopGrRJ8uA/CYgk5oJyBNAnlAzAdmkZgJyo+YJNZtOqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0Hx9mRi/ivkgtAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/7a6e51dd">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BQW4kwREEwfDC/P/Lrj3mqYBG51CkFGb4T6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIT1IzAXlCzRNAJjVPAHlCzQTkJ6l546Rq0UnVopOqRZ8sU7MJyBNqJiA3QG7U3AB5Qs0E5Ak1m4BsOqladFK16KRq0SdfBuQJNU+oeQLIN6n5SUCeUPNNJ1WLTqoWnVQt+uSPAzKpuVEzAbkBcqNmAjKpmYBMav6XnFQtOqladFK16JM/Ts0E5AbIpOYGyA2QN4BMav6yk6pFJ1WLTqoWffJlan4TNROQJ9Q8AeSb1PwmJ1WLTqoWnVQt+mQZkJ8EZFIzAXlCzQTkBsik5kbNBOQJIL/ZSdWik6pFJ1WLPnlJzW8CZJOaCcgNkBsgT6j5S06qFp1ULTqpWvTJS0AmNROQGzUTkCfUTEAmNZvU3ADZBGRScwNkUjMBuVHzxknVopOqRSdViz55Sc03qZmATEAmNTdAngAyqblRcwPkBsgNkBs1N2omIJtOqhadVC06qVr0yUtAJjWTmgnIjZoJyKRmAvKEmgnIjZobIJOaCcik5g0gTwC5UbPppGrRSdWik6pFn3wZkDfU3KiZgNyouQHyhJobNTdAJjWb1NwAmdS8cVK16KRq0UnVIvwnLwC5UfMEkE1qboDcqHkCyI2abwJyo+abTqoWnVQtOqlahP9kEZBNar4JyKTmBsik5gkgk5obIDdqboA8oeaNk6pFJ1WLTqoWffISkCfUPAFkUvMEkEnNDZBJzaTmBsgTQN4AMqn5bzqpWnRSteikatEnL6mZgExqngAyqZmAbFJzA+QJNTdAbtTcAHlCzQRkUrPppGrRSdWik6pF+E++CMikZgLyhpoJyKRmAvKEmjeAvKHmBsiNmgnIpGbTSdWik6pFJ1WLPvkvUzMBmdS8AWQTkEnNjZobIE8AmdRMQCYgP+mkatFJ1aKTqkWfvARkUjOpmYBMaiY1E5AbNTdqboBMaiYgbwCZ1ExqJiBvqJmATGq+6aRq0UnVopOqRZ+8pOYGyA2QSc2k5gbIE0AmNU+omYB8E5BJzW92UrXopGrRSdWiT5YBmdRMQCY1E5AbNU8AmdS8AWQTkCeA/GYnVYtOqhadVC3Cf/KHAblRcwNkUvMEkEnNE0AmNU8A2aTmjZOqRSdVi06qFn3yEpCfpOYJIDdqfhKQJ4BMap5QMwGZ1Gw6qVp0UrXopGrRJ8vUbAKySc0NkEnNBOQNNROQGzWb1HzTSdWik6pFJ1WLPvkyIE+oeULNBOQGyKRmUvOEmgnIpOYJIG+omYA8oeaNk6pFJ1WLTqoWffLHAZnUTEAmNROQN4DcAJnUTGomIJOaGyATkEnNDZBNJ1WLTqoWnVQt+uT/DJBJzQ2QSc0TQCYgk5ongExqboBMar7ppGrRSdWik6pFn3yZmm9SMwG5UXMD5AbIpOYJNROQSc0bQCY1E5BJzaaTqkUnVYtOqhZ9sgzITwIyqZmATECeUDMBeQPIG2p+s5OqRSdVi06qFuE/qVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoPUgUUaiiBiIMAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
