@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>通过路由优先于推理解决语音延迟问题</title>
+        <title>我复刻了 Claude 刚发布的生成式 UI 交互！</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>通过路由优先于推理解决语音延迟问题</h2>
-        <p>3/13/2026, 11:15:10 PM</p>
+        <h2>我复刻了 Claude 刚发布的生成式 UI 交互！</h2>
+        <p>3/15/2026, 9:22:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文展示了如何通过实现「路由优先于推理」架构显著降低语音助手延迟——使用确定性模式匹配处理常见意图，将 LLM 留给模糊场景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细复盘了作者复刻 Claude 生成式 UI 的工程路径，重点展示流式渲染、组件协议与交互体验打磨。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者解决了语音优先界面中的「死寂」问题，当延迟超过 1.8 秒时，用户会重复自己的话并打破系统状态。通过放弃模型优先的路由方法，作者实现了一个「RouterAgent」，使用正则表达式和关键词检测在大约 8 毫秒内处理约 80% 的查询。该架构遵循「先分诊，后专家」的理念，利用编排器协调专业智能体，并使用专门的 VoiceAgentProcessor 强制执行严格的时间预算并格式化文本转语音的输出。这一优化将 P50 端到端延迟从 1.4 秒降低到 620 毫秒，证明了将路由视为延迟预算问题而非 AI 问题，对于构建响应式语音产品至关重要。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是一篇工程实践复盘，围绕“在聊天流中实时生成可交互 UI”的实现方案展开，涵盖架构思路、生成流程、渲染机制与体验细节优化。文章优点在于实操导向强、问题拆解清晰，并提供了从灵感到落地的完整路径，对 AI Coding 与产品交互结合有直接参考价值。虽然仍属于个人实践样本，泛化边界需要更多场景验证，但整体技术含金量与可执行性较高。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将路由视为延迟预算问题，而非纯粹的 AI 分类问题</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在语音交互中，沉默被解读为失败。对每个路由决策都使用 LLM 会消耗太多 1.8 秒「耐心窗口」的时间，而这些简单查询本可以用确定性逻辑解决。</span>
+                        <strong style="color: #1e40af">文章验证了生成式 UI 在聊天场景的可用工程路径。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过边生成边渲染的方案，显著提升了交互反馈速度和可感知性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实现一个确定性优先的 RouterAgent 来处理大多数用户意图</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用正则表达式和关键词匹配处理常见请求（如搜索或 CRM 查询），系统实现亚 10 毫秒的路由，将昂贵的 LLM 调用仅作为真正模糊查询的降级方案。</span>
+                        <strong style="color: #1e40af">作者不仅复刻功能，还拆解了实现细节。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 包括组件组织、渲染时机和容错体验等关键环节，便于开发者迁移实践。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将编排与「思考」解耦，确保可预测的系统行为</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 编排器应专注于排序和合并智能体结果，而非即兴制定计划。这减少了方差，使系统更易于调试和测试。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用专用桥接层强制执行语音特定的约束和安全</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> VoiceAgentProcessor 管理硬超时、在日志中脱敏 PII，并截断长响应以防止 TTS 引擎变慢，确保稳定清晰的用户体验。</span>
+                        <strong style="color: #1e40af">体验层打磨被置于同等重要位置。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章强调“不该被注意到的细节”决定了产品从 demo 到可用工具的差距。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不要用 LLM 调用去解决一个正则表达式就能解决的问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在语音交互中，两秒的间隙不会让人感觉像「加载中」——而是感觉系统没听到你。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统表现得不像委员会会议，更像优秀的急诊调度员：先分诊，后专家，最后叙述。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最大的改变不是增加更多智能，而是将智能移出关键路径。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">枯燥是好事。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我在 Codepilot 里面复刻了 Claude 刚推出的生成 UI 能力！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 直接在聊天里画交互式图表，流式输出，边生成边渲染。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你能看着图表一笔一笔在画布上画出来。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +62,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">HackerNoon</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Daniel Romitelli</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">歸藏的AI工具箱</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">歸藏的AI工具箱</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2859</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">14 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3316</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">语音 AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 延迟</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体编排</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">意图分类</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">生成式 UI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Coding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">流式渲染</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">交互设计</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/afeb04f2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/15435105" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/afeb04f2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATVSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzJwEyqZmAPKFmAvKb1LxxUrXopGrRSdWiT5ap2QTkm4BMaiYgN2pu1GxSswnIppOqRSdVi06qFn3yZUCeUPMEkBs1m9RMQCY1E5An1DwB5Ak133RSteikatFJ1aJP/ufUTEBugExqJiCTmgnIpOZvclK16KRq0UnVok/+MmreUPMEkEnNBOT/5KRq0UnVopOqRZ98mZp/E5AbNROQSc0E5Ak1N0AmNU+o+ZOcVC06qVp0UrXok2VA/mRqJiCTmgnIpGYCcgNkUvMGkD/ZSdWik6pFJ1WL8Ef+w4C8oeYJIJOaJ4BMav4mJ1WLTqoWnVQt+uQlIJOaCcgmNZOaCcikZgJyA2RS8wSQSc2kZgIyqZmAbFLzTSdVi06qFp1ULfrkJTVvqHkCyCYgk5oJyKRmAjKpuQFyA+QNNU8AmdS8cVK16KRq0UnVIvyRF4BMaiYgN2pugExqboDcqJmATGpugDyh5gbIjZr/kpOqRSdVi06qFn2yDMiNmgnIjZobIL9JzQRkUjMBeQPIjZoJyKRmAjKp2XRSteikatFJ1aJPlql5Qs0NkBs1E5BJzRNAJjU3aiYgN2p+E5BJzTedVC06qVp0UrUIf+QXAZnUvAFkUnMDZFJzA2RScwPkm9RMQCY1TwCZ1LxxUrXopGrRSdWiT14CMql5AsgTaiY1vwnIE2pugExqboBMaiYgN2omNZtOqhadVC06qVr0yTIgk5obNU8AmdRMQJ4AMqmZ1ExAbtTcANkEZFJzA2RSs+mkatFJ1aKTqkWfvKRmAvIGkCeAbALyhJoJyKTmRs0baiYgN2q+6aRq0UnVopOqRfgjLwB5Qs0bQG7UPAFkUvMEkEnNBOQJNROQJ9RMQCY1E5BJzRsnVYtOqhadVC36ZJmaCcgEZFJzA2RS8waQSc0E5Ak1T6i5ATKpmYBMat5Qs+mkatFJ1aKTqkX4Iy8AmdRMQCY1E5BJzRNAJjXfBORGzRNAJjUTkCfU3ACZ1Gw6qVp0UrXopGoR/sgLQCY1N0DeUHMDZFIzAXlCzRNAJjUTkG9SMwF5Qs0bJ1WLTqoWnVQtwh/5DwMyqZmATGqeADKpmYBMap4AMql5AsgmNW+cVC06qVp0UrXok5eA/CY1k5oJyKTmBsiNmgnIDZBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAJjU3QG7U3Kh5Asgbap5QcwPkRs0bJ1WLTqoWnVQt+uTLgDyh5g0gk5obNU8AmdRMQCY1N0AmIJuA/KaTqkUnVYtOqhZ98pcDMqmZgNyomdRMQCY1b6i5ATKpmYD8m06qFp1ULTqpWvTJX07NBOQNIJvU3AC5AfKGmk0nVYtOqhadVC365MvUfJOaGyDfpOYGyKRmAjKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/Ccik5gk1N0AmNTdAJjUTkEnNBGRScwPkBsik5ptOqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0D1KlRyXgJ9xCAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/15435105">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJweSNszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzTUCeUHMD5Ak1E5DfpOaNk6pFJ1WLTqoWfbJMzSYgTwC5UTMBuVHzhppNajYB2XRSteikatFJ1aJPvgzIE2qeAPKGmieATGpugDyh5gkgT6j5ppOqRSdVi06qFn3yj1MzAblRMwF5AsikZgIyqfmXnFQtOqladFK16JP/GTUTkCfU3KiZgPyfnFQtOqladFK16JMvU/Ob1NwAuQFyA2RSc6PmBsik5gk1f5KTqkUnVYtOqhZ9sgzInwTIpGYCMqmZgExqJiCTmgnIpOYNIH+yk6pFJ1WLTqoWffKSmn8JkBsgk5obNROQSc2Nmr/JSdWik6pFJ1WL8EdeADKpmYBsUnMDZFIzAblRMwF5Q80NkEnNBGSTmm86qVp0UrXopGoR/sgvAjKpeQLIG2omIJOaGyCTmieAfJOaJ4BMat44qVp0UrXopGoR/sgiIE+ouQFyo2YCMqmZgDyhZgLyhJobIDdq/iYnVYtOqhadVC365CUgN2omIBOQGzUTkE1qJiA3aiYgk5oJyBtAbtRMQCY1E5BJzaaTqkUnVYtOqhbhj7wA5Ak1E5BJzQTkCTUTkBs1m4DcqPkmIDdqvumkatFJ1aKTqkX4I4uAPKFmAjKpeQPIE2reAPJNaiYgk5ongExq3jipWnRSteikahH+yC8CMqm5AfKEmieATGpugDyh5gbIpOYGyKRmAnKj5ptOqhadVC06qVr0yUtAJjUTkBsgk5pJzQ2QJ4B8k5obIJuATGpugExqNp1ULTqpWnRSteiTl9R8E5BJzRNAJjWb1ExAJjU3at5QMwG5UfNNJ1WLTqoWnVQtwh95AciNmgnIE2omIG+omYDcqLkBMqmZgDyhZgLyhJoJyKRmAjKpeeOkatFJ1aKTqkWfLFOzCciNmgnIDZAngNyoeULNDZBJzQRkUvOGmk0nVYtOqhadVC3CH3kByKRmAjKpuQEyqZmAvKFmAnKjZgJyo+YJIJOaCcgTam6ATGo2nVQtOqladFK16JNfBuQJIE+omYA8oWYCMqm5ATKpmYDcANkE5AbIpOaNk6pFJ1WLTqoW4Y/8xYC8oeYNIJOaJ4BMap4AsknNGydVi06qFp1ULfrkJSC/Sc2k5gbIpOYNIDdANgGZ1Lyh5ptOqhadVC06qVr0yTI1m4DcAJnUTGomIJOaGyCTmieAvKHmCTU3QG7UvHFSteikatFJ1aJPvgzIE2q+Sc0TaiYgk5oJyKTmBsgEZBOQGzWbTqoWnVQtOqla9Mk/BsgbaiYgk5oJyKTmDTU3QCY1E5AngExq3jipWnRSteikatEn/xg1E5BNQDapuQFyA+QNNZtOqhadVC06qVr0yZep+SY1E5A3gDyh5gbIpGYCMqmZ1ExAJjUTkEnNBOSbTqoWnVQtOqla9MkyIL8JyCY1bwCZ1ExAJjUTkEnNDZAbIJOabzqpWnRSteikahH+SNWSk6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatF/isgxNYHtxjQAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

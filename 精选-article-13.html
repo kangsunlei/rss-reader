@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>一文搞懂爆火的 SKills 原理及实践案例</title>
+        <title>通过路由优先于推理解决语音延迟问题</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>一文搞懂爆火的 SKills 原理及实践案例</h2>
-        <p>3/13/2026, 12:46:00 AM</p>
+        <h2>通过路由优先于推理解决语音延迟问题</h2>
+        <p>3/13/2026, 11:15:10 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入探讨了 AI 辅助开发中“Skills”的核心原理，提出了基于中台思维的 Prompt 复用理念，并详细介绍了逆向建模、问题定位及 AI-CR 等实战案例。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文展示了如何通过实现「路由优先于推理」架构显著降低语音助手延迟——使用确定性模式匹配处理常见意图，将 LLM 留给模糊场景。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章将 AI Skills 类比为软件架构中的“中台”，核心在于 Prompt 的复用与工程化沉淀。作者提出 Skills 的设计应遵循“渐进式披露”原则以优化上下文窗口，并强调开发 Skills 的难点在于“向外洞察”问题与“向内觉察”思维过程。在实践层面，文章重点介绍了“逆向建模”方法论，即通过现有代码反推实体、规则和行为，从而引导 AI 进行精准的需求迭代。此外，还展示了利用 MCP 协议打通日志系统进行问题定位，以及工程化的 AI 辅助代码评审（CR）流程，强调了面向 AI 设计系统的重要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者解决了语音优先界面中的「死寂」问题，当延迟超过 1.8 秒时，用户会重复自己的话并打破系统状态。通过放弃模型优先的路由方法，作者实现了一个「RouterAgent」，使用正则表达式和关键词检测在大约 8 毫秒内处理约 80% 的查询。该架构遵循「先分诊，后专家」的理念，利用编排器协调专业智能体，并使用专门的 VoiceAgentProcessor 强制执行严格的时间预算并格式化文本转语音的输出。这一优化将 P50 端到端延迟从 1.4 秒降低到 620 毫秒，证明了将路由视为延迟预算问题而非 AI 问题，对于构建响应式语音产品至关重要。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Skills 的本质是公共 Prompt 的工程化复用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴中台思维，将高频、通用的 Prompt 封装为 Skills，并按软件工程生命周期分类，实现经验的低成本共享与提效。</span>
+                        <strong style="color: #1e40af">将路由视为延迟预算问题，而非纯粹的 AI 分类问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在语音交互中，沉默被解读为失败。对每个路由决策都使用 LLM 会消耗太多 1.8 秒「耐心窗口」的时间，而这些简单查询本可以用确定性逻辑解决。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">设计 Skills 应采用“渐进式披露”以节省上下文。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 运行时资源有限，通过分级加载元信息和语义匹配，只在需要时加载实际内容，避免干扰并减少幻觉。</span>
+                        <strong style="color: #1e40af">实现一个确定性优先的 RouterAgent 来处理大多数用户意图</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用正则表达式和关键词匹配处理常见请求（如搜索或 CRM 查询），系统实现亚 10 毫秒的路由，将昂贵的 LLM 调用仅作为真正模糊查询的降级方案。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">逆向建模是 AI 辅助需求迭代的核心方法。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过代码反推实体关系、流程和规则，建立显化表达的“图纸”，让 AI 的生成基于确定的逻辑而非模糊的语言。</span>
+                        <strong style="color: #1e40af">将编排与「思考」解耦，确保可预测的系统行为</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 编排器应专注于排序和合并智能体结果，而非即兴制定计划。这减少了方差，使系统更易于调试和测试。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">开发 Skills 需要“向外洞察”与“向内觉察”。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 识别反复出现的价值问题，并复盘自己解决问题的隐性思考过程，将其转化为 AI 可理解的领域知识。</span>
+                        <strong style="color: #1e40af">使用专用桥接层强制执行语音特定的约束和安全</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> VoiceAgentProcessor 管理硬超时、在日志中脱敏 PII，并截断长响应以防止 TTS 引擎变慢，确保稳定清晰的用户体验。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">什么是 Skills？答：公共的 Prompt 就是 Skills！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不是让 AI 知道更多，而是让 AI 在恰当的时间知道恰当的事。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 时代，人类的语言已经成为了一门全新的“编程语言”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的 Prompt 其实就是代码本身。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 时代，系统设计将从面向于人设计转向面向 AI 设计。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不要用 LLM 调用去解决一个正则表达式就能解决的问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在语音交互中，两秒的间隙不会让人感觉像「加载中」——而是感觉系统没听到你。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统表现得不像委员会会议，更像优秀的急诊调度员：先分诊，后专家，最后叙述。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最大的改变不是增加更多智能，而是将智能移出关键路径。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">枯燥是好事。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">HackerNoon</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Daniel Romitelli</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">18 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4418</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2859</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Coding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Skills</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">逆向建模</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">语音 AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 延迟</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体编排</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">意图分类</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/a9529ba9" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/afeb04f2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/a9529ba9">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS5SURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHZAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBGRScwPkRs0EZFLzBJAn1ExAfpOaN06qFp1ULTqpWvTJMjWbgDwBZFLzhpobIE+omYA8oWYTkE0nVYtOqhadVC365MuAPKHmCTVPqJmATEBu1Nyo+U1AnlDzTSdVi06qFp1ULfrkHwdkUrNJzRNAJjUTkEnNf8lJ1aKTqkUnVYs++cepuQEyqblRcwNkUjMBeQLIpOZfdlK16KRq0UnVok++TM1fAuQNNTdqJiDfpOYvOaladFK16KRq0SfLgPwmIJOaGzUTkBsgk5oJyKTmRs0E5Akgf9lJ1aKTqkUnVYs+eUnNXwJkUvNNaiYgN0CeUPMvOaladFK16KRq0ScvAZnUTEBu1ExAnlDzBJAn1NwA+SYgk5obIJOaCciNmjdOqhadVC06qVqEP/ICkE1qngAyqXkDyI2aCcik5gbIN6l5Asik5o2TqkUnVYtOqhZ98pKaCcikZgIyqbkBcqPmCSA3aiYgbwCZ1LwB5AkgN2o2nVQtOqladFK1CH/ki4A8oeYGyKTmBsiNmgnIE2reADKpuQFyo+YJIJOaN06qFp1ULTqpWoQ/8ocBeULNE0CeUHMD5EbNNwG5UfNNJ1WLTqoWnVQtwh9ZBOQJNROQSc0E5EbNDZAbNROQGzVPAJnU3AC5UXMD5Ak1b5xULTqpWnRSteiTl4DcqLkBMqmZgGxSMwG5UfMEkCeAvAFkUvP/dFK16KRq0UnVok9eUnMD5EbNjZobIBOQGzVvALlRcwPkRs0NkCfUTEAmNZtOqhadVC06qVqEP/ICkBs1N0DeUHMD5A01bwB5Q80NkBs1E5BJzaaTqkUnVYtOqhZ98pKaCcgE5EbNBGRScwPkRs0TQG6ATGpu1NwAeQLIpGYCMgH5TSdVi06qFp1ULfrkJSCTmhsgN2omIDdqboBMaiYgk5pNQCY1k5oJyBtqJiCTmm86qVp0UrXopGrRJy+p2QRkUjMBuQEyqZmAvKFmAvJNQCY1f9lJ1aKTqkUnVYs+WQbkCSCTmgnIDZBJzQTkRs0TQDYBeQLIX3ZSteikatFJ1SL8kX8YkCfU3AC5UTMBmdQ8AWRS8wSQTWreOKladFK16KRq0ScvAflNar5JzQRkE5AngExqnlAzAZnUbDqpWnRSteikatEny9RsAvKbgNwAeUPNBORGzSY133RSteikatFJ1aJPvgzIE2qeUDMBmdRMQCY1k5obIJOaCcik5gkgb6iZgDyh5o2TqkUnVYtOqhZ98o8DcgPkBsgbQG6ATGomNROQSc0NkAnIpOYGyKaTqkUnVYtOqhZ98h+j5gkgN2reADIBmdQ8AWRScwNkUvNNJ1WLTqoWnVQt+uTL1HyTmgnIpGYCMqmZgExAbtQ8oWYCMql5A8ikZgIyqdl0UrXopGrRSdWiT5YB+U1A/iVA3lDzl51ULTqpWnRStQh/pGrJSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteh/N0kKaE1HnGcAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/afeb04f2">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATVSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzJwEyqZmAPKFmAvKb1LxxUrXopGrRSdWiT5ap2QTkm4BMaiYgN2pu1GxSswnIppOqRSdVi06qFn3yZUCeUPMEkBs1m9RMQCY1E5An1DwB5Ak133RSteikatFJ1aJP/ufUTEBugExqJiCTmgnIpOZvclK16KRq0UnVok/+MmreUPMEkEnNBOT/5KRq0UnVopOqRZ98mZp/E5AbNROQSc0E5Ak1N0AmNU+o+ZOcVC06qVp0UrXok2VA/mRqJiCTmgnIpGYCcgNkUvMGkD/ZSdWik6pFJ1WL8Ef+w4C8oeYJIJOaJ4BMav4mJ1WLTqoWnVQt+uQlIJOaCcgmNZOaCcikZgJyA2RS8wSQSc2kZgIyqZmAbFLzTSdVi06qFp1ULfrkJTVvqHkCyCYgk5oJyKRmAjKpuQFyA+QNNU8AmdS8cVK16KRq0UnVIvyRF4BMaiYgN2pugExqboDcqJmATGpugDyh5gbIjZr/kpOqRSdVi06qFn2yDMiNmgnIjZobIL9JzQRkUjMBeQPIjZoJyKRmAjKp2XRSteikatFJ1aJPlql5Qs0NkBs1E5BJzRNAJjU3aiYgN2p+E5BJzTedVC06qVp0UrUIf+QXAZnUvAFkUnMDZFJzA2RScwPkm9RMQCY1TwCZ1LxxUrXopGrRSdWiT14CMql5AsgTaiY1vwnIE2pugExqboBMaiYgN2omNZtOqhadVC06qVr0yTIgk5obNU8AmdRMQJ4AMqmZ1ExAbtTcANkEZFJzA2RSs+mkatFJ1aKTqkWfvKRmAvIGkCeAbALyhJoJyKTmRs0baiYgN2q+6aRq0UnVopOqRfgjLwB5Qs0bQG7UPAFkUvMEkEnNBOQJNROQJ9RMQCY1E5BJzRsnVYtOqhadVC36ZJmaCcgEZFJzA2RS8waQSc0E5Ak1T6i5ATKpmYBMat5Qs+mkatFJ1aKTqkX4Iy8AmdRMQCY1E5BJzRNAJjXfBORGzRNAJjUTkCfU3ACZ1Gw6qVp0UrXopGoR/sgLQCY1N0DeUHMDZFIzAXlCzRNAJjUTkG9SMwF5Qs0bJ1WLTqoWnVQtwh/5DwMyqZmATGqeADKpmYBMap4AMql5AsgmNW+cVC06qVp0UrXok5eA/CY1k5oJyKTmBsiNmgnIDZBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAJjU3QG7U3Kh5Asgbap5QcwPkRs0bJ1WLTqoWnVQt+uTLgDyh5g0gk5obNU8AmdRMQCY1N0AmIJuA/KaTqkUnVYtOqhZ98pcDMqmZgNyomdRMQCY1b6i5ATKpmYD8m06qFp1ULTqpWvTJX07NBOQNIJvU3AC5AfKGmk0nVYtOqhadVC365MvUfJOaGyDfpOYGyKRmAjKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/Ccik5gk1N0AmNTdAJjUTkEnNBGRScwPkBsik5ptOqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0D1KlRyXgJ9xCAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
