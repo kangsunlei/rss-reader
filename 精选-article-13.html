@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>通过路由优先于推理解决语音延迟问题</title>
+        <title>如何定义“人味儿”？——HeartBench 评测体系建设实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>通过路由优先于推理解决语音延迟问题</h2>
-        <p>3/13/2026, 11:15:10 PM</p>
+        <h2>如何定义“人味儿”？——HeartBench 评测体系建设实践</h2>
+        <p>3/16/2026, 12:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文展示了如何通过实现「路由优先于推理」架构显著降低语音助手延迟——使用确定性模式匹配处理常见意图，将 LLM 留给模糊场景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章系统复盘 HeartBench 从 0 到 1 的构建过程，提出了一套可迁移的 AI 拟人化评测方法论与人机协作流程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者解决了语音优先界面中的「死寂」问题，当延迟超过 1.8 秒时，用户会重复自己的话并打破系统状态。通过放弃模型优先的路由方法，作者实现了一个「RouterAgent」，使用正则表达式和关键词检测在大约 8 毫秒内处理约 80% 的查询。该架构遵循「先分诊，后专家」的理念，利用编排器协调专业智能体，并使用专门的 VoiceAgentProcessor 强制执行严格的时间预算并格式化文本转语音的输出。这一优化将 P50 端到端延迟从 1.4 秒降低到 620 毫秒，证明了将路由视为延迟预算问题而非 AI 问题，对于构建响应式语音产品至关重要。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文围绕「如何科学定义并评测 AI 的人味儿」展开，给出了 HeartBench 的完整设计与落地路径。内容不仅介绍了数据规模、能力维度、Rubric 体系和盲测机制，还详细复盘了 v0.1 到 v1.0 的迭代坑点，包括题目区分度不足、专家一致性低、规模化质量失控和合规返工等关键问题。文章的价值在于将心理社科评测的高主观性问题转化为可复现工程流程：先小样本验证，再人机协作扩展，并用人工盲测校验 LLM-as-a-Judge 的可靠性。对做 AI 评测、对齐和产品化落地的团队有较强参考意义。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将路由视为延迟预算问题，而非纯粹的 AI 分类问题</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在语音交互中，沉默被解读为失败。对每个路由决策都使用 LLM 会消耗太多 1.8 秒「耐心窗口」的时间，而这些简单查询本可以用确定性逻辑解决。</span>
+                        <strong style="color: #1e40af">文章将 AI 下半场竞争重心定义为「问题定义与评测标准」而非单纯模型扩容。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在通用基准趋于饱和后，作者将情感与社交智能视为关键差异点，并强调没有可操作评测体系就无法有效优化模型行为。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">实现一个确定性优先的 RouterAgent 来处理大多数用户意图</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用正则表达式和关键词匹配处理常见请求（如搜索或 CRM 查询），系统实现亚 10 毫秒的路由，将昂贵的 LLM 调用仅作为真正模糊查询的降级方案。</span>
+                        <strong style="color: #1e40af">HeartBench 通过能力维度、场景设计和细粒度 Rubric 建立了结构化评测框架。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 其核心是把抽象的人文能力拆成可观测指标，并通过多轮静态评测保证可解释、可验证与可复现。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">将编排与「思考」解耦，确保可预测的系统行为</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 编排器应专注于排序和合并智能体结果，而非即兴制定计划。这减少了方差，使系统更易于调试和测试。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">使用专用桥接层强制执行语音特定的约束和安全</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> VoiceAgentProcessor 管理硬超时、在日志中脱敏 PII，并截断长响应以防止 TTS 引擎变慢，确保稳定清晰的用户体验。</span>
+                        <strong style="color: #1e40af">从小样本验证到规模化生产再到盲测校验，形成了可迁移的方法论闭环。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章清晰总结了版本迭代中的失误与修正策略，尤其对专家协作、合规前置和质量控制给出可执行经验。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不要用 LLM 调用去解决一个正则表达式就能解决的问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在语音交互中，两秒的间隙不会让人感觉像「加载中」——而是感觉系统没听到你。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统表现得不像委员会会议，更像优秀的急诊调度员：先分诊，后专家，最后叙述。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最大的改变不是增加更多智能，而是将智能移出关键路径。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">枯燥是好事。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们评测目标并非是模型"像不像人"，而是它是否"懂人"。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最终结果显示人机一致性达到 86%，证明了我们的"模型作为裁判"的评估方法能够高度复现人类专家的判断。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">基于上述实践，我们探索并沉淀了一套可复用的路径和经验，核心是"小步快跑验证+人机协同流程"。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +62,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">HackerNoon</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Daniel Romitelli</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2859</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">38 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9269</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">语音 AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 延迟</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">智能体编排</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">意图分类</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">HeartBench</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 评测</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">拟人化能力</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM-as-a-Judge</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">心理社科</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/afeb04f2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/0558e7f7" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/afeb04f2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATVSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzJwEyqZmAPKFmAvKb1LxxUrXopGrRSdWiT5ap2QTkm4BMaiYgN2pu1GxSswnIppOqRSdVi06qFn3yZUCeUPMEkBs1m9RMQCY1E5An1DwB5Ak133RSteikatFJ1aJP/ufUTEBugExqJiCTmgnIpOZvclK16KRq0UnVok/+MmreUPMEkEnNBOT/5KRq0UnVopOqRZ98mZp/E5AbNROQSc0E5Ak1N0AmNU+o+ZOcVC06qVp0UrXok2VA/mRqJiCTmgnIpGYCcgNkUvMGkD/ZSdWik6pFJ1WL8Ef+w4C8oeYJIJOaJ4BMav4mJ1WLTqoWnVQt+uQlIJOaCcgmNZOaCcikZgJyA2RS8wSQSc2kZgIyqZmAbFLzTSdVi06qFp1ULfrkJTVvqHkCyCYgk5oJyKRmAjKpuQFyA+QNNU8AmdS8cVK16KRq0UnVIvyRF4BMaiYgN2pugExqboDcqJmATGpugDyh5gbIjZr/kpOqRSdVi06qFn2yDMiNmgnIjZobIL9JzQRkUjMBeQPIjZoJyKRmAjKp2XRSteikatFJ1aJPlql5Qs0NkBs1E5BJzRNAJjU3aiYgN2p+E5BJzTedVC06qVp0UrUIf+QXAZnUvAFkUnMDZFJzA2RScwPkm9RMQCY1TwCZ1LxxUrXopGrRSdWiT14CMql5AsgTaiY1vwnIE2pugExqboBMaiYgN2omNZtOqhadVC06qVr0yTIgk5obNU8AmdRMQJ4AMqmZ1ExAbtTcANkEZFJzA2RSs+mkatFJ1aKTqkWfvKRmAvIGkCeAbALyhJoJyKTmRs0baiYgN2q+6aRq0UnVopOqRfgjLwB5Qs0bQG7UPAFkUvMEkEnNBOQJNROQJ9RMQCY1E5BJzRsnVYtOqhadVC36ZJmaCcgEZFJzA2RS8waQSc0E5Ak1T6i5ATKpmYBMat5Qs+mkatFJ1aKTqkX4Iy8AmdRMQCY1E5BJzRNAJjXfBORGzRNAJjUTkCfU3ACZ1Gw6qVp0UrXopGoR/sgLQCY1N0DeUHMDZFIzAXlCzRNAJjUTkG9SMwF5Qs0bJ1WLTqoWnVQtwh/5DwMyqZmATGqeADKpmYBMap4AMql5AsgmNW+cVC06qVp0UrXok5eA/CY1k5oJyKTmBsiNmgnIDZBNQCY1b6j5ppOqRSdVi06qFn2yTM0mIDdAJjU3QG7U3Kh5Asgbap5QcwPkRs0bJ1WLTqoWnVQt+uTLgDyh5g0gk5obNU8AmdRMQCY1N0AmIJuA/KaTqkUnVYtOqhZ98pcDMqmZgNyomdRMQCY1b6i5ATKpmYD8m06qFp1ULTqpWvTJX07NBOQNIJvU3AC5AfKGmk0nVYtOqhadVC365MvUfJOaGyDfpOYGyKRmAjKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/Ccik5gk1N0AmNTdAJjUTkEnNBGRScwPkBsik5ptOqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0D1KlRyXgJ9xCAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/0558e7f7">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ0crIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAblRcwPkRs0EZFJzA2RS8wSQ36TmjZOqRSdVi06qFn2yTM0mIDdqboBMaiY1E5AbNROQSc2kZgJyo+ZGzSYgm06qFp1ULTqpWvTJlwF5Qs0bQCY1N0AmNROQGzUTkEnNNwF5Qs03nVQtOqladFK16JO/HJBJzQ2QSc0EZFIzAblRMwG5UfMvOaladFK16KRq0Sf/GCCTmhsgk5pvUjMBmdT8zU6qFp1ULTqpWvTJl6n5TWomIJOaCcgE5EbNE2omIJOaN9T8n5xULTqpWnRSteiTZUD+ZmomIDdAJjUTkEnNBGRScwPk/+ykatFJ1aKTqkX4I38xIJOaCcik5g0gm9T8S06qFp1ULTqpWvTJS0AmNU8AmdRMQDYBmdQ8oWYCcqNmAnIDZJOaGyCTmjdOqhadVC06qVqEP7IIyKRmAvKEmk1AJjUTkCfUfBOQ36TmjZOqRSdVi06qFn3yEpBJzQRkUvMEkBs1E5AbNTdqJiBvAJnUTEA2qXkCyKaTqkUnVYtOqhbhjywCMqmZgExq/iQgk5oJyKTmBsikZgLyhJobIDdqJiA3at44qVp0UrXopGrRJy8BmdS8AeRGzQTkDTVPAJnU3AD5JjVvqNl0UrXopGrRSdWiT5YBmdQ8oeYNNU8AuVEzAXlDzRNAJjUTkDeATGreOKladFK16KRq0ScvqZmA3KiZgLyh5gkgTwB5Qs0E5AbIpOab1ExANp1ULTqpWnRSteiTZWpugExqJiCTmgnIDZBJzRNqJiBPALkBsknNE0C+6aRq0UnVopOqRfgjfxCQN9TcALlRswnIpOYGyI2aCcik5gkgk5pNJ1WLTqoWnVQtwh95AcgTam6ATGomIG+omYBsUjMBmdTcANmkZgJyo+aNk6pFJ1WLTqoWffKSmieATGomNROQGzUTkCfUTEDeADKp2aRmAjKpmYBMaiYgm06qFp1ULTqpWoQ/8kVAJjUTkEnNE0AmNROQJ9TcAJnUTEBu1ExAJjXfBORGzRsnVYtOqhadVC365CUgTwCZ1NwAmdRsUnMD5A01TwDZpGZSMwHZdFK16KRq0UnVok9eUvNNajapmYDcqJmATEAmNTdAbtQ8AWRS8yedVC06qVp0UrXok5eA/CY1N0AmNROQSc0EZAJyo+abgExqboDcqPmmk6pFJ1WLTqoWfbJMzSYgN2omIBOQSc0EZFIzAZnUTEBu1Lyh5gk1N0AmNZtOqhadVC06qVr0yZcBeULNE0DeUDMBeULNBOQNIG8AmdRMaiYgk5o3TqoWnVQtOqla9MlfTs0E5AbIpOYJIDdqnlAzAZnUTEAmNf8nJ1WLTqoWnVQt+uQfo2aTmgnIpGYCcqPmRs2Nmhsgf9JJ1aKTqkUnVYs++TI1vwnIpGYCMqmZ1DwB5EbNDZBJzQRkUjMBuVEzAfmmk6pFJ1WLTqoWfbIMyG8CMqmZgExqNqmZgGxSMwG5UfOEmk0nVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36D2NMTyyhBh2IAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
