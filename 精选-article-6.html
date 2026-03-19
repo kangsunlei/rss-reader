@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>兄弟！你真的懂 Skill 吗？</title>
+        <title>Open SWE：一个用于内部编码智能体的开源框架</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>兄弟！你真的懂 Skill 吗？</h2>
-        <p>3/17/2026, 12:46:00 AM</p>
+        <h2>Open SWE：一个用于内部编码智能体的开源框架</h2>
+        <p>3/17/2026, 6:37:23 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度拆解了 Anthropic 的 Skill 框架源码与 16 个官方技能，揭示了其通过“Markdown 注入 + 沙箱执行”取代传统 Function Calling 的核心机制。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Open SWE 是 LangChain 推出的一个开源框架，它使组织能够基于生产验证的模式（如隔离沙盒和无缝工作流集成）构建可定制的内部编码智能体。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章对 Anthropic 开源的 Skill 框架进行了全方位的技术剖析。作者通过对 2000 多行核心源码的解读，梳理出从 SKILL.md 声明到 LLM 执行的 7 步完整链路。核心观点认为，Anthropic 并没有采用传统的 Function Calling 注册大量 API，而是通过 `skill_run` 工具在隔离沙箱中执行脚本，配合三层信息注入模型（概览、主体、详细文档）来优化 Token 消耗。文章归纳了五种 Skill 执行模式：纯 Prompt 注入型、脚本执行型、库调用型、参考文档渐进加载型以及复杂的编排型。这种设计哲学强调“教 AI 知识”优于“给 AI 接口”，充分利用了 LLM 的代码生成与逻辑推理能力，为开发者构建高效、灵活的 Agent 系统提供了极具价值的工程参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 Open SWE，这是一个专为工程团队部署内部 AI 编码智能体而设计的框架。它借鉴了 Stripe、Ramp 和 Coinbase 的生产系统经验，将隔离云沙盒（用于安全代码执行）、精选工具集以及与 Slack、Linear 和 GitHub 的深度集成等架构模式进行了规范化。Open SWE 基于 LangChain 的 Deep Agents 和 LangGraph 构建，强调“可组合”的方法，允许团队在不分叉核心逻辑的情况下定制模型、工具和沙盒。它通过 AGENTS.md 文件实现独特的上下文管理，并使用确定性中间件来确保 PR 创建和消息处理等任务的可靠性，为企业级 SWE 智能体提供了一个结构化的起点。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Anthropic 的 Skill 系统核心逻辑是“教 AI 知识”而非单纯“注册 API”。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 官方 16 个技能均未通过 Tools 声明注册函数，而是利用 SKILL.md 文本注入 system prompt，引导 LLM 自主编写或调用沙箱脚本。</span>
+                        <strong style="color: #1e40af">生产级编码智能体共享沙盒和精选工具的融合架构。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对 Stripe、Ramp 和 Coinbase 系统的分析表明，工具集成正从“越多越好”转向隔离执行环境和专注的工具集。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">skill_run 工具通过隔离沙箱和增量哈希设计，实现了生产级的安全与性能平衡。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该工具创建隔离工作空间并自动注入环境变量，利用文件哈希避免重复拷贝，通过只读保护防止脚本篡改技能源码，确保执行环境安全高效。</span>
+                        <strong style="color: #1e40af">Open SWE 采用组合而非分叉的方式，以确保可持续的升级路径。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过基于 Deep Agents 框架构建，Open SWE 允许组织将自定义工具和提示作为配置进行维护，从而在无需手动合并代码的情况下受益于核心库的改进。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用三层信息注入模型（L0-L2）极大地优化了长对话中的 Token 经济性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 系统根据 LLM 的需求，从轻量概览到详细文档渐进式加载内容，相比一次性塞入所有文档，可节省约 40%-50% 的 Token 消耗。</span>
+                        <strong style="color: #1e40af">隔离云沙盒对于安全和自主的智能体执行至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在专用的远程 Linux 环境（通过 Modal、Daytona 等）中运行任务，可以限制错误的“爆炸半径”，并允许智能体在无需持续人工批准的情况下执行 shell 命令。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">总结出的五种 Skill 模式为不同复杂度的 AI 任务提供了标准化的实现路径。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从简单的纯 Prompt 约束到复杂的多 Agent 编排流水线，这五种模式覆盖了从前端设计到自动化测试、复杂项目管理的各种应用场景。</span>
+                        <strong style="color: #1e40af">有效的上下文工程需要平衡仓库级知识与任务特定数据。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该框架使用 AGENTS.md 来定义架构约定和团队特定模式，同时从 Slack 话题或 Linear 问题中提取实时上下文，以减少工具调用的开销。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">确定性中间件是智能体编排的必要安全网。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然 LLM 驱动逻辑，但中间件钩子负责处理可靠的任务，例如注入运行中消息或确保 PR 被打开，从而平衡了 AI 的灵活性与工程可靠性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">与其给 AI 注册新函数，不如教它怎么写代码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skill 的执行力 = SKILL.md body 质量 × (Agent 基础工具 + skill_run 沙箱能力)</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Anthropic 显然想通了一件事：function calling 是给确定性操作设计的，而大多数 Skill 面对的是不确定性任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">SKILL.md 本质上就是一种极其高效的知识传递方式：用最少的 Token，把最关键的领域知识注入到 LLM 的上下文中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 最强的能力不是调 API，而是理解自然语言指令后自主解决问题。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">工具的精选似乎比工具的数量更重要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">先隔离，然后在边界内授予完全权限。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种智能体（模型驱动）和确定性（中间件驱动）编排的分离有助于平衡可靠性与灵活性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Open SWE 旨在成为一个可定制的基础，而非一个成品。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">组合提供了两个优势：升级路径和无需分叉的定制。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,32 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">LangChain Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">LangChain Accounts</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">48 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">11940</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1810</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Anthropic</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Skill Framework</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">沙箱安全</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SWE 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LangChain</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLMOps</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/a39df55f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/9f6c9323" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/a39df55f">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS1SURBVO3BQY4kRxIEQdNA/f/Lun30vQSQSK+eIWki+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5Dep2QTkCTVPAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBNAbtRMap4AcqNmUrNJzSYgm06qFp1ULTqpWvTJlwF5Qs0TQCY1E5AJyI2aCcik5gkgT6h5AsgTar7ppGrRSdWik6pFn9T/AXID5Ak1E5BJzb/JSdWik6pFJ1WLPvmXATKp+ZOA/JecVC06qVp0UrXoky9T8ycBeULNBOQJNZOaGyCTmifU/E1OqhadVC06qVr0yTIgf5KaCcikZgLyhJoJyA2QSc0bQP5mJ1WLTqoWnVQtwh/5BwNyo+YGyKTmBsik5gkgk5p/k5OqRSdVi06qFuGPvABkUjMB2aTmBsgTaiYgT6iZgExqboBMaiYgm9R800nVopOqRSdVi/BH/iJAJjVvAJnUbAIyqbkB8k1qngAyqXnjpGrRSdWik6pF+CMvAJnUPAHkCTUTkEnNBGRSMwH5JjU3QG7U/JOcVC06qVp0UrXok18G5EbNDZBJzY2aCciNmieATGomIG8AuVEzAZnUTEAmNZtOqhadVC06qVr0yZcBmdRMQG6ATGomIJuATGpu1ExAbtT8JiCTmm86qVp0UrXopGrRJy+peQLIpGYCMqmZgExqngByo2YCMql5A8gbaiYgk5ongExq3jipWnRSteikatEny4BMam6ATGomIG8A2QTkCTU3QCY1N0AmNROQGzWTmk0nVYtOqhadVC365MuATGomNTdqJiBPqJmATGo2qbkBsgnIpOYGyKRm00nVopOqRSdViz5ZpmYTkBsgk5obNROQGzUTkEnNBGRSc6PmDTUTkBs133RSteikatFJ1SL8kReATGomIDdqvgnIpOYJIJOaCcikZgLyhJoJyBNqJiCTmgnIpOaNk6pFJ1WLTqoWffKHAZnUTED+JkAmNU+ouQEyqZmATGreULPppGrRSdWik6pF+CMvAJnUPAHkRs0NkEnNBGRSMwGZ1ExAnlDzBJBJzQTkCTU3QCY1m06qFp1ULTqpWvTJH6ZmAjIBmdRMajYBuVFzA2RSMwG5AbIJyA2QSc0bJ1WLTqoWnVQtwh/5BwPyhJpNQCY1TwCZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5pJzRNAvgnIJiCTmjfUfNNJ1aKTqkUnVYs+WaZmE5AbIJOaN9RsAvKGmifU3AC5UfPGSdWik6pFJ1WLPvkyIE+o+U1qngAyqZmATGpugExANgH5TSdVi06qFp1ULfrkP0bNBGRSc6NmAjKpeUPNDZBJzQTkTzqpWnRSteikatEn/3JAbtQ8AWSTmhsgN0DeULPppGrRSdWik6pFn3yZmm9S8waQSc0E5EbNDZBJzQRkUjOpmYBMaiYgk5oJyDedVC06qVp0UrXok2VAfhOQTUAmNU8AmdRMQCY1E5BJzQ2QGyCTmm86qVp0UrXopGoR/kjVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrR/wDroiA9dx4s2gAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/9f6c9323">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATKSURBVO3BQY4bSRAEwfAC//9lXx3zVECjkyPNIszwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAjKpuQEyqbkBMql5AsgTaiYgP0nNGydVi06qFp1ULfpkmZpNQDapuQEyqXkCyI2aCcgTajYB2XRSteikatFJ1aJPvgzIE2qeUHMDZBOQSc2k5icBeULNN51ULTqpWnRSteiTXw7IpGYTkCeATGomIJOa/5OTqkUnVYtOqhZ98sup2aRmAnID5A0gk5rf7KRq0UnVopOqRZ98mZq/Sc0EZFJzo+YNIN+k5l9yUrXopGrRSdWiT5YB+UlAJjUTkEnNBGRSMwGZ1ExAJjU3aiYgTwD5l51ULTqpWnRSteiTl9T8Zmpu1NyomYDcAHlCzW9yUrXopGrRSdWiT14CMqmZgNyomYA8oeZGzQTkCTUTkEnNNwGZ1NwAmdRMQG7UvHFSteikatFJ1SL8I4uATGpugExqngAyqdkEZFLzBpBvUvMEkEnNGydVi06qFp1ULfrkJSBPAJnUTEBu1ExqJiCTmm8CMqmZgExq3gDyBJAbNZtOqhadVC06qVqEf+QFIJOabwIyqXkDyI2aCcik5g0gk5obIDdqngAyqXnjpGrRSdWik6pF+EdeAPKEmgnIpGYC8oSaCciNmk1AbtR8E5AbNd90UrXopGrRSdUi/COLgDyhZgIyqZmATGpugNyoeQLIpOYJIJOaGyA3am6APKHmjZOqRSdVi06qFn3ylwG5AfIEkG9ScwPkCSBvAJnU/E0nVYtOqhadVC365CUgk5oJyI2aCcik5gbIJiBvqLkBcqPmBsgTaiYgk5pNJ1WLTqoWnVQt+uTL1LwB5Ak1E5BJzRtqngDyBJBJzaRmAjIBmdT8pJOqRSdVi06qFn3ykpobIG+omYBMaiYgk5o31ExAJjU3am6APAFkUjMBmYD8pJOqRSdVi06qFn3yEpBJzaTmCSATkEnNBOQJIDdqJiBvAJnUTGomIG+omYBMar7ppGrRSdWik6pFn7yk5gbIpOYJNROQN9RMQJ5QMwH5JiCTmn/ZSdWik6pFJ1WLPlkG5AbIjZoJyBNqJiA3am7UTEA2AXkCyL/spGrRSdWik6pFnyxTs0nNDZAbNROQJ4BMaiYgk5o31DwB5AkgN2reOKladFK16KRq0ScvAflJam6ATGomNROQSc03AXkCyKTmCTUTkEnNppOqRSdVi06qFn2yTM0mIE+omYBMam6ATGomIG+omYDcqNmk5ptOqhadVC06qVr0yZcBeULNE2o2qXlCzQRkUvMEkDfUTEAmNd90UrXopGrRSdWiT345IDdqJiCTmgnIE0BugExqJjUTkEnNDZAJyKTmBsik5o2TqkUnVYtOqhZ98j+j5kbNE2reADIBmdQ8AWRScwNkUvNNJ1WLTqoWnVQt+uTL1HyTmgnIpGYCcqPmBsik5gk1E5BJzRtAJjUTkEnNppOqRSdVi06qFn2yDMhPAjKpuVHzBJBNQN5Q8y87qVp0UrXopGoR/pGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWi/wB6NClJci2gQAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

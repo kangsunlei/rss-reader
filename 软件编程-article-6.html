@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>使用 Argo CD 在 Kubernetes 上实现 GitOps</title>
+        <title>OpenAI Codex 是如何工作的</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>使用 Argo CD 在 Kubernetes 上实现 GitOps</h2>
-        <p>3/17/2026, 6:07:51 PM</p>
+        <h2>OpenAI Codex 是如何工作的</h2>
+        <p>3/18/2026, 3:30:41 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一份关于使用 Argo CD、GitHub Actions 和 Argo CD Image Updater 在 Kubernetes 上实现 GitOps 的全面实践教程，用于构建零接触部署流水线。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 OpenAI Codex 的工程架构，详细介绍了其智能体循环、提示词管理以及自定义双向协议如何实现跨平台的强大编码助手功能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这是一份关于在 Kubernetes 上实现 GitOps 工作流的详细实践教程。作者强调，仅仅将配置清单存储在 Git 中是不够的，集群必须主动监听变更。教程涵盖完整设置流程：理解 GitOps 原则、安装 Argo CD、准备应用源代码和仓库结构、使用 GitHub Actions 自动化镜像构建、部署应用配置清单，以及使用 Argo CD Image Updater 设置自动更新。目标是实现零接触部署，推送代码即可自动触发构建、标记和部署，无需手动执行 kubectl 命令。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了围绕 OpenAI Codex 的“外壳”（harness），并指出编排层比底层模型本身更为关键。文章描述了“智能体循环”（Agent Loop），即模型通过迭代调用 shell 命令和测试套件等工具来解决复杂任务。很大一部分篇幅致力于探讨提示词管理的挑战：由于 OpenAI 优先考虑无状态性和零数据保留（Zero Data Retention），提示词会呈二次方增长，因此需要先进的提示词缓存和上下文窗口压缩技术。此外，文章解释了 OpenAI 为何放弃模型上下文协议（MCP），转而采用自定义的 JSON-RPC “应用服务器”协议，以支持流式进度显示和破坏性操作的用户确认等丰富的双向交互。这种架构使得单一的“Codex 核心”能够一致地驱动 VS Code、Web 和桌面端界面。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">GitOps 将你的集群变成仓库的镜像——如果它不在 Git 中，它就不存在。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这一原则确保 Git 仓库成为唯一真实来源，消除配置漂移和手动变更。</span>
+                        <strong style="color: #1e40af">AI 模型仅仅是一个组件；真正的工程价值在于智能体的编排外壳。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然模型提供了推理能力，但周边系统负责管理提示词组装、工具执行、内存限制和跨平台兼容性，这些才是生产环境中更难解决的问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">仅仅将配置清单存储在 Git 中是不够的，集群必须主动监听你的代码。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 仓库和集群状态之间的差距必须通过 Argo CD 等自动同步工具来弥合。</span>
+                        <strong style="color: #1e40af">Codex 利用迭代式智能体循环来自主执行多步骤的软件工程任务。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该系统不仅生成代码；它还在一个持续的循环中进行推理、执行 shell 命令、运行测试并修复 lint 错误，直到用户的宏观需求得到满足。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">本教程从头实现一个完整的零接触部署闭环。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这包括使用 Argo CD、GitHub Actions 和 Argo CD Image Updater 在 git push 时自动构建、标记和部署代码。</span>
+                        <strong style="color: #1e40af">无状态 API 设计导致提示词呈二次方增长，通过复杂的预填充缓存（prefix caching）来缓解。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了保持零数据保留，每个请求都携带完整的历史记录。OpenAI 使用提示词缓存来复用之前轮次的计算结果，尽管这种机制很脆弱，容易因微小的上下文变化而失效。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">从本地终端手动执行 kubectl apply 创造的是 babysitting，而不是管理。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种反模式会导致生产环境中的配置漂移、痛苦的回滚和不存在的审计追踪。</span>
+                        <strong style="color: #1e40af">在 MCP 被证明不足以应对复杂的智能体交互后，开发了一种自定义的双向协议。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 标准协议缺乏对流式推理、暂停以等待用户确认以及输出结构化差异（diff）的支持，这促使 OpenAI 构建了一个基于 JSON-RPC 的应用服务器，用于多端集成。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">通过项目特定的 AGENTS.md 文件和潜在状态压缩来优化上下文管理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者可以使用本地配置文件来引导智能体，而系统则通过用加密的、具有代表性的模型状态摘要替换完整历史记录，来处理上下文窗口限制。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你还在从本地终端运行 kubectl apply，你不是在管理集群，你是在 babysitting 集群。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">没有可靠的策略，Kubernetes 部署很快就会陷入配置漂移、痛苦回滚和不存在审计追踪的混乱中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">GitOps 弥合了这个差距，它将你的集群变成仓库的镜像，如果它不在 Git 中，它就不存在。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你将从头实现一个「零接触」部署闭环。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型是组件，智能体是系统。大部分工程工作都在系统层面。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正的智能体所需的丰富交互模式……无法与 MCP 提供的功能完美映射。因此，团队从零开始构建了一个新协议。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">正确的抽象通常在你尝试过错误的抽象之后才会出现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">OpenAI 有意接受这种成本 [二次方数据传输]……因为这样做会破坏每个请求的无状态性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">管理上下文窗口是一个首要的工程问题，而不是事后才考虑的事情。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +66,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Olumoko Moses</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ByteByteGo Newsletter</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ByteByteGo</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2820</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1850</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Argo CD</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Actions</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DevOps</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI Codex</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 编排</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示词工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/07c98fb5" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/b578486b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/07c98fb5">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAThSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyBvqHkCyKRmAvKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCfUTEAmNTdAJjUTkCfUbFKzCcimk6pFJ1WLTqoWffJlQJ5Q8wSQSc2kZgJyo2YCMqmZgNwAeULNE0CeUPNNJ1WLTqoWnVQt+uQfA2RSM6mZgExAJjUTkBsgk5oJyKTmX3JSteikatFJ1aJP6grIpOYJIP9PTqoWnVQtOqla9MmXqfmTqXkCyKTmRs0NkEnNE2r+JCdVi06qFp1ULfpkGZD/kpoJyKRmAjKpmYBMaiYgk5oJyKTmDSB/spOqRSdVi06qFuGP/MWATGpugExqboDcqHkCyKTmX3JSteikatFJ1SL8kReATGomIJvUfBOQSc0E5Ak1N0AmNROQTWq+6aRq0UnVopOqRfgjLwC5UXMD5EbNG0A2qXkDyDepeQLIpOaNk6pFJ1WLTqoW4Y+8AGRSMwGZ1DwB5A01E5AbNTdAnlBzA+RGzd/kpGrRSdWik6pF+CMvALlRMwGZ1ExAJjUTkG9S8wSQSc0E5JvUTEAmNROQSc2mk6pFJ1WLTqoWffKHUTMBeUPNE0Bu1ExqJiA3an4TkEnNN51ULTqpWnRStQh/ZBGQSc0NkBs1bwCZ1HwTkG9SMwGZ1DwBZFLzxknVopOqRSdViz55CcgTQG7UTECeUDOpmYBMaiYgm9TcAJnU3ACZ1ExAbtRMajadVC06qVp0UrXok5fUPKHmBsik5gkgk5obIJOaGyA3am6AbAIyqbkBMqnZdFK16KRq0UnVok++DMiNmknNBGRSMwG5ATKpmYBMQJ5QMwGZ1NyoeUPNBORGzTedVC06qVp0UrXok5eA3KiZgNwAmdRMQDapeQPIpGYCcgNkUjMBuQEyqZmA3ACZ1LxxUrXopGrRSdWiT5apmYA8oWYCMql5AsgNkBs1E5BJzRNqboBMaiYgk5o31Gw6qVp0UrXopGoR/sgLQCY1E5BJzQTkRs0NkEnNNwG5UfMEkEnNBOQJNTdAJjWbTqoWnVQtOqla9Ml/TM0EZALyBpA31ExqboBMaiYgN0A2AbkBMql546Rq0UnVopOqRfgjfzEgN2omIDdqJiCTmgnIpOYJIJOaJ4BsUvPGSdWik6pFJ1WLPnkJyG9SM6mZgExAbtQ8AeQGyCYgk5o31HzTSdWik6pFJ1WLPlmmZhOQGyCTmgnIDZBJzY2aJ4C8oeYJNTdAbtS8cVK16KRq0UnVok++DMgTar5JzQTkRs0EZFIzAZnU3ACZgGwC8ptOqhadVC06qVr0yT8GyKRmAvKGmgnIpOYNNTdAJjUTkP/SSdWik6pFJ1WLPvnHAZnUvAFkk5obIDdA3lCz6aRq0UnVopOqRZ98mZpvUjMBmdQ8AWRSc6PmBsikZgIyqZnUTEAmNROQSc0E5JtOqhadVC06qVr0yTIgvwnIpGYCcqPmBsik5gbIpGYCMqmZgExqboDcAJnUfNNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+B8B3RT8ll6aOAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/b578486b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATaSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9C6SsyaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAvknNBORGzSYgb6h5Asg3qXnjpGrRSdWik6pFnyxTswnIE2pugNyomYBMat4AcqPmRs0mIJtOqhadVC06qVr0yS8D8oSaN4BMaiY1E5AJyKRmAnKjZgIyqZmAvAHkCTW/6aRq0UnVopOqRZ/849TcAJnUTGqeUHMDZFIzAfkvO6ladFK16KRq0Sf/OCA3aiYgk5obIDdqboD8PzmpWnRSteikatEnv0zNb1IzAZmATGomIDdqboDcqLkB8oaav8lJ1aKTqkUnVYs+WQbkm4BMaiYgT6iZgExqbtRMQCY1bwD5m51ULTqpWnRStQh/5D8MyKTmBsgTat4AMqn5l51ULTqpWnRStQh/5AUgk5obIH+SmieAvKFmAvKEmhsgk5oJyBNq3jipWnRSteikatEnL6mZgExqJjVvALlRcwNkUjMBmdRMQCY1b6h5AsgmNZtOqhadVC06qVr0yTI1bwC5UTMBuQEyqZmATGomIDdAJjU3am6ATGpu1Dyh5jedVC06qVp0UrXok5eAPKHmCTXfBOQJNROQN9TcqLkBMqm5ATKpeeOkatFJ1aKTqkWffBmQSc2kZgIyqZnUTECeUDMBuVEzAZnUTEDeAHKjZlLzJ51ULTqpWnRSteiTl9TcAHlDzQTkRs0NkEnNjZoJyKRmAnKj5g01E5C/yUnVopOqRSdViz5ZBmRScwPkCTU3QCY1k5oJyG9SMwG5UXMDZFJzA2RSMwHZdFK16KRq0UnVok+WqXlCzRNAbtRMQG7U3ACZ1NyoeULNBOQJIJOaP+mkatFJ1aKTqkWfLAPyhpoJyKRmAvJNQCY1bwCZ1LwBZFJzo2bTSdWik6pFJ1WLPnkJyKRmk5oJyBNqJiBPqJmA3AB5A8ik5gbIpGYCcqNm00nVopOqRSdVi/BHXgDyhpoJyI2aCcik5g0gk5oJyJ+k5gbIpOYGyKTmjZOqRSdVi06qFuGPvADkCTUTkBs1E5BJzQRkUjMBuVHzBJBJzQ2QSc0E5Dep+U0nVYtOqhadVC365JepuVEzAZmAbFJzA2RS8wSQSc2kZgLyTUAmNZtOqhadVC06qVr0yUtqNql5AsikZgIyqXkCyI2aTWqeAHKj5ptOqhadVC06qVr0yUtAvknNE2pugExqJiA3QCY1E5A3gExq/mYnVYtOqhadVC36ZJmaTUCeADKpmYA8oWYCcgNkk5on1NwAmdRsOqladFK16KRq0Se/DMgTat5QMwG5UTMBeUPNDZAbIG8AmdTcAJnUvHFSteikatFJ1aJP/uPU/M3UTEAmNROQSc0TaiYgm06qFp1ULTqpWvTJP07NBGRSMwG5UXMDZFKzSc0TQCY1E5BvOqladFK16KRq0Se/TM03qblRcwPkRs0EZFIzAZnU3AB5Qs0E5EbNBGTTSdWik6pFJ1WLPlkG5JuATGomIJOaCcikZgJyo+ZGzQTkCTU3QG7U3KjZdFK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8BIKdQGfTKbrUAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
