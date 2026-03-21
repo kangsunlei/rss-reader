@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>让编码 Agent 发挥作用的工程实践</title>
+        <title>探索 GPU 加速向量检索：NVDIA Cagra 在微信大规模推荐系统中的应用实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>让编码 Agent 发挥作用的工程实践</h2>
-        <p>3/19/2026, 12:56:45 PM</p>
+        <h2>探索 GPU 加速向量检索：NVDIA Cagra 在微信大规模推荐系统中的应用实践</h2>
+        <p>3/20/2026, 9:37:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Simon Willison 分享与 AI 编码 Agent 高效协作的工程实践，强调测试驱动开发、手动验证和安全沙盒机制的重要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了微信团队如何利用 NVIDIA Cagra GPU 图索引算法，通过三层分层存储架构与 CPU/GPU 协同优化，在超大规模推荐系统中实现向量检索性能的量级提升。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">在这场 Pragmatic Summit 对谈中， prolific 开源开发者、Django 联合创始人 Simon Willison 详细介绍了与 AI 编码 Agent 协作的工作流。他倡导使用红绿测试驱动开发（TDD）来防止过度工程化，并确保无需逐行人工审查即可获得高质量代码。他还涵盖了通过 curl 命令进行手动测试、包括沙盒和最小权限原则在内的安全实践，以及 AI 工具不断演进的格局。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章分享了微信基础架构团队将 NVIDIA Cagra（基于 GPU 加速的图索引 ANN 算法）应用于视频号推荐系统的技术实践。针对 Cagra 原生算法在生产环境中的局限性，团队设计了渐进式子图优化方案以降低内存依赖，并构建了类似 LSM-Tree 的三层存储架构（Streaming/Growing/Sealed），有效平衡了数据实时性与索引构建效率。此外，通过 Post-filter 缓存优化、Batch 聚合分发及链式广播唤醒机制，解决了 CPU 与 GPU 协同中的性能瓶颈。实测显示，该方案将建库时间缩短至 1/30，计算资源消耗降低 50% 以上，显著提升了系统的时效性与召回效果。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">红绿 TDD 对编码 Agent 至关重要</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 每次会话开始时告诉 Agent 使用红绿 TDD，能显著提高获得可用代码的概率。测试可以防止过度工程化，是获得高质量结果的第一步。</span>
+                        <strong style="color: #1e40af">Cagra 算法针对 GPU 架构进行了深度定制，通过单层图和固定出度提升并行度。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比 HNSW，Cagra 摒弃了复杂的分层结构，采用规整的内存分配和批量化扩展策略，极大发挥了 GPU 的吞吐优势。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">手动测试是对自动化测试的补充</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 应该通过启动服务器并使用 curl 验证 API 来手动测试其工作。测试套件全部通过并不能保证服务器正常运行——手动验证可以发现测试覆盖不到的漏洞。</span>
+                        <strong style="color: #1e40af">设计渐进式子图优化方案，解决了大规模建图对 Pinned Memory 的过度依赖。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过随机构建连通图并多次小范围遍历筛选子图，在标准容器化环境中实现了与全图 NNDescent 相当的准确率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">安全需要沙盒和最小权限原则</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 AI 生成的代码视为不可信代码——在具有受限权限的沙盒环境中运行。应用「致命三要素」规则：同时获得凭证访问权、互联网访问权和不可信输入访问权会造成不可接受的风险。</span>
+                        <strong style="color: #1e40af">采用类似 LSM-Tree 的三层分层存储架构，兼顾数据时效性与检索性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将数据分为流式层、增长层和封存层，分别采用暴力计算和 Cagra 索引，通过双缓冲机制实现索引的平滑切换。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">「不写不读」范式正在兴起</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 一些团队现在完全不编写或阅读代码，完全依赖 Agent。当 Agent 通过测试和验证而非人工代码审查来证明正确性时，这种模式是可行的。</span>
+                        <strong style="color: #1e40af">通过链式广播唤醒机制优化 CPU/GPU 协同，大幅降低上下文切换开销。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将跨线程通信次数从协程总数降至物理线程数，使 CPU 系统态资源占用显著下降，单机吞吐量提升了 65%。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">红绿测试驱动开发是第一个秘诀。这是经典的测试优先理念：先写测试，看着它失败，然后再写实现。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所有优秀的编码 Agent 都知道红绿 TDD 是什么意思。如果它们先写测试，你获得可用代码的概率会大幅飙升。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">测试不再是可选项——它们是获得高质量结果的第一步。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你必须让它们进行手动测试。任何使用过自动化测试的人都知道，所有测试通过并不意味着 Web 服务器真的能启动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">把 LLM 写的代码当成你不完全信任的实习生写的代码来对待。在沙盒中运行它。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">致命三要素是：访问凭证的权限、访问互联网的权限、访问不可信输入的权限。任意两个都没问题，但三个同时具备就是安全噩梦。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Cagra 充分利用了 GPU 的强大并行计算能力，在保持高召回率的同时，能够提供显著更高的吞吐量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">传统 HNSW 算法需要耗费数十分钟甚至小时级的时间，而 Cagra 将建索引时间缩短至原来的 1/30 以下。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将跨线程通信次数从‘总协程数量’降至‘物理线程数量’。这一改造使 CPU System 态的资源占用率大幅下降，单机吞吐量再次提升了 65%。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在同等 QPS 且召回率更高的情况下，计算资源消耗降低了 50% 以上。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Pragmatic Engineer</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">The Pragmatic Engineer</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">19 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4509</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2572</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编码</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">测试驱动开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工程实践</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示词注入</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工作流</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量检索</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPU加速</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">NVIDIA Cagra</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推荐系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式架构</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/video/891ae75" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            播放完整视频
+        <a href="https://www.bestblogs.dev/article/19553f10" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/video/891ae75">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATzSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OolOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaJ4BMajYBmdRMQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gSQSc0bQN5Qs0nNJiCbTqoWnVQtOqla9MmXAXlCzRNAngByo+YJNTdAnlDzBJAn1HzTSdWik6pFJ1WLPvnHqJmATGpugExqJiA3QCY1E5BJzb/kpGrRSdWik6pFn/xjgNwAmdRMaiYgk5oJyKRmAvJfclK16KRq0UnVok++TM1vUjMBmdRMQJ4A8oSaGyCTmifU/ElOqhadVC06qVr0yTIgfzM1E5BJzQTkBsik5g0gf7KTqkUnVYtOqhZ98pKavwmQSc0TQCY1N2omIJOaGzV/k5OqRSdVi06qFuGPvABkUjMB2aTmBsikZgIyqZmATGomIE+ouQEyqZmAbFLzTSdVi06qFp1ULcIf+YsAmdTcAHlCzQRkUvMGkG9S8wSQSc0bJ1WLTqoWnVQt+mQZkBs1N0Bu1ExAJjVPqHkCyBNqJjUTkBs136Rm00nVopOqRSdViz75PwNyo2YCMqmZgDwBZFLzhJobIG8AuVEzAZnUTEAmNZtOqhadVC06qVr0yUtAbtRMQJ4AMqmZgExqJiBvqLkB8oSa3wRkUvNNJ1WLTqoWnVQtwh95AcgTat4AMqmZgDyhZgIyqXkCyDepmYBMap4AMql546Rq0UnVopOqRZ+8pOYJIJOaCcgbaiYgbwC5UXOj5gbIpOYGyKRmAnKjZlKz6aRq0UnVopOqRZ98GZA31ExAnlAzAXlCzQTkRs0NkE1AJjU3QCY1m06qFp1ULTqpWvTJS0Bu1ExAJiA3QCY1N0AmNU+omYBMaiYgN2pu1LyhZgJyo+abTqoWnVQtOqla9MkyNU+omYBMam6A3ACZ1Dyh5kbNG0AmNROQGyCTmgnIDZBJzRsnVYtOqhadVC365A+jZgIyqblRMwG5ATKpuQHyhJpJzQ2QSc0EZFLzhppNJ1WLTqoWnVQt+uTLgExqJiCTmknNE0BugDwBZFIzAZnUTEAmNROQSc0E5AbIpGZSMwGZ1Gw6qVp0UrXopGrRJ78MyBNAnlDzBJAbNTdqJiCTmgnIDZBNQG6ATGreOKladFK16KRqEf7IXwzIpGYCsknNDZAbNROQSc0TQDapeeOkatFJ1aKTqkWfvATkN6mZ1ExAbtTcALkBcqNmAjIBeQLIpOYNNd90UrXopGrRSdWiT5ap2QTkBsikZgIyAXlCzQ2QGzUTkCfUPKHmCSCTmjdOqhadVC06qVr0yZcBeULNN6l5AsikZlIzAZnUTGomIBOQTUAmNZOaTSdVi06qFp1ULfrkHwNkUnMDZFIzqbkBMqmZgExqbtTcAJnUTEBugNyoeeOkatFJ1aKTqkWf/McAeQPIE2pu1NwAuQHyhppNJ1WLTqoWnVQt+uTL1HyTmgnIE2pugLwBZFIzAZnUTGomIJOaCcikZgLyTSdVi06qFp1ULfpkGZDfBOQGyBtqJiCTmgnIpGYCMqmZgExqboDcAJnUfNNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+B9ivSk+nSWvrAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/19553f10">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATSSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyuCaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaN4DcqJmATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkCeA3KiZgDwB5EbNpGaTmk1ANp1ULTqpWnRSteiTLwPyhJongLyh5g01N0CeUPMEkCfUfNNJ1aKTqkUnVYs++ceouQHyhJobIDdqJiCTmn/JSdWik6pFJ1WLPvnHAHlDzQRkUjOpuQHy/+SkatFJ1aKTqkWffJmaP0nNJiA3aiY1N0AmNU+o+ZucVC06qVp0UrXok2VA/iQ1E5BJzQRkUnOjZgJyA2RS8waQv9lJ1aKTqkUnVYvwR/7DgNyomYBMam6A3Kh5Asik5l9yUrXopGrRSdUi/JEXgExqJiCb1NwAmdQ8AWRSMwF5Qs0NkEnNBGSTmm86qVp0UrXopGoR/sgLQN5Q85uA3KiZgExq3gDyTWqeADKpeeOkatFJ1aKTqkWffJmaCcgNkCfUTEDeADKpmYA8oWZSMwG5UfNNajadVC06qVp0UrXok5fUPKFmAnKjZgLyhJo3gExqJiCTmgnIG0Bu1ExAJjUTkEnNppOqRSdVi06qFn2yDMikZgLyBJBJzQRkUnMDZFIzAXlCzQTkRs1vAjKp+aaTqkUnVYtOqhbhj/wiIJOaCcikZgLyhJrfBOSb1ExAJjVPAJnUvHFSteikatFJ1SL8kReA/E3U3AD5TWpugExqboBMaiYgN2q+6aRq0UnVopOqRZ+8pGYC8oaaGyA3QG7UTEAmNTdAbtTcANkEZFJzA2RSs+mkatFJ1aKTqkWfvARkUjMBmdQ8AeRGzRNAJjUTkEnNjZoJyKTmRs0baiYgN2q+6aRq0UnVopOqRZ98mZobIDdqngAyqZnUTEAmNROQSc0EZFIzAbkBMqmZgNwAmdRMQG6ATGreOKladFK16KRq0Sd/GTUTkEnNBOQJIJOaGzUTkEnNE2pugExqJiCTmjfUbDqpWnRSteikahH+yAtAJjUTkBs1bwDZpGYC8oSaJ4BMaiYgT6i5ATKp2XRSteikatFJ1aJP/jAgb6jZBGRS8wSQSc0E5AbIJiA3QCY1b5xULTqpWnRStQh/5D8MyBNqngAyqZmATGqeADKpeQLIJjVvnFQtOqladFK16JOXgPwmNZOaCcik5gbIpGZSMwG5AbIJyKTmDTXfdFK16KRq0UnVok+WqdkE5AbIDZBNap4A8oaaJ9TcALlR88ZJ1aKTqkUnVYs++TIgT6h5Q80EZFLzBpBJzQRkUnMDZAKyCchvOqladFK16KRq0Sf/GCCTmgnIpGYCMqmZ1ExAJjVvqLkBMqmZgPxJJ1WLTqoWnVQt+uQfo2YCMqmZgExqJiDfpOYGyA2QN9RsOqladFK16KRq0Sdfpuab1GwCMqmZgExqboBMaiYgk5pJzQRkUjMBmdRMQL7ppGrRSdWik6pF+CMvAPlNaiYgk5pNQCY1N0AmNROQSc0EZFIzAXlDzTedVC06qVp0UrUIf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXof7FrRSRVjgnhAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
