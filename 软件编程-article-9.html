@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>平台工程：卓越 socio-technical 的实践</title>
+        <title>Windows 栈限制检查回顾：arm64，又称 AArch64</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>平台工程：卓越 socio-technical 的实践</h2>
-        <p>3/20/2026, 2:55:00 PM</p>
+        <h2>Windows 栈限制检查回顾：arm64，又称 AArch64</h2>
+        <p>3/20/2026, 10:11:23 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文重新定义了平台工程，将其视为一种 socio-technical 实践，在技术架构与组织文化之间取得平衡，以应对扩展软件系统的复杂性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细回顾了 Windows 栈限制检查在 ARM64（AArch64）上的实现，提供了汇编代码分析和全面的跨架构比较表。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文从 socio-technical 理论的角度探讨平台工程，强调技术工具和社会结构本质上是相互关联的，必须“联合优化”。作者不将平台仅仅视为基础设施，而是将其呈现为组织可持续性的战略——在短期增长与长期可靠性之间取得平衡。通过大规模应用 DevOps 原则（CALMS），平台工程旨在降低开发者的认知负荷，促进社群学习，并管理标准化与灵活性之间的内在张力。核心信息是，成功的平台是由社区驱动的支持系统，与组织的 human 和 technical 需求共同演进。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是关于 Windows 栈限制检查系列文章的收尾，探讨了 ARM64/AArch64 的实现。文中展示了 `chkstk` 函数的汇编代码，解释了 x15 如何保存待分配的 16 字节单元（段）数量，从而支持最大约 1MB 的栈帧。作者阐述了使用内存读取验证栈可用性的栈探测机制，包括页边界计算和下溢限制。文章最后提供了涵盖六种架构（x86-32、MIPS、PowerPC、Alpha AXP、x86-64、AArch64）的详细比较表，突出展示了单位、指针调整、运行时检测、短路和探测操作的差异。简要说明解释了汇编器如何处理 PAGE_SIZE 作为立即数常量。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">平台工程是应对组织复杂性的社会技术解决方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它通过将组织视为一个系统来解决软件扩展的挑战，在这个系统中，社会动态和技术基础设施必须共同设计和改进。</span>
+                        <strong style="color: #1e40af">ARM64 栈检查使用寄存器 x15 中的 16 字节单元（段）来表达更大的分配范围。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过除以 16，该值可以使用 MOVZ 表达最高 0x0FFF0 字节（约 1MB），足以支持默认的 1MB 栈大小。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">社群学习是最可持续的组织优势。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了防止孤岛和单点故障，组织必须优先考虑有意的知识共享，创建“知识冗余”，以维持个人和集体的持续发展。</span>
+                        <strong style="color: #1e40af">chkstk 函数通过在页边界进行顺序内存读取来验证栈可用性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它计算目标栈指针，舍入到页边界，并通过每次读取一个页来探测，如果栈空间不足则触发页错误。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">领导力在于把握文化与工具之间的张力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 有效的领导者不会试图消除开发者需求与运维可靠性之间的摩擦；相反，他们通过有意的意图和分布式决策来驾驭这种“钟摆”。</span>
+                        <strong style="color: #1e40af">不同架构使用不同的栈限制检查策略。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 差异包括测量单位、栈指针是否在返回前调整、检测发生的时间，以及是否支持短路。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">平台架构应该是设计驱动的，与最终用户互补。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 平台必须超越基础设施，支持整个开发生命周期，使用反映应用开发者实际痛点的抽象，而不仅仅是技术偏见。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">选择“无聊的技术”和文档通常可以替代复杂工具。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 创新代币应该明智地花费；许多问题最好通过标准化文档和经过验证的技术来解决，而不是从头构建定制的内部平台。</span>
+                        <strong style="color: #1e40af">读探测不能短路，但写探测必须能够短路以保证正确性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种架构约束确保部分写入的栈帧保持有效，且探测过程不会破坏内存。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">平台工程是应对应用程序扩展组织复杂性的 socio-technical 解决方案。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">社群学习是最可持续的优势……它提供了维持我们自己和组织所需的知识冗余。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">目标不是解决这种张力，而是很好地维持它。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">平台工程师不是来告诉其他开发者要做什么的。我们只是在这里支持他们做他们需要做的事。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们写的每一行代码最终都是一种负债。代码不一定是平台工程的面包和黄油。研究、设计和技术决策才是。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">由于 arm64 栈必须保持 16 字节对齐，我们知道除以 16 不会产生余数。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">以段为单位传递数量可将单个常量加载可表达的字节数从 0xFFF0 扩展到 0x0FFF0。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果探测操作是写操作，则短路是强制的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果仔细观察，你可能会发现 PAGE_SIZE 太大，无法放入 12 位的立即数常量中。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Lesley Cordero</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">81</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Old New Thing</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Raymond Chen</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">36 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8849</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">461</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">平台工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">社会技术系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DevOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者体验</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">组织扩展</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Windows 内部机制</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ARM64</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AArch64</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">栈管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">汇编编程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/e5577da0" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/53b59d18" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/e5577da0">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATbSURBVO3BQY4kRxIEQdNA/f/Lun10XgJIpFcPOWsi+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQEyqZmATGpugExqngDyhJoJyG9S88ZJ1aKTqkUnVYs+WaZmE5An1NyoeQPIjZpJzSY1m4BsOqladFK16KRq0SdfBuQJNU8A2aRmE5An1DwB5Ak133RSteikatFJ1aJP/jJqJiCTmhsgk5oJyA2QSc0EZFLzNzmpWnRSteikatEn9Q9qJiCTmieA/D85qVp0UrXopGrRJ1+m5k9SMwGZ1ExAboDcqJnU3ACZ1Dyh5t/kpGrRSdWik6pFnywD8m8CZFIzAZnUTEAmNROQGyCTmjeA/JudVC06qVp0UrUIf+Q/DMgmNROQJ9TcAJnU/E1OqhadVC06qVqEP/ICkEnNBGSTmhsgk5oJyBNqJiCTmgnIpOYGyKRmArJJzTedVC06qVp0UrUIf2QRkEnNBORGzQ2QSc0E5EbNE0AmNROQSc0NkG9S8wSQSc0bJ1WLTqoWnVQt+uQPUzMBuVHzhJobIE8AuQEyqZnUTEBu1HyTmk0nVYtOqhadVC365CUgk5oJyKRmAnKj5gbIpOYNNROQSc0EZFIzAXkDyI2aCcikZgIyqdl0UrXopGrRSdUi/JFfBGRScwNkUnMDZFLzBJAbNTdAbtR8E5AbNd90UrXopGrRSdWiT14CcqPmBsiNmgnIpGaTmm8C8oaaCcik5gkgk5o3TqoWnVQtOqlahD/yBwGZ1ExAbtTcAHlCzQTkDTU3QCY1N0AmNROQGzXfdFK16KRq0UnVok+WAZnUvKFmAnID5EbNE2omIDdqboBsAjKpuQEyqdl0UrXopGrRSdWiT5apeQPIjZon1DwB5Ak1E5BJzY2aN9RMQG7UfNNJ1aKTqkUnVYvwR14A8oSaGyCTmgnIjZoJyI2aN4BMaiYgT6iZgDyhZgIyqZmATGreOKladFK16KRq0SfL1ExAJiBPAHkCyI2aN4BMap5QcwNkUjMBmdS8oWbTSdWik6pFJ1WLPvllaiYgN2omIJuATGomIDdAJjWTmhsgk5oJyA2QSc2kZgIyqdl0UrXopGrRSdUi/JEXgExqJiA3aiYgN2pugGxS8wSQSc0E5JvUTECeUPPGSdWik6pFJ1WL8Ef+w4BMaiYgN2pugExqJiCTmieATGqeALJJzRsnVYtOqhadVC365CUgv0nNpGYCMqmZgDyhZgJyA2QTkEnNG2q+6aRq0UnVopOqRZ8sU7MJyA2QSc0TQCY1N2qeAPKGmifU3AC5UfPGSdWik6pFJ1WLPvkyIE+oeQPINwGZ1ExAJjU3QCYgm4D8ppOqRSdVi06qFn3yl1HzBpBJzaRmAjKpeUPNDZBJzQTkTzqpWnRSteikatEndQXkm9TcALkB8oaaTSdVi06qFp1ULfrky9R8k5ongExqbtRMQCY1N0AmNROQSc2kZgIyqZmATGomIN90UrXopGrRSdUi/JEXgPwmNROQSc0EZJOaGyCTmgnIpGYCMqmZgLyh5ptOqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0P/wzVRTMsTHjAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/53b59d18">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATPSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GoOuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaJ4BMaiYgk5ongExqJiBPqJmA/CY1b5xULTqpWnRSteiTZWo2AflNQCY1E5An1GxSswnIppOqRSdVi06qFn3yZUCeUPMEkBs1N2qeUPMEkCfUPAHkCTXfdFK16KRq0UnVok/+cUAmNROQGzUTkCfUTEAmNf+Sk6pFJ1WLTqoWffJ/Ts0NkEnNE0D+n5xULTqpWnRSteiTL1PzJ6mZgNyouQFyo2ZScwNkUvOEmv+Sk6pFJ1WLTqoWfbIMyJ+kZgIyqZmAPKFmAnIDZFLzBpD/spOqRSdVi06qFn3ykpq/mZongDyhZgIyqblR8zc5qVp0UrXopGoR/sgLQCY1E5BNam6A3KiZgNyomYA8oeYGyKRmArJJzTedVC06qVp0UrXok1+m5gbIpOYNNTdqJiATkEnNG0BugLyh5gkgk5o3TqoWnVQtOqlahD/yi4BMaiYg36RmAjKpuQHyhJobIDdq/iYnVYtOqhadVC36ZBmQGzUTkBs1N0DeUHMDZFIzAZnUTEDeAHKjZgIyqZmATGo2nVQtOqladFK16JNfBmRScwPkRs0EZFLzBJAn1ExAbtT8JiCTmm86qVp0UrXopGrRJy8BmdRMQCY1E5AbNU+oeQLIpOabgLyhZgIyqXkCyKTmjZOqRSdVi06qFuGPLALyTWreAHKjZgLyhpobIJOaGyCTmgnIjZpvOqladFK16KRq0Se/TM0EZFJzA2RSMwG5UTMBuVEzAblRcwNkE5BJzQ2QSc2mk6pFJ1WLTqoWffKHqbkB8puATGpu1ExAJjU3at5QMwG5UfNNJ1WLTqoWnVQt+uQlIG8AuVEzAblR84SaGyCTmgnIpGYCcgNkUjMBuQEyqZmA3ACZ1LxxUrXopGrRSdWiT5apuQFyo2YCMqm5ATKpuQEyqZnUTEAmNU+ouQEyqZmATGreULPppGrRSdWik6pF+CMvAJnUPAFkUnMD5EbNBGRS8wSQJ9Q8AWRSMwF5Qs0NkEnNppOqRSdVi06qFn3yZUDeADKpuQHyBpBJzRNAJjUTkBsgm4DcAJnUvHFSteikatFJ1SL8kb8YkEnNBGRSMwF5Qs0EZFLzBJBJzRNANql546Rq0UnVopOqRZ+8BOQ3qZnU3Kh5Qs0NkBsgm4BMat5Q800nVYtOqhadVC36ZJmaTUBugPwmNU8AeUPNE2pugNyoeeOkatFJ1aKTqkWffBmQJ9S8oWYCMqmZgDwBZFIzAZnU3ACZgGwC8ptOqhadVC06qVr0yT8GyKTmRs0EZFIzqZmATGreUHMDZFIzAfmTTqoWnVQtOqla9Mk/Rs0EZFIzAXkCyCY1N0BugLyhZtNJ1aKTqkUnVYs++TI136TmCSCTmhsgN2pugExqJiCTmknNBGRSMwGZ1ExAvumkatFJ1aKTqkWfLAPym4C8AeRGzRNAJjUTkEnNBGRScwPkBsik5ptOqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0P45+Mz+R5LYvAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
