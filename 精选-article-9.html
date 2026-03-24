@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AI x 大前端性能稳定性：快手亿级 DAU 下的智能诊断实践</title>
+        <title>你不知道的 Agent：原理、架构与工程实践 - Tw93</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>AI x 大前端性能稳定性：快手亿级 DAU 下的智能诊断实践</h2>
-        <p>3/20/2026, 10:27:00 AM</p>
+        <h2>你不知道的 Agent：原理、架构与工程实践 - Tw93</h2>
+        <p>3/21/2026, 4:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">快手通过自研“柯南 AI”平台，利用 Agent 架构深度集成底层排障工具，实现了亿级 DAU 规模下大前端性能稳定性的智能诊断与应急止血。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文系统梳理了 Agent 架构的核心工程实践，涵盖 Agent Loop、Harness、上下文工程、工具设计、记忆系统、多 Agent 组织、评测与追踪等关键技术维度，并结合 OpenClaw 开源实现展示设计原则的落地方式。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了快手在 AI 赋能大前端稳定性方面的实战经验。面对亿级 DAU 带来的复杂性能挑战，快手构建了以 Agent 为中心的“柯南 AI”平台，通过自研 Agent 框架和 MCP 协议连接内部工具链。核心实践包括：利用 Holmes 工具进行 UI 视图与运行时数据采集，并通过多 Agent 协作解决根因定位中的“推理链断裂”问题；针对性能瓶颈，通过数据预处理压缩火焰图，使 AI 能精准定位源码；在应急侧，通过 Ekko 工具实现事后异常兜底，并由 AI 辅助生成配置以消除高压环境下的人为失误。作者强调了从确定性编程向概率思维切换的重要性，认为 AI 是开发者能力的延伸。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">这是一篇来自蚂蚁集团工程师的 Agent 架构深度实践文章，基于团队业务落地经验进行系统梳理。文章核心观点包括：1）Agent Loop 核心逻辑不到 20 行代码，遵循感知-&gt;决策-&gt;行动-&gt;反馈循环；2）Harness（测试验证基础设施）比模型本身更关键，决定系统稳定运行；3）上下文需要分层管理，常驻层要短而稳定，知识按需加载；4）工具设计遵循 ACI 原则，描述要说明何时用、何时不用，返回要结构化；5）记忆分四种类型（工作记忆、程序性记忆、情景记忆、语义记忆），需要协作设计；6）评测系统本身的问题往往比 Agent 问题更难发现；7）调试 Agent 应优先检查工具定义而非模型能力。文章最后用 OpenClaw 开源实现展示了五层架构设计原则的完整落地。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 的核心定位是团队产出放大器，旨在将专家经验转化为组织能力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 AI 承接疑难 bug 的初步诊断和简单 bug 的自动修复，释放专家人力做更高价值的工作，解决团队中“只有老专家能解 bug”的恶性循环。</span>
+                        <strong style="color: #1e40af">Harness 比模型更关键，决定 Agent 系统稳定运行</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在代码编写等高可验证任务上，验收基线、执行边界、反馈信号和回退手段等外围工程条件往往比模型选择更能决定系统可靠性，OpenAI Codex 的实践验证了这一点。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">构建基于单一职责 Agent 的协作架构，解决大模型在复杂排障中的幻觉问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将排障拆解为问题总结、假设提出、验证假设等环节，通过精心裁剪的提示词和 few-shot 示例，让不同 Agent 负责特定领域的分析，提高工业级场景的准确率。</span>
+                        <strong style="color: #1e40af">上下文要分层管理，知识按需加载</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 上下文失效的常见原因是信息密度不对，常驻层应短而稳定（身份定义、项目约定），Skills 和领域知识描述符常驻但完整内容触发时再注入，避免无关内容稀释关键信号。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过数据预处理与上下文工程，实现 AI 对海量性能数据的有效消费。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对火焰图等动辄数十 MB 的原始数据，采用预处理算法进行压缩和特征提取，使模型能在有限的上下文窗口内精准关联源码与 trace 事件。</span>
+                        <strong style="color: #1e40af">工具设计遵循 ACI 原则，描述决定调用准确性</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 好工具对应 Agent 目标而非 API 操作，描述要说明何时用、何时不用，返回结构化错误和修正建议。调试 Agent 时应优先检查工具定义，多数选择错误出在描述不准确。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">建立“事后兜底”的应急处置体系，利用 AI 辅助降低高压环境下的操作风险。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 自研 Ekko 工具在崩溃发生瞬间恢复现场并跳过错误，同时由 AI Agent 自动分析现场并生成兜底配置，避免人工在紧张状态下产生误操作。</span>
+                        <strong style="color: #1e40af">评测系统本身的问题往往比 Agent 问题更难发现</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 评测的环境噪声（资源不足、评分器 bug、测试用例脱节）可能造成模型退化的假象，需要先排查环境再修改 Agent 代码。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">排障本质是科学推理实验，需要从确定性思维向概率思维切换。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发者需识别 AI 的能力天花板，通过 Agent 策略引导模型进行演绎与归纳推理，并在恰当时机引入人工干预，实现 Human-on-the-loop 的演进。</span>
+                        <strong style="color: #1e40af">多 Agent 协作要把协议、任务图、隔离边界先定下来</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 多 Agent 通过 JSONL inbox 协议通信，用 Worktree 隔离文件修改，协作方式不能靠自然语言对齐，需要结构化协议防止幻觉互相放大。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 的定位首先不是取代谁，而是成为团队产出放大器，把‘专家经验’转化为组织能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Code is cheap， debug is expensive—show me the fix。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">排障过程与破案极为相似，都要在零散线索里还原动机，再锁定真凶。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大模型需要概率思维，若仍以确定性思维调试，只会徒增烦恼。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">自动化工具历来只是人类能力的延伸……真正决定价值的，始终是我们如何驾驭它。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型虽然重要，但决定系统能不能稳定运行的，往往是这些外围工程条件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">调试 Agent 时应先检查工具定义，大多数工具选择错误的原因出在描述不准确，不在模型能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">别把确定性逻辑放进上下文，凡是可以通过 Hooks、代码规则或工具约束表达的内容，都应交给外部系统处理。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">评测系统本身的问题很多时候比 Agent 出问题更难发现，如果一直在 Agent 代码上反复调，效果未必明显。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">多 Agent 协作一旦靠自然语言来对齐，很快就会出问题。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">快手技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">快手技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Tw93 Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Tw93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">31 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7521</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">69 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">17061</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大前端稳定性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动化排障</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">快手技术</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">记忆系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多Agent组织</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/51507f72" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/58852dc5" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/51507f72">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATtSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUPAHkRs0EZFJzA2RS8wSQ36TmjZOqRSdVi06qFn2yTM0mIDdqboBMaiY1E5AbNROQSc2kZgJyo+ZGzSYgm06qFp1ULTqpWvTJlwF5Qs0mNTdAJjUTkCeATGq+CcgTar7ppGrRSdWik6pFn/zlgExqJiCTmknNBGRSMwGZ1NwAuVHzLzmpWnRSteikatEn/xggk5obIL9JzQRkUvM3O6ladFK16KRq0SdfpuY3qbkBMqmZgExAJjUTkEnNpGYCMql5Q82f5KRq0UnVopOqRZ8sA/InATKpmYBMaiYgbwCZ1ExAJjU3QP5kJ1WLTqoWnVQtwh/5iwG5UTMBmdQ8AWRSMwF5Qs2/5KRq0UnVopOqRZ+8BGRS8wSQSc0E5Ak1N2qeADKpmYDcqJmA3ADZpOYGyKTmjZOqRSdVi06qFuGPLAKySc0EZFIzAdmkZgIyqfkmIL9JzRsnVYtOqhadVC36ZJmaTUAmNROQSc0NkEnNBGQC8gaQSc0EZJOaJ4BsOqladFK16KRq0ScvAZnUTEBu1NyomYC8oWYCMqmZgExqboBMaiYgT6i5ATIBmdRMQL7ppGrRSdWik6pFn7ykZgLyBpAbNROQCcgmNROQSc0NkG9S84aaTSdVi06qFp1ULfrky9S8oWYCMqmZgExqJiA3QL5JzRNAJjUTkDeATGreOKladFK16KRq0ScvAZnUTEAmNROQSc0EZFIzAZnU/J/UTEBugExqvknNBGTTSdWik6pFJ1WLPnlJzQTkBsgNkEnNG0CeUHMD5AbIDZBNap4A8k0nVYtOqhadVC365JepeQLIpOYGyKTmBsgNkEnNE2pugExAJjUTkEnNG2o2nVQtOqladFK1CH/kBSDfpGYCcqNmAnKjZgIyqZmA3KiZgExqboBsUjMBuVHzxknVopOqRSdVi/BHvgjIJjXfBGSTmieA3KiZgExqJiCTmgnIpOaNk6pFJ1WLTqoW4Y/8j4BMam6APKFmAjKpuQFyo2YCcqNmAjKp+SYgN2reOKladFK16KRq0ScvAblRMwGZ1NwAuVEzAZmATGomIJOaTWqeALJJzaRmArLppGrRSdWik6pF+CN/MSA3aiYgk5oJyKRmAnKj5gbIjZongExqngAyqXnjpGrRSdWik6pFn7wE5DepuVEzAZnUbFLzTUAmNTdAbtR800nVopOqRSdViz5ZpmYTkBs1N2omIDdqbtRMQG7UvKHmCTU3QCY1m06qFp1ULTqpWvTJlwF5Qs0TQG7UPAHkRs2kZgLyBpA3gExqJjUTkEnNGydVi06qFp1ULfrkL6fmBsikZgLyBJAbNU+omYBMaiYgk5o/yUnVopOqRSdViz75xwB5Q80E5EbNBORGzY2aGzU3QP5PJ1WLTqoWnVQt+uTL1PwmNW8AmdRMQCYgN2pugExqJiCTmgnIjZoJyDedVC06qVp0UrXok2VAfhOQN9RMQCYgN2omIJvUTEBu1DyhZtNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+A1VAUjuC8fj+AAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/58852dc5">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATlSURBVO3BQY4kRxIEQdNA/f/Lun10XgJIpFeTM2si+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQHyhJoJyI2aJ4A8oWYC8pvUvHFSteikatFJ1aJPlqnZBOQJNU8AmdTcAJnU3KjZpGYTkE0nVYtOqhadVC365MuAPKHmCSBvqPkmIE+oeQLIE2q+6aRq0UnVopOqRZ/85dTcALlRM6mZgNyomYBMav4mJ1WLTqoWnVQt+uQvo+YJNTdAJjWTmhsg/09OqhadVC06qVr0yZep+U1A3lBzA+RGzaTmBsik5gk1/yUnVYtOqhadVC36ZBmQf5OaCcikZgLyhJoJyA2QSc0bQP7LTqoWnVQtOqlahD/yBwNyo2YCMqm5AfKEmhsgk5q/yUnVopOqRSdVi/BHXgAyqZmAbFLzBJBJzQTkRs0E5Ak1N0AmNROQTWq+6aRq0UnVopOqRZ98mZoJyKRmAjKpuQHyhpobIJOaN4DcAHlDzRNAJjVvnFQtOqladFK1CH9kEZAbNTdAbtTcAJnU3AC5UTMBeULNDZAbNX+Sk6pFJ1WLTqoW4Y+8AGRScwNkUvMEkEnNBORGzSYgk5oJyDepmYBMaiYgk5pNJ1WLTqoWnVQt+uQlNROQGzUTkEnNBGQTkDfUTGomIDdqfhOQSc03nVQtOqladFK16JOXgExqboDcAJnUTECeUDMBmdT8JiBvqJmATGqeADKpeeOkatFJ1aKTqkWfvKRmAjKpmdQ8AeSbgExqJiBvqLkBMqm5ATKpmYDcqJnUbDqpWnRSteikahH+yCIgN2omIJOaJ4BMar4JyI2aGyA3am6A3Ki5ATKp2XRSteikatFJ1aJPvkzNBOQJIE8AmdRMQCY1E5An1ExAJjU3at5QMwG5UfNNJ1WLTqoWnVQt+uQlIG+ouVHzm9Q8AWRSMwG5ATKpmYDcAJnUTEBugExq3jipWnRSteikatEny9RMQCY1E5BJzQRkUnMDZFLzBJBJzQRkUvOEmhsgk5oJyKTmDTWbTqoWnVQtOqlahD/yApBJzRNAbtTcAJnUPAFkUjMBeULNE0AmNROQJ9TcAJnUbDqpWnRSteikatEnXwbkRs0NkEnNNwGZ1DwBZFIzAbkBsgnIDZBJzRsnVYtOqhadVC3CH/mDAblRcwNkUjMBmdRMQCY1TwCZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5pJzQTkBsik5gkgN0A2AZnUvKHmm06qFp1ULTqpWvTJMjWbgNwAmdRMQCY1E5BJzY2aJ4C8oeYJNTdAbtS8cVK16KRq0UnVok++DMgTajapmYA8oWYCMqmZgExqboBMQDYB+U0nVYtOqhadVC36pP4ByKRmUjMBmdS8oeYGyKRmAvJvOqladFK16KRq0Sd/GSA3aiYgk5oJyDepuQFyA+QNNZtOqhadVC06qVr0yZep+SY1E5BJzQRkUjMBmdRMQCY1N0AmNROQSc2kZgIyqZmATGomIN90UrXopGrRSdWiT5YB+U1AboBsUnMDZFIzAZnUTEAmNTdAboBMar7ppGrRSdWik6pF+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pF/wM0Dk0xbJKkuwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

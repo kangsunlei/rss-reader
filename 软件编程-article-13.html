@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>OpenAI GPT-5.4 前端设计指南分享与实操建议</title>
+        <title>构建基于代码库的知识助手</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,76 @@
         </style>
     </head>
     <body>
-        <h2>OpenAI GPT-5.4 前端设计指南分享与实操建议</h2>
-        <p>3/22/2026, 11:47:03 AM</p>
+        <h2>构建基于代码库的知识助手</h2>
+        <p>3/23/2026, 6:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">分享 OpenAI 官方发布的《Designing delightful frontends with GPT-5.4》指南，并结合个人经验提供前端开发实操建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文评估了三种用于构建基于代码库的 RAG 知识助手的切片策略——固定大小、启发式和基于 AST 的方法，并证明了带有元数据头的 AST 切片策略能提供更优的检索性能。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者针对之前对 Codex UI 设计能力的吐槽，分享了 OpenAI 官方发布的 GPT-5.4 前端设计指南。推文不仅推荐了该指南，还总结了核心实操技巧，包括使用 `frontend-skill` 强制模型规划视觉与交互，以及调整推理参数等建议。这些内容将理论与工程实践相结合，对提升 AI 辅助前端开发的质量具有很高的参考价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了在代码库上实施 RAG 时面临的挑战，即简单的切片方式往往会破坏函数和类等语义边界。作者使用一个演示代码库，比较了三种切片策略：固定字符大小切片、LangChain 启发式分割器和基于 AST 的解析。通过利用 MLflow 的评估框架和特定的 LLM 评判器，他们证明了基于 AST 的切片方式（保留了语法结构并包含元数据头）能显著提高 AI 编程助手的检索准确性和上下文感知能力。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">代码需要结构感知的切片才能实现有效的 RAG。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与线性的业务文档不同，代码具有类和方法等嵌套层级。简单的切片方式会破坏这些语义单元，导致检索效果不佳并丢失关键上下文。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">基于 AST 且带有元数据头的切片策略更胜一筹。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将代码解析为抽象语法树（AST）可以保留语义边界。在切片中添加元数据头（文件路径、类/函数层级）通过提供必要的上下文，显著提高了检索的相关性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">系统性评估对于 RAG 性能至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 MLflow 的评估框架配合 RetrievalSufficiency 等特定的评判器，开发者可以针对多样化的代码相关查询数据集，定量比较不同的切片策略。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">代码中的语义单元通常是一个完整的函数，而不是一个段落。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">基于 AST 的切片策略将代码解析为语法树，并在语义边界（如函数、类或语句块）处进行切片。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你的切片缺乏关于代码位置的元数据，检索系统将难以区分存在于不同上下文中的相似类和函数。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">83</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Viking(@vikingmute)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Viking</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">396</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Databricks</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1584</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPT-5.4</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">UI 设计</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码库分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AST</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">切片</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2035684681463869856" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/68d7248e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2035684681463869856">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/68d7248e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATUSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyA3ajYBmdRMQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8oSaCcgNkEnNBORGzY2aTWo2Adl0UrXopGrRSdWiT74MyBNqngAyqdmkZgLyBJAn1DwB5Ak133RSteikatFJ1aJP/jFAJjU3aiYgk5pJzQTkRs0EZFLzLzmpWnRSteikatEn/zggT6iZgExqJjU3QP6fnFQtOqladFK16JMvU/M3AXIDZFJzo+YGyKTmCTV/kpOqRSdVi06qFn2yDMh/Sc0EZFIzAZnUTEAmNROQSc0EZFLzBpA/2UnVopOqRSdViz55Sc2fTM0E5DepmYBMam7U/E1OqhadVC06qVqEP/ICkEnNBGSTmjeAPKFmAvKEmhsgk5oJyCY133RSteikatFJ1SL8kUVAbtRMQG7UPAHkRs0EZFIzAZnUvAHkm9Q8AWRS88ZJ1aKTqkUnVYvwR14A8oaaGyBvqJmAPKFmAvKEmhsgN2r+JidVi06qFp1ULfrkJTUTkEnNBOQGyKTmBsik5gk1T6iZgExqJiBvALlRMwGZ1ExAJjWbTqoWnVQtOqlahD/yBwFyo+YJIJOaGyCTmieA3Kj5JiA3ar7ppGrRSdWik6pF+COLgNyomYBMam6AbFJzA2RScwPkm9RMQCY1TwCZ1LxxUrXopGrRSdWiT14CMql5Qs0NkEnNG0DeAPKEmhsgk5obIJOaCciNmknNppOqRSdVi06qFuGPfBGQSc0NkEnNG0CeUHMD5EbNDZAbNTdAbtTcAJnUbDqpWnRSteikatEnLwGZ1ExqnlAzAXlCzaRmAnIDZFJzo2YCMqm5UfOGmgnIjZpvOqladFK16KRqEf7IC0AmNROQJ9S8AWRScwPkCTUTkEnNBOQJNROQJ9RMQCY1E5BJzRsnVYtOqhadVC365D+mZgLyhpobIJOaJ4BMap5QcwNkUjMBmdS8oWbTSdWik6pFJ1WLPvllam7U3ACZ1ExAJjU3QCY1TwCZ1ExqboBMaiYgN0AmNZOaCcikZtNJ1aKTqkUnVYs++WVAJjUTkBs1N2pu1NwAuVFzA2RSMwG5AbIJyA2QSc0bJ1WLTqoWnVQtwh/5iwHZpOYJIJOaJ4BMap4AsknNGydVi06qFp1ULfrkJSC/Sc2kZgJyo2YCcgPkCSCbgExq3lDzTSdVi06qFp1ULfpkmZpNQG6A3KiZgExqnlDzBJA31Dyh5gbIjZo3TqoWnVQtOqla9MmXAXlCzZ9EzQRkUjMBmdTcAJmAbALym06qFp1ULTqpWvTJPw7IJjUTkEnNG2pugExqJiD/pZOqRSdVi06qFn3yj1EzAZnUTED+S2pugNwAeUPNppOqRSdVi06qFn3yZWq+Sc0E5AbIjZoJyI2aGyCTmgnIpGZSMwGZ1ExAJjUTkG86qVp0UrXopGrRJ8uA/CYgv0nNDZBJzQRkUjMBmdTcALkBMqn5ppOqRSdVi06qFuGPVC05qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFv0PGfJRDNNyx08AAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
