@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>我们如何为深度智能体构建评估体系</title>
+        <title>当数据库的主要用户不再是人类：我们在 AI Agent 场景下的架构实践与思考</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>我们如何为深度智能体构建评估体系</h2>
-        <p>3/26/2026, 3:18:56 PM</p>
+        <h2>当数据库的主要用户不再是人类：我们在 AI Agent 场景下的架构实践与思考</h2>
+        <p>3/27/2026, 7:15:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 LangChain 构建针对性智能体评估的方法论，不仅关注简单的正确性，还通过步数比率和理想轨迹等指标来衡量效率。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 AI Agent 成为数据库主要用户后带来的架构挑战，分享了 TiDB 在成本控制、长上下文存储及架构简化方面的实战经验，并提出了面向 Agent 的记忆层基础设施 mem9。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">LangChain 介绍了其用于评估“深度智能体”（Deep Agents）的内部框架，强调评估（evals）不仅仅是测试，更是主动塑造智能体行为的“向量”。其核心理念摒弃了“越多越好”的测试方法，转而提倡通过内部使用（dogfooding）、精选基准测试和精心设计的单元测试，构建具有针对性且自文档化的评估。文章概述了两层评估策略：首先确立正确性，然后优化效率。为了量化效率，LangChain 引入了“理想轨迹”（Ideal Trajectory）的概念——即通往解决方案的最直接路径——并使用步数比率（Step Ratio）、工具调用比率（Tool Call Ratio）和延迟比率（Latency Ratio）等特定指标来衡量智能体的表现。该方法论已集成到他们的开源 Deep Agents 仓库和 LangSmith 可观测性平台中。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">随着 TiDB Cloud 上超过 90% 的数据库集群由 AI Agent 自动创建，传统围绕人类设计的数据库假设正在失效。TiDB CTO 黄东旭通过三个核心案例揭示了 Agent 工作负载的特征：海量短命实例、长上下文数据化以及流量不可预测。文章提出，在 Agent 场景下，数据库方案是决定业务能否上线的商业前提。针对这些挑战，TiDB 采用了存算分离、逻辑隔离及资源控制等技术手段降低成本，并提倡将长上下文直接存入数据库以简化架构。最后，文章强调了“记忆层”作为 Agent 基础设施的重要性，并介绍了开源项目 mem9 如何通过专门的 API 解决跨 session 的信息恢复问题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">评估充当了智能体系统的行为向量。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 添加到测试套件中的每一个测试都会对系统提示词和工具描述施加压力，引导智能体产生特定的行为；因此，评估的设计必须反映实际的生产需求。</span>
+                        <strong style="color: #1e40af">AI Agent 改变了数据库的使用范式，从“一产品一库”转向“一 Agent 一库”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 场景下存在海量短命实例，要求数据库具备极高的元数据承载能力和 scale-to-zero 的弹性能力，以使商业模式在成本上成立。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">对于生产环境中的智能体而言，效率与正确性同样关键。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 一旦智能体达到准确，就必须对其成本和延迟进行优化。LangChain 通过将智能体的实际步骤和工具调用与预定义的“理想轨迹”进行比较来衡量这一点。</span>
+                        <strong style="color: #1e40af">简化架构比优化架构更有价值，长上下文应考虑直接收回数据库。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统的“对象存储 + 元数据 + 缓存”链路在处理 30MB+ 上下文时过于脆弱，利用数据库的事务性和长字段能力可以大幅降低运维复杂度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">稳健的评估分类法可提高诊断的清晰度。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 按能力（例如：文件操作、检索、记忆）而非来源对评估进行分类，使团队能够识别特定模型的弱点，并跟踪不同版本间的改进情况。</span>
+                        <strong style="color: #1e40af">AI Agent 生成的 SQL 模式与人类完全不同，标准基准测试无法替代真实负载压测。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 生成的 SQL 往往是不规则且非最优的，涉及复杂的上下文重建，必须针对真实工作负载进行查询计划调优。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">追踪分析是发现评估的主要引擎。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过内部使用智能体并分析 LangSmith 中的失败追踪，开发人员可以将生产错误转化为可复现的测试用例，从而防止回归。</span>
+                        <strong style="color: #1e40af">记忆层（Memory Layer）将成为 Agent 基础设施的标配。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了实现跨 session 的状态恢复和长期任务跟进，需要一层专门的 API 来处理记忆的沉淀、索引和注入，而非简单的无状态运行。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">更多的评估 ≠ 更好的智能体。相反，应构建能够反映生产中预期行为的针对性评估。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每一个评估都是一个改变你智能体系统行为的向量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果模型无法可靠地完成我们关心的任务，其他一切都无关紧要。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">两个解决相同任务的模型在实践中表现可能大相径庭。一个可能会多走弯路、进行不必要的工具调用，或者在执行任务时更缓慢。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当数据库的主要用户从人类变成 AI Agent 时，过去二十年我们围绕「人类使用数据库」所构建的一切假设——容量规划、schema 设计、运维流程、定价模型——还能成立吗？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">数据库方案不是性能优化项，而是决定业务能不能上线的前提条件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI Agent 生成的 SQL 和人类写的 SQL 不一样，标准基准跑得再好，也不代表生产没问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 时代的竞争优势不在模型大小，而在数据基础设施能否支撑 Agent 的工作方式。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,32 +63,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">LangChain Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">LangChain Accounts</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1966</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5265</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 评估</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LangChain</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LangSmith</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TiDB</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">长上下文</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">存算分离</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/20518dd1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/bf736fa1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/20518dd1">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATKSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHZAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBOQJNU8AmdQ8AeQJNROQ36TmjZOqRSdVi06qFn2yTM0mIE+ouQFyo2ZS8wSQGzUTkCfUbAKy6aRq0UnVopOqRZ98GZAn1DyhZgJyo2YCMgG5UTMBmdT8JiBPqPmmk6pFJ1WLTqoWffKPA3KjZgLyhJoJyA2QSc0EZFLzX3JSteikatFJ1aJP/nFqboA8oeYJNROQJ4BMav5lJ1WLTqoWnVQt+uTL1PwmIJOaGyATkEnNpGYCMqmZgHyTmr/kpGrRSdWik6pFnywD8puATGomIJOaGzUTkEnNG2omIE8A+ctOqhadVC06qVqEP/IPA7JJzQ2QSc0E5A01/7KTqkUnVYtOqhZ98hKQSc0E5EbNBOQJNTdANqn5TUAmNTdAJjUTkBs1b5xULTqpWnRStQh/5AUgN2pugExqboBMaiYgT6iZgNyoeQPIN6l5Asik5o2TqkUnVYtOqhZ98mVAbtRMQH4TkEnNBOQGyKRmAjKpeQPIE0Bu1Gw6qVp0UrXopGrRJ8vU3AB5Qs0E5Ak1N0AmIJOaCcik5kbNDZBJzSY1N0AmNW+cVC06qVp0UrUIf+QFIE+omYBMaiYgN2omIDdqboDcqLkBcqPmm4DcqPmmk6pFJ1WLTqoW4Y8sAnKjZgIyqdkE5EbNDZAbNU8AmdTcALlRcwPkCTVvnFQtOqladFK1CH9kEZAn1ExAbtRMQCY1N0DeUHMD5P9JzQTkCTVvnFQtOqladFK16JOXgExqngAyqXkDyKRmUvMGkBs1N0Bu1NwAeULNBGRSs+mkatFJ1aKTqkWf/HFAJjWbgNyomdQ8AeQJIJOaSc0EZAIyqflNJ1WLTqoWnVQt+uQlNTdAJjVPqHlCzQRkUjOpmYDcAJnU3Ki5AfIEkEnNBGQC8ptOqhadVC06qVr0yUtAJjU3QG6APKFmAnIDZFIzqZmAvAFkUjOpmYC8oWYCMqn5ppOqRSdVi06qFn3ykpon1LwB5EbNBOQGyKTmRs0E5JuATGr+spOqRSdVi06qFn2yDMik5gbIG0DeUHOjZgKyCcgTQP6yk6pFJ1WLTqoW4Y/8w4A8oeYJIJOaCcik5gkgk5ongGxS88ZJ1aKTqkUnVYs+eQnIb1Jzo+YGyKTmNwF5Asik5gk1E5BJzaaTqkUnVYtOqhZ9skzNJiBPAJnUPAHkBsgbaiYgN2o2qfmmk6pFJ1WLTqoWffJlQJ5Q84SaCcgEZFIzAZnU3ACZ1ExAJjVPAHlDzQTkCTVvnFQtOqladFK16JN/HJBJzQ2QSc0NkBsgN0AmNZOaCcik5gbIBGRScwNk00nVopOqRSdViz75jwHyTWqeADIBmdQ8AWRScwNkUvNNJ1WLTqoWnVQt+uTL1HyTmhsgb6iZgExqnlAzAZnUvAFkUjMBmdRsOqladFK16KRq0SfLgPwmIJOaSc1fAuQNNX/ZSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gfLQSVQrHbNmQAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/bf736fa1">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATkSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6NdKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzQRkUjMBmdQ8AeQJNROQ36TmjZOqRSdVi06qFn2yTM0mIE8AmdRMQCY1E5AbIJOaGzWb1GwCsumkatFJ1aKTqkWffBmQJ9Q8AWRSc6PmRs0EZFIzAZnUTECeUPMEkCfUfNNJ1aKTqkUnVYs++Z8BMqmZgExqJiCTmgnIpGYCMqn5LzmpWnRSteikatEn/zNqbtRMQCY1E5BJzQTk/+SkatFJ1aKTqkWffJmafxOQSc0E5EbNBGRSc6PmBsik5gk1f5KTqkUnVYtOqhZ9sgzI30zNBGRSMwGZ1ExAJjVvAPmTnVQtOqladFK16JOX1PzJ1HyTmhs1E5BJzY2av8lJ1aKTqkUnVYvwR14AMqmZgGxS8waQJ9RMQCY1E5BJzQ2QSc0EZJOabzqpWnRSteikahH+yAtA3lAzAZnU/JuATGomIJOaGyDfpOYJIJOaN06qFp1ULTqpWoQ/sgjIpOYNIDdq3gDyTWpugNyo+ZucVC06qVp0UrXok5eATGomIDdqJiCTmhsgN2qeUPMEkEnNBOQNIDdqJiCTmgnIpGbTSdWik6pFJ1WL8Ef+YEBu1ExAvknNDZAbNd8E5EbNN51ULTqpWnRSteiTXwbkCTU3QDap+SYgb6iZgExqngAyqXnjpGrRSdWik6pFn3wZkBs1E5AJyKTmRs0bQDapuQEyqbkBMqmZgNyomdRsOqladFK16KRq0ScvAZnU3Kh5Qs2NmhsgT6i5AXKj5gbIJiCTmhsgk5pNJ1WLTqoWnVQt+uQlNROQSc0bQN5QMwG5AfKEmgnIpOZGzRtqJiA3ar7ppGrRSdWik6pFn7wE5A0gN2pugExqbtRMQCY1TwCZ1ExAboBMaiYgN0AmNROQGyCTmjdOqhadVC06qVr0yTI1N0AmNROQCcik5gbIE2qeADKpeULNDZBJzQRkUvOGmk0nVYtOqhadVC365A+j5gbIE2pugExqJiA3QCY1k5obIJOaCcgNkEnNpGYCMqnZdFK16KRq0UnVok9+mZongExqJiCTmgnIpGZSMwGZ1DwBZFIzAbkBsgnIDZBJzRsnVYtOqhadVC3CH/mLAXlCzQRkUjMBmdRMQCY1TwCZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5pJzQRkUjMBmdTcqJmA3ADZBGRS84aabzqpWnRSteikatEny9RsAnIDZFIzAbkBMqmZgExqngDyhpon1NwAuVHzxknVopOqRSdViz75MiBPqPmTqJmATGomIJOaGyATkE1AftNJ1aKTqkUnVYs++Y8BcqPmBsikZlIzAZnUvKHmBsikZgLybzqpWnRSteikatEn/zFqJiA3QCY1E5BvUnMD5AbIG2o2nVQtOqladFK16JMvU/NNaiYgbwCZ1ExAJjU3QCY1E5BJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5TUBu1GxScwNkUjMBmdRMQCY1N0BugExqvumkatFJ1aKTqkX4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/AG3FUS3zo/ObAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

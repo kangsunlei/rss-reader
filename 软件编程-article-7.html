@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何在 Chrome DevTools 中覆盖 API 响应和标头：分步指南</title>
+        <title>如何使用 kcp 运行多个 Kubernetes 集群而无需额外开销</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何在 Chrome DevTools 中覆盖 API 响应和标头：分步指南</h2>
-        <p>3/26/2026, 9:20:49 PM</p>
+        <h2>如何使用 kcp 运行多个 Kubernetes 集群而无需额外开销</h2>
+        <p>3/27/2026, 8:36:42 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本指南演示了如何使用 Chrome DevTools 的“本地覆盖”（Local Overrides）功能来修改 API 响应和标头，使前端开发人员能够绕过后端延迟和 CORS 问题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 kcp 如何通过提供一个轻量级控制平面来管理多个被称为“工作区”的隔离逻辑集群，从而解决 Kubernetes 集群蔓延和命名空间隔离限制的问题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了关于利用 Chrome DevTools 中“本地覆盖”功能的全面分步教程。它解决了前端开发中三个常见的瓶颈：后端 API 响应错误、无需后端更改即可验证特定 UI 场景（如边缘情况）的需求，以及阻碍开发的 CORS 错误。通过将覆盖文件保存到本地文件夹，开发人员可以在本地持久化 API 数据和响应标头（例如 Access-Control-Allow-Origin）的更改，从而在实际后端服务出现故障或受限时，依然能够保持高效工作，不受阻碍。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文讨论了 Kubernetes 中多租户面临的挑战，强调了命名空间在为 CRD 等集群范围资源提供强隔离方面的不足，同时指出管理多个物理集群会导致巨大的运营开销和成本。文章介绍了 kcp，这是一个将 Kubernetes 控制平面与工作节点解耦的开源项目。通过使用被称为“工作区”（workspaces）的逻辑集群，kcp 允许团队在拥有独立 API 端点和资源的隔离环境中进行操作。作者提供了关于设置 kcp、创建分层工作区以及利用 APIExports 和 APIBindings 在团队间共享自定义 API 而不产生全局冲突的实践指南。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">“本地覆盖”允许对网络响应进行持久化的本地修改。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将网络请求映射到本地文件，开发人员可以编辑在页面刷新后依然有效的 API 数据或标头，从而有效地模拟后端环境。</span>
+                        <strong style="color: #1e40af">由于共享集群范围的资源，命名空间不足以实现真正的多租户。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在标准集群中，CRD 是全局注册的，这意味着不同团队无法在不相互影响的情况下轻松运行同一 Operator 的冲突版本。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">标头覆盖可以在无需更改服务器端的情况下解决 CORS 问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发人员可以手动将 Access-Control-Allow-Origin 和其他安全标头添加到本地响应中，从而在开发过程中绕过浏览器的 CORS 限制。</span>
+                        <strong style="color: #1e40af">kcp 引入了工作区，作为单一控制平面上的独立逻辑集群。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工作区提供了完整 Kubernetes 集群的体验，包括独立的 RBAC 和 API，但没有多个 API 服务器和 etcd 实例的基础设施开销。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">内容覆盖有助于测试 UI 逻辑和边缘情况。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 修改 API 响应中的特定值（例如更改库存数量）使开发人员能够立即触发并验证前端逻辑，如条件标签或错误状态。</span>
+                        <strong style="color: #1e40af">APIExports 和 APIBindings 实现了选择性的“API 即服务”模型。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> kcp 工作区不再是单一的 API，而是从空状态开始，允许平台团队导出特定的 API，租户团队可以有选择地绑定并使用这些 API。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">kcp 严格作为控制平面运行，不直接执行工作负载。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实际的计算资源保留在物理执行集群上，kcp 负责管理从逻辑工作区到下游硬件的资源同步。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即使后端 API 返回错误响应或出现 CORS 错误，你也可以继续进行前端开发。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这将在顶部调出一个 UI，你可以在其中选择一个文件夹来存储覆盖文件。需要理解的是，所有的内容覆盖都存储在你机器的本地硬盘上。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">试想一下，无需更改一行服务器端代码，你就能解除阻碍，继续推进客户端 UI 工作。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最初清晰的分离很快就会演变成集群蔓延，带来更高的成本、复杂的网络和持续的运营开销。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">kcp 是一个开源项目，让你可以在单一控制平面上运行多个逻辑 Kubernetes 集群。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">kcp 本身不运行工作负载。它严格来说是一个控制平面。你的实际应用程序仍然在物理 Kubernetes 集群上运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个工作区开始时都是完全空的。然后，你可以有选择地让你的工作区“订阅”你真正需要的 API。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -60,31 +63,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Tapas Adhikary</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Olalekan Odukoya</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1839</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3097</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Chrome DevTools</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API 覆盖</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">调试</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CORS</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">kcp</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多租户</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">控制平面</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/039c4464" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/5729736a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/039c4464">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS+SURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6NdKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAXlCzQRkUnMDZFJzA2RS8wSQ36TmjZOqRSdVi06qFn2yTM0mIDdqJiCTmgnIDZAbNROQSc2kZgJyo+ZGzSYgm06qFp1ULTqpWvTJlwF5Qs0mIDdqboA8AWRS801AnlDzTSdVi06qFp1ULfrkLwdkUvMGkBsgk5obIDdq/ktOqhadVC06qVr0yf8ckN+kZgIyqfmbnVQtOqladFK16JMvU/NvAjKpuVEzAZnUPKFmAjKpeUPNn+SkatFJ1aKTqkWfLAPyfwJkUjMBmdRMQCY1N0D+ZCdVi06qFp1ULcIf+YsBuVEzAblRMwH5JjX/JSdVi06qFp1ULfrkJSCTmieATGomIE+ouVFzA+RGzQTkRs0E5AbIJjU3QCY1b5xULTqpWnRStQh/5IuAvKHmBsik5g0gk5oJyKTmm4D8JjVvnFQtOqladFK16JOXgNyomYBMam6ATGqeADKpmYBMajYBmdRMQDapeQLIppOqRSdVi06qFn3yh1PzTWqeUHMDZFIzAXlCzQ2QCcikZgLyTSdVi06qFp1ULfrkJTUTkBs1N0DeAPIEkDfU3AD5JjVvqNl0UrXopGrRSdWiT5apmYDcqJnU3AB5Qs0EZFIzAZnUTEDeUPMEkEnNBOQNIJOaN06qFp1ULTqpWvTJl6m5ATKpmYDcqJmA3KiZgExq3lAzAbkBMqn5JjUTkE0nVYtOqhadVC365A+n5g0gk5obIG8AuQGySc0TQL7ppGrRSdWik6pFnywDcqPmCSCTmhs1E5AbNTdAJjVPqLkBMgGZ1ExAJjVvqNl0UrXopGrRSdUi/JEXgExqboA8oeYNIJOaN4DcqJmATGpugGxSMwG5UfPGSdWik6pFJ1WLPnlJzSY1E5BJzRtAJjUTkDeATGo2qZmATGomIJOaCcimk6pFJ1WLTqoW4Y98EZAbNROQSc0EZFIzAZnUTEBu1NwAmdRMQG7UTEAmNd8E5EbNGydVi06qFp1ULfrkJSA3aiYgE5BJzQTkBsgbaiYgk5o31DwBZJOaSc0EZNNJ1aKTqkUnVYvwR/5iQCY1TwDZpOYGyI2aJ4BMap4AMql546Rq0UnVopOqRZ+8BOQ3qfkmNTdAJjXfBGRScwPkRs03nVQtOqladFK16JNlajYBuVFzA2RSM6l5Qs0E5EbNG2qeUHMDZFKz6aRq0UnVopOqRZ98GZAn1DwBZFIzqZmATGomIDdqJjUTkDeAvAFkUvObTqoWnVQtOqla9MlfTs0EZFIzqXkDyI2aJ9RMQCY1E5BJzRNqJiCTmjdOqhadVC06qVr0yf8ckBs1E5BJzQTkRs2Nmhs1N0D+TSdVi06qFp1ULfrky9T8SYBMat4AcqPmBsikZgIyqZmA3KiZgHzTSdWik6pFJ1WLPlkG5DcB2QRkUnOjZgKySc0E5EbNE2o2nVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16B+AYjMqevjeRwAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/5729736a">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATkSURBVO3BQY4kRxIEQdNA/f/Lun0ifC8BJNKrOUOYCP5I1ZKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0ScvAflNap4AMqmZgNyomYDcqJmA3Ki5AfKb1LxxUrXopGrRSdWiT5ap2QTkBsikZlJzo2YCMgG5UTMB+SY1m4BsOqladFK16KRq0SdfBuQJNU+ouQFyo2aTmgnINwF5Qs03nVQtOqladFK16JP6P2omIJOaCcik5kbNf9lJ1aKTqkUnVYs++csBmdTcqJmATGomNZuA3Kj5m51ULTqpWnRSteiTL1PzTWpu1ExAJjVPAJnUTEB+k5o/yUnVopOqRSdViz5ZBuQ3AZnUTEAmNROQSc0EZFIzAZnUTEAmNROQJ4D8yU6qFp1ULTqpWoQ/Uv8A8oSaCciNmv+yk6pFJ1WLTqoWffISkEnNBGRSMwGZ1ExAJjVPAJnUTEAmNZvUfBOQSc0NkEnNppOqRSdVi06qFuGP/CIgk5o3gDyhZgIyqZmA3KiZgNyomYA8oeYGyKTmBsik5o2TqkUnVYtOqhZ98hKQJ9RMQCY1E5AbNROQSc0EZFLzhJon1NyouQHyhJoJyG86qVp0UrXopGrRJy+puQFyo2YCMql5A8ik5gbIE0DeAPIGkEnNpGYCMqnZdFK16KRq0UnVIvyRF4DcqLkBMqmZgHyTmhsgm9RMQJ5QcwNkUjMBuVHzxknVopOqRSdViz5ZpmYC8gSQSc0EZFIzAZnUPAFkUvMnATKpeULNBGTTSdWik6pFJ1WLPlkGZFLzBpBJzQTkBsiNmknNBGRScwNkUnOjZgLyTUC+6aRq0UnVopOqRZ+8pOYGyKRmAjKpmdTcqLkB8gSQSc0E5Akgk5oJyKTmN6nZdFK16KRq0UnVok/+ZWpugExqboC8oeZGzQTkRs0E5AbIE2reADKpeeOkatFJ1aKTqkWfLAMyqXkCyKRmAnKj5gkgk5oJyKTmDTUTkEnNBGRS8wSQSc0EZNNJ1aKTqkUnVYs+eQnIpOYGyKTmBsikZgIyAZnUTEC+Sc0EZFLzBpBJzaTmBsg3nVQtOqladFK1CH9kEZAbNTdAJjXfBORGzQTkm9RMQCY1N0AmNROQSc2mk6pFJ1WLTqoW4Y+8AGRSMwH5JjU3QCY1bwB5Qs0E5JvU/JtOqhadVC06qVqEP/IXA3KjZgLyhJobIJvUPAFkUjMBeULNGydVi06qFp1ULfrkJSC/Sc2k5gbIpGYCMqmZgExqJjUTkE1AJjU3QCY1E5BvOqladFK16KRq0SfL1GwC8puATGreUHMD5EbN3+SkatFJ1aKTqkWffBmQJ9Q8AWRSM6mZgExqboBMaiYgm4C8oeZGzQRk00nVopOqRSdViz75y6mZgExq3lDzBpAn1DwB5AbIbzqpWnRSteikatEnfzkgT6iZgDyhZlLzBpAJyKRmAnIDZFJzA2TTSdWik6pFJ1WLPvkyNd+k5gbIpOYNIJOaCcikZgJyo+ZGzQRkUnMDZFKz6aRq0UnVopOqRZ8sA/KbgLyh5gkgE5BvAvIEkEnNDZBJzRsnVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36H2U3STvRXhwxAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
