@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何使用 kcp 运行多个 Kubernetes 集群而无需额外开销</title>
+        <title>开源 OCR 模型 Chandra OCR 2：支持复杂文档结构化转换</title>
         <style>
             body {
                 padding: 12px;
@@ -15,79 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>如何使用 kcp 运行多个 Kubernetes 集群而无需额外开销</h2>
-        <p>3/27/2026, 8:36:42 PM</p>
+        <h2>开源 OCR 模型 Chandra OCR 2：支持复杂文档结构化转换</h2>
+        <p>3/28/2026, 1:30:54 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 kcp 如何通过提供一个轻量级控制平面来管理多个被称为“工作区”的隔离逻辑集群，从而解决 Kubernetes 集群蔓延和命名空间隔离限制的问题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">介绍一款名为 Chandra OCR 2 的开源 OCR 模型，支持将 PDF 和图片转换为结构化的 Markdown、HTML 或 JSON，并能保留原始排版。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文讨论了 Kubernetes 中多租户面临的挑战，强调了命名空间在为 CRD 等集群范围资源提供强隔离方面的不足，同时指出管理多个物理集群会导致巨大的运营开销和成本。文章介绍了 kcp，这是一个将 Kubernetes 控制平面与工作节点解耦的开源项目。通过使用被称为“工作区”（workspaces）的逻辑集群，kcp 允许团队在拥有独立 API 端点和资源的隔离环境中进行操作。作者提供了关于设置 kcp、创建分层工作区以及利用 APIExports 和 APIBindings 在团队间共享自定义 API 而不产生全局冲突的实践指南。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">由于共享集群范围的资源，命名空间不足以实现真正的多租户。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在标准集群中，CRD 是全局注册的，这意味着不同团队无法在不相互影响的情况下轻松运行同一 Operator 的冲突版本。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">kcp 引入了工作区，作为单一控制平面上的独立逻辑集群。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工作区提供了完整 Kubernetes 集群的体验，包括独立的 RBAC 和 API，但没有多个 API 服务器和 etcd 实例的基础设施开销。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">APIExports 和 APIBindings 实现了选择性的“API 即服务”模型。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> kcp 工作区不再是单一的 API，而是从空状态开始，允许平台团队导出特定的 API，租户团队可以有选择地绑定并使用这些 API。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">kcp 严格作为控制平面运行，不直接执行工作负载。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实际的计算资源保留在物理执行集群上，kcp 负责管理从逻辑工作区到下游硬件的资源同步。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
-            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最初清晰的分离很快就会演变成集群蔓延，带来更高的成本、复杂的网络和持续的运营开销。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">kcp 是一个开源项目，让你可以在单一控制平面上运行多个逻辑 Kubernetes 集群。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">kcp 本身不运行工作负载。它严格来说是一个控制平面。你的实际应用程序仍然在物理 Kubernetes 集群上运行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每个工作区开始时都是完全空的。然后，你可以有选择地让你的工作区“订阅”你真正需要的 API。</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">该推文推荐了开源项目 Chandra OCR 2，这是一款针对复杂文档（包含表格、公式、手写体）的 OCR 模型。它支持 90 多种语言，在多语言 OCR 基准测试中表现优异，能够将文档转换为结构化的 Markdown、HTML 或 JSON 格式，并保留原始排版和表单结构。对于需要处理扫描件、论文等文档的开发者来说，是一个实用的工具。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Olalekan Odukoya</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">80</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHubDaily(@GitHub_Daily)</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHubDaily</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3097</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">350</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">kcp</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多租户</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">云原生</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">控制平面</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OCR</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Chandra OCR</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文档处理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/5729736a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/status/2037885139695608304" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/5729736a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATkSURBVO3BQY4kRxIEQdNA/f/Lun0ifC8BJNKrOUOYCP5I1ZKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0ScvAflNap4AMqmZgNyomYDcqJmA3Ki5AfKb1LxxUrXopGrRSdWiT5ap2QTkBsikZlJzo2YCMgG5UTMB+SY1m4BsOqladFK16KRq0SdfBuQJNU+ouQFyo2aTmgnINwF5Qs03nVQtOqladFK16JP6P2omIJOaCcik5kbNf9lJ1aKTqkUnVYs++csBmdTcqJmATGomNZuA3Kj5m51ULTqpWnRSteiTL1PzTWpu1ExAJjVPAJnUTEB+k5o/yUnVopOqRSdViz5ZBuQ3AZnUTEAmNROQSc0EZFIzAZnUTEAmNROQJ4D8yU6qFp1ULTqpWoQ/Uv8A8oSaCciNmv+yk6pFJ1WLTqoWffISkEnNBGRSMwGZ1ExAJjVPAJnUTEAmNZvUfBOQSc0NkEnNppOqRSdVi06qFuGP/CIgk5o3gDyhZgIyqZmA3KiZgNyomYA8oeYGyKTmBsik5o2TqkUnVYtOqhZ98hKQJ9RMQCY1E5AbNROQSc0EZFLzhJon1NyouQHyhJoJyG86qVp0UrXopGrRJy+puQFyo2YCMql5A8ik5gbIE0DeAPIGkEnNpGYCMqnZdFK16KRq0UnVIvyRF4DcqLkBMqmZgHyTmhsgm9RMQJ5QcwNkUjMBuVHzxknVopOqRSdViz5ZpmYC8gSQSc0EZFIzAZnUPAFkUvMnATKpeULNBGTTSdWik6pFJ1WLPlkGZFLzBpBJzQTkBsiNmknNBGRScwNkUnOjZgLyTUC+6aRq0UnVopOqRZ+8pOYGyKRmAjKpmdTcqLkB8gSQSc0E5Akgk5oJyKTmN6nZdFK16KRq0UnVok/+ZWpugExqboC8oeZGzQTkRs0E5AbIE2reADKpeeOkatFJ1aKTqkWfLAMyqXkCyKRmAnKj5gkgk5oJyKTmDTUTkEnNBGRS8wSQSc0EZNNJ1aKTqkUnVYs+eQnIpOYGyKTmBsikZgIyAZnUTEC+Sc0EZFLzBpBJzaTmBsg3nVQtOqladFK1CH9kEZAbNTdAJjXfBORGzQTkm9RMQCY1N0AmNROQSc2mk6pFJ1WLTqoW4Y+8AGRSMwH5JjU3QCY1bwB5Qs0E5JvU/JtOqhadVC06qVqEP/IXA3KjZgLyhJobIJvUPAFkUjMBeULNGydVi06qFp1ULfrkJSC/Sc2k5gbIpGYCMqmZgExqJjUTkE1AJjU3QCY1E5BvOqladFK16KRq0SfL1GwC8puATGreUHMD5EbN3+SkatFJ1aKTqkWffBmQJ9Q8AWRSM6mZgExqboBMaiYgm4C8oeZGzQRk00nVopOqRSdViz75y6mZgExq3lDzBpAn1DwB5AbIbzqpWnRSteikatEnfzkgT6iZgDyhZlLzBpAJyKRmAnIDZFJzA2TTSdWik6pFJ1WLPvkyNd+k5gbIpOYNIJOaCcikZgJyo+ZGzQRkUnMDZFKz6aRq0UnVopOqRZ8sA/KbgLyh5gkgE5BvAvIEkEnNDZBJzRsnVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36H2U3STvRXhwxAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/status/2037885139695608304">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
