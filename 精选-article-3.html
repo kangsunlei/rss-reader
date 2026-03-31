@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>当数据库的主要用户不再是人类：我们在 AI Agent 场景下的架构实践与思考</title>
+        <title>什么时候 Agent 能自己写 skill？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>当数据库的主要用户不再是人类：我们在 AI Agent 场景下的架构实践与思考</h2>
-        <p>3/27/2026, 7:15:00 AM</p>
+        <h2>什么时候 Agent 能自己写 skill？</h2>
+        <p>3/30/2026, 2:03:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 AI Agent 成为数据库主要用户后带来的架构挑战，分享了 TiDB 在成本控制、长上下文存储及架构简化方面的实战经验，并提出了面向 Agent 的记忆层基础设施 mem9。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度综述了 AI Agent 技能（Skill）从手动打磨向自主发现、封装组合及持续进化的演进历程，并系统梳理了 2025-2026 年间学术界与工业界在 Agent 技能生命周期管理上的核心突破。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">随着 TiDB Cloud 上超过 90% 的数据库集群由 AI Agent 自动创建，传统围绕人类设计的数据库假设正在失效。TiDB CTO 黄东旭通过三个核心案例揭示了 Agent 工作负载的特征：海量短命实例、长上下文数据化以及流量不可预测。文章提出，在 Agent 场景下，数据库方案是决定业务能否上线的商业前提。针对这些挑战，TiDB 采用了存算分离、逻辑隔离及资源控制等技术手段降低成本，并提倡将长上下文直接存入数据库以简化架构。最后，文章强调了“记忆层”作为 Agent 基础设施的重要性，并介绍了开源项目 mem9 如何通过专门的 API 解决跨 session 的信息恢复问题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章探讨了 AI Agent 领域的核心瓶颈：如何让 Agent 自主获取并优化专业技能。作者回顾了从 1999 年强化学习理论到 2023 年 Voyager 开启「技能即代码」时代的跨越，重点分析了 2025 年 Anthropic 发布 Agent Skills 标准后的技术爆发。内容涵盖了技能发现的三种路径（好奇心、失败、需求驱动）、技能组合的挑战（嵌套崩溃与模型能力瓶颈）、以及技能进化的前沿方案（如 EvolveR 的闭环自进化）。最后指出，Agent 技能正从学术兴趣转向工程化落地，成为一种可复用、可传承的知识基础设施。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI Agent 改变了数据库的使用范式，从“一产品一库”转向“一 Agent 一库”。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 场景下存在海量短命实例，要求数据库具备极高的元数据承载能力和 scale-to-zero 的弹性能力，以使商业模式在成本上成立。</span>
+                        <strong style="color: #1e40af">技能形态的转变是 Agent 进化的关键拐点。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 技能从不可解释的神经网络权重矩阵转向可读、可编辑、可迁移的代码（如 JavaScript 函数），使得知识的积累、检验与传播成为可能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">简化架构比优化架构更有价值，长上下文应考虑直接收回数据库。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统的“对象存储 + 元数据 + 缓存”链路在处理 30MB+ 上下文时过于脆弱，利用数据库的事务性和长字段能力可以大幅降低运维复杂度。</span>
+                        <strong style="color: #1e40af">技能发现已形成好奇心、失败和需求驱动三条成熟路径。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> EXIF 通过环境探索发现技能，EvoSkill 通过分析失败原因定向修复，CASCADE 则在处理专业任务时按需自主学习工具用法。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI Agent 生成的 SQL 模式与人类完全不同，标准基准测试无法替代真实负载压测。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 生成的 SQL 往往是不规则且非最优的，涉及复杂的上下文重建，必须针对真实工作负载进行查询计划调优。</span>
+                        <strong style="color: #1e40af">技能组合是当前 Agent 走向复杂的工程瓶颈。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 单步原子技能已相对成熟，但多层层级嵌套会导致错误率指数级累积，弱模型在组合时容易因边界条件失控而崩溃。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">记忆层（Memory Layer）将成为 Agent 基础设施的标配。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了实现跨 session 的状态恢复和长期任务跟进，需要一层专门的 API 来处理记忆的沉淀、索引和注入，而非简单的无状态运行。</span>
+                        <strong style="color: #1e40af">技能进化正在实现从「外挂经验库」到「模型策略升级」的闭环。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过对比分析（AutoRefine）或自蒸馏结合强化学习（EvolveR），Agent 不仅能优化外部技能文件，还能进化模型本身的推理策略。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当数据库的主要用户从人类变成 AI Agent 时，过去二十年我们围绕「人类使用数据库」所构建的一切假设——容量规划、schema 设计、运维流程、定价模型——还能成立吗？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">数据库方案不是性能优化项，而是决定业务能不能上线的前提条件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI Agent 生成的 SQL 和人类写的 SQL 不一样，标准基准跑得再好，也不代表生产没问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 时代的竞争优势不在模型大小，而在数据基础设施能否支撑 Agent 的工作方式。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent 不是变聪明了才学会 skill，而是 skill 变得可读了，才能被积累、检验、传播。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">发现原子级 skill 不是瓶驳，组合才是。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">零件都好使，装到一起就崩了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">进化的过程本身就包含管理，淘汰劣质经验、合并冗余经验、持续校准评分，这些不是进化之外的维护工作，而是进化机制的一部分。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,32 +63,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯科技</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯科技</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5265</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">48 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">11900</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">TiDB</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">长上下文</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">存算分离</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent Skills</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">强化学习</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Voyager</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/bf736fa1" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/401cc08f" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/bf736fa1">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATkSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6NdKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzQRkUjMBmdQ8AeQJNROQ36TmjZOqRSdVi06qFn2yTM0mIE8AmdRMQCY1E5AbIJOaGzWb1GwCsumkatFJ1aKTqkWffBmQJ9Q8AWRSc6PmRs0EZFIzAZnUTECeUPMEkCfUfNNJ1aKTqkUnVYs++Z8BMqmZgExqJiCTmgnIpGYCMqn5LzmpWnRSteikatEn/zNqbtRMQCY1E5BJzQTk/+SkatFJ1aKTqkWffJmafxOQSc0E5EbNBGRSc6PmBsik5gk1f5KTqkUnVYtOqhZ9sgzI30zNBGRSMwGZ1ExAJjVvAPmTnVQtOqladFK16JOX1PzJ1HyTmhs1E5BJzY2av8lJ1aKTqkUnVYvwR14AMqmZgGxS8waQJ9RMQCY1E5BJzQ2QSc0EZJOabzqpWnRSteikahH+yAtA3lAzAZnU/JuATGomIJOaGyDfpOYJIJOaN06qFp1ULTqpWoQ/sgjIpOYNIDdq3gDyTWpugNyo+ZucVC06qVp0UrXok5eATGomIDdqJiCTmhsgN2qeUPMEkEnNBOQNIDdqJiCTmgnIpGbTSdWik6pFJ1WL8Ef+YEBu1ExAvknNDZAbNd8E5EbNN51ULTqpWnRSteiTXwbkCTU3QDap+SYgb6iZgExqngAyqXnjpGrRSdWik6pFn3wZkBs1E5AJyKTmRs0bQDapuQEyqbkBMqmZgNyomdRsOqladFK16KRq0ScvAZnU3Kh5Qs2NmhsgT6i5AXKj5gbIJiCTmhsgk5pNJ1WLTqoWnVQt+uQlNROQSc0bQN5QMwG5AfKEmgnIpOZGzRtqJiA3ar7ppGrRSdWik6pFn7wE5A0gN2pugExqbtRMQCY1TwCZ1ExAboBMaiYgN0AmNROQGyCTmjdOqhadVC06qVr0yTI1N0AmNROQCcik5gbIE2qeADKpeULNDZBJzQRkUvOGmk0nVYtOqhadVC365A+j5gbIE2pugExqJiA3QCY1k5obIJOaCcgNkEnNpGYCMqnZdFK16KRq0UnVok9+mZongExqJiCTmgnIpGZSMwGZ1DwBZFIzAbkBsgnIDZBJzRsnVYtOqhadVC3CH/mLAXlCzQRkUjMBmdRMQCY1TwCZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5pJzQRkUjMBmdTcqJmA3ADZBGRS84aabzqpWnRSteikatEny9RsAnIDZFIzAbkBMqmZgExqngDyhpon1NwAuVHzxknVopOqRSdViz75MiBPqPmTqJmATGomIJOaGyATkE1AftNJ1aKTqkUnVYs++Y8BcqPmBsikZlIzAZnUvKHmBsikZgLybzqpWnRSteikatEn/zFqJiA3QCY1E5BvUnMD5AbIG2o2nVQtOqladFK16JMvU/NNaiYgbwCZ1ExAJjU3QCY1E5BJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5TUBu1GxScwNkUjMBmdRMQCY1N0BugExqvumkatFJ1aKTqkX4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/AG3FUS3zo/ObAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/401cc08f">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS6SURBVO3BQY4kRxIEQdNA/f/Lun30vQSQSK/mcGgi+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepeQLIpOYJIJOaJ4A8oWYC8pvUvHFSteikatFJ1aJPlqnZBGQTkEnNjZoJyKTmRs0mNZuAbDqpWnRSteikatEnXwbkCTVPAHlCzRNA3gDyhJongDyh5ptOqhadVC06qVr0yV9OzQ2QN4DcqJmATGr+JidVi06qFp1ULfqk/o+aTUD+S06qFp1ULTqpWvTJl6n5TWomIDdqJiCTmgnIpOZGzQ2QSc0Tav4kJ1WLTqoWnVQt+mQZkD+ZmgnIpGYCMqmZgExqJiCTmjeA/MlOqhadVC06qVqEP/IvBmSTmgnIE2pugExq/iYnVYtOqhadVC3CH3kByKRmArJJzRNAJjUTkG9ScwNkUjMB2aTmm06qFp1ULTqpWvTJl6mZgExqngAyqZmATGomIDdqvgnIDZA31DwBZFLzxknVopOqRSdVi/BHFgG5UXMD5Ak1N0AmNROQGzUTkCfU3AC5UfNvclK16KRq0UnVok/+cGomIG8AuVEzAZnUTEAmNROQN4DcqJmATGomIJOaTSdVi06qFp1ULcIfeQHIjZo3gExqJiCTmgnIpGYCcqPmCSA3ar4JyI2abzqpWnRSteikatEny9RMQCY1T6iZgExqJiBPqLkBMql5A8gbaiYgk5ongExq3jipWnRSteikatEnX6ZmAjKpuQHyhJobIDdqJjUTkCfU3ACZ1NwAmdRMQG7UTGo2nVQtOqladFK16JMvA/IEkEnNBGSTmk1qboBsAjKpuQEyqdl0UrXopGrRSdWiT5YBmdS8AeQGyI2aGyA3am7UTEAmNTdq3lAzAblR800nVYtOqhadVC3CH3kByKTmBsik5p8E5Ak1E5BJzQTkCTUTkCfUTEAmNROQSc0bJ1WLTqoWnVQt+uTLgNwA2aTmDTU3QCY1T6i5ATKpmYBMat5Qs+mkatFJ1aKTqkWffJmaCcikZgIyqXkCyG8CMqmZ1NwAmdRMQG6ATGomNROQSc2mk6pFJ1WLTqoWffJlQCY1E5BJzQRkUjMBmdS8AeRGzQ2QSc0E5AbIJiA3QCY1b5xULTqpWnRStQh/5F8MyBtq3gAyqXkCyKTmCSCb1LxxUrXopGrRSdWiT14C8pvUTGqeADIB2QRkE5BJzRtqvumkatFJ1aKTqkWfLFOzCcgNkBs1k5rfBOQNNU+ouQFyo+aNk6pFJ1WLTqoWffJlQJ5QswnIpOYNIJOaCcik5gbIBGQTkN90UrXopGrRSdWiT/7jgExqbtRMQCY1b6i5ATKpmYD8k06qFp1ULTqpWvTJX0bNBORGzQTkN6m5AXID5A01m06qFp1ULTqpWvTJl6n5JjU3at5QMwGZ1NwAmdRMQCY1k5oJyKRmAjKpmYB800nVopOqRSdViz5ZBuQ3AXlDzaRmAjKpuQEyqZmATGomIJOaGyA3QCY133RSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aL/ATD/LixShFUEAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
