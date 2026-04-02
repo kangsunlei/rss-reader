@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>认知重建之后，步入 Agentic Engineering 的工程革命</title>
+        <title>Claude Code 架构深度拆解：最强 AI Coding Agent 的工程实现全貌</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>认知重建之后，步入 Agentic Engineering 的工程革命</h2>
-        <p>3/30/2026, 9:37:00 AM</p>
+        <h2>Claude Code 架构深度拆解：最强 AI Coding Agent 的工程实现全貌</h2>
+        <p>3/31/2026, 11:33:26 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度复盘了腾讯工程师从 Vibe Coding 转向 Agentic Engineering 的实践历程，提出了一套以上下文管理为核心、基于工具化设计的 AI 辅助工程体系。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度拆解了 Claude Code 的核心架构，揭秘其作为顶级 AI Coding Agent 在主循环设计、五层上下文压缩管道、三层权限防御及流式工具执行等方面的工程实现细节。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详尽记录了作者在两个月内将一个简单的 AGENTS.md 文件演进为包含 22 个 Agent、27 个 Skill 和 28 个命令的工程体系的过程。核心观点认为，Agentic Engineering 是从「代码编写」到「Agent 协调」的范式转移。作者通过实战推翻了传统的 DDD 架构和复杂的动态场景路由，转向了以「渐进式披露」为原则的工具设计（Command、Skill、Subagent 三级体系）。文章强调了上下文空间作为稀缺资源的底层约束，并提出了「复利工程」理念，即通过结构化文档将项目知识沉淀为 AI 的长期记忆，从而实现研发效率的持续增长。这不仅是一份技术指南，更是对 AI 时代软件工程方法论的深度重构。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章通过对 Claude Code 源码的深度分析，揭示了其作为一个完整 Agent 运行系统的复杂架构。核心亮点包括：基于异步生成器的 Agent 主循环，实现了高效的背压控制和生命周期管理；创新的流式工具执行机制（StreamingToolExecutor），允许在模型生成过程中并行执行工具；极其精妙的五层上下文压缩管道，从单条消息限额到全对话摘要逐级优化 token 使用；以及包含 AST 级命令分析的三层权限防御体系。此外，文章还探讨了其极简的状态管理、缓存友好的提示词工程以及多 Agent 协作模式，为开发者提供了构建高性能 AI Agent 的实战参考和设计模式。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">从 Vibe Coding 向 Agentic Engineering 的范式演进。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 编程模式正从「全部接受」的氛围编程转向严谨的智能体工程，开发者角色从代码编写者转变为 Agent 协调者与监督者。</span>
+                        <strong style="color: #1e40af">Agent 主循环采用异步生成器实现，具备极强的工程鲁棒性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 async generator 替代回调或 Promise 链，提供了天然的背压控制、清晰的生命周期语义（yield 为事件，return 为终态）以及便捷的取消传播机制。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">上下文空间是 Agent 协作的底层物理约束。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Agent 的能力上限取决于上下文的信噪比。应采用渐进式披露架构，通过轻量级索引和按需检索（Agentic Search）来对抗上下文腐烂。</span>
+                        <strong style="color: #1e40af">流式工具执行（StreamingToolExecutor）是其响应速度快的核心秘密。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工具在从模型流式响应中解析出来时即刻执行，无需等待完整响应完成，并能根据并发安全性（per-invocation 粒度）智能分批并行调度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">推翻动态场景路由，转向结构化的工具设计体系。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 放弃复杂的运行时场景识别，改用 Command（快捷入口）、Skill（知识封装）、Subagent（上下文隔离）三级能力体系，降低 Agent 的认知负担。</span>
+                        <strong style="color: #1e40af">设计了精妙的五层分层上下文管理管道，实现 Token 极致利用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过工具结果预算、历史裁剪、消息级微优化、上下文折叠和全对话摘要五层过滤，确保模型在有限窗口内始终看到最相关信息，并设有熔断器防止无限重试。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">建立「文档即记忆」的知识复利机制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将研发过程中的知识沉淀为结构化 Markdown 文档，使 AI 能够基于项目历史资产持续进化，实现跨需求的效率复利。</span>
+                        <strong style="color: #1e40af">构建了三层纵深防御的权限系统，平衡安全与体验。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合静态规则匹配、基于 tree-sitter AST 分析的工具专属检查，以及在 auto 模式下引入轻量级 LLM 分类器进行安全评估，实现了细粒度的权限管控。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">工具应封装知识而非流程，给予 Agent 必要的自由度。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 不要用脚本式的 SOP 限制 Agent，而应提供领域知识和质量约束，让 Agent 在明确的边界内自主决策。</span>
+                        <strong style="color: #1e40af">极致的提示词工程与缓存优化策略。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过双层 Prompt 结构分离静态与动态内容，并利用 Latch 机制锁定关键 Header，最大化 Anthropic API 的 Prompt Caching 命中率，显著降低成本和延迟。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +58,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agentic Engineering 是一种工程范式：人从「代码编写者」转变为「Agent 协调者」，通过系统化的上下文管理、知识沉淀和流程设计，让 AI Agent 具备自主性、记忆力和成长性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">上下文空间是稀缺资源，渐进式披露是应对它的最优解，机械化强制执行是让方案长期可持续的必要条件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">好的工程体系不是设计出来的，是「长」出来的。每一个 Agent、每一个 Skill 都是在解决业务问题的过程中被逼出来的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">工具应该封装知识而非流程，给 Agent 自由度而非脚本。告诉它「做什么」和「注意什么」，而不是「第一步做什么、第二步做什么」。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">今天投入的每一个 Skill、每一条规则、每一份经验文档，都在为明天的效率买单。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Claude Code 是一个完整的 Agent 运行时系统，它和 ChatGPT、GitHub Copilot 的本质区别在于其自主 Agent 循环和深度工具能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">它是目前工程化程度最高的 AI Coding Agent 实现之一，其架构设计中蕴含了大量可复用的工程模式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">上下文窗口管理不是简单的「截断旧消息」，而是一个 5 层逐级压缩的管道，每一层有不同的触发条件、代价和粒度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI Agent 的竞争力不仅在模型能力上，更在工程化的深度上。同样的基座模型，配上精心设计的系统，体验可以天差地别。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">源码面前，了无秘密。但理解设计意图，需要一点工程直觉。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,32 +66,32 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">93</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">掘金本周最热</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">sunny_</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">186 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">46254</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">35 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8619</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agentic Engineering</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vibe Coding</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程方法论</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示词工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/66d6464a" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/97b7a7a2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/66d6464a">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATRSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnU3ACZ1ExA3lAzAZnUPAHkN6l546Rq0UnVopOqRZ8sU7MJyI2aCcik5gbIjZo31ExAbtTcqNkEZNNJ1aKTqkUnVYs++TIgT6j5JjUTkEnNG0AmNd8E5Ak133RSteikatFJ1aJP/nJAJjUTkCeATGomIJOaSc0E5EbNv+SkatFJ1aKTqkWf/GOA3KiZgPwmNROQSc3f7KRq0UnVopOqRZ98mZr/k5obNU+oeULNBGRS84aaP8lJ1aKTqkUnVYs+WQbk/6RmAjKpmYBMaiYgk5oJyKRmAjKpmYBMam6A/MlOqhadVC06qVqEP/IXA/KEmgnIpOYNIE+o+ZecVC06qVp0UrXok5eATGqeADKpmYA8oeYGyKTmBsikZgJyo2YCcgNkk5obIJOaN06qFp1ULTqpWoQ/8kVAJjU3QCY1E5A31ExAbtRMQCY13wTkN6l546Rq0UnVopOqRZ8sAzKpuQFyA2RSMwG5UXOj5gbIG0AmNROQTWqeALLppGrRSdWik6pF+CMvAHlCzQ2QSc0bQG7UbAIyqZmAPKHmBsiNmgnIjZo3TqoWnVQtOqla9MlLajapmYDcqJmATGreAHKj5gbIN6l5Q82mk6pFJ1WLTqoWfbIMyKTmBsikZlLzhJobIE+omYC8oeYJIJOaCcgbQCY1b5xULTqpWnRSteiTZWomIDdqJiA3aiYgT6i5ATIBeULNBOQGyKTmm9RMQDadVC06qVp0UrXok5eATGqeADKp+SYgk5pJzQ2QGyA3QDapeQLIN51ULTqpWnRSteiTX6ZmAjIBeUPNDZAJyKRmAjKpeULNDZAJyKRmAjKpeUPNppOqRSdVi06qFuGPvABkUjMBuVEzAZnUTEAmNROQSc0TQCY1E5AbNROQSc0NkE1qJiA3at44qVp0UrXopGoR/sgvAjKpmYD8n9RMQN5Q8wSQGzUTkEnNBGRSMwGZ1LxxUrXopGrRSdUi/JEvAjKpmYBMap4AcqNmE5BJzQTkRs0EZFLzTUBu1LxxUrXopGrRSdWiT14C8gSQSc0E5Ak1E5AJyBNqNql5AsgmNZOaCcimk6pFJ1WLTqoW4Y/8xYD8SdTcALlR8wSQSc0TQCY1b5xULTqpWnRSteiTl4D8JjU3ap4AMqm5ATKp+SYgk5obIDdqvumkatFJ1aKTqkWfLFOzCciNmjfU3ACZ1ExAbtS8oeYJNTdAJjWbTqoWnVQtOqla9MmXAXlCzRNAnlAzAXlDzQTkDSBvAJnUTGomIJOaN06qFp1ULTqpWvTJX07NDZBNQG7UPKFmAjKpmYBMav4kJ1WLTqoWnVQt+uQfp2YCcqNmAnKjZgJyo+ZGzY2aGyD/p5OqRSdVi06qFn3yZWp+E5A3gDwB5EbNDZBJzQRkUjMBuVEzAfmmk6pFJ1WLTqoWfbIMyG8CMql5AsgbaiYgm9RMQG7UPKFm00nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4Dk/BBKBSlrIkAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/97b7a7a2">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATnSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJAn1DwBZFIzAXlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyCY1E5AJyKRmAvKEmk1qNgHZdFK16KRq0UnVok++DMgTap4A8oaaJ9RMQG6APKHmCSBPqPmmk6pFJ1WLTqoWffKXUfMGkEnNBOQGyKRmAjKp+ZucVC06qVp0UrXok/85IJOaCcik5gkg/ycnVYtOqhadVC365MvU/CYgk5oJyA2QGyA3aiY1N0AmNU+o+ZOcVC06qVp0UrXok2VA/k1qJiCTmgnIpGYCMqmZgNwAmdS8AeRPdlK16KRq0UnVok9eUvMnUzMBeQPIpOZGzQRkUnOj5r/kpGrRSdWik6pF+CMvAJnUTEA2qXkCyI2aCciNmgnIjZobIJOaCcgmNd90UrXopGrRSdUi/JEXgLyhZhOQSc0EZFLzm4B8k5ongExq3jipWnRSteikatEnL6m5ATKpmYA8oWYC8puAPKFmUjMBuVHzTWo2nVQtOqladFK1CH/kBSCTmgnIpOYGyKTmDSBPqJmATGomIJOaCcg3qZmATGomIJOaTSdVi06qFp1ULcIf+YMBmdRMQG7UTEAmNROQSc0TQG7UfBOQGzXfdFK16KRq0UnVIvyRF4DcqLkBcqNmAjKp+SYgk5obIN+kZgIyqXkCyKTmjZOqRSdVi06qFn2yTM0EZFLzBJBJzQTkRs0NkCeAPKHmBsik5gbIpGYCcqNmUrPppGrRSdWik6pFn7ykZgIyqZmATGo2qZmATGpu1ExAnlBzA2QTkEnNDZBJzaaTqkUnVYtOqhZ98hKQJ9RMQN5QswnIE2omIJOaGzVvqJmA3Kj5ppOqRSdVi06qFn2yTM0NkCfUTEBugExqnlDzBJBJzQTkBsikZgJyA2RSMwG5ATKpeeOkatFJ1aKTqkWffBmQSc0EZFIzAbkBMqm5AfIGkEnNE2pugExqJiCTmjfUbDqpWnRSteikahH+yAtAJjU3QCY1bwC5UXMDZFIzAXlCzRNAJjUTkCfU3ACZ1Gw6qVp0UrXopGrRJ18G5AbIpGYC8oSaGyCTmgnIpOYJIJOaCcgNkE1AboBMat44qVp0UrXopGoR/sh/GJBJzQTkRs0NkEnNBGRS8wSQSc0TQDapeeOkatFJ1aKTqkWfvATkN6mZ1Dyh5gbIpGYCcgNkE5BJzRtqvumkatFJ1aKTqkWfLFOzCcgNkE1qbtQ8AeQNNU+ouQFyo+aNk6pFJ1WLTqoWffJlQJ5Q84aaGyCTmieATGomIJOaGyATkE1AftNJ1aKTqkUnVYs++csAuVFzA2RSM6mZgExq3lBzA2RSMwH5N51ULTqpWnRSteiTv5yaCciNmgnIN6m5AXID5A01m06qFp1ULTqpWvTJl6n5JjVPqJmATEAmNROQSc0NkEnNBGRSM6mZgExqJiCTmgnIN51ULTqpWnRStQh/5AUgv0nNBORGzRNAbtTcAJnUTEAmNROQSc0E5A0133RSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aJ/AEPwUS0slTwAAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
