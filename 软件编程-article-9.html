@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>oh-my-codex 项目介绍</title>
+        <title>使用批处理模式 VC-6 和 NVIDIA Nsight 加速视觉 AI 流水线</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,76 @@
         </style>
     </head>
     <body>
-        <h2>oh-my-codex 项目介绍</h2>
-        <p>4/1/2026, 8:09:49 PM</p>
+        <h2>使用批处理模式 VC-6 和 NVIDIA Nsight 加速视觉 AI 流水线</h2>
+        <p>4/2/2026, 5:30:39 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">swyx 介绍了“oh-my-codex”项目，这是一个旨在记录当前 AI 编程发展浪潮的开源追踪工具。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 VC-6 视频编解码器解码流水线的架构重构，利用 NVIDIA Nsight 分析实现了批处理和内核级优化，将单张图像的解码时间缩短了高达 85%。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这条推文简要介绍了“oh-my-codex”，该项目旨在记录和追踪 AI 编程智能体及相关技术的快速演进。通过引用 Latent Space 的公告，它强调了为软件工程史上的这一重要时期保留开源记录的意义。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了如何通过使用 SMPTE VC-6 编解码器解决数据到张量（data-to-tensor）的差距，从而优化视觉 AI 流水线。文章详细介绍了从单图像解码到批处理执行模型的转变，显著提高了 GPU 利用率和吞吐量。通过使用 NVIDIA Nsight Systems 和 Nsight Compute，作者识别出了内核启动开销和低效内存访问等瓶颈。最终的实现方案包括小批量流水线（minibatch pipelining）和特定的内核优化（例如用常量索引替换二分查找），实现了单张图像解码时间降低高达 85% 的效果，展示了在不同 GPU 架构上显著的性能提升。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">从单图像解码转向批处理模式解码可显著提高 GPU 利用率。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将多张图像聚合到单个解码器实例中，系统减少了内核启动开销，并更好地饱和了 GPU 资源，将瓶颈从调度转移到了计算吞吐量上。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">使用 NVIDIA Nsight Systems 和 Nsight Compute 进行分析对于识别微架构瓶颈至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这些工具揭示了诸如低 SM 占用率、Warp 发散和低效内存访问模式等具体问题，从而实现了有针对性的优化，例如用常量索引替换二分查找以避免共享内存停顿。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">小批量流水线通过重叠 CPU 处理、PCIe 传输和 GPU 解码，有效地隐藏了延迟。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这种方法通过保持数据在流水线中持续流动，确保 GPU 始终得到充分利用，将开销分摊到各个批次中，并保持高吞吐量。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">随着批处理大小的增加，瓶颈从单图像内核效率转移到了工作负载编排、启动节奏和 GPU 占用率上。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">要改变这一点，需要将范式从许多小内核转变为少数几个大内核。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">结果是单张图像的解码时间比之前的实现降低了高达约 85%，在批处理中 LoQ-0（约 4K）的解码时间达到了亚毫秒级。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">79</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">swyx(@swyx)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">swyx</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">NVIDIA Technical Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Andreas Kieslinger</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">40</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1754</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">oh-my-codex</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">swyx</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">视觉 AI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">VC-6</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">NVIDIA Nsight</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CUDA</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPU 优化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2039435085305585742" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/45245e5b" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2039435085305585742">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/45245e5b">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATKSURBVO3BQY4kRxIEQdNA/f/Lun30vQSQSK8eDmki+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQEyqZmATGpugExqngDyhJoJyG9S88ZJ1aKTqkUnVYs+WaZmE5DfBGRSMwG5UTOp2aRmE5BNJ1WLTqoWnVQt+uTLgDyh5gkgN0CeULMJyBNqngDyhJpvOqladFK16KRq0Sf/MWpugExqngAyqZmATGr+TU6qFp1ULTqpWvRJ/R81E5BJzRNA/ktOqhadVC06qVr0yZep+ScDMqm5ATKpuVFzA2RS84Saf5KTqkUnVYtOqhZ9sgzIn6RmArJJzQRkUjMBmdS8AeSf7KRq0UnVopOqRZ+8pOZvpuZGzQTkCTUTkEnNjZq/yUnVopOqRSdVi/BHXgAyqZmAbFLzBpBJzQRkUjMBeULNDZBJzQRkk5pvOqladFK16KRq0ScvqfkmNROQSc0EZFJzA2RSMwGZ1LwB5AbIG2qeADKpeeOkatFJ1aKTqkX4Iy8AeUPNBORGzQRkUnMDZFJzA+QNNTdAbtT8TU6qFp1ULTqpWvTJMjVPAJnUPKFmAjKpmdS8oWYCMqmZgLwB5EbNBGRSMwGZ1Gw6qVp0UrXopGrRJ8uATGreADKpmYBMaiYg36RmAnKj5jcBmdR800nVopOqRSdViz5ZpuYGyA2QSc0baiYgk5rfBOQNNROQSc0TQCY1b5xULTqpWnRStQh/ZBGQJ9TcAJnU3AC5UfMEkDfU3ACZ1NwAmdRMQG7UfNNJ1aKTqkUnVYs+eQnIpGYCMqm5ATKpuQEyqbkBMqnZpOYGyCYgk5obIJOaTSdVi06qFp1ULcIf+UVAfpOaCcgTaiYgk5oJyKRmAjKpeQLIpGYCcqPmm06qFp1ULTqpWoQ/8gKQGzW/Ccik5gbIpGYCMqmZgExqJiBPqJmAPKFmAjKpmYBMat44qVp0UrXopGrRJ8vUTEB+k5pvAjKpeULNDZBJzQRkUvOGmk0nVYtOqhadVC3CH3kByKTmCSA3av4kIE+oeQLIpGYC8oSaGyCTmk0nVYtOqhadVC365MuATGomNTdAJjU3QCY1E5A31NwAmdRMQG6AbAJyA2RS88ZJ1aKTqkUnVYvwR/5iQCY1TwCZ1DwBZFLzBJBJzRNANql546Rq0UnVopOqRZ+8BOQ3qZnUTEAmNROQSc0EZFIzAbkBsgnIpOYNNd90UrXopGrRSdWiT5ap2QTkBsik5g01N2qeAPKGmifU3AC5UfPGSdWik6pFJ1WLPvkyIE+oeQPINwGZ1ExAJjU3QCYgm4D8ppOqRSdVi06qFn3yL6PmCSA3aiY1E5BJzRtqboBMaiYgf9JJ1aKTqkUnVYs++ZcDMqmZ1ExAboBsUnMD5AbIG2o2nVQtOqladFK16JMvU/NNaiYgk5oJyBNAbtTcAJnUTEAmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwGZ1Dyh5gbIpOYGyKRmAjKpmYBMam6A3ACZ1HzTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gf5j0EfdzvRSgAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

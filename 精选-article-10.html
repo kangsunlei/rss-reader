@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Claude Code 架构深度拆解：最强 AI Coding Agent 的工程实现全貌</title>
+        <title>为什么我们要为 AI 时代重新思考缓存机制</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Claude Code 架构深度拆解：最强 AI Coding Agent 的工程实现全貌</h2>
-        <p>3/31/2026, 11:33:26 AM</p>
+        <h2>为什么我们要为 AI 时代重新思考缓存机制</h2>
+        <p>4/2/2026, 2:00:01 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度拆解了 Claude Code 的核心架构，揭秘其作为顶级 AI Coding Agent 在主循环设计、五层上下文压缩管道、三层权限防御及流式工具执行等方面的工程实现细节。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 正在重新设计 CDN 缓存架构，以缓解由 AI 爬虫独特的长尾访问模式所导致的破坏性缓存抖动。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章通过对 Claude Code 源码的深度分析，揭示了其作为一个完整 Agent 运行系统的复杂架构。核心亮点包括：基于异步生成器的 Agent 主循环，实现了高效的背压控制和生命周期管理；创新的流式工具执行机制（StreamingToolExecutor），允许在模型生成过程中并行执行工具；极其精妙的五层上下文压缩管道，从单条消息限额到全对话摘要逐级优化 token 使用；以及包含 AST 级命令分析的三层权限防御体系。此外，文章还探讨了其极简的状态管理、缓存友好的提示词工程以及多 Agent 协作模式，为开发者提供了构建高性能 AI Agent 的实战参考和设计模式。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 AI 爬虫流量的激增如何从根本上挑战传统的 CDN 缓存策略。与人类用户不同，用于 RAG 和模型训练的 AI 机器人表现出激进、大容量且连续的扫描行为，专门针对极少被访问的长尾内容。这种行为会导致严重的缓存抖动，使标准的 LRU（最近最少使用）算法效率低下，并增加源服务器的负载。Cloudflare 与苏黎世联邦理工学院（ETH Zurich）合作，提出了 AI 感知缓存解决方案，包括采用更具弹性的淘汰算法（如 SIEVE 和 S3FIFO），以及根据延迟敏感度和任务类型将人类流量与 AI 流量分离的分层架构。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Agent 主循环采用异步生成器实现，具备极强的工程鲁棒性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 使用 async generator 替代回调或 Promise 链，提供了天然的背压控制、清晰的生命周期语义（yield 为事件，return 为终态）以及便捷的取消传播机制。</span>
+                        <strong style="color: #1e40af">AI 爬虫的流量模式与人类行为有着根本的不同，导致了严重的缓存抖动。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 机器人表现出高唯一 URL 比率和对长尾内容的连续扫描，这会驱逐原本面向人类用户的热门内容，导致缓存未命中率升高。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">流式工具执行（StreamingToolExecutor）是其响应速度快的核心秘密。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工具在从模型流式响应中解析出来时即刻执行，无需等待完整响应完成，并能根据并发安全性（per-invocation 粒度）智能分批并行调度。</span>
+                        <strong style="color: #1e40af">传统的 LRU 算法不足以应对 AI 时代的混合工作负载。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LRU 难以应对 AI 爬虫的重复扫描行为；初步实验表明，像 SIEVE 或 S3FIFO 这样的算法可以更好地保护人类流量的命中率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">设计了精妙的五层分层上下文管理管道，实现 Token 极致利用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过工具结果预算、历史裁剪、消息级微优化、上下文折叠和全对话摘要五层过滤，确保模型在有限窗口内始终看到最相关信息，并设有熔断器防止无限重试。</span>
+                        <strong style="color: #1e40af">Cloudflare 提出了分层的、AI 感知的缓存架构。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该策略涉及根据紧急程度将流量路由到不同的缓存层——优先考虑人类用户的边缘响应速度，同时为大规模 AI 训练爬取使用更深、容量更大的层级。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">构建了三层纵深防御的权限系统，平衡安全与体验。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 结合静态规则匹配、基于 tree-sitter AST 分析的工具专属检查，以及在 auto 模式下引入轻量级 LLM 分类器进行安全评估，实现了细粒度的权限管控。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">极致的提示词工程与缓存优化策略。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过双层 Prompt 结构分离静态与动态内容，并利用 Latch 机制锁定关键 Header，最大化 Anthropic API 的 Prompt Caching 命中率，显著降低成本和延迟。</span>
+                        <strong style="color: #1e40af">现实世界的基础设施影响在各大平台上已经非常显著。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对维基百科（Wikipedia）、SourceHut 和 Fedora 的案例研究表明，激进的 AI 抓取已导致带宽激增 50% 并引发服务不稳定，这使得除了简单的封禁之外，还需要更智能的缓解措施。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Claude Code 是一个完整的 Agent 运行时系统，它和 ChatGPT、GitHub Copilot 的本质区别在于其自主 Agent 循环和深度工具能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">它是目前工程化程度最高的 AI Coding Agent 实现之一，其架构设计中蕴含了大量可复用的工程模式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">上下文窗口管理不是简单的「截断旧消息」，而是一个 5 层逐级压缩的管道，每一层有不同的触发条件、代价和粒度。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI Agent 的竞争力不仅在模型能力上，更在工程化的深度上。同样的基座模型，配上精心设计的系统，体验可以天差地别。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">源码面前，了无秘密。但理解设计意图，需要一点工程直觉。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">曾经被认为是‘长尾’或极少被访问的页面现在正被频繁请求，这改变了 CDN 缓存中内容热度的分布。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种对长尾资产的重复访问会搅动人类流量所依赖的缓存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">更智能的缓存架构将使网站运营商能够在服务 AI 爬虫的同时，保持人类用户的响应时间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于混合的人类和 AI 机器人流量，我们的初步实验表明，选择不同的缓存替换算法，特别是使用 SIEVE 或 S3FIFO，可以让人类流量实现相同的命中率。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -68,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">掘金本周最热</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">sunny_</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">35 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8619</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Avani Wildani</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2040</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示词工程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CDN</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存算法</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 爬虫</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/97b7a7a2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/2b316424" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/97b7a7a2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATnSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJAn1DwBZFIzAXlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyCY1E5AJyKRmAvKEmk1qNgHZdFK16KRq0UnVok++DMgTap4A8oaaJ9RMQG6APKHmCSBPqPmmk6pFJ1WLTqoWffKXUfMGkEnNBOQGyKRmAjKp+ZucVC06qVp0UrXok/85IJOaCcik5gkg/ycnVYtOqhadVC365MvU/CYgk5oJyA2QGyA3aiY1N0AmNU+o+ZOcVC06qVp0UrXok2VA/k1qJiCTmgnIpGYCMqmZgNwAmdS8AeRPdlK16KRq0UnVok9eUvMnUzMBeQPIpOZGzQRkUnOj5r/kpGrRSdWik6pF+CMvAJnUTEA2qXkCyI2aCciNmgnIjZobIJOaCcgmNd90UrXopGrRSdUi/JEXgLyhZhOQSc0EZFLzm4B8k5ongExq3jipWnRSteikatEnL6m5ATKpmYA8oWYC8puAPKFmUjMBuVHzTWo2nVQtOqladFK1CH/kBSCTmgnIpOYGyKTmDSBPqJmATGomIJOaCcg3qZmATGomIJOaTSdVi06qFp1ULcIf+YMBmdRMQG7UTEAmNROQSc0TQG7UfBOQGzXfdFK16KRq0UnVIvyRF4DcqLkBcqNmAjKp+SYgk5obIN+kZgIyqXkCyKTmjZOqRSdVi06qFn2yTM0EZFLzBJBJzQTkRs0NkCeAPKHmBsik5gbIpGYCcqNmUrPppGrRSdWik6pFn7ykZgIyqZmATGo2qZmATGpu1ExAnlBzA2QTkEnNDZBJzaaTqkUnVYtOqhZ98hKQJ9RMQN5QswnIE2omIJOaGzVvqJmA3Kj5ppOqRSdVi06qFn2yTM0NkCfUTEBugExqnlDzBJBJzQTkBsikZgJyA2RSMwG5ATKpeeOkatFJ1aKTqkWffBmQSc0EZFIzAbkBMqm5AfIGkEnNE2pugExqJiCTmjfUbDqpWnRSteikahH+yAtAJjU3QCY1bwC5UXMDZFIzAXlCzRNAJjUTkCfU3ACZ1Gw6qVp0UrXopGrRJ18G5AbIpGYC8oSaGyCTmgnIpOYJIJOaCcgNkE1AboBMat44qVp0UrXopGoR/sh/GJBJzQTkRs0NkEnNBGRS8wSQSc0TQDapeeOkatFJ1aKTqkWfvATkN6mZ1Dyh5gbIpGYCcgNkE5BJzRtqvumkatFJ1aKTqkWfLFOzCcgNkE1qbtQ8AeQNNU+ouQFyo+aNk6pFJ1WLTqoWffJlQJ5Q84aaGyCTmieATGomIJOaGyATkE1AftNJ1aKTqkUnVYs++csAuVFzA2RSM6mZgExq3lBzA2RSMwH5N51ULTqpWnRSteiTv5yaCciNmgnIN6m5AXID5A01m06qFp1ULTqpWvTJl6n5JjVPqJmATEAmNROQSc0NkEnNBGRSM6mZgExqJiCTmgnIN51ULTqpWnRStQh/5AUgv0nNBORGzRNAbtTcAJnUTEAmNROQSc0E5A0133RSteikatFJ1SL8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aJ/AEPwUS0slTwAAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2b316424">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATGSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBOQNNTdAbtTcAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBtqNqm5AXKjZgLyhJpNQDadVC06qVp0UrXoky8D8oSaJ9RMQJ4AcqNmAnKj5jcBeULNN51ULTqpWnRSteiTPw7IpOYGyKTmDTUTkEnNBGRS819yUrXopGrRSdWiT/44NROQGzUTkBs1N0DeADKp+ctOqhadVC06qVr0yZep+U1qvknNBGRSMwH5JjX/kpOqRSdVi06qFn2yDMhvAjKpmYBMam7UTEAmNW+omYA8AeRfdlK16KRq0UnVIvyRPwzIG2qeADKpmYC8oeYvO6ladFK16KRq0ScvAZnUTEBu1ExAnlAzAZnU3ACZ1Nyo+U1AJjU3QCY1E5AbNW+cVC06qVp0UrUIf+T/CMiNmjeATGomIE+oeQPIN6l5Asik5o2TqkUnVYtOqhZ98suA3KiZgNyomYA8oeYNIJOaCcik5g0gTwC5UbPppGrRSdWik6pFnywDMql5AsikZgJyo+YNIJOaCcik5kbNDZBJzSY1N0AmNW+cVC06qVp0UrUIf+QFIJOaCcgTaiYgk5obIJOaJ4DcqLkBcqPmm4DcqPmmk6pFJ1WLTqoW4Y/8IiCTmgnIpOYJIJOaGyBvqHkCyKTmBsiNmhsgT6h546Rq0UnVopOqRZ+8BGRSMwG5ATKpmYBMam7UTEAmNTdq3gDyBJA3gExq/p9OqhadVC06qVqEP/KHALlRcwNkUvMEkBs1N0Bu1NwAuVFzA2RSs+mkatFJ1aKTqkWfvATkRs0EZFJzA2RSswnIpGYCMql5AsgTQCY1k5oJyARkUvObTqoWnVQtOqla9MlLaiYgm9TcAJnU3KiZgExAJjUTkEnNjZobIE8AmdRMQCYgv+mkatFJ1aKTqkWfvARkUnOj5gkgN2reUPNNQCY1k5oJyBtqJiCTmm86qVp0UrXopGrRJy+puQHyhpongExqJiA3aiYgk5oJyDcBmdT8y06qFp1ULTqpWvTJMiA3aiYgN0Bu1Dyh5gbIpGYCsgnIE0D+ZSdVi06qFp1ULfpkmZon1LwBZFJzA2RS84SaCcik5g01TwB5AsiNmjdOqhadVC06qVr0yUtAfpOaGyA3aiYgvwnIE0AmNU+omYBMajadVC06qVp0UrXok2VqNgF5Qs0E5EbNE0DeUDMBuVGzSc0EZFLzxknVopOqRSdViz75MiBPqHlCzQRkUvMGkBs1E5BJzRNA3lAzAZnUTGo2nVQtOqladFK16JM/DsgNkEnNBOQNIDdAJjWTmgnIpOYGyARkUnMDZFLzxknVopOqRSdViz75j1GzSc0bQCYgk5ongExqboBMar7ppGrRSdWik6pFn3yZmm9SMwGZ1GwCMql5Qs0EZFLzBpBJzQRkUrPppGrRSdWik6pFnywD8puATGo2AdkE5A01/7KTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9D+KGLTw4qaB/AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
