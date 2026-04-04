@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>携程 JDK 25 升级踩坑记：一场由 G1GC “偷走”对象引发的数据静默损坏</title>
+        <title>为什么我们要为 AI 时代重新思考缓存机制</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>携程 JDK 25 升级踩坑记：一场由 G1GC “偷走”对象引发的数据静默损坏</h2>
-        <p>4/2/2026, 9:02:00 AM</p>
+        <h2>为什么我们要为 AI 时代重新思考缓存机制</h2>
+        <p>4/2/2026, 2:00:01 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">携程技术团队分享了在升级 JDK 25 过程中，通过 AI 辅助排查并定位到 G1GC 内部 Bug 导致数据静默损坏的完整过程与根因分析。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 正在重新设计 CDN 缓存架构，以缓解由 AI 爬虫独特的长尾访问模式所导致的破坏性缓存抖动。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细记录了携程大数据平台在升级 JDK 25 过程中遇到的数据静默损坏问题。通过深入排查，团队发现该问题源于 JDK 25 G1GC 在可选回收阶段错误地移动了被 JNI 临界区锁定的对象，导致直接操作内存的 Native 代码（如 Zstd 压缩）出现数据静默损坏。文章展示了利用 AI 工具辅助二进制分析、自动化编译与二分查找定位 Bug 的高效排障流程，并最终推动 OpenJDK 社区完成了修复。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 AI 爬虫流量的激增如何从根本上挑战传统的 CDN 缓存策略。与人类用户不同，用于 RAG 和模型训练的 AI 机器人表现出激进、大容量且连续的扫描行为，专门针对极少被访问的长尾内容。这种行为会导致严重的缓存抖动，使标准的 LRU（最近最少使用）算法效率低下，并增加源服务器的负载。Cloudflare 与苏黎世联邦理工学院（ETH Zurich）合作，提出了 AI 感知缓存解决方案，包括采用更具弹性的淘汰算法（如 SIEVE 和 S3FIFO），以及根据延迟敏感度和任务类型将人类流量与 AI 流量分离的分层架构。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">JDK 25 G1GC 存在严重 Bug</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在可选回收阶段，G1GC 错误地移动了被 JNI 临界区锁定的对象，导致直接操作内存的 Native 代码（如 Zstd 压缩）出现数据静默损坏，且写入过程无报错，隐蔽性极高。</span>
+                        <strong style="color: #1e40af">AI 爬虫的流量模式与人类行为有着根本的不同，导致了严重的缓存抖动。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 机器人表现出高唯一 URL 比率和对长尾内容的连续扫描，这会驱逐原本面向人类用户的热门内容，导致缓存未命中率升高。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 辅助排障的高效实践</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 排查过程充分利用了 AI 工具（Cursor， Copilot 等）进行日志分析、二进制格式解析、自动化编译 Workflow 生成及 Commit 二分查找，显著提升了复杂系统问题的定位效率。</span>
+                        <strong style="color: #1e40af">传统的 LRU 算法不足以应对 AI 时代的混合工作负载。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LRU 难以应对 AI 爬虫的重复扫描行为；初步实验表明，像 SIEVE 或 S3FIFO 这样的算法可以更好地保护人类流量的命中率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">工程实践中的深度排查方法论</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过构建可复现的 Docker 环境、利用 Git Bisect 定位引入 Bug 的 Commit，以及与 OpenJDK 社区的深度协作，展示了企业级技术团队解决底层系统问题的专业能力。</span>
+                        <strong style="color: #1e40af">Cloudflare 提出了分层的、AI 感知的缓存架构。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该策略涉及根据紧急程度将流量路由到不同的缓存层——优先考虑人类用户的边缘响应速度，同时为大规模 AI 训练爬取使用更深、容量更大的层级。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">现实世界的基础设施影响在各大平台上已经非常显著。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对维基百科（Wikipedia）、SourceHut 和 Fedora 的案例研究表明，激进的 AI 抓取已导致带宽激增 50% 并引发服务不稳定，这使得除了简单的封禁之外，还需要更智能的缓解措施。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该 Bug 的根本原因是 G1 GC 在 Optional Evacuation 阶段错误移动了被 JNI 临界区锁定的对象。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该 Bug 最大的危险在于写入过程完全无异常抛出（静默损坏）。数据已经损坏地写入存储，只有在后续读取/解压时才会报错，数据不可恢复。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">pinned 标志丢失 → GC 移动了不该移动的对象 → JNI 裸指针指向了废弃内存 → 数据静默损坏。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">曾经被认为是‘长尾’或极少被访问的页面现在正被频繁请求，这改变了 CDN 缓存中内容热度的分布。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这种对长尾资产的重复访问会搅动人类流量所依赖的缓存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">更智能的缓存架构将使网站运营商能够在服务 AI 爬虫的同时，保持人类用户的响应时间。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于混合的人类和 AI 机器人流量，我们的初步实验表明，选择不同的缓存替换算法，特别是使用 SIEVE 或 S3FIFO，可以让人类流量实现相同的命中率。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -62,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">携程技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">携程技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Cloudflare Blog</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Avani Wildani</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">24 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5904</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2040</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JDK 25</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">G1GC</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据损坏</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JNI</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CDN</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存算法</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 爬虫</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/babe59ea" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/2b316424" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/babe59ea">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATKSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmm8CMqmZgDyhZgLym9S8cVK16KRq0UnVok+WqdkE5Ak1bwCZ1ExAnlCzSc0mIJtOqhadVC06qVr0yZcBeULNE0A2qXlCzQ2QJ9Q8AeQJNd90UrXopGrRSdWiT/5xaiYgk5oJyBtAJjUTkEnNv+SkatFJ1aKTqkWf/OOAPKHmCSCTmgnI/5OTqkUnVYtOqhZ98mVqfpOaCcgNkEnNBORGzY2aGyCTmifU/ElOqhadVC06qVr0yTIgfzI1E5An1ExAJjUTkEnNG0D+ZCdVi06qFp1ULcIf+YsBmdRsAjKpeQPIpOZfclK16KRq0UnVIvyRF4BMaiYgm9TcAJnUTECeUDMBmdRMQCY1N0AmNROQTWq+6aRq0UnVopOqRfgjXwRkUnMDZFIzAZnU3AC5UXMDZFIzAZnU3AD5JjVPAJnUvHFSteikatFJ1SL8kS8CcqNmAnKjZgIyqdkE5A01N0Bu1PxNTqoWnVQtOqla9MkyIE8AuVHzBpAn1NyomYBMaiYgbwC5UTMBmdRMQCY1m06qFp1ULTqpWvTJMjU3QCY1N0AmNU+omYBMaiYgk5obNROQGzW/Ccik5ptOqhadVC06qVr0yTIgk5obIDdqngAyqbkBcgNkUvMGkDfUTEAmNU8AmdS8cVK16KRq0UnVIvyR/xCQ36RmAjKpuQHyhJobIJOaGyCTmgnIjZpvOqladFK16KRq0ScvAZnUvKHmBsgbQJ4A8oSaGyCbgExqboBMajadVC06qVp0UrXok2VAJjUTkEnNDZAbNROQSc0NkAnIE2omIJOaGzVvqJmA3Kj5ppOqRSdVi06qFn3yh1NzA2RS84aaJ4BMaiYgN0AmNROQGyCTmgnIDZBJzRsnVYtOqhadVC36ZJmaJ4BMaiYgk5pJzQ2QGzU3QG7UPKHmBsikZgIyqXlDzaaTqkUnVYtOqhbhj7wAZFIzAZnU3ACZ1ExAnlAzAblRMwF5Qs0TQCY1E5An1NwAmdRsOqladFK16KRqEf7IC0AmNROQGzU3QJ5Q8wSQJ9TcAJnUTEC+Sc0E5Ak1b5xULTqpWnRStQh/5C8G5EbNDZBJzRNAJjVPAJnUPAFkk5o3TqoWnVQtOqla9MlLQH6TmknNBOSbgNwA2QRkUvOGmm86qVp0UrXopGrRJ8vUbAJyA+SbgExqngDyhpon1NwAuVHzxknVopOqRSdViz75MiBPqPkmIJOaGzUTkEnNBGRScwNkArIJyG86qVp0UrXopGrRJ/84IJOaCciNmknNBGRS84aaGyCTmgnIf+mkatFJ1aKTqkWf/OPUvAHkm9TcALkB8oaaTSdVi06qFp1ULfrky9R8k5oJyARkUrNJzQ2QSc0EZFIzqZmATGomIJOaCcg3nVQtOqladFK16JNlQH4TkBs1E5An1DwBZFIzAZnUTEAmNTdAboBMar7ppGrRSdWik6pF+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pF/wPI+TYzicNbXgAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2b316424">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATGSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenGbAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBOQNNTdAbtTcAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBtqNqm5AXKjZgLyhJpNQDadVC06qVp0UrXoky8D8oSaJ9RMQJ4AcqNmAnKj5jcBeULNN51ULTqpWnRSteiTPw7IpOYGyKTmDTUTkEnNBGRS819yUrXopGrRSdWiT/44NROQGzUTkBs1N0DeADKp+ctOqhadVC06qVr0yZep+U1qvknNBGRSMwH5JjX/kpOqRSdVi06qFn2yDMhvAjKpmYBMam7UTEAmNW+omYA8AeRfdlK16KRq0UnVIvyRPwzIG2qeADKpmYC8oeYvO6ladFK16KRq0ScvAZnUTEBu1ExAnlAzAZnU3ACZ1Nyo+U1AJjU3QCY1E5AbNW+cVC06qVp0UrUIf+T/CMiNmjeATGomIE+oeQPIN6l5Asik5o2TqkUnVYtOqhZ98suA3KiZgNyomYA8oeYNIJOaCcik5g0gTwC5UbPppGrRSdWik6pFnywDMql5AsikZgJyo+YNIJOaCcik5kbNDZBJzSY1N0AmNW+cVC06qVp0UrUIf+QFIJOaCcgTaiYgk5obIJOaJ4DcqLkBcqPmm4DcqPmmk6pFJ1WLTqoW4Y/8IiCTmgnIpOYJIJOaGyBvqHkCyKTmBsiNmhsgT6h546Rq0UnVopOqRZ+8BGRSMwG5ATKpmYBMam7UTEAmNTdq3gDyBJA3gExq/p9OqhadVC06qVqEP/KHALlRcwNkUvMEkBs1N0Bu1NwAuVFzA2RSs+mkatFJ1aKTqkWfvATkRs0EZFJzA2RSswnIpGYCMql5AsgTQCY1k5oJyARkUvObTqoWnVQtOqla9MlLaiYgm9TcAJnU3KiZgExAJjUTkEnNjZobIE8AmdRMQCYgv+mkatFJ1aKTqkWfvARkUnOj5gkgN2reUPNNQCY1k5oJyBtqJiCTmm86qVp0UrXopGrRJy+puQHyhpongExqJiA3aiYgk5oJyDcBmdT8y06qFp1ULTqpWvTJMiA3aiYgN0Bu1Dyh5gbIpGYCsgnIE0D+ZSdVi06qFp1ULfpkmZon1LwBZFJzA2RS84SaCcik5g01TwB5AsiNmjdOqhadVC06qVr0yUtAfpOaGyA3aiYgvwnIE0AmNU+omYBMajadVC06qVp0UrXok2VqNgF5Qs0E5EbNE0DeUDMBuVGzSc0EZFLzxknVopOqRSdViz75MiBPqHlCzQRkUvMGkBs1E5BJzRNA3lAzAZnUTGo2nVQtOqladFK16JM/DsgNkEnNBOQNIDdAJjWTmgnIpOYGyARkUnMDZFLzxknVopOqRSdViz75j1GzSc0bQCYgk5ongExqboBMar7ppGrRSdWik6pFn3yZmm9SMwGZ1GwCMql5Qs0EZFLzBpBJzQRkUrPppGrRSdWik6pFnywD8puATGo2AdkE5A01/7KTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9D+KGLTw4qaB/AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

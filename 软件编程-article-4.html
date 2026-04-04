@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>GitHub Copilot 现已登陆终端</title>
+        <title>如何使用 ReadDirectoryChangesW 来获知有人正在从目录中复制文件？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,79 @@
         </style>
     </head>
     <body>
-        <h2>GitHub Copilot 现已登陆终端</h2>
-        <p>4/2/2026, 9:10:29 PM</p>
+        <h2>如何使用 ReadDirectoryChangesW 来获知有人正在从目录中复制文件？</h2>
+        <p>4/3/2026, 6:57:11 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 推出 Copilot CLI，让开发者能够通过简单的安装，直接在终端环境中获得 AI 编程辅助。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文阐明了 ReadDirectoryChangesW API 旨在监控目录列表的变更，而非检测用户层面的文件复制操作，并解释了为什么文件系统层面的监控无法可靠地推断用户意图。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 推出了 Copilot CLI，允许开发者将 AI 编程辅助直接集成到终端工作流中。该工具支持通过 npm、Homebrew 和 WinGet 安装，将 Copilot 的能力延伸至 IDE 之外，从而简化了开发体验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Raymond Chen 解释了为什么开发人员经常错误地尝试使用 ReadDirectoryChangesW API 来检测文件复制。他澄清说，该 API 以及 FindFirstChangeNotification 都是在文件系统层面运行，用于跟踪目录列表的变更，而非用户的意图。文件系统只能观察到底层的读写操作，无法区分用户是打开文件进行编辑还是将其复制。此外，他强调了使用文件哈希来检测副本是徒劳的，因为“另存为”等操作通常会导致文件在功能上相同，但在字节层面却不完全匹配。他总结道，对于数据安全或分类需求，开发人员应该利用专门的数据分类技术，而不是试图拦截文件系统事件。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">ReadDirectoryChangesW 用于目录元数据，而非文件操作意图。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该 API 旨在当目录列表发生变化（例如文件创建、删除、重命名）时通知应用程序，而不是跟踪文件被访问的原因。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">文件系统缺乏定义“复制”的上下文。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在文件系统层面，不存在“复制”操作；只有读取和写入。系统无法区分合法访问和未经授权的复制。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">哈希是一种检测副本的不可靠方法。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用户经常使用“另存为”来复制文件，这可能会改变元数据或内容，使得逐字节的哈希比较无法有效检测重复文件。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">使用专门的技术进行数据保护。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 开发人员不应试图破解文件系统事件，而应实施旨在执行安全策略和跟踪数据使用情况的数据分类技术。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">像 ReadDirectoryChangesW 和 FindFirstChangeNotification 这样的函数是在文件系统层面运行的，因此它们看到的基本操作是“读取”和“写入”之类的东西。它们不知道某人为什么要读取或写入。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你允许人们读取文件，那么他们就可以复制它。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你的目标是检测文件是否被“复制”（无论你如何定义它），你必须在另一个层面进行操作。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHub(@github)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHub</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Old New Thing</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Raymond Chen</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">236</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">679</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Copilot</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CLI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工具</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Windows API</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ReadDirectoryChangesW</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文件系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据安全</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2039812737073643823" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/51bff90e" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2039812737073643823">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/51bff90e">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS4SURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHZAxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBOQJNROQSc0TQCY1E5An1ExAfpOaN06qFp1ULTqpWvTJMjWbgGwCMqmZgNyouQFyo2YC8oSaTUA2nVQtOqladFK16JMvA/KEmifUTEAmNTdAbtQ8oeY3AXlCzTedVC06qVp0UrXok38ckBsgN2omIBOQJ4BMaiYgk5r/kpOqRSdVi06qFn3yj1MzAZnUPKFmAnKjZgLyBJBJzb/spGrRSdWik6pFn3yZmr8EyI2aGzU3aiYg36TmLzmpWnRSteikatEny4D8JiCTmgnIpGYC8gaQSc2NmgnIE0D+spOqRSdVi06qFn3ykpq/BMikZgIyqdkE5AbIE2r+JSdVi06qFp1ULfrkJSCTmgnIjZoJyBNq3gAyqXlCzQRkE5BJzQ2QSc0E5EbNGydVi06qFp1ULcIfeQHIjZoJyKRmAjKpuQFyo+YGyKTmm4B8k5ongExq3jipWnRSteikatEnL6l5Qs0EZFIzAXlCzRtAJjU3QCY1E5BJzRtAngByo2bTSdWik6pFJ1WLPlkGZFLzBJBJzQ2QN9RMQG6ATGpu1NwAmdRsUnMDZFLzxknVopOqRSdVi/BHfhGQSc0E5EbNDZAbNROQGzVPALlR801AbtR800nVopOqRSdViz5ZBmRS84SaJ4DcqJmAvAFkUjOpuQEyqbkBcqNmUjMBmYDcqHnjpGrRSdWik6pF+CNfBGRScwPkCTUTkCfUTEAmNU8A+X9SMwF5Qs0bJ1WLTqoWnVQtwh95Acik5jcBmdRsAvKEmhsgN2pugNyouQEyqdl0UrXopGrRSdWiT5YBeULNDZBJzTcBuVHzBJAngExqJjUTkAnIpOY3nVQtOqladFK1CH9kEZBJzQTkCTUTkBs1E5BvUvMGkBs1E5BJzQTkCTWbTqoWnVQtOqla9MlLQCY1E5AbNTdAngAyqdkE5Akgk5pJzQTkDTUTkEnNN51ULTqpWnRSteiTl9TcqJmA3ACZ1NwAeQLIjZoJyKRmAvJNQCY1f9lJ1aKTqkUnVYs+WQZkUnMDZFIzAZnUTGp+E5BNQJ4A8pedVC06qVp0UrUIf+QfBuQJNROQSc0TQCY1TwCZ1DwBZJOaN06qFp1ULTqpWvTJS0B+k5on1PwlQJ4AMql5Qs0EZFKz6aRq0UnVopOqRZ8sU7MJyBNq3gDyTWomIDdqNqn5ppOqRSdVi06qFn3yZUCeUPOEmhsgk5obNTdAJjUTkEnNE0DeUDMBeULNGydVi06qFp1ULfrkHwdkUvOEmgnIE0BugExqJjUTkEnNDZAJyKTmBsimk6pFJ1WLTqoWfVKPqHkCyARkUvMEkEnNDZBJzTedVC06qVp0UrXoky9T801qbtQ8oWYCMgGZ1DyhZgIyqXkDyKRmAjKp2XRSteikatFJ1aJPlgH5TUD+JUDeUPOXnVQtOqladFK1CH+kaslJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16H+S5RxHNmeyOgAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
