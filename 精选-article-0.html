@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>淘宝跨端体验优化 AI 演进之路</title>
+        <title>深度解析：Claude Code 源码架构与 Harness Engineering 实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>淘宝跨端体验优化 AI 演进之路</h2>
-        <p>4/3/2026, 9:16:00 AM</p>
+        <h2>深度解析：Claude Code 源码架构与 Harness Engineering 实践</h2>
+        <p>4/4/2026, 7:20:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了手淘跨端团队如何通过孵化体验优化 Agent 等 5 款 AI 技术产品，构建覆盖研发全链路的 AI 自驱动优化体系，解决复杂业务语意下的性能治理难题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过对 Claude Code 逆向源码的深度分析，揭示了其基于 Harness Engineering 的 Agent 架构设计，重点探讨了状态持久化、工具调度及系统提示词控制面等核心机制。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细阐述了手淘跨端业务在 AI 时代的重构历程。面对传统人工诊断效率低、方案难以复用等痛点，团队从 0 到 1 孵化了包括体验优化 Agent 在内的 5 款 AI 产品，实现了从本地编码、预发、提测到线上运维的全链路闭环。核心技术点在于通过整合端边云基建、构建上下文工程（信息熵减）、引入统一解决方案中心以及赋予 AI 云真机调试和自动化 Coding 等 Skills，使 AI 能够理解手淘复杂的 SSR 渲染模式和业务语意，最终实现无需人工干预的性能问题自发现、自分析与自修复，显著提升了双十一等核心场景的业务指标。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章以 Harness Engineering 为理论框架，对 Claude Code（v2.1.88）的逆向源码进行了系统性剖析。核心观点认为，Agent 的能力不仅取决于模型单体，更取决于其外围的「Harness」系统。源码揭示了 Claude Code 维护的四条核心不变量：轨迹拓扑完整性、缓存前缀稳定性、能力面分层暴露以及连续性外化。文章详细拆解了 QueryEngine 作为会话宿主的职责、query.ts 作为恢复图而非线性循环的设计逻辑，以及系统提示词（System Prompt）如何作为「运行时法律」通过结构化分区和缓存边界来治理模型行为。此外，还分析了其复杂的工具执行流水线、并发调度策略以及利用专用侧向查询（Side Query）处理窄任务的工程实践。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">从人工诊断向 AI 自驱动演进的五个阶段。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 手淘跨端优化经历了从架构师介入、标准化框架、AI 辅助诊断，演进到当前的 AI 全托管分析与 Coding，并向自进化 Agent 迈进。</span>
+                        <strong style="color: #1e40af">Agent 系统设计的核心在于维护四条运行时不变量。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 包括轨迹拓扑不可破（工具调用必须匹配结果）、缓存前缀不可漂（保护 Prompt Cache）、能力面分层暴露（按需激活工具）以及连续性外化（依赖外部工件而非仅靠消息历史）。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">构建上下文工程以提升 AI 输出的确定性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过端边云基建整合、信息聚类分析和统一解决方案中心，将「不确定性」关进工程化的牢笼，有效避免模型幻觉并确保修复方案的标准性。</span>
+                        <strong style="color: #1e40af">系统提示词是第一控制面，而非简单的文案层。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> System Prompt 被建模为宿主协议的一部分，通过显式的静态前缀与动态边界划分，在定义行为法则的同时最大化缓存复用效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">赋予 AI 关键 Skills 以打通修复「最后一公里」。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过对接云真机调试、平台配置修改和自动化代码修复能力，使 Agent 不再纸上谈兵，能够直接在云端沙箱或 IDE 中落地优化动作。</span>
+                        <strong style="color: #1e40af">主循环 query.ts 本质上是一个复杂的恢复图。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它不是简单的「采样-执行」循环，而是通过显式的状态转换处理 Token 溢出、权限拒绝和轨迹中断，目标是不断修正并维持一条合法的执行轨迹。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">全链路研发闭环实现「问题左移」。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 AI 能力嵌入本地 IDE、预发平台、测试平台及线上监控，实现从代码编写时的实时提醒到线上劣化后的自动工单治理。</span>
+                        <strong style="color: #1e40af">采用专用 Prompt Worker 处理窄任务以保持主循环纯净。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 架构中引入了侧向查询机制，将记忆选择、模式分类、UI 摘要等特定任务分配给专用模型调用，避免主模型在长上下文中过载。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将优化方式从「人工诊断」推向「AI 自驱与自进化」。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">原则上，能用工程实现的确定性执行过程一定不给模型处理，工程的预处理可以有效避免模型的幻觉，让『1 + 1 = 2』。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">体验优化 Agent 成为每个跨端同学最懂手淘体验的 AI 架构师。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">问题发现得越早，解决的成本越低。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">值得迁移的不是某个函数，而是它在替哪条不变量付账。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统提示词在这里不是文案层，而是 runtime law。哪个 prompt 赢，直接决定了后续能力面、任务边界、消息协议、输出语义。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不要把所有智能都塞给主对话模型。把 recall、policy judgment、UI summary、memory maintenance 这些窄任务分配给专用 prompt worker，主 loop 才能保持干净。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正值得迁移到未来 agent 设计里的，主要是 principle，以及少量已经被证明有效的 workaround。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">浮之静</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">浮之静</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6634</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">76 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">18949</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">手淘</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">跨端开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SSR</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent 架构</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源码分析</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Harness Engineering</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统提示词</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/07c3b941" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/8c5068ba" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/07c3b941">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATJSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpobIE+oeQPIpGYC8oSaCcivpOaNk6pFJ1WLTqoWfbJMzSYg3wTkRs0E5Ak1m9RsArLppGrRSdWik6pFn3wZkCfUPAHkDTU3QCY1E5AbIE+oeQLIE2q+6aRq0UnVopOqRZ/8z6iZgNyomYDcAJnUTEAmNf+Sk6pFJ1WLTqoWffKPUTMBmYDcqJmATGqeAPJ/clK16KRq0UnVok++TM2fTM0EZFIzAZnU3Ki5ATKpeULNn+SkatFJ1aKTqkWfLAPyJ1MzAZnUTEAmNROQSc0EZFLzBpA/2UnVopOqRSdViz55Sc2fTM0E5A0gk5obNROQSc2Nmr/JSdWik6pFJ1WL8EdeADKpmYBsUvMGkEnNBGSTmhsgk5oJyCY133RSteikatFJ1SL8kReA3KiZgExqJiCTmjeAPKHmm4B8k5ongExq3jipWnRSteikahH+yG8EZFIzAZnUTEAmNROQSc0NkEnNBOQJNTdAbtT8TU6qFp1ULTqpWoQ/8gKQSc0E5EbNE0Bu1DwBZFLzBJBJzQTkm9RMQCY1E5BJzaaTqkUnVYtOqhbhj/xGQN5QMwF5Q80bQG7UfBOQGzXfdFK16KRq0UnVok+WAZnU3KiZgExqJiC/EpBJzRtA3lAzAZnUPAFkUvPGSdWik6pFJ1WL8EdeAHKj5gkg36TmDSBPqLkBMqm5ATKpmYDcqPmmk6pFJ1WLTqoWffKSmhsgT6i5ATKpmYBMan4lNTdANgGZ1NwAmdRsOqladFK16KRq0SdfpuYGyATkm4BMat5QMwGZ1NyoeUPNBORGzTedVC06qVp0UrUIf+QFIJOaCcik5gbIpGYCcqPmDSCTmhsgk5oJyBNqJiBPqJmATGomIJOaN06qFp1ULTqpWvTJl6mZgNyomYDcqLkBMqmZgNwAuVHzhJobIJOaCcik5g01m06qFp1ULTqpWoQ/8gKQSc0TQG7UvAHkRs0E5A01TwCZ1ExAnlBzA2RSs+mkatFJ1aKTqkWf/GZqboDcqHlCzQTkRs0TQCY1E5AbIJuA3ACZ1LxxUrXopGrRSdUi/JG/GJAbNU8AmdTcAJnUPAFkUvMEkE1q3jipWnRSteikatEnLwH5ldRMam6APKFmAvIEkE1AJjVvqPmmk6pFJ1WLTqoWfbJMzSYgN0AmNZOaTWqeAPKGmifUPAFkUvPGSdWik6pFJ1WLPvkyIE+o+ZOomYBMaiYgk5obIBOQTUAmNZOaTSdVi06qFp1ULfrkHwPkRs0EZFJzo2YCMql5Q80NkEnNBOQGyI2aN06qFp1ULTqpWvTJP0bNBGQTkE1qboDcAHlDzaaTqkUnVYtOqhZ98mVqvknNBGRSMwG5ATKpuVFzA2RSMwGZ1ExqJiCTmgnIpGYC8k0nVYtOqhadVC3CH3kByK+kZgLyhJoJyBNqboBMaiYgk5oJyKRmAvKGmm86qVp0UrXopGoR/kjVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRf4YTSgp7OZUdAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/8c5068ba">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnt6MRH8kaolJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aJPXgLyK6m5AfKGmgnIpOYJIE+omYD8SmreOKladFK16KRq0SfL1GwC8k1qngByo2ZSs0nNJiCbTqoWnVQtOqla9MmXAXlCzRNAJjUTkBsgk5obNU8AeULNE0CeUPNNJ1WLTqoWnVQt+uQfo2YCMgGZ1ExAJjUTkEnNBGRS8zc5qVp0UrXopGrRJ/8YIJOaGyCTmgnIpGYC8i85qVp0UrXopGrRJ1+m5v+k5g01E5BJzY2aGyCTmifU/E5OqhadVC06qVr0yTIgvxMgk5oJyKRmAjKpmYBMaiYgk5o3gPzOTqoWnVQtOqlahD/yBwNyo2YTkEnNE0AmNX+Tk6pFJ1WLTqoW4Y+8AGRSMwHZpOYGyKTmBsiNmhsgN2pugExqJiCb1HzTSdWik6pFJ1WL8EcWAZnUTEAmNU8AuVEzAXlCzQRkUvMGkG9S8wSQSc0bJ1WLTqoWnVQtwh9ZBORGzQTkCTU3QG7U3ADZpOYGyI2aP8lJ1aKTqkUnVYvwR74IyKTmDSCTmhsgk5oJyKTmCSCTmgnIN6mZgExqJiCTmk0nVYtOqhadVC3CH3kByI2aJ4DcqLkBMql5Asik5gkgN2q+CciNmm86qVp0UrXopGrRJy+pmYBsUnMDZFJzA2RScwNkUvMGkDfUTEAmNU8AmdS8cVK16KRq0UnVIvyRF4DcqJmA3KiZgNyomYBMajYBeULNDZBJzQ2QSc0E5EbNN51ULTqpWnRSteiTZWomIJOaCcgEZFIzAfmdqbkBsgnIpOYGyKRm00nVopOqRSdViz5ZBuQNNROQSc2NmgnIpOYGyBNqJiCTmhs1b6iZgNyo+aaTqkUnVYtOqhbhj7wA5A01TwB5Q80mIJOaCcgTaiYgT6iZgExqJiCTmjdOqhadVC06qVr0yTI1N0AmIJOaCcik5g0gT6iZgExqnlBzA2RSMwGZ1LyhZtNJ1aKTqkUnVYvwR14AMqmZgLyh5gbIjZobIJOaGyA3ap4AMqmZgDyh5gbIpGbTSdWik6pFJ1WLPvkyNTdAboDcqHkCyKRmAnKj5gbIpGYCcgNkE5AbIJOaN06qFp1ULTqpWoQ/8gcDMqmZgDyh5gkgk5ongExqngCySc0bJ1WLTqoWnVQt+uQlIL+SmknNG2qeAHIDZBOQSc0bar7ppGrRSdWik6pFnyxTswnIDZBJzRNAJjUTkEnNE0DeUPOEmhsgN2reOKladFK16KRq0SdfBuQJNW8AuVHzhJoJyKRmAjKpuQEyAdkE5Fc6qVp0UrXopGrRJ385NROQSc0EZFIzqZmATGreUHMDZFIzAfk/nVQtOqladFK16JO/HJA3gHyTmhsgN0DeULPppGrRSdWik6pFn3yZmm9S8wSQCcgbam6ATGomIJOaSc0EZFIzAZnUTEC+6aRq0UnVopOqRZ8sA/IrAZnUTEBu1GwCMqmZgExqJiCTmhsgN0AmNd90UrXopGrRSdUi/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWi/wDgyEci4wfYPwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
