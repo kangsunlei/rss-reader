@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Uber 微服务架构背后的真实故事</title>
+        <title>去哪儿网数据库智能异常检测实践：从传统巡检到 AIOps 的演进</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,79 @@
         </style>
     </head>
     <body>
-        <h2>Uber 微服务架构背后的真实故事</h2>
-        <p>4/5/2026, 8:25:08 PM</p>
+        <h2>去哪儿网数据库智能异常检测实践：从传统巡检到 AIOps 的演进</h2>
+        <p>4/6/2026, 11:15:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Gergely Orosz 分享了 Uber 前 CTO Thuan Pham 的见解，揭示了 Uber 采用大规模微服务架构并非出于精心设计，而是为了应对快速扩张的生存需求。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了去哪儿网 DBA 团队如何利用机器学习算法（如 DoubleRollingAggregate、SeasonalAD、LevelShiftAD 等）实现数据库指标的智能异常检测，将报警准确率提升至 80% 以上。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Gergely Orosz 揭露了 Uber 转向数千个微服务架构背后鲜为人知的故事。他引用前 CTO Thuan Pham 的话澄清道，这种架构转型是出于紧急的扩容需求和避免团队协作瓶颈的考量，而非事先的精心规划。其核心策略包括通过“Darwin”项目将遗留的“API”单体应用进行拆解，以实现并行开发；待业务稳定后，再通过“Arc”项目对服务进行合理化整合。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了去哪儿网在数据库运维中从传统固定阈值监控向智能异常检测转型的实践经验。核心内容围绕异常检测的四个关键环节展开：特征分析（识别周期性与平稳性）、算法选择（针对不同特征匹配窗口检测、周期分解或水位检测算法）、模型调优（结合动静态阈值及业务场景过滤误报）以及报警收敛。文中重点分析了平稳趋势检测（如磁盘使用率）、周期性变化检测（如 Redis 内存）和突变异常检测（如 CPU 水位及 QPS 掉 0）三大典型场景，并分享了如何通过识别 DDL、数据迁移等业务行为来降低误报率的实战技巧。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">传统固定阈值巡检无法感知指标的动态变化，导致预警滞后。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 固定阈值通常设置较高以减少干扰，但难以捕捉业务高峰期的动态趋势，智能检测能通过历史数据识别常规之外的异常行为，实现提前介入。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">针对不同监控指标特征，需采用差异化的算法体系。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 平稳趋势指标适用滑动窗口算法（DoubleRollingAggregate）；周期性指标适用季节性分解算法（SeasonalAD）；瞬时突变则适用水位检测（LevelShiftAD）或四分位距法（IQR）。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">算法检测必须与业务场景深度结合才能降低误报。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过引入静态阈值兜底，并主动识别 DDL 工单、节点迁移等已知干扰项，将数学意义上的异常点过滤为具有业务价值的报警点。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1e40af">多维报警收敛机制是防止告警风暴的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过纵向时间窗口合并和横向集群/业务组关联分析，将重复或关联的报警聚合，提升告警的可读性和处理效率。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
+            <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">机器学习可以从历史数据中找到自身的规律，识别出常规之外的行为。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过算法识别出来的异常点不一定是真实业务场景的异常点，因为异常算法只是从数学的角度进行的检测。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统报警准确率在 80% 以上，显著提高了巡检效率，并有效减少了常规报警数量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的技术方案不是最完美的那个，而是能被团队理解和执行的那个。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Gergely Orosz(@GergelyOrosz)</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Gergely Orosz</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">274</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">35 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8606</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Uber</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">微服务</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Thuan Pham</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库运维</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">异常检测</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AIOps</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MySQL</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2040888490292908372" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/9c7f5796" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2040888490292908372">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/9c7f5796">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATlSURBVO3BQW4ERxIEwfDC/P/LvjzmqYBG53AlKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1KzCcikZgIyqXkCyBNqJiC/Sc0bJ1WLTqoWnVQt+mSZmk1AngAyqZmATGomIDdAbtRMajap2QRk00nVopOqRSdViz75MiBPqHkCyKTmRs0EZFIzAZnUPAHkCTVPAHlCzTedVC06qVp0UrXokz8OyKTmBsgNkEnNBGRSMwGZ1PwlJ1WLTqoWnVQt+uSPUzMBuVHzBJBJzQTkv+SkatFJ1aKTqkWffJma3wRkUjOpuQGySc0NkEnNE2r+SU6qFp1ULTqpWvTJMiD/T2omIJOaCcikZgIyqZmA3ACZ1LwB5J/spGrRSdWik6pFn7yk5i9TMwGZ1NyomYBMam7U/JucVC06qVp0UrUIf+QFIJOaCcgmNTdAJjXfBORGzQ2QSc0EZJOabzqpWnRSteikatEnX6bmBsik5gbIjZoJyKTmCSCTmknNE0BugLyh5gkgk5o3TqoWnVQtOqla9MkyIJOaN4DcqPkmNROQJ9RMaiYgN2q+Sc2mk6pFJ1WLTqoW4Y8sAvKEmgnIpGYCcqPmBsiNmieATGomIN+kZgIyqZmATGo2nVQtOqladFK1CH/kBSA3am6APKHmBsik5gbIpOYNIDdqvgnIjZpvOqladFK16KRq0Se/DMiNmk1AJjWTmhsgk5o3gLyhZgIyqXkCyKTmjZOqRSdVi06qFuGPvADkCTVPAJnUvAFkUjMBmdRMQJ5QcwNkUnMDZFIzAblR800nVYtOqhadVC36ZJmaTWomIJOaN4BMat5QcwNkE5BJzQ2QSc2mk6pFJ1WLTqoWffLLgLyh5gbIjZongNyomYBMam7UvKFmAnKj5ptOqhadVC06qVr0yTIgk5on1NwAeULNDZBJzaTmBsikZgJyA2RSMwG5ATKpmYDcAJnUvHFSteikatFJ1aJPlqmZgNyouQEyqXkCyI2aCcikZgIyqXlCzQ2QSc0EZFLzhppNJ1WLTqoWnVQt+uSXqbkBMqmZgDyhZgJyo2YCcgNkUjOpuQEyqZmA3ACZ1ExqJiCTmk0nVYtOqhadVC365MvUvAFkUnMD5A0gN2pugExqJiA3QDYBuQEyqXnjpGrRSdWik6pF+CP/YkAmNROQJ9Q8AWRS8wSQSc0TQDapeeOkatFJ1aKTqkWfvATkN6mZ1Dyh5g0gN0A2AZnUvKHmm06qFp1ULTqpWvTJMjWbgNwAmdRMaiYgk5on1DwB5A01T6i5AXKj5o2TqkUnVYtOqhZ98mVAnlDzBpAbNROQSc0NkEnNBGRScwNkArIJyKTmm06qFp1ULTqpWvTJH6NmAnKjZgIyqZnUTEAmNW+ouQEyqZmA3AC5UfPGSdWik6pFJ1WLPvnj1ExAbtTcANmk5gbIDZA31Gw6qVp0UrXopGrRJ1+m5pvUvKHmDTU3QCY1E5BJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5TUBu1DwBZFIzqbkBMqmZgExqJiCTmhsgN0AmNd90UrXopGrRSdUi/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWi/wGiYl0VZJbCOAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
