@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>如何在 Kubernetes 中对用户进行身份验证：x509 证书、OIDC 和云身份</title>
+        <title>是否有 Windows 3.1 程序因为与 Windows 95 极度不兼容而完全无法修复？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>如何在 Kubernetes 中对用户进行身份验证：x509 证书、OIDC 和云身份</h2>
-        <p>4/6/2026, 8:31:43 PM</p>
+        <h2>是否有 Windows 3.1 程序因为与 Windows 95 极度不兼容而完全无法修复？</h2>
+        <p>4/7/2026, 7:51:28 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一份关于 Kubernetes 身份验证机制的深度技术指南，涵盖了内部身份验证器链、x509 证书实现以及与 Dex 的现代 OIDC 集成。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Raymond Chen 解释了为什么某些 Windows 3.1 应用程序在根本上与 Windows 95 不兼容，这主要是由于它们非法访问了操作系统内部内存结构，并对系统架构做出了硬编码的假设。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文从第一性原理出发，解释了 Kubernetes 在没有内部用户数据库的情况下如何处理身份。文章探讨了可插拔的身份验证器链，区分了面向机器的 Service Account 和外部管理的 User。作者提供了创建 x509 客户端证书的实操演示，强调了其局限性（如缺乏吊销机制），并详细介绍了如何使用 Dex 和 kubelogin 设置用于生产环境的、基于浏览器的 OIDC (OpenID Connect) 登录。文中特别提到了 Kubernetes v1.30 中引入的现代 AuthenticationConfiguration，使其成为当前基础设施安全实践中极具参考价值的资源。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">这篇来自“The Old New Thing”的文章探讨了为什么一些旧版 Windows 3.1 应用程序无法通过补丁在 Windows 95 上运行。罪魁祸首在于那些绕过公共 API、通过将句柄转换为指针来直接操作操作系统内部对象的软件。这种做法在 Windows 95 中失效了，因为 UI 和图形对象的底层内存架构从 16 位堆迁移到了 32 位堆。此外，作者指出，一些程序包含有缺陷的版本检查逻辑，或依赖于脆弱的 API 劫持技术，使得它们在较新的操作系统上无法获得支持。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">Kubernetes 依赖外部身份验证器链而非内部用户数据库来验证请求签名。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> API Server 将凭据传递给一系列身份验证器（x509、OIDC、IAM 等）；第一个验证凭据成功的身份验证器生效，否则请求将被视为匿名请求。</span>
+                        <strong style="color: #1e40af">直接操作操作系统内部内存结构导致了致命的不兼容性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当操作系统从 16 位堆迁移到 32 位堆时，那些通过将句柄转换为指针来访问内部实现细节的应用程序会崩溃，因为内存布局和对象结构发生了根本性的改变。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">User 不是 Kubernetes 对象；它们是由 CA 或 OIDC 提供商等外部系统断言的身份。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与属于命名空间对象的 Service Account 不同，User 是在外部管理的。Kubernetes 仅从已验证的断言中提取用户名和组。</span>
+                        <strong style="color: #1e40af">开发者往往忽视公共 API，转而采用未公开的内部访问方式。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者强调了处理那些为了访问数据而使用“黑客手段”的软件所带来的挫败感，而这些数据本可以通过受支持的、稳定的公共 API 获取。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">x509 证书将通用名称 (CN) 映射为用户名，将组织 (O) 映射为组，但在生产环境中存在显著局限性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 主要问题在于缺乏对证书吊销列表 (CRL) 的支持，以及手动轮换和分发带来的高运营开销。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">OIDC 通过使用短效 JWT 和基于浏览器的流程，实现了无状态、可扩展且安全的身份验证。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> API Server 使用提供商的公钥在本地验证 JWT 签名，无需在每次请求时都联系身份提供商。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">身份验证与授权是解耦的；已验证的身份仍需要 RBAC 角色才能执行任何操作。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过身份验证层仅能识别用户“是谁”；RBAC 则根据 RoleBinding 决定他们被允许“做什么”。</span>
+                        <strong style="color: #1e40af">脆弱的版本检查和 API 劫持导致了无法修复的局面。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 一些旧版程序具有硬编码的版本逻辑，无法识别较新的操作系统版本，而另一些程序则使用了与 Windows 95 内核架构不兼容的侵入式 API 劫持方法。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Kubernetes 不知道你是谁。它没有用户数据库，没有内置的登录系统，也没有密码文件。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">理解这种模型是区分“能够调试身份验证失败的工程师”与“只会复制 kubeconfig 文件并祈祷一切顺利的工程师”的分水岭。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Kubernetes 不会检查证书吊销列表 (CRL)。如果开发者的 kubeconfig 被盗，嵌入的证书在过期前将一直有效。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Kubernetes API Server 不会在每次请求时联系 OIDC 提供商……这使得 OIDC 身份验证具有无状态性和可扩展性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">有效的证书能让你通过大门。至于进去后能做什么，那是 RBAC 的工作。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">其中最大的一类程序是那些获取各种类型的句柄并设法将其转换为指针，然后利用这些指针访问（有时甚至修改！）这些对象内部实现细节的程序。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Windows 95 为用户界面和图形对象使用了 32 位堆，而 Windows 3.1 使用的是 16 位堆。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">特别令人沮丧的是，程序为了访问内部实现细节而这样做，但它们想要的信息其实已经通过公共且受支持的 API 暴露出来了。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -66,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">90</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Destiny Erhabor</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Old New Thing</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Raymond Chen</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5496</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">249</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kubernetes</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">身份验证</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OIDC</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">x509 证书</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RBAC</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Windows 95</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">旧版软件</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">操作系统</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/a648dda5" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/bf606962" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/a648dda5">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATfSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6NdKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzRNAJjVPAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBNAJjU3QCY1N0AmNTdqNqnZBGTTSdWik6pFJ1WLPvkyIE+oeQLIE0CeUHMDZFIzAXlCzRNAnlDzTSdVi06qFp1ULfrkf0bNDZBJzQTkBsikZgIyqfkvOaladFK16KRq0Sf/MWpugDwBZFLzBJD/k5OqRSdVi06qFn3yZWp+E5BJzaTmDSA3aiY1N0AmNU+o+ZOcVC06qVp0UrXok2VA/k1qJiCTmgnIpGYCMqmZgNwAmdS8AeRPdlK16KRq0UnVok9eUvM3U3OjZgIyqblRMwGZ1Nyo+ZucVC06qVp0UrXok5eATGomIJvUTGreALIJyKRmUjMBmdRMQDap+aaTqkUnVYtOqhbhjywCMqmZgExq3gDyhpo3gExqboB8k5ongExq3jipWnRSteikahH+yAtAbtTcAJnUTEAmNROQSc0NkBs1E5A31NwAuVHzNzmpWnRSteikahH+yAtAbtR8E5AbNTdAJjVPAJnUTEC+Sc0EZFIzAZnUbDqpWnRSteikahH+yCIgN2qeAHKj5gkgk5oJyI2aGyA3ar4JyI2abzqpWnRSteikatEn/zIgN2omIE8AeULNNwF5Q80EZFLzBJBJzRsnVYtOqhadVC365JcBuVEzAZnUTEAmNTdqJiCTmgnIG2pugExqboBMaiYgN2omNZtOqhadVC06qVqEP/ICkBs1E5BJzRtAbtRsAnKj5gbIjZobIDdqboBMajadVC06qVp0UrXokz8ckCfUPAHkDTUTkEnNjZo31ExAbtR800nVopOqRSdViz75MiCTmhsgk5obIBOQSc0Tap4AMqmZgNwAmdRMQG6ATGomIDdAJjVvnFQtOqladFK16JNlaiYgE5BJzaRmAjKpeQLIJiCTmifU3ACZ1ExAJjVvqNl0UrXopGrRSdWiT/4wQCY1N2omIDdqJiA3QG6ATGomNTdAJjUTkBsgk5pJzQRkUrPppGrRSdWik6pFn/wyNROQGyCTmgnIJiCTmieATGomIDdANgG5ATKpeeOkatFJ1aKTqkX4I38xIDdqboBMaiYgk5oJyKTmCSCTmieAbFLzxknVopOqRSdViz55CchvUjOpmYBMQDYBuQGyCcik5g0133RSteikatFJ1aJPlqnZBOQGyKRmAjKpeUPNE0DeUPOEmhsgN2reOKladFK16KRq0SdfBuQJNd8EZFJzo2YCMqmZgExqboBMQDYB+U0nVYtOqhadVC365D8GyBNAJjU3aiYgk5o31NwAmdRMQP5NJ1WLTqoWnVQt+uR/Rs0E5AbIN6m5AXID5A01m06qFp1ULTqpWvTJl6n5JjUTkEnNBGRSMwGZ1ExAJjU3QCY1E5BJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5TUCeUDMBmdTcqLkBMqmZgExqJiCTmhsgN0AmNd90UrXopGrRSdUi/JGqJSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWifwD8zkBEVZTAFQAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/bf606962">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATXSURBVO3BQY4bSRAEwfAC//9lXx3zVECjkyPNIszwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAnKj5gkgk5o3gExqngDyk9S8cVK16KRq0UnVok+WqdkE5EbNNwGZ1DyhZgJyo+ZGzSYgm06qFp1ULTqpWvTJlwF5Qs0bQCY1N0AmNW8AmdR8E5An1HzTSdWik6pFJ1WLPvnlgExqboBMap4AcqNmAnKj5v/kpGrRSdWik6pFn/zPAJnU3ACZ1HyTmgnIpOY3O6ladFK16KRq0SdfpuZvAjKpmYDcAJnUPKFmAjKpeUPNv+SkatFJ1aKTqkWfLAPyN6mZgHwTkEnNBGRSMwGZ1NwA+ZedVC06qVp0UrXok5fU/GZqbtQ8AeQGyKTmRs1vclK16KRq0UnVok9eAjKpeQLIpGYC8gSQSc0NkBs1N2omIJOaCcgNkE1qboBMat44qVp0UrXopGoR/pFFQCY1N0Bu1LwB5EbNE0Bu1GwC8pPUvHFSteikatFJ1aJPXgJyA2RS8wSQJ9S8AeQJNTdAJjUTkE1qngCy6aRq0UnVopOqRZ+8pGYCMql5Qs0NkBsgN2omIDdqngAyqZmAPKHmBsgEZFIzAfmmk6pFJ1WLTqoWffISkEnNDZBJzQTkRs0E5Akgk5ongExqboB8k5o31Gw6qVp0UrXopGrRJy+peQPIjZoJyKRmAnKjZgJyo2aTmieATGomIG8AmdS8cVK16KRq0UnVok9eAjKpeULNDZAbIJOaCcgTat5QMwG5ATKp+SY1E5BNJ1WLTqoWnVQt+uQlNROQSc2k5gbIpGYC8k1AJjVPALkBsknNE0C+6aRq0UnVopOqRZ+8BGRSMwGZ1ExAJjUTkEnNE2omIE8AmdQ8oeYGyARkUjMBmdS8oWbTSdWik6pFJ1WL8I+8AGRScwNkUvMEkEnNBGRSMwGZ1ExA3lAzAZnU3ADZpGYCcqPmjZOqRSdVi06qFuEf+SIgk5oJyBNqJiBPqHkDyBNqngByo2YCMqmZgExqJiCTmjdOqhadVC06qVr0yT9GzRNqJiCTmgnIpOYNNROQCcikZgIyqXlCzY2aCcg3nVQtOqladFK16JOXgNyomYDcAHlCzRtAvknNE0A2qZnUTEA2nVQtOqladFK16JOX1DyhZhOQJ9Q8AeQGyKTmBsiNmieATGr+ppOqRSdVi06qFn3yEpCfpGYTkDfUfBOQSc0NkBs133RSteikatFJ1aJPlqnZBORGzRtqJiCTmhsgN2reUPOEmhsg33RSteikatFJ1aJPvgzIE2qeAHKj5gbIG2omIG8AeQPIpOZGzaaTqkUnVYtOqhZ98supmYBMQJ5QMwF5Qs0TaiYgk5oJyKTmCTUTkEnNGydVi06qFp1ULfrkf0bNBGRSMwG5UTMBmdRMQG7U3Ki5UXMD5G86qVp0UrXopGrRJ1+m5icBmdRMQG6APAHkRs0NkEnNBGRSMwG5UTMB+aaTqkUnVYtOqhZ9sgzITwJyA+Sb1ExANqmZgNyoeULNppOqRSdVi06qFuEfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoPgpk0R+bgLoYAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
