@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>最终，更简单的技术或许才是真正的赢家</title>
+        <title>如何向处于活动状态的 MsgWaitForMultipleObjects 添加或移除句柄？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>最终，更简单的技术或许才是真正的赢家</h2>
-        <p>4/7/2026, 8:00:04 PM</p>
+        <h2>如何向处于活动状态的 MsgWaitForMultipleObjects 添加或移除句柄？</h2>
+        <p>4/8/2026, 7:56:35 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文认为，随着软件功能日益臃肿且充斥着 AI 驱动的复杂性，简洁与以用户为中心的克制将成为产品长期成功的终极竞争优势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文解释了为什么无法在活动的 MsgWaitForMultipleObjects 调用中修改句柄列表，并提供了一种使用窗口消息安全管理动态句柄更新的实用架构模式。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了功能繁杂的软件开发与用户对简洁需求之间日益增长的矛盾。文章指出，虽然科技行业常将复杂性等同于进步，但用户最终看重的是那些能减少摩擦和认知负荷的产品。作者强调，AI 时代通过降低过度构建的门槛，加剧了这一问题，导致了数字混乱。核心观点是，成熟技术的定义在于其能够在后台消化复杂性，而不是将其暴露给用户。归根结底，那些能够赢得持久忠诚度的产品，都是优先考虑清晰度、尊重用户时间并为用户复杂的数字生活提供解脱的产品。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者探讨了一个常见的技术挑战：如何修改正在被 MsgWaitForMultipleObjects 循环监控的句柄列表。文章明确指出，该 API 不支持动态更新，因为这会导致返回值变得模糊且不可靠。相反，作者提出了一种稳健的架构模式：使用一个专门的“句柄管理窗口”来监听自定义窗口消息（WM_ADDHANDLE、WM_REMOVEHANDLE）。这使得线程能够中断其等待状态，安全地更新句柄列表并恢复等待，从而确保线程同步和状态一致性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">构建者常将复杂性误认为进步，但用户更看重减少摩擦。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 产品团队经常通过增加功能来彰显雄心和灵活性，但用户真正在意的是工具能否在不增加心理负担的情况下快速解决眼下的问题。</span>
+                        <strong style="color: #1e40af">直接在活动的 MsgWaitForMultipleObjects 调用中修改句柄是不可能的。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> API 设计不支持运行时更改句柄列表；即使支持，返回值也会变得模糊，导致无法确定是哪个句柄触发了信号，从而无法与更新操作对应。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">真正的简洁并非缺乏深度，而是对深度的掌控。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 成熟的产品会在后台完成艰巨的工作，屏蔽内部的复杂性，而不是强迫用户去处理这些复杂性。</span>
+                        <strong style="color: #1e40af">使用消息驱动的方法安全地管理句柄更新。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过利用窗口过程来处理自定义消息，可以向线程发送信号以使其跳出等待状态，执行更新，并以新的配置重新开始等待。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">AI 时代产生了一种过度构建的危险诱惑。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着 AI 让功能交付变得更快，产品中充斥着未经请求的 AI 层，将智能变成了噪音而非实用工具。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">清晰度能赢得信任，这比初期的炒作更有价值。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然复杂的产品可能在发布之初获得关注，但那些尊重用户时间和注意力的产品才能在长期竞争中生存并繁荣发展。</span>
+                        <strong style="color: #1e40af">将句柄数据封装到结构体中以提高可维护性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 不要直接传递原始句柄，而是传递指向包含句柄及相关逻辑（回调或枚举）的结构体的指针，以定义线程在特定句柄收到信号时应如何响应。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">科技有一种奇怪的习惯，就是把简单的事情变复杂。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当智能变得廉价时，克制就变得昂贵了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的产品不会炫技，它们会隐于无形。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在那个世界里，简洁不是一种奢侈，而是一种仁慈。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最好的技术不是功能最多的，而是最有帮助的。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你做不到。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">即使你能做到，这也意味着 MsgWaitForMultipleObjects 的返回值将失去意义。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你可以要求线程停止等待，更新其句柄列表，然后再回到等待状态。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -64,30 +61,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">HackerNoon</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Samiran Mondal</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">产品设计</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">The Old New Thing</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Raymond Chen</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1445</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">334</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品设计</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户体验</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件开发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">简洁性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品策略</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Win32 API</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MsgWaitForMultipleObjects</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多线程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Windows 编程</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/cbbdd25c" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/7f3a9b80" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/cbbdd25c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATHSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ0fSIszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEAmNTdA3lAzAZnUPAHkN6l546Rq0UnVopOqRZ8sU7MJyI2aCcgNkEnNpGYCMql5Qs0E5EbNjZpNQDadVC06qVp0UrXoky8D8oSaN9RMQCY1E5BJzaTmBsiNmm8C8oSabzqpWnRSteikatEn/zggN2omIJOaCcgbaiYgN2r+T06qFp1ULTqpWvTJ/xyQSc2fpGYCMqn5l51ULTqpWnRSteiTL1PzJ6m5AXKj5gbIjZoJyKTmDTV/k5OqRSdVi06qFn2yDMifpGYCMqm5UTMBmdQ8AWRSMwGZ1NwA+ZudVC06qVp0UrUIf+QfBmRS85uAvKHm/+SkatFJ1aKTqkWfvARkUvMEkEnNBOSbgExqnlAzAZnUTEBugGxScwNkUvPGSdWik6pFJ1WL8EdeALJJzQ2QTWomIG+o2QTkN6l546Rq0UnVopOqRZ+8pGYCcqNmAnID5A01N0AmNROQGzU3QCY1E5BNap4AsumkatFJ1aKTqkWfvARkUnMD5AbIpGYCMqmZgGxS8wSQSc0E5Ak1N0AmIJOaCcg3nVQtOqladFK1CH/kLwLkRs0E5EbNG0Bu1ExANqnZBGRSs+mkatFJ1aKTqkWfLAMyqXlCzQ2QSc0E5AkgN2omIG+oeQLIpGYC8gaQSc0bJ1WLTqoWnVQt+uQlIJOaCcikZgIyqZmATGomIDdAJjWTmgnIG2omIDdAJjXfpGYCsumkatFJ1aKTqkWfLANyA2RSc6NmAjKpeQLIjZo3gNwA2aTmCSDfdFK16KRq0UnVok9eUvMEkAnIb1IzAbkBMql5Qs0NkAnIpGYCMql5Q82mk6pFJ1WLTqoW4Y+8AGRS8waQSc0E5EbNBOQNNROQGzUTkEnNDZBNaiYgN2reOKladFK16KRq0ScvqXkCyBNAJjUTkE1qJiBPAJnUbFIzAZnUTEAmNROQTSdVi06qFp1ULcIf+YOA3Kh5AsgbaiYgN2omIDdqJiCTmm8CcqPmjZOqRSdVi06qFn3yEpAn1ExqboD8SWomIE+oeQLIJjWTmgnIppOqRSdVi06qFuGP/MOATGomIJOaCcgmNTdAbtQ8AWRS8wSQSc0bJ1WLTqoWnVQt+uQlIL9JzQ2QTWomIJOabwIyqbkBcqPmm06qFp1ULTqpWvTJMjWbgNyoeQLIjZoJyKRmAnKj5g01T6i5ATKp2XRSteikatFJ1aJPvgzIE2qeAPKEmhsgT6iZgLwB5A0gk5pJzQRkUvPGSdWik6pFJ1WLPvnHqXkCyKTmCSA3ap5QMwGZ1ExAJjV/k5OqRSdVi06qFn3yPwfkBsgbaiYgN2pu1NyouQHyJ51ULTqpWnRSteiTL1Pzm4BMaiYgk5ongExAbtTcAJnUTEAmNROQGzUTkG86qVp0UrXopGrRJ8uA/CYgN0AmNZvUTEA2qZmA3Kh5Qs2mk6pFJ1WLTqoW4Y9ULTmpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoW/QdgwytHJVpG+AAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/7f3a9b80">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATpSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyA3aiYgk5oJyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXlCzRNqJiCTmgnIpOZGzSY1m4BsOqladFK16KRq0SdfBuQJNU8AmdS8oWYCMqmZgExqJiBPqHkCyBNqvumkatFJ1aKTqkWf/GOATGqeAHIDZFIzAZnUTEAmNf+Sk6pFJ1WLTqoWffKPUTMBuVEzqXkCyKRmAvL/5KRq0UnVopOqRZ98mZr/kpoJyBtAnlBzA2RS84SaP8lJ1aKTqkUnVYs+WQbkTwJkUjMBmdRMQCY1E5AbIJOaN4D8yU6qFp1ULTqpWvTJS2r+JEAmNTdqvknNBGRSc6Pmb3JSteikatFJ1SL8kReATGomIJvU3ACZ1ExAJjUTkEnNBOQJNTdAJjUTkE1qvumkatFJ1aKTqkX4I18E5Ak1N0Bu1DwB5Ak1bwD5JjVPAJnUvHFSteikatFJ1SL8kUVAbtTcALlR8waQSc0TQJ5QcwPkRs3f5KRq0UnVopOqRZ98mZobIJOaGyCTmhsgbwCZ1ExAJjUTkDeA3KiZgExqJiCTmk0nVYtOqhadVC36ZJmaTUCeADKpuQHyhpoJyI2a3wRkUvNNJ1WLTqoWnVQtwh95Acik5gbIE2omIDdq/ktAvknNBGRS8wSQSc0bJ1WLTqoWnVQt+uTLgExqngAyqbkBMqm5AXKjZgLyhJobIJOaGyCTmgnIjZpJzaaTqkUnVYtOqhZ9sgzIG0AmNROQSc2kZgLyhJo31NwA2QRkUnMDZFKz6aRq0UnVopOqRZ+8pOYGyA2QSc0E5JvUTEAmNTdqJiCTmhs1b6iZgNyo+aaTqkUnVYtOqhZ98hKQSc0NkEnNBGRSMwGZgExqbtQ8AWRSMwGZ1ExAboBMaiYgN0AmNROQGyCTmjdOqhadVC06qVr0yZepmYBMQG6APAHkBsiNmhsgk5on1NwAmdRMQCY1b6jZdFK16KRq0UnVok++DMiNmieA3KiZgNyoeQPIpGZScwNkUjMBuQEyqZnUTEAmNZtOqhadVC06qVr0yS9T8wSQSc0E5EbNBGQCcqNmUnMDZFIzAbkBsgnIDZBJzRsnVYtOqhadVC3CH/mLAblR8waQSc0EZFLzBJBJzRNANql546Rq0UnVopOqRZ+8BOQ3qZnUvAFkUjOpmYDcANkEZFLzhppvOqladFK16KRq0SfL1GwCcgPkCTWTmifUPAHkDTVPqLkBcqPmjZOqRSdVi06qFn3yZUCeUPOGmgnIDZBJzQ2QSc0EZFJzA2QCsgnIbzqpWnRSteikatEn/zg1E5A31ExAJjVvqLkBMqmZgPyXTqoWnVQtOqla9Mk/Bsik5gkgv0nNDZAbIG+o2XRSteikatFJ1aJPvkzNN6l5Qs0EZFIzAblRcwNkUjMBmdRMaiYgk5oJyKRmAvJNJ1WLTqoWnVQt+mQZkN8E5EbNjZoJyI2aGyCTmgnIpGYCMqm5AXIDZFLzTSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfofNBNLPIOeqssAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

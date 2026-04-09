@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>机械同理心原则</title>
+        <title>AI 智能体的状态化延续：为什么传输层现在至关重要</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>机械同理心原则</h2>
-        <p>4/7/2026, 1:39:00 PM</p>
+        <h2>AI 智能体的状态化延续：为什么传输层现在至关重要</h2>
+        <p>4/8/2026, 9:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文阐述了“机械同理心”原则，展示了如何通过将软件设计与内存层级和缓存行等硬件现实相匹配，从而显著提升系统性能。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析了 AI 智能体工作流从无状态 HTTP 向有状态 WebSocket 连接的转变，并展示了通过服务端上下文缓存带来的显著性能提升。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了“机械同理心”（Mechanical Sympathy）——这一术语借用自赛车运动，用于描述构建高性能软件所需的对硬件的深刻理解。文章详细阐述了四个基本原则：通过偏好顺序访问来优化 CPU 内存层级，从而利用 L1/L2/L3 缓存；避免多线程争用同一缓存行的“伪共享”（False Sharing）；应用“单写者原则”（Single Writer Principle），用基于 Actor 的异步消息传递取代缓慢的互斥锁；以及实现“自然批处理”（Natural Batching），在没有固定超时延迟惩罚的情况下贪婪地处理任务。作者通过 AI 推理服务等现代示例阐释了这些概念，并总结道，虽然这些技术可以从本地代码扩展到分布式系统，但必须以严格的可观测性和度量为指导。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了 AI 智能体面临的“飞机问题”——即在无状态 HTTP 下，上下文负载的线性增长会导致带宽受限环境中的超时和延迟。通过对 OpenAI 新推出的 Responses API WebSocket 模式进行基准测试，作者证明了状态化延续（在服务端缓存对话历史）可将客户端发送的数据量减少 80% 以上，并将端到端执行时间缩短高达 29%。尽管这种向有状态协议的转变在多轮智能体循环中提供了巨大的架构优势，但也带来了关于供应商锁定、可观测性以及对持久连接管理需求等方面的挑战。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过可预测的顺序访问模式利用内存层级。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 现代 CPU 使用缓存层级（L1-L3）来隐藏 RAM 延迟。线性数据访问允许硬件预取器准确预测并加载数据，性能显著优于随机访问。</span>
+                        <strong style="color: #1e40af">无状态 HTTP API 在多轮智能体工作流中会产生“负载膨胀”问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在涉及 10-50 轮交互的智能体循环中，每次都重新发送整个对话历史会导致带宽线性增长，从而在受限网络中造成瓶颈。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">通过理解缓存行机制防止伪共享。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当多个线程写入驻留在同一个 64 字节缓存行中的不同变量时，CPU 会强制序列化。通过填充变量使其占据各自的缓存行，可以恢复并行性能。</span>
+                        <strong style="color: #1e40af">有状态 WebSocket 连接可实现 80% 以上的入站流量减少。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用响应 ID 引用服务端缓存的状态，客户端只需发送增量工具输出，而无需发送完整上下文，从而稳定了负载大小。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">采用单写者原则消除锁争用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与其使用互斥锁来保护共享资源，不如指定单个线程（Actor）来处理所有写入操作。这消除了上下文切换和锁管理的开销。</span>
+                        <strong style="color: #1e40af">性能增益随智能体任务的复杂程度而扩展。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基准测试显示，虽然简单任务的收益微乎其微，但复杂的跨文件编码工作流由于减少了分词和传输开销，速度提升了 39-50%。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">利用自然批处理实现高效的请求处理。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与其等待固定的超时时间或批处理大小，不如在请求可用时立即处理，并在队列为空或达到限制时停止，与基于超时的策略相比，这能有效将延迟减半。</span>
+                        <strong style="color: #1e40af">向有状态协议的转变在性能和可移植性之间产生了权衡。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 目前，高级状态化延续主要还是 OpenAI 的特定优势，这增加了多供应商策略的复杂性，并需要更稳健的连接处理逻辑。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你不需要成为一名工程师才能成为赛车手，但你确实需要具备机械同理心。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过对软件运行的硬件保持‘同理心’，我们可以创造出性能惊人的系统。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">优先选择能够实现可预测、顺序数据访问的算法和数据结构。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">避免使用互斥锁来保护可写资源。相反，指定单个线程（‘Actor’）来负责每一次写入。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在优化之前优先考虑可观测性。无法度量就无法改进。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">智能体工作流使传输层成为首要关注点。多轮、重工具调用的循环放大了在单轮 LLM 使用中可以忽略不计的开销。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">速度源于服务端状态管理：WebSocket 服务器将最近的响应存储在连接本地的易失性内存中，从而实现了近乎即时的延续。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">WebSocket 始终能将客户端发送的数据量减少 80-86%。这是最可靠的发现，与模型、API 差异或任务复杂性无关。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于构建智能体系统的架构师来说，关键在于认识到：随着 AI 工作流从单轮转向多轮，那些对于聊天机器人无关紧要的传输层决策，对智能体而言变得至关重要。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Martin Fowler</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Martin Fowler</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Anirudh Mendiratta</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1643</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2876</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">机械同理心</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CPU 缓存</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并发</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">单写者原则</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 智能体</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">WebSocket</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM 基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络协议</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenAI Responses API</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/558175ad" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/d449a8aa" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/558175ad">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATLSURBVO3BQY4cSRIEQdNA/f/Lujz6KYBEenWTsyaCf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXok5eA/CQ1E5BJzRNAJjUTkEnNBOQJNU8A+Ulq3jipWnRSteikatEny9RsAvIEkEnNjZobNTdqngByo+ZGzSYgm06qFp1ULTqpWvTJlwF5Qs0mIDdqJiCTmhsgk5oJyKRmAvIGkCfUfNNJ1aKTqkUnVYs++cepuQEyqZmA3AC5UTMBmdRMQP7LTqoWnVQtOqla9Mk/Dsik5gbIpGYCsgnI/5OTqkUnVYtOqhZ98mVqvknNBGRS84aaGyA3am6AvKHmb3JSteikatFJ1aJPlgH5SUAmNROQSc0EZFIzAZnU3KiZgExq3gDyNzupWnRSteikatEnL6n5TWomIJvU3Ki5UfOGmn/JSdWik6pFJ1WLPnkJyKTmBsg3qbkBMqmZgDyhZgIyqZmA3ACZ1NwAmdRMQJ5Q88ZJ1aKTqkUnVYs+WQbkRs03AXkCyKTmCSCTmifUPAFkk5pNJ1WLTqoWnVQt+uSHAZnU3ACZ1NyomYC8AWSTmhsgk5obNU+o+aaTqkUnVYtOqhZ9skzNBGRSMwGZ1ExqJiCTmm9SMwGZ1ExA3lBzo+YGyKTmBsik5o2TqkUnVYtOqhZ98pKaCcikZgIyqbkBMqmZgDyh5gbIjZoJyKRmAvIGkBs1k5rfdFK16KRq0UnVok9eAjKpeQLIpGZSMwGZ1ExAJjVPqJmATEAmNROQGzVvqJmA/E1OqhadVC06qVr0yQ9TMwG5AfIGkDfUTECeUDMBuVFzA2RScwNkUjMB2XRSteikatFJ1aJPlgGZ1LyhZgJyo+YNIDdqbtQ8oWYC8gSQSc1vOqladFK16KRqEf6RLwLyk9TcALlRMwG5UfMEkBs1bwCZ1Pykk6pFJ1WLTqoWffISkCfU3ACZ1DwBZFLzhpoJyA2QN4BMam6ATGomIDdqNp1ULTqpWnRStQj/yAtAbtTcAJnUTEBu1NwAuVEzAZnUTEB+k5obIJOaGyCTmjdOqhadVC06qVqEf+QFIJvU3AC5UXMD5EbNE0AmNTdAJjUTkG9S800nVYtOqhadVC3CP/ICkDfU3AC5UTMBmdQ8AWRScwPkRs0NkN+kZtNJ1aKTqkUnVYs+eUnNN6m5AfIEkBs1N0AmNZvUPAHkRs1POqladFK16KRq0ScvAflJam7U3Kh5AsgNkEnNBOQNIJOav9lJ1aKTqkUnVYs+WaZmE5BvAjKpmdRMQG6AbFLzhJrfdFK16KRq0UnVok++DMgTan4TkDfU3AC5AfIGkEnNBORGzRsnVYtOqhadVC365D8OyKRmUnMD5JvUTEAmNROQSc0TaiYgm06qFp1ULTqpWvTJP07NBOQGyKRmAjKpmYBMajapeQLIpGYC8pNOqhadVC06qVr0yZep+ZuoeUPNBGRSMwGZ1NwAeULNBORGzQRk00nVopOqRSdVi/CPvADkJ6mZgNyoeQPIpOYNIE+ouQFyo+YnnVQtOqladFK1CP9I1ZKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0f8AEOU8JMohSIEAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/d449a8aa">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATCSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ0fSIszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAblRcwPkRs0EZFJzA2RS8wSQ36TmjZOqRSdVi06qFn2yTM0mIDdqJiATkBs1E5AbNU+omYDcqLlRswnIppOqRSdVi06qFn3yZUCeUPOGmhsgE5BJzQ2QSc0EZFLzTUCeUPNNJ1WLTqoWnVQt+uQfB+RGzRNAJjVPqJmA3Kj5PzmpWnRSteikatEn/zNqJiCTmj9JzQRkUvMvO6ladFK16KRq0SdfpuZPUnMD5Ak1T6iZgExq3lDzNzmpWnRSteikatEny4D8TYBMam7UTEBugExqJiCTmgnIpOYGyN/spGrRSdWik6pFn7yk5l+m5gkgk5oJyA2QSc2Nmn/JSdWik6pFJ1WLPnkJyKTmCSCTmgnIG2omIJOaGzVvqJmA3ADZpOYGyKTmjZOqRSdVi06qFn3ykpobIJOaGyCTmt8E5A01N2pu1ExA3gDym06qFp1ULTqpWoQ/8kVANqm5ATKp2QRkUnMDZFIzAdmk5gkgk5o3TqoWnVQtOqlahD/yi4BMaiYgk5obIE+oeQLIpOYGyKRmAvKEmhsgN2omIDdq3jipWnRSteikatEny4BsAvKEmhsgN2pugExqboB8k5o31Gw6qVp0UrXopGrRJy8BeULNE2r+JDUTkDfUPAFkUjMBeQPIpOaNk6pFJ1WLTqoWffJlaiYgN2omIDdq/iZqJiA3QCY136RmArLppGrRSdWik6pFn7yk5gk1T6iZgPzNgNwA2aTmCSDfdFK16KRq0UnVIvyRF4BMam6ATGomIJvU/CYgk5obIDdqJiCTmieATGo2nVQtOqladFK1CH/kBSBvqHkDyKRmAjKpmYBsUjMBmdTcANmkZgJyo+aNk6pFJ1WLTqoWffKSmieATEAmNROQSc0TaiYgk5ongNwAmdRsUjMBmdRMQCY1E5BNJ1WLTqoWnVQt+uTLgExqJiA3aiYgk5pvAnKjZgIyAZnUTEAmNU+ouVEzAfmmk6pFJ1WLTqoWffISkBs1E5BJzQTkCSBvAJnUTGomIE+oeQLIJjWTmgnIppOqRSdVi06qFuGP/MOATGreAPKGmhsgN2qeADKpeQLIpOaNk6pFJ1WLTqoWffISkN+k5pvU3ACZ1HwTkEnNDZAbNd90UrXopGrRSdWiT5ap2QTkRs0E5Ak1N0AmNROQGzVvqHlCzQ2QSc2mk6pFJ1WLTqoWffJlQJ5Q8wSQSc0bQJ5QMwF5A8gbQCY1k5oJyKTmjZOqRSdVi06qFn3yj1MzAZnUTEAmNU8AuVHzhJoJyKRmAjKp+ZucVC06qVp0UrXok/8ZNROQGyBvqJmA3Ki5UXOj5gbIn3RSteikatFJ1aJPvkzNbwIyqXkCyKRmAjIBuVFzA2RSMwGZ1ExAbtRMQL7ppGrRSdWik6pFnywD8puA3ACZ1ExAJjVPqJmAbFIzAblR84SaTSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoP/T82JA//FNEAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
