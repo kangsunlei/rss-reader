@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>构建可靠 GPU 基础设施指南</title>
+        <title>如何利用 Claude、GitHub Actions 和 JavaScript 构建安全的 AI 代码评审工具</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>构建可靠 GPU 基础设施指南</h2>
-        <p>4/10/2026, 12:00:00 AM</p>
+        <h2>如何利用 Claude、GitHub Actions 和 JavaScript 构建安全的 AI 代码评审工具</h2>
+        <p>4/10/2026, 9:04:10 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Google Cloud 概述了其构建可靠 GPU 基础设施的战略框架，重点关注系统韧性、主动预防以及 MTBI 和 Goodput 等关键指标，以支持万亿参数模型的训练。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本教程演示了如何构建一个安全、自动化的 AI 代码评审工具，重点介绍了如何防范提示词注入并确保输出的可靠性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #2563eb; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">随着 AI 模型扩展至万亿参数规模，GPU 基础设施已成为关键任务资产，即使是微小的硬件差异也可能导致数百万美元的损失。本文详细介绍了 Google Cloud 如何从单纯追求原始性能转向构建系统韧性的方法论。文章强调了从单机管理向机架级架构（如 NVIDIA GB200）的转变，并确定了四个核心原则：通过硬件验证进行主动预防、通过智能检测进行持续监控、利用可观测性工具实现用户透明度，以及通过智能调度和自动修复最大限度地减少中断。该框架旨在通过从被动故障排除转向智能、自愈的生态系统，从而最大化“Goodput”（即完成的实际有效计算工作量）。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提供了创建 AI 驱动的 Pull Request (PR) 评审工具的综合指南。文章解决了两个关键的安全挑战：PR diff 的不可信性（潜在的提示词注入风险）以及 LLM 输出的概率性。作者详细介绍了一种稳健的架构，包括 diff 清洗（脱敏和裁剪）、基于 JSON Schema 的结构化提示词，以及使用 Zod 进行严格的输出验证。最终系统作为 GitHub Action 实现，能够获取 PR diff，通过 Claude 进行处理，并将格式化的 Markdown 反馈直接发布到 GitHub PR 界面中。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
             <h3 style="color: rgb(30, 64, 175); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">可靠性已从硬件效用转变为战略性业务资产。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在超大规模 LLM 时代，0.01% 的性能波动就可能引发系统性故障，导致数周的进度损失和巨大的资本支出浪费。</span>
+                        <strong style="color: #1e40af">将 PR diff 视为不可信的用户输入，以防止提示词注入。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> diff 中可能包含恶意代码或注释，试图覆盖系统指令；系统必须使用强有力的系统提示词和清洗机制来保持控制权。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">MTBI 和 Goodput 是衡量 AI 基础设施健康状况的全新黄金标准。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统的正常运行时间指标已不足够；平均中断间隔时间（MTBI）和 Goodput（单位时间内的有效工作量）能更准确地反映昂贵 GPU 集群的生产力。</span>
+                        <strong style="color: #1e40af">为 LLM 输出验证实现“故障安全”机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 LLM 的响应具有概率性，使用 Zod 验证 JSON 结构可以确保当模型生成格式错误的数据时，系统能够安全地失败，而不是崩溃或提供误导性信息。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">韧性必须通过系统工程来实现，而非依赖硬件的完美无缺。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Google 的方法包含四大支柱策略：主动验证、基于遥测的智能检测、面向用户的透明度以及自动化的中断最小化。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1e40af">向机架级架构的转型改变了运营格局。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 随着 NVIDIA GB200 NVL72 等系统的出现，管理范围必须涵盖整个互联域，而非孤立的机架，以避免协同工作负载的中断。</span>
+                        <strong style="color: #1e40af">在发送给 LLM 之前，对输入数据进行清洗和限制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对 API 密钥等敏感信息进行脱敏并裁剪过大的 diff，既能保护敏感数据，又能控制 API 成本，同时确保在 Token 限制范围内运行。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #2563eb; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">计算能力已从一种效用转变为关键任务的战略资产。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">训练的真正前沿不仅在于集群的规模，更在于韧性的系统架构。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">0.01% 的性能波动就可能引发系统性故障。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">目标已从期待硬件的绝对完美，转向构建具备内在韧性的系统。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">diff 是不可信的。模型输出也是不可信的。自动化层需要正确的权限。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在将代码 diff 发送给 LLM 时，永远不要将其视为可信输入。它们可能包含提示词注入、密钥、误导性指令或故意破坏的上下文。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">优秀的工程设计从不依赖盲目的信任。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb;">
@@ -63,31 +60,31 @@
                 <span style="color: #2563eb; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Google Cloud Blog</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Abhijith Prabhudev, Abhay Ketkar</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 评分：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">freeCodeCamp.org</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Sumit Saha</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">英文</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">924</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">16 分钟</span></div>
+<div style="padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3842</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPU 基础设施</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI/ML 可靠性</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Google Cloud</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MTBI</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Goodput</span>
+                        <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub Actions</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码评审</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示词注入</span>, <span style="background-color: #15803d; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JavaScript</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #2563eb; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/5b90aae2" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/e1b1bccc" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/5b90aae2">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATTSURBVO3BQW4kSRIEQdNA/f/Lun30UwCJ9OKSAxPBf1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpKaCcikZgIyqZmAPKHmCSBPqJmA/CQ1b5xULTqpWnRSteiTZWo2AXkCyBtqJiBPALlRMwF5Qs0mIJtOqhadVC06qVr0yZcBeULNE2qeADKpmYDcALlR85OAPKHmm06qFp1ULTqpWvTJHwdkUnOjZgJyo2YCMqmZgExqJiCTmv+Sk6pFJ1WLTqoWffLHqbkBMqmZ1LwB5A0gk5q/7KRq0UnVopOqRZ98mZqfBOQGyBNqJjVPAPkmNb/JSdWik6pFJ1WLPlkG5CcBmdRMQCY1E5BJzQRkUjMBmdTcqJmAPAHkNzupWnRSteikatEnL6n5TYA8oWYTkBsgT6j5S06qFp1ULTqpWvTJS0AmNROQGzUTkCfUTECeADKpeULNBGQTkEnNDZBJzQTkRs0bJ1WLTqoWnVQtwn/yg4DcqHkCyKTmNwPyTWqeADKpeeOkatFJ1aKTqkWfvATkRs2NmgnIjZpJzQTkRs0EZFIzAZnUTEAmNROQSc0bQJ4AcqNm00nVopOqRSdViz5ZpuYNNd8EZFIzAbkBMqm5UXMDZFKzSc0NkEnNGydVi06qFp1ULcJ/8gKQGzU3QCY1E5DfRM0NkBs13wTkRs03nVQtOqladFK1CP/JFwG5UfMEkEnNDZBJzRNAbtQ8AWRScwPkRs0NkCfUvHFSteikatFJ1aJPlgHZBGRSMwG5UfMEkEnNE0CeAPIGkEnN/9NJ1aKTqkUnVYs+eQnIpGYCMqm5ATKpuVEzAbkBMqmZ1ExAnlBzA+RGzQ2QJ9RMQCY1m06qFp1ULTqpWvTJMiCTmifUTEAmNU8AeQLIpOYNIE8AmdRMaiYgE5BJzU86qVp0UrXopGrRJy+pmYDcAJnU3Kh5Qs0TQJ4AMqm5UXMD5Akgk5oJyATkJ51ULTqpWnRSteiTl4BMam7UTEDeUDMBuVEzqbkB8gaQSc2kZgLyhpoJyKTmm06qFp1ULTqpWvTJS2qeADKpmYBMap5QMwGZgNyomdTcAPkmIJOa3+ykatFJ1aKTqkWfLAMyqXlCzQRkUnMDZFJzA+QJIJuAPAHkNzupWnRSteikatEny9TcqHlCzQ2QbwIyqZmATGreUPMEkCeA3Kh546Rq0UnVopOqRZ+8BOQnqblRMwGZ1NwA+SYgTwCZ1DyhZgIyqdl0UrXopGrRSdWiT5ap2QTkDTUTkEnNBGRSMwF5Q80E5EbNJjXfdFK16KRq0UnVok++DMgTap5QMwGZ1NwAmdQ8oWYCMql5AsgbaiYgT6h546Rq0UnVopOqRZ/8cUAmNTdqngByA+QGyKRmUjMBmdTcAJmATGpugGw6qVp0UrXopGrRJ/9xQCY1N0Bu1DwBZAIyqXkCyKTmBsik5ptOqhadVC06qVr0yZep+SY1N2o2AZnUPKFmAjKpeQPIpGYCMqnZdFK16KRq0UnVok+WAflJQDapmYBsAvKGmt/spGrRSdWik6pF+E+qlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gcPDShZz2b4VgAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/e1b1bccc">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATzSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ2clIczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUTEAmNTdA3lAzAZnUPAHkN6l546Rq0UnVopOqRZ8sU7MJyI2aN4BMaiYgk5oJyI2aCciNmhs1m4BsOqladFK16KRq0SdfBuQJNW8AmdRMQJ5QMwG5ATKp+SYgT6j5ppOqRSdVi06qFn3ylwNyA2RSMwGZgExqbtTcALlR8y85qVp0UrXopGrRJ/84NTdqJiDfpGYCMqn5m51ULTqpWnRSteiTL1Pzm9TcAHkCyKRmAjKpmdRMQCY1b6j5k5xULTqpWnRSteiTZUD+JEAmNROQSc0E5A0gk5oJyKTmBsif7KRq0UnVopOqRfgjfzEgN2reAHKjZgLyhJp/yUnVopOqRSdViz55Ccik5gkgk5oJyBNqboBMam7UvKFmAnIDZJOaGyCTmjdOqhadVC06qVqEP7IIyI2aCciNmgnIpGYCMqm5AbJJzSYgv0nNGydVi06qFp1ULfrkJSDfBGRSMwF5Q80EZFIzAZnU3ACZ1ExANql5Asimk6pFJ1WLTqoW4Y98EZA31ExAJjU3QJ5Q8waQSc0E5Ak1N0Bu1ExAbtS8cVK16KRq0UnVok9eAjKpmdTcAJnUTEDeUDMBeQPIpOYGyDepeUPNppOqRSdVi06qFn3ykpobIJOaSc2Nmhsgk5on1ExAvknNE0AmNROQN4BMat44qVp0UrXopGrRJy8BuVFzA+QNNTdAJjUTkBs1E5AbNROQGyCTmm9SMwHZdFK16KRq0UnVok+WqZmAvKFmAjIBmdTcALlRMwF5AsgNkE1qngDyTSdVi06qFp1ULfpkGZBJzRNAJiBPALlRMwG5UfOGmhsgE5BJzQRkUvOGmk0nVYtOqhadVC3CH3kByBNqJiCTmhsgk5oJyKRmAjKpmYC8oWYCMqm5AbJJzQTkRs0bJ1WLTqoWnVQt+uQlNW+omYDcqJmATGqeAHKjZgJyA2RSs0nNBGRSMwGZ1ExANp1ULTqpWnRSteiTLwMyqZmA3KjZpGYCMqmZgNyomYBMQCY1E5BJzRNqbtRMQL7ppGrRSdWik6pFn7wE5EbNjZobIDdqJiCTmgnIE2omIE+oeQLIJjWTmgnIppOqRSdVi06qFn3ykppvUnMDZFIzAblRMwF5Asik5gbIjZongExq/k8nVYtOqhadVC365CUgv0nNDZAngNyomYBMar4JyKTmBsiNmm86qVp0UrXopGrRJ8vUbAJyo+YJIJOaGyCTmgnIjZo31Dyh5gbIpGbTSdWik6pFJ1WLPvkyIE+oeQLIpGYCMqmZgLyhZgLyBpA3gExqJjUTkEnNGydVi06qFp1ULfrkL6dmAnIDZFJzA2QCcqPmCTUTkEnNBGRS8yc5qVp0UrXopGrRJ/84NTdAJjWTmgnIpGYCcqPmRs2Nmhsg/6eTqkUnVYtOqhZ98mVqfpOaGyCbgNyouQEyqZmATGomIDdqJiDfdFK16KRq0UnVok+WAflNQCY1E5AbNTdAbtRMQDapmYDcqHlCzaaTqkUnVYtOqhbhj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhb9Bw1rUEZUvMc4AAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
