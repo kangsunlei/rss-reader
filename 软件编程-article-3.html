@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>这大概是我读过最硬核的一次 Linux 内核重构文章了</title>
+        <title>对现有模型不满可能预示新模型即将发布</title>
         <style>
             body {
                 padding: 12px;
@@ -15,80 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>这大概是我读过最硬核的一次 Linux 内核重构文章了</h2>
-        <p>4/12/2026, 9:51:00 AM</p>
+        <h2>对现有模型不满可能预示新模型即将发布</h2>
+        <p>4/13/2026, 1:39:17 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文系统梳理了腾讯工程师 Kairui Song 主导的 Linux 内核 Swap 子系统现代化重构工程，详细解读了从引入 swap table、移除 swap map 到探索虚拟 swap 空间等多个阶段的技术细节、性能收益与社区影响。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者提出一个观察：当你无法再忍受 Claude 模型的“愚蠢”时，可能意味着其新模型快要发布了。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度解析了腾讯 TencentOS 内核工程师 Kairui Song 对 Linux 内核 Swap 子系统进行的一系列系统性重构工作。该工程历时 18 个月，旨在解决 Swap 子系统数十年积累的代码复杂性问题。核心内容包括：引入 swap table 替代 XArray，带来 5%~20% 的性能提升；移除 swap map，统一元数据管理，节省约 30% 的内存开销；以及在此基础上探索虚拟 swap 空间等前瞻性方案。文章不仅翻译整理了 LWN.net 的三篇深度报道，还补充了腾讯团队提出的 Virtual GhostSwap 方案与 Meta 方案的对比，并展望了后续对 MGLRU 等内存管理子系统的优化工作，展现了大规模生产实践驱动内核创新的完整图景。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
-            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #d97706; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Swap 子系统的现代化重构通过引入 swap table 统一了元数据管理，显著提升了性能和可扩展性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用基于 swap cluster 的 C 数组（swap table）替代了原有的 XArray 和 address_space 两套机制，消除了锁竞争和查找开销，在基准测试中获得了 5%~20% 的吞吐量提升。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">移除独立的 swap map 并将引用计数整合进 swap table，是简化设计和降低内存开销的关键一步。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过重新设计 swap table entry 的格式，将引用计数、页面状态等信息统一存储，彻底移除了 swap map，为 1TB 的 swap 文件节省了约 256MB 的元数据内存。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">生产环境的需求是驱动内核深度优化的核心动力，腾讯的实践体现了这一点。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文中所述的重构工作以及后续对 MGLRU 的优化补丁，均源于腾讯大规模服务器场景中遇到的实际性能与稳定性问题，验证了真实负载对内核演进的重要价值。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">虚拟 swap 空间是 Swap 子系统未来的重要方向，但社区在实现方案上存在分歧。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Meta 的方案主张一个强制的统一中间层以解耦 PTE 与物理设备，而腾讯团队则基于 swap table 提出了更灵活、可选的 Dynamic Ghost Swapfile 方案，两者的碰撞反映了在性能、内存开销和复杂度之间的不同权衡。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
-            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Swap 子系统自诞生以来，数十年间代码复杂度持续累积，逐渐成为内存管理子系统中公认的复杂地带。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">根据 Kairui 的测评，第一阶段工作就可以‘在基准测试和工作负载测试中，吞吐量、RPS 或构建时间性能提升高达约 5-20%’。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Swap 子系统约 30% 的元数据开销得以消除，对于 1TB 的 swap 文件来说，可节省约 256MB 内存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">页面可以轻松地在不同 swap 设备之间迁移。例如，一个 zswap 页面被推送到存储设备时，只需修改 swp_desc 结构体中的两个字段即可。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">生产环境 OOM 问题也明显减少，代码复杂度也随之降低。值得一提的是，部分问题正是 Kairui Song 所在团队于腾讯生产环境中发现并着手解决的。</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">这是一条带有调侃和观察性质的推文。作者提出了一个基于用户体验周期的猜想：当用户对现有 AI 模型（此处特指 Anthropic 的 Claude）的缺点感到无法忍受时，这可能是该模型即将发布新版本的一个信号。这反映了用户对模型迭代速度的期待，以及厂商可能在新品发布前减少对旧模型优化的常见市场感知。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">76</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Yangyi(@Yangyixxxx)</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Yangyi</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">39 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9731</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">37</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux 内核</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Swap 子系统</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内核重构</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 模型</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品发布</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户体验</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">行业观察</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/c67b2af9" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/status/2043685458480415080" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/c67b2af9">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATaSURBVO3BQY4kRxIEQdNA/f/Lun30vQSQSK/mcGgi+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQFyo2YCMqmZgExqngDyhJoJyG9S88ZJ1aKTqkUnVYs+WaZmE5An1NwAmdRMQG6ATGpu1GxSswnIppOqRSdVi06qFn3yZUCeUPMEkCfUTEAmNROQSc0EZFIzAXlCzRNAnlDzTSdVi06qFp1ULfqk/g+QGyA3QCY1E5BJzd/kpGrRSdWik6pFn/zHALlRswnIf8lJ1aKTqkUnVYs++TI1v0nNDZAbIJOaCciNmknNDZBJzRNq/iQnVYtOqhadVC36ZBmQPwmQSc0EZFIzAZnUTEBugExq3gDyJzupWnRSteikahH+yL8YkBs1E5BJzW8CMqn5m5xULTqpWnRStQh/5AUgk5oJyCY13wRkUjMBmdRMQCY1N0AmNROQTWq+6aRq0UnVopOqRfgjXwTkDTUTkEnNBORGzRNAJjUTkEnNDZBvUvMEkEnNGydVi06qFp1ULcIf+UVAJjUTkBs1E5BJzQ2QSc0EZFIzAXlCzQ2QGzX/JidVi06qFp1ULcIfWQRkUjMBeULNBOSb1DwBZFIzAfkmNROQSc0EZFKz6aRq0UnVopOqRZ+8BGRSMwF5Qs0E5Ak1bwC5UTOpmYDcqPlNQCY133RSteikatFJ1SL8kT8IkEnNE0AmNTdAJjVvAPkmNROQSc0TQCY1b5xULTqpWnRSteiTl4C8oeYGyKRmAvIEkEnNE0CeUHMDZFJzA2RSMwG5UTOp2XRSteikatFJ1aJPlqmZgDyhZhOQSc0TQJ5QcwNkE5BJzQ2QSc2mk6pFJ1WLTqoWffKSmhs1E5AJyKRmAjKpuVEzAXkCyBNqJiCTmhs1b6iZgNyo+aaTqkUnVYtOqhbhj7wA5EbNDZBJzRNAJjU3QCY1bwCZ1ExAnlAzAXlCzQRkUjMBmdS8cVK16KRq0UnVok+WqZmAvAHkRs0EZFLzBJAn1Dyh5gbIpGYCMql5Q82mk6pFJ1WLTqoW4Y+8AGRSMwGZ1GwCMqmZgDyh5gbIjZongExqJiBPqLkBMqnZdFK16KRq0UnVIvyRF4BMap4A8oSaGyCTmhsgN2qeADKpmYB8k5oJyBNq3jipWnRSteikahH+yL8YkDfUTEBu1ExAJjVPAJnUPAFkk5o3TqoWnVQtOqla9MlLQH6TmknNJjU3QG6AbAIyqXlDzTedVC06qVp0UrXok2VqNgG5AfKGmhsgk5ongLyh5gk1N0Bu1LxxUrXopGrRSdWiT74MyBNqNqmZgDyhZgIyqZmATGpugExANgH5TSdVi06qFp1ULfrkL6NmAjKpmYBMam7UTEAmNW+ouQEyqZmA/JNOqhadVC06qVr0yV9OzRNAJjUTkE1qboDcAHlDzaaTqkUnVYtOqhZ98mVqvknNBORGzRNAbtTcAJnUTEAmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwGZ1NwAmdRsAjKpmYBMaiYgk5obIDdAJjXfdFK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8Bg9hNHxIbezEAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/status/2043685458480415080">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
