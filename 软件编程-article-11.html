@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>立正请站好：一个组件复用 Skill 的工程化实践</title>
+        <title>从全量启动到最小核： 手淘外链唤端链路的三次架构演进</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>立正请站好：一个组件复用 Skill 的工程化实践</h2>
-        <p>4/13/2026, 10:30:00 AM</p>
+        <h2>从全量启动到最小核： 手淘外链唤端链路的三次架构演进</h2>
+        <p>4/14/2026, 8:21:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文分享了在 AI 辅助开发中，通过设计 AGENTS.md + Hook + Skill 三层结构，将「组件复用优先」的工程规范流程化，以解决 AI 不会主动复用代码的难题，使其成为遵守纪律的工程协作者。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了淘宝跨端技术团队针对外链唤端耗时过长问题，通过从全量串行到按需裁剪的架构演进，先后落地标准、极简和最小核三代链路方案，将低端设备唤端耗时从 10 秒压缩至 3 秒以内，并配套建立了完善的发布前校验、灰度验证及线上应急换链体系。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了在 AI 辅助编程（如使用 Claude Code）的背景下，如何解决组件重复创建、代码库臃肿的工程痛点。作者指出，核心问题并非缺乏搜索工具，而是 AI 的「思考顺序」问题——它不会主动复用已有组件。为此，作者提出了一套工程化解决方案：通过 AGENTS.md 提供常驻上下文、利用 Hook 增强意图路由、设计 Skill 提供稳定执行流程。文章详细拆解了该 Skill 的实现细节，包括统一入口收敛、Monorepo 范围解析、多因素加权匹配、可复用索引流水线以及反馈回路设计。最后，作者总结了三条让 AI 流程化的核心原则，并分享了从「增加能力」到「定义工作方式」的认知转变。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了移动互联网增长场景中 DeepLink 唤端性能对转化率的关键影响，并系统性地分享了淘宝跨端技术团队的三代架构演进方案。从最初的“全量串行”标准链路，到“跳过首页、裁剪非必要任务”的极简链路，最终演进至采用“包含法”极致裁剪、启动与资源加载并行化的“最小核链路”。通过这一系列优化，成功将低端设备的唤端体感耗时从 10 秒以上压缩至 3 秒以内。文章不仅阐述了技术方案的演进思路与实现细节，还重点介绍了为保障线上外投稳定性而建立的完整体系，包括发布前的链接参数校验、灰度验证与实时回滚能力，以及全量后的三种应急换链方案。这是一篇兼具深度技术剖析与完整工程实践的高质量案例复盘。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">核心挑战是 AI 的「思考顺序」而非搜索能力，需将「复用优先」流程化。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 辅助开发时，容易直接新建组件而非复用已有代码。解决方案不是提供搜索工具，而是通过工程化手段（AGENTS.md、Hook、Skill）强制 AI 在编码前先走「查询-判断-新建」的固定流程。</span>
+                        <strong style="color: #1a365d">唤端性能优化需从“全量串行”转向“按需裁剪”的架构思维。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 标准链路围绕首页设计，与外链目标页面错配，导致大量冗余任务串行执行。优化核心在于识别并裁剪非必要任务，将启动流程重构为目标页面渲染的最小依赖集。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">采用 AGENTS.md + Hook + Skill 三层结构，分别解决「不知道」、「想不起」、「做不稳」的问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AGENTS.md 提供常驻上下文，让 AI 知晓复用机制；Hook 在特定意图下注入提示，提高触发概率；Skill 提供统一入口和稳定输出，确保执行过程可靠。这三层共同构成了一个稳定的工程化协作框架。</span>
+                        <strong style="color: #1a365d">采用“包含法”构建最小核链路是实现极致优化的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比“排除法”的保守，“包含法”以目标页面为起点反向追溯必需依赖，能更彻底地裁剪任务。同时，识别 CPU 密集型启动任务与网络 I/O 型资源加载的天然错配，实现并行预加载，充分利用系统资源。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Skill 设计的关键在于收敛入口、提供工具函数，并建立反馈回路。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将分散的脚本逻辑聚合到 `find-component.js` 等少数明确入口，避免 AI 调用混乱。Skill 需提供可直接执行的工具函数和固定 JSON 输出协议。同时，记录使用行为形成反馈，让系统能学习团队偏好，持续优化推荐质量。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">认知应从「为 AI 增加能力」转变为「为 AI 定义默认工作方式」。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Skill 不仅是能力包，更是流程控制器。通过定义清晰的世界观（AGENTS.md）、触发提醒（Hook）和稳定动作（Skill），可以将 AI 从「即兴发挥」的代码补全器，转变为遵守团队工程纪律的协作者。</span>
+                        <strong style="color: #1a365d">外投链路的稳定性保障需贯穿发布前、灰度期及全量后全流程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对外链投放后难以修改的特性，必须建立多层防线：发布前进行链接参数强制校验；灰度期分阶段放量并具备秒级回滚能力；全量后提供 SDK 回滚、平台换链、AB 实验等多种应急方案，实现快速止血。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">做这个 Skill 的目标不是‘帮 AI 搜索一下’，而是：把‘复用优先’的思考过程流程化，让 AI 在写代码前先走一遍‘查索引 → 判断是否复用 → 命不中再新建’的路径。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正的问题不是工具有没有，而是：AI 会不会主动用；AI 什么时候用；AI 用完之后是否还能回到项目上下文；AI 能不能稳定走同一条流程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">把基础上下文放进 AGENTS.md 或通过 hook 提前注入，本质上是在减少决策点。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">把复杂系统收敛成几个明确入口，AI 才容易稳定执行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 其实非常适合被放进一套清晰流程里工作。只要把下面三件事做好：基础上下文（AGENTS.md / hooks）；可执行入口（工具函数）；明确流程边界（统一入口 + 输出协议）。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">极简链路的核心理念是：去掉非必要的启动任务，只保留核心功能所需的最小任务集。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最小核方案转而采用“包含法”——从零开始，只添加目标页面渲染所必需的任务。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">启动任务主要消耗的是 CPU，而资源加载主要消耗的是网络带宽，两者天然适合并行。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">链接一旦投放到渠道侧，就无法直接修改。因此，我们从「发布前 &amp; 灰度」和「全量后应急」两个方向建立了完整的稳定性保障体系。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +60,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4129</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">16 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3778</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">组件复用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工程化实践</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Skill 设计</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构演进</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepLink</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">唤端链路</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">移动端</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/35ea42bb" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/d094e421" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/35ea42bb">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATFSURBVO3BQY4kRxIEQdNA/f/LunOjnwJIpFdzmmsi+EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLPnkJyE9SMwG5UTMBmdRMQN5QMwGZ1DwB5CepeeOkatFJ1aKTqkWfLFOzCciNmgnIBOQGyI2aGyA3aiYgN2pu1GwCsumkatFJ1aKTqkWffBmQJ9R8k5ongNyomYBMar4JyBNqvumkatFJ1aKTqkWf/HJAJjVvAHlDzQTkRs1/yUnVopOqRSdViz75jwEyqZmATGp+kpoJyKTmNzupWnRSteikatEnX6bmJ6mZgExqJiBPqJmATGomNROQSc0bav4mJ1WLTqoWnVQt+mQZkN9MzQTkDSCTmgnIpOYGyN/spGrRSdWik6pFn7ykpv4B5AbIpOZGzW9yUrXopGrRSdWiT14CMql5AsikZgLyBJAbIJOab1IzAbkBsknNDZBJzRsnVYtOqhadVC3CP/JFQG7UTEAmNTdAJjUTkEnNBORGzQRkUvNNQH6SmjdOqhadVC06qVr0yUtAJjWbgExqJjUTkBsgk5obIG8AmdRMQDapeQLIppOqRSdVi06qFuEfWQRkUjMBuVHzBpAbNROQSc0bQCY1E5An1NwAuVEzAblR88ZJ1aKTqkUnVYs+WaZmAvIEkBs1E5AbNW8AuVFzA+Sb1LyhZtNJ1aKTqkUnVYs++cupmYC8AWRSMwGZ1ExA3lDzBJBJzQTkDSCTmjdOqhadVC06qVr0yUtAbtRMQJ4AMqmZgNwA+UlqJiA3QCY136RmArLppGrRSdWik6pFn7ykZgIyAblRMwGZ1LyhZgIyAZnUvAHkBsgmNU8A+aaTqkUnVYtOqhZ98hKQSc0EZFJzo2YCcqPmBsgmNU+ouQEyAZnUTEAmNW+o2XRSteikatFJ1SL8Iy8AmdRMQG7UTEAmNROQJ9RMQL5JzQRkUnMDZJOaCciNmjdOqhadVC06qVr0yUtqbtTcALkBcqPmm9RMQG6ATGo2qZmATGomIJOaCcimk6pFJ1WLTqoWffJlQCY1T6i5ATKpuVEzAZnUPKFmAjIBmdRMQCY1T6i5UTMB+aaTqkUnVYtOqhZ98hKQbwIyqZnUTEBu1PwkNU8A2aRmUjMB2XRSteikatFJ1SL8I78YkL+JmhsgN2qeADKpeQLIpOaNk6pFJ1WLTqoWffISkJ+k5gk1N0Bu1ExAJjXfBGRScwPkRs03nVQtOqladFK16JNlajYBuVFzA+QJNTdqJiA3at5Q84SaGyCTmk0nVYtOqhadVC365MuAPKHmCSBvqJmA3KiZ1ExA3gDyBpBJzaRmAjKpeeOkatFJ1aKTqkWf/HJqJiA3aiYgTwC5UfOEmgnIpGYCMqn5m5xULTqpWnRSteiT/zNAJjU3QG7UTEBu1NyouVFzA+TfdFK16KRq0UnVok++TM2/Sc0E5Ak1E5AJyI2aGyCTmgnIpGYCcqNmAvJNJ1WLTqoWnVQt+mQZkJ8E5Ak1E5A31ExANqmZgNyoeULNppOqRSdVi06qFuEfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfofOrUsQIqpRZAAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/d094e421">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATBSURBVO3BQW4kSRIEQdNA/f/Lujz6KYBEenHYCxPBH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC365CUgv0nNBORGzQTkDTVPAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBtAnlAzAXkCyI2aCcgTajYB2XRSteikatFJ1aJPvgzIE2qeUDMBmdQ8AeQJIJOa3wTkCTXfdFK16KRq0UnVok/+cUC+Sc0E5AbIpGYCMqn5f3JSteikatFJ1aJP/nFqJiATkEnNBGRS84SaCcgTQCY1/7KTqkUnVYtOqhZ98mVq/ktqJiA3QG7UTEAmNROQb1Lzl5xULTqpWnRSteiTZUB+E5BJzQRkUjMBmdRMQDapmYA8AeQvO6ladFK16KRq0ScvqfnL1ExAvgnIDZAn1PxLTqoWnVQtOqla9MlLQCY1E5AbNROQJ9S8oeYvAzKpuQEyqZmA3Kh546Rq0UnVopOqRfgji4DcqJmATGpugExqJiA3aiYgk5ongExqboB8k5ongExq3jipWnRSteikatEnX6bmCSA3aiYgk5oJyH8JyKTmDSBPALlRs+mkatFJ1aKTqkX4Iy8AeULNDZBJzQTkRs0TQN5Q8waQSc0NkBs1TwCZ1LxxUrXopGrRSdUi/JEXgExqJiCTmhsgN2omIDdqJiA3at4AcqPmm4DcqPmmk6pFJ1WLTqoWffJlaiYgk5obNZvUTECeADKpmdTcAJnU3AC5UTOpmYBMQG7UvHFSteikatFJ1aJPvgzIE2omIJOaSc0TQG6ATGomNTdAngDyBpBJzX/ppGrRSdWik6pF+CN/CJBJzRNAnlDzBJAbNTdAbtTcALlRcwNkUrPppGrRSdWik6pFn7wEZJOaCcik5gk1E5AJyKRmAjKpeQLIE0AmNZOaCcgEZFLzm06qFp1ULTqpWoQ/sgjIpOYGyI2aCcikZgLyhJongExq3gByo2YCMqmZgDyhZtNJ1aKTqkUnVYs+eQnIpOYJNTdAJjUTkBs1bwB5A8ikZlIzAXlDzQRkUvNNJ1WLTqoWnVQt+uQlNTdAJjUTkEnNpGYCMql5A8iNmhsg3wRkUvOXnVQtOqladFK16JNlQCY1E5BJzQTkRs0E5EbNE2pugGwC8gSQv+ykatFJ1aKTqkX4I/8wIJOa3wRkUvMEkEnNE0A2qXnjpGrRSdWik6pFn7wE5DepuQEyqflLgDwBZFLzhJoJyKRm00nVopOqRSdViz5ZpmYTkCfUTED+EjUTkBs1/5KTqkUnVYtOqhZ98mVAnlDzhJo31DwBZFIzAZnUPAHkDTUTkEnNN51ULTqpWnRSteiTfxyQGzVPAHkCyA2QSc2kZgIyqbkBMgGZ1NwAmdS8cVK16KRq0UnVok/+z6iZgDyhZgIyqXkCyARkUvMEkEnNDZBJzTedVC06qVp0UrXoky9T801qJiDfBGRS84SaCcik5g0gk5oJyKRm00nVopOqRSdViz5ZBuQ3AblRMwGZ1NyomYC8AeQNNX/ZSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/geN+RxTbz5oewAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

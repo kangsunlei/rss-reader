@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>深度解析 OpenClaw 在 Prompt / Context / Harness 三个维度中的设计哲学与实践</title>
+        <title>浏览器自动化：从 GUI 到 OpenCLI</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>深度解析 OpenClaw 在 Prompt / Context / Harness 三个维度中的设计哲学与实践</h2>
-        <p>4/13/2026, 12:30:00 AM</p>
+        <h2>浏览器自动化：从 GUI 到 OpenCLI</h2>
+        <p>4/14/2026, 12:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了 OpenClaw 这一现象级 AI Agent 系统的核心设计哲学，从 Prompt Engineering、Context Engineering 和 Harness Engineering 三个维度，提炼出其结构化动态组装、上下文压缩与分层记忆管理等可复用的方法论。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 OpenCLI 这一开源工具，它通过解析和复现网页底层 API 请求，而非模拟前端 UI 交互，来解决浏览器自动化的效率与稳定性难题，并阐述了其面向 AI Agent 的自动化工作流和未来软件“可调用性”的竞争维度。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章对 2026 年初爆火的 AI Agent 项目 OpenClaw 进行了深度源码级解析，旨在超越表面的“养虾热”，提炼其背后长效的设计价值。作者从现代 AI 系统的三个关键阶段——Prompt Engineering（如何说）、Context Engineering（让 AI 看什么）、Harness Engineering（构建怎样的运行环境）——展开分析。在 Prompt 层面，OpenClaw 展示了高度结构化的动态组装机制，通过 23 个模块化组件和 Markdown 文件驱动（如 AGENT.md， SOUL.md， USER.md）来构建系统提示词，并贯彻了“质量大于数量”的极简主义风格。在 Context 层面，文章重点分析了其可扩展的 Skills 机制、自适应的上下文压缩（Compaction）与修剪（Pruning）算法，以及分层的记忆存储系统（如 MEMORY.md），以应对上下文窗口爆炸的挑战。文章基于作者的个人技术实践与源码阅读，旨在为读者构建自己的 Agent 系统提供可落地的设计思路和方法论借鉴。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入探讨了传统基于 GUI 操作的浏览器自动化（如 Selenium）在效率和稳定性上的困境，并提出了一种全新的解决思路：绕过不稳定的前端界面，直接抓取和复现网页背后的 API 请求。作者介绍了其开源项目 OpenCLI，这是一个将网站 API 封装为本地命令行工具（CLI）的框架。文章详细阐述了 OpenCLI 的核心原理，包括面向 AI Agent 的探索工作流、五级认证策略（从公开 API 到 UI 自动化的降级方案）、适配器生成机制（YAML/TypeScript），以及通过 `record` 和 AI 辅助生成 CLI 的高级功能。最后，文章通过内部会画平台和 BOSS 直聘自动化等案例展示了其实用价值，并提出了“未来软件竞争可调用性”的前瞻观点，认为易于被 Agent 理解和调用的 API 将成为软件的新竞争维度。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Prompt Engineering 已从撰写固定文本进化为复杂的动态组装机制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> OpenClaw 的系统提示词由 23 个模块化组件动态拼接而成，并引入 AGENT.md、SOUL.md 等 Markdown 文件驱动配置，实现了指令的结构化、模块化与外部化，在保证功能完整性的同时贯彻了极简主义，为业务数据留出了宝贵的上下文空间。</span>
+                        <strong style="color: #1a365d">放弃不稳定的 GUI 自动化，转向解析和复现底层 API 是浏览器自动化的更优解。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统模拟点击、填表的方案受前端变化影响大、效率低。直接调用产生数据的后端 API，稳定性更高，执行速度更快，是实现高效自动化的根本路径。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Context Engineering 的核心是高效管理有限的上下文窗口，防止信息爆炸。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> OpenClaw 通过可扩展的 Skills 机制实现能力的渐进式披露，并设计了自适应的上下文压缩算法（分块、分层摘要）和精细化修剪策略，以智能地保留关键信息（如活跃任务、决策、标识符），舍弃冗余内容，维持长对话的连贯性与系统性能。</span>
+                        <strong style="color: #1a365d">OpenCLI 框架通过五级认证策略和适配器机制，系统化地将网站能力封装为 CLI。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该框架提供了从公开 API、Cookie 认证、Header 认证，到拦截前端状态管理请求，最后降级至 UI 自动化的完整策略链，并支持 YAML（声明式）和 TypeScript（编程式）两种适配器，灵活应对不同复杂度的网站。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">系统的设计哲学强调结构化、安全性与用户体验的平衡。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从文件驱动的配置解耦、Skills 市场的安全管控，到记忆的分层管理（区分日常记录 MEMORY.md 与长期记忆）、群聊中的行为准则（Quality &gt; quantity），都体现了 OpenClaw 在追求强大能力的同时，对可控性、安全性和人性化交互的深度思考。</span>
+                        <strong style="color: #1a365d">为 AI Agent 设计的探索工作流和自动生成 CLI 能力，是 OpenCLI 面向未来的核心特性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章定义了 AI Agent 探索网站 API 的标准步骤（观察、抓包、交互、验证），并提供了 `opencli explore`、`record` 录制以及结合 AI（如 Cursor）自动生成适配器的工具链，极大降低了构建自动化脚本的门槛。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">分析热门项目应超越现象，沉淀可复用的方法论与设计模式。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者主张冷静剖析 OpenClaw 这类集大成者背后的设计思路，而非仅仅跟风实践。文章提炼的 Prompt/Context/Harness 三维分析框架及其具体实践，为开发者设计自己的 Agent 系统提供了直接可借鉴的架构范式和实现细节。</span>
+                        <strong style="color: #1a365d">未来软件的竞争维度将从“界面友好”转向“可调用性”，易于被 Agent 集成的 API 更具价值。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 AI Agent 普及的背景下，软件不仅服务于人，更要服务于 Agent。清晰、稳定、易于理解和调用的 API 接口，将成为软件能否融入下一代智能工作流的关键竞争力。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Prompt Engineering → Context Engineering → Harness Engineering 也是现代 AI 系统的三大关键阶段，分别聚焦于‘如何说’、‘让 AI 看什么’以及‘构建怎样的运行环境’，三者层层递进，共同致力于提升大模型在复杂任务中的可靠性与可控性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">优秀的 Prompt 不是写得越长越好，而是越清晰、越模块化、越节省资源越好。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在群聊的时候不要每条都回复，Prompt 通过一句 Quality &gt; quantity 就非常清晰地传达了‘注重核心信息、拒绝废话、保证高价值输出’的复杂指令。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果把对话过程比喻比为一场‘开卷考试’：明确了课本学到了第 50 页，然后最后的 45~50 页是最近学习的，是必考的部分，前面 40 页是内容随机抽查，而你只能带 10 页纸进入考场，你要如何规划这 10 页纸的内容，来提高你的成绩呢？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">技术浪潮总有起伏，在大潮来时，我们要敢于直面浪潮；而在大潮退去之时，我们更要能留下沉淀，汲取这场火热盛宴背后那些更本质、更长效的核心价值。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心想法很简单：不跟网页界面较劲，直接抓它背后的 API。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你（AI Agent）必须通过浏览器打开目标网站去探索！不要只靠 `opencli explore` 命令或静态分析来发现 API。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">GUI 是给人用的。API 是能力底座。而 Agent 最喜欢的，其实是更清晰的执行面：命令、参数、返回值、失败原因。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">未来软件可能会多一个新竞争维度：不是谁页面更好看。而是谁更容易被 Agent 理解、调用、验证，再接进工作流。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -69,26 +69,26 @@
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">80 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">19925</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2351</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenClaw</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Context Engineering</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">浏览器自动化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenCLI</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RPA</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API 调用</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/824a229d" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/42acaf7d" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/824a229d">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATLSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBpBJzQ2QSc0TQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gaQSc0bQCY1N2o2qdkEZNNJ1aKTqkUnVYs++TIgT6h5AsikZlIzAZnU3Kh5A8gTap4A8oSabzqpWnRSteikatEnfxkgbwDZpGYCMqn5m5xULTqpWnRSteiTv4yaGyATkEnNJiD/JydVi06qFp1ULfrky9T8JiDfBGRSc6PmBsik5gk1/yUnVYtOqhadVC36ZBmQf5OaCcikZgJyA2RSMwGZ1ExAJjVvAPkvO6ladFK16KRq0ScvqfmTqXkCyKTmRs0EZFJzo+ZPclK16KRq0UnVok9eAjKpmYBsUjOpeQPIjZobIDdqJjUTkEnNBGSTmm86qVp0UrXopGoR/sgXAZnU3ACZ1NwAeULNE0AmNW8A+SY1TwCZ1LxxUrXopGrRSdUi/JFFQL5JzRtAJjUTkEnNBOQJNTdAbtT8SU6qFp1ULTqpWoQ/8kVAJjUTkBs1E5AbNROQSc0EZFLzBJBJzQTkm9RMQCY1E5BJzaaTqkUnVYtOqhbhj/wiIJvUvAHkRs0TQG7UfBOQGzXfdFK16KRq0UnVok9eAjKpmYBMaiYgN2omIE8AeULNBGRS8waQN9RMQCY1TwCZ1LxxUrXopGrRSdWiT15S801AJjUTkBs1E5BJzQRkUjMBeULNDZBJzQ2QSc0E5EbNpGbTSdWik6pFJ1WLPlkG5Ak1E5BJzQTkm9S8oeYGyCYgk5obIJOaTSdVi06qFp1ULfrkJSA3aiYgTwC5UTMBeQPIpOZGzQRkUnOj5g01E5AbNd90UrXopGrRSdWiT74MyI2aCcik5g0gk5ongExqJiCTmgnIDZBJzQTkBsikZgJyA2RS88ZJ1aKTqkUnVYs+WaZmAjKpuVEzAZnU3Kh5Q80NkEnNE2pugExqJiCTmjfUbDqpWnRSteikahH+yAtAJjU3QCY1E5BJzRtAJjVPAHlCzRNAJjUTkCfU3ACZ1Gw6qVp0UrXopGrRJ79MzQTkBsik5g0gb6i5ATKpmYDcANkE5AbIpOaNk6pFJ1WLTqoW4Y/8wYBMaiYgk5oJyKTmCSCTmieATGqeALJJzRsnVYtOqhadVC365CUgv0nNpGYCsgnIE0A2AZnUvKHmm06qFp1ULTqpWvTJMjWbgNwAuVEzAXlCzRtA3lDzhJobIDdq3jipWnRSteikatEnXwbkCTWbgExqJiBPAJnUTEAmNTdAJiCbgPymk6pFJ1WLTqoWffKXUfMGkEnNpGYCMql5Q80NkEnNBOTfdFK16KRq0UnVok/+MkBu1NyomYB8k5obIDdA3lCz6aRq0UnVopOqRZ98mZpvUnMD5EbNG2pugExqJiCTmknNBGRSMwGZ1ExAvumkatFJ1aKTqkWfLAPym4DcqHkCyI2aGyCTmgnIpGYCMqm5AXIDZFLzTSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoH19s3NfphbkMAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/42acaf7d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATKSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyBvqHkCyKRmAvKEmgnIb1LzxknVopOqRSdViz5ZpmYTkDfUTEAmNU8AmdTcqNmkZhOQTSdVi06qFp1ULfrky4A8oeYJIG8AmdRMQCY1TwB5Qs0TQJ5Q800nVYtOqhadVC365B+j5kbNBGQCcgPkCTUTkEnNv+SkatFJ1aKTqkWf/OOATGpu1GwC8v/kpGrRSdWik6pFn3yZmt8E5AbIpGYCMqmZgExqbtTcAJnUPKHmT3JSteikatFJ1aJPlgH5L6mZgExqJiCTmgnIpGYCMqmZgExq3gDyJzupWnRSteikatEnL6n5k6mZgLwB5Ak1E5BJzY2av8lJ1aKTqkUnVYvwR14AMqmZgGxScwNkUjMBmdRMQDapuQEyqZmAbFLzTSdVi06qFp1ULcIfeQHIE2omIJOaGyBPqPmTAPkmNU8AmdS8cVK16KRq0UnVIvyRRUBu1DwB5JvUPAHkCTU3QG7U/E1OqhadVC06qVr0yUtAJjVPALlRcwPkRs0bQCY1E5BJzQTkDSA3aiYgk5oJyKRm00nVopOqRSdVi/BHFgGZ1LwB5Ak1TwB5Qs0NkBs13wTkRs03nVQtOqladFK16JMvA/KEmknNBGRSMwGZ1ExAbtR8E5A31ExAJjVPAJnUvHFSteikatFJ1aJPXgKyCchvUjMB2aTmBsik5gbIpGYCcqNmUrPppGrRSdWik6pFn/zh1ExAJiBPqJmATGpugNyouQGyCcik5gbIpGbTSdWik6pFJ1WLPvnDqJmAbAIyqZmATGpu1ExAJjU3at5QMwG5UfNNJ1WLTqoWnVQt+uQ/pmYCMql5A8gTaiYgk5oJyKRmAnIDZFIzAbkBMqmZgNwAmdS8cVK16KRq0UnVok+WqXkCyKRmAvKEmknNBGQC8gSQSc0Tam6ATGomIJOaN9RsOqladFK16KRqEf7IC0AmNROQGzUTkEnNBGRScwPkRs0NkCfUPAFkUjMBeULNDZBJzaaTqkUnVYtOqhZ98mVqJiA3aiYgN0Bu1DwB5EbNDZBJzQTkBsgmIDdAJjVvnFQtOqladFK1CH/kLwbkCTWbgExqngAyqXkCyCY1b5xULTqpWnRSteiTl4D8JjWTmgnIDZAbNROQJ4BsAjKpeUPNN51ULTqpWnRSteiTZWo2AbkBMqmZgExqJiA3at4A8oaaJ9TcALlR88ZJ1aKTqkUnVYs++TIgT6h5A8ik5kbNE0AmNROQSc0NkAnIJiC/6aRq0UnVopOqRZ/844BMaiYgN2omNROQSc0bam6ATGomIP+lk6pFJ1WLTqoWffKPUzMBmdTcAPkmNTdAboC8oWbTSdWik6pFJ1WLPvkyNd+k5gk1m9TcAJnUTEAmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwGZ1NwAuVFzo+YGyKRmAjKpmYBMam6A3ACZ1HzTSdWik6pFJ1WL8EeqlpxULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WL/gempjE+hSOn3wAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
