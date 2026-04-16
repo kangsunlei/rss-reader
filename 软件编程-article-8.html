@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>黑客买下 30 款插件后，首次提交代码就埋下后门，静默 8 个月后全面爆发！</title>
+        <title>读完 Claude Code 源码才发现：Skills、MCP、Rules 的区别，远没有你想的那么大</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>黑客买下 30 款插件后，首次提交代码就埋下后门，静默 8 个月后全面爆发！</h2>
-        <p>4/14/2026, 10:06:00 AM</p>
+        <h2>读完 Claude Code 源码才发现：Skills、MCP、Rules 的区别，远没有你想的那么大</h2>
+        <p>4/15/2026, 10:01:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细披露了一起针对 WordPress 插件生态的大规模供应链攻击事件，攻击者通过收购 30 余款插件并植入后门，利用以太坊智能合约绕过传统安全拦截，静默潜伏 8 个月后实施 SEO 劫持与远程入侵。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过深入分析 Claude Code 泄漏源码，揭示了 Rules、MCP、Skills 三个概念的底层实现机制，指出其核心区别在于信息在 API 请求中的注入位置不同，并提供了基于源码洞察的实践建议。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章编译自安全研究员 Austin Ginder 的博客，详细揭露了一起针对 WordPress 插件生态的复杂供应链攻击。攻击者通过 Flippa 平台以六位数美元收购了 Essential Plugin 品牌下的 30 余款插件，并在接手后的首次代码更新（2.6.7 版本）中植入了包含 PHP 反序列化后门的高危代码。该后门通过名为 wpos-analytics 的模块，从远程服务器下载恶意载荷，并注入到网站的 wp-config.php 核心配置文件中。攻击手法精巧，利用以太坊智能合约解析 C2 域名以规避传统拦截，并仅向谷歌爬虫展示垃圾内容以逃避管理员察觉。后门静默潜伏 8 个月后于 2026 年 4 月被激活，最终导致 WordPress.org 紧急下架全部涉事插件。文章不仅梳理了完整的时间线和攻击链条，还提供了具体的排查步骤和修复方案（包括使用 Claude Code 自动化移除恶意模块），并借此事件探讨了 WordPress 插件生态的信任危机与审核机制缺失。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章基于 Claude Code v2.1.88 泄漏源码，从 LLM API 调用层面深度解析了 Rules、MCP、Skills 的实现细节。作者指出，Rules（CLAUDE.md）是项目级行为规范，通过 `prependUserContext` 被动注入到 `messages` 中；MCP 是标准化工具协议，其工具定义注册在 `tools[]` 中，而 Server 级使用说明则注入到 `system` 的动态区域；Skills 是可复用的提示词，通过 `tool_use` 触发后将 Markdown 指令文本注入 `messages`。三者的本质区别在于信息在 API 请求（`system`、`tools`、`messages`）中的位置，而非功能上的根本不同。文章通过源码分析，澄清了网络上的常见误解，并给出了何时使用 Rules、Skills 或 MCP 的落地建议，强调不要迷信 Skills 的自动触发，许多场景下 Bash 工具足以替代 MCP。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">供应链攻击成为 WordPress 生态的重大威胁，攻击者通过公开收购插件资产植入后门。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 攻击者利用 Flippa 等公开市场收购拥有大量用户的插件品牌，获取代码提交权限后，首次更新即植入恶意代码，整个过程缺乏有效平台审核。</span>
+                        <strong style="color: #1a365d">Rules、MCP、Skills 的核心区别在于信息在 API 请求中的位置，而非功能本质。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Rules 作为自然语言指令被注入到 `messages` 中；MCP 的工具定义在 `tools[]`，Server 说明在 `system`；Skills 通过 `tool_use` 触发后将提示词注入 `messages`。对模型而言，最终处理的都是文本指令，区别在于工程实现层面。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">攻击手法高度隐蔽且持久，结合了区块链技术以增强抗打击能力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 后门代码静默潜伏 8 个月，利用以太坊智能合约解析 C2 域名，使传统域名关停手段失效，并采用仅对谷歌爬虫展示恶意内容的定向投放机制。</span>
+                        <strong style="color: #1a365d">Skills 的本质是提示词注入，而非代码层面的流程控制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 源码显示，Skill 执行（默认 Inline 模式）只是将 SKILL.md 文件内容作为 `isMeta: true` 的用户消息注入对话历史。所谓的‘标准化工作流’完全依赖模型的指令遵循能力，没有硬编码的逻辑控制步骤。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">官方修复措施存在局限性，仅阻断通信而未清理已注入的恶意代码。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> WordPress.org 的强制更新仅通过添加 `return;` 语句阻断插件外联，但未移除已写入 `wp-config.php` 的注入代码，治标不治本。</span>
+                        <strong style="color: #1a365d">MCP 的真正价值在于持久化连接、原子封装和权限隔离，而非简单的工具调用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型通过 Bash 工具也能调用外部命令。MCP 的不可替代性在于其作为常驻进程可管理状态（如数据库连接池）、封装复杂操作为原子调用，以及提供比万能 Bash 更安全可控的权限边界。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">文章提供了从检测到修复的完整实操指南，具有高参考价值。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 详细说明了通过备份文件二分法溯源、检查 `wp-config.php` 文件大小、使用 Claude Code 自动化移除恶意模块、以及手动安装修复版插件等一系列具体步骤。</span>
+                        <strong style="color: #1a365d">不要过度依赖 Skills 的自动触发，手动调用或直接引用 Rules 文件往往是更可靠的选择。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Skill 的自动触发依赖其简短的描述（最多 250 字符）和 whenToUse 字段，判断常不准确。对于核心工作流，教会团队成员使用 `/skill-name` 快捷命令或直接 `@rules-file.md` 引用，比指望模型自动识别更高效可靠。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">此次注入的恶意程序设计极为精巧：它会从远程命令与控制服务器（C2 服务器）拉取垃圾外链、跳转劫持规则以及虚假页面内容；并且采用定向投放机制，仅向谷歌爬虫展示垃圾内容，网站管理员日常访问完全无法察觉异常。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">整件事最离谱的细节在于——攻击者通过以太坊智能合约解析 C2 域名，调用区块链公共 RPC 节点完成域名解析。传统的域名关停、解析拦截手段对此完全失效。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">收购方接手后的第一次代码提交，就直接植入了高危后门，全程蓄谋已久。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">WordPress.org 并没有针对插件所有权转移的标记或审核机制：当控制权发生变更时，用户不会收到任何‘所有权变更’的通知；开发者账号更换后，也不会触发额外的代码审查流程。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">它们的区别，本质上就是信息在 API 请求中被塞到了不同的位置。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">MCP 的价值不在于‘能调用外部系统’（Bash 也能），而在于‘以更安全、更可靠的方式调用外部系统’。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skills 是‘提示词注入’机制，不是函数调用。tool_use 只是触发器，真正的‘能力’来自被注入的 Markdown 指令文本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果你每次都是手动触发，那 Skills 的完整调用链路……和你手动用 @commit-rules.md 引用一个同等内容的 Rules 文件，效果是……两者最终模型看到的都是一段自然语言指令，没有本质区别。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">把核心 Skill 的快捷命令告诉团队成员，让他们手动调用，比指望模型自动识别靠谱得多。MCP 同理——在引入之前先想想，Bash 能不能直接搞定。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +63,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">CSDN</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">CSDN</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">百度Geek说</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">百度Geek说</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">18 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4445</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7251</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">供应链安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">WordPress</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">插件安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">后门攻击</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SEO 劫持</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源码分析</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Skills</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/2c9408fe" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/1e8dafaa" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/2c9408fe">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATeSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJAbNROQGzVPAHlCzQTkN6l546Rq0UnVopOqRZ8sU7MJyBtqboBMam6A3KiZ1GxSswnIppOqRSdVi06qFn3yZUCeUPMEkEnNJiCTmieAPKHmCSBPqPmmk6pFJ1WLTqoWffKXAXKjZlIzAZnUTEAmNROQSc0EZFLzNzmpWnRSteikatEnfxk1TwCZ1ExAJjUTkEnNBOT/5KRq0UnVopOqRZ98mZp/E5BJzRtAJjU3am6ATGqeUPMnOaladFK16KRq0SfLgPzN1ExAJjUTkEnNG0D+ZCdVi06qFp1ULcIf+Q8DcqPmTwJkUvM3OaladFK16KRqEf7IC0AmNROQTWreADKpmYBMaiYgT6i5ATKpmYBsUvNNJ1WLTqoWnVQtwh95Acg3qXkCyI2aJ4BMat4A8k1qngAyqXnjpGrRSdWik6pF+CMvAJnUTEBu1ExAnlAzAZnUTEAmNU8AeULNDZAbNf8lJ1WLTqoWnVQtwh95AciNmgnIjZobIJOaCciNmgnIpOYJIJOaCcg3qZmATGomIJOaTSdVi06qFp1ULfpkmZoJyKTmCSCTmgnIpGYC8gSQSc2NmgnIjZrfBGRS800nVYtOqhadVC365JcBmdRMQCY1TwCZ1LwBZFLzBpA31ExAJjVPAJnUvHFSteikatFJ1aJPvkzNDZAbIDdqJiA3QG7U3AB5Qs0NkEnNDZBJzQTkRs2kZtNJ1aKTqkUnVYs+eUnNBGRSMwF5Qs0NkEnNBOQ3qbkBsgnIpOYGyKRm00nVopOqRSdViz5ZpuYNNROQSc2k5kbNE0CeUDMBmdTcqHlDzQTkRs03nVQtOqladFK16JOXgExqJiA3aiYgk5oJyKRmAjKpmYDcqHkCyKRmAnIDZFIzAbkBMqmZgNwAmdS8cVK16KRq0UnVok9+mZongNwAmdRMQG7UTECeUPOEmhsgk5oJyKTmDTWbTqoWnVQtOqlahD/yApBJzQ2QSc0mIG+ouQFyo+YJIJOaCcgTam6ATGo2nVQtOqladFK16JMvAzKpmYC8oeZGzQTkBsiNmhsgk5oJyA2QTUBugExq3jipWnRSteikahH+yH8YkEnNDZAbNU8AmdQ8AWRS8wSQTWreOKladFK16KRq0ScvAflNaiY1E5An1NwAeQLIJiCTmjfUfNNJ1aKTqkUnVYs+WaZmE5AbIJOab1LzBJA31Dyh5gbIjZo3TqoWnVQtOqla9MmXAXlCzRtAJjUTkEnNjZoJyKRmAjKpuQEyAdkE5DedVC06qVp0UrXok78ckEnNG2omIJOaN9TcAJnUTED+TSdVi06qFp1ULfrkfwbIpGYC8pvU3AC5AfKGmk0nVYtOqhadVC365MvUfJOaCcik5gk1N0AmNTdAJjUTkEnNpGYCMqmZgExqJiDfdFK16KRq0UnVok+WAflNQCY1E5AbNROQSc2k5gbIpGYCMqmZgExqboDcAJnUfNNJ1aKTqkUnVYvwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYv+AWGgTSh+RE+bAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/1e8dafaa">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATBSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GpyOSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyDfpOYJIE+omYD8JjVvnFQtOqladFK16JNlajYBeULNBGRS8waQGzWTmk1qNgHZdFK16KRq0UnVok++DMgTap4AMqn5mwB5Qs0TQJ5Q800nVYtOqhadVC365D8OyBtqJiCTmgnIpOZfclK16KRq0UnVok/+cWomIJOaN4BMaiYg/yUnVYtOqhadVC365MvU/CYgTwCZ1ExA3lBzA2RS84Sav8lJ1aKTqkUnVYs+WQbkT1IzAZnUTECeUDMBuQEyqXkDyN/spGrRSdWik6pF+CP/x4DcqLkBMqm5ATKpeQLIpOZfclK16KRq0UnVIvyRF4BMaiYgm9S8AeQ3qbkBMqmZgGxS800nVYtOqhadVC365MvUTECeUHMD5EbNpOZPAnID5A01TwCZ1LxxUrXopGrRSdWiT36ZmieATGomNROQGyA3am6APKFmUjMBuVHzTWo2nVQtOqladFK16JOX1ExAJjUTkEnNBGRSMwG5UTMBeQPIpGYCMqmZgLwB5EbNBGRSMwGZ1Gw6qVp0UrXopGrRJ79MzQRkUjMBeUPNBOQGyBNqJiA3an4TkEnNN51ULTqpWnRSteiTl4DcAJnU3ACZ1ExA3lDzJwF5Q80EZFLzBJBJzRsnVYtOqhadVC3CH3kByKRmAjKpuQFyo2YC8jdTcwNkUnMDZFIzAblR800nVYtOqhadVC365CU1bwC5UbNJzQRkUnMD5EbNDZBNQCY1N0AmNZtOqhadVC06qVr0yTIgk5o3gExqbtS8AeQJNROQSc2NmjfUTEBu1HzTSdWik6pFJ1WL8EdeAPKGmieAvKFmAjKpeQLIpGYC8oSaCcgTaiYgk5oJyKTmjZOqRSdVi06qFn2yTM0NkAnIpGYCcqPmNwGZ1Dyh5gbIpGYCMql5Q82mk6pFJ1WLTqoWffLL1NwAmdTcAHlCzRNAboBMaiY1N0AmNROQGyCTmknNBGRSs+mkatFJ1aKTqkX4Iy8AmdRMQCY1TwCZ1DwB5EbNBORGzQ2QSc0E5JvUTECeUPPGSdWik6pFJ1WL8Ef+jwGZ1PwmIJOaJ4BMap4AsknNGydVi06qFp1ULfrkJSC/Sc2k5gkgN2pugNwA2QRkUvOGmm86qVp0UrXopGrRJ8vUbAJyA2RSswnIpOYJIG+oeULNDZAbNW+cVC06qVp0UrXoky8D8oSaN4BMaiY1E5AbNROQSc0EZFJzA2QCsgnIbzqpWnRSteikatEn/zFAJjVPqJmATGreUHMDZFIzAfmTTqoWnVQtOqla9Mk/Rs2Nmhsgk5oJyCY1N0BugLyhZtNJ1aKTqkUnVYs++TI136TmBsikZgJyA+RGzQ2QSc0EZFIzqZmATGomIJOaCcg3nVQtOqladFK16JNlQH4TkEnNpOYJNROQSc0NkEnNBGRSMwGZ1NwAuQEyqfmmk6pFJ1WLTqoW4Y9ULTmpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoW/Q96VDQpb8DknQAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

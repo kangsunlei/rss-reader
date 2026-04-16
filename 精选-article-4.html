@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Harness 刚火，可能就要成为过去时了</title>
+        <title>MiniMax Agent 更新：这次我们重新设计了 Agent 操作电脑的方式</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Harness 刚火，可能就要成为过去时了</h2>
-        <p>4/13/2026, 12:00:00 AM</p>
+        <h2>MiniMax Agent 更新：这次我们重新设计了 Agent 操作电脑的方式</h2>
+        <p>4/14/2026, 7:07:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度解读了 Yandex 关于大模型在长上下文中会主动「偷懒」的论文《Reasoning Shift》，并结合 Anthropic 的情绪向量研究，探讨了从模型内部机制而非外部工程脚手架解决 Agent 长程任务退化的可能性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">MiniMax 发布了其 Agent 桌面端的两项重要更新：Pocket 功能支持通过 IM 远程操控电脑，以及 Computer Use 功能使 Agent 能像人一样通过视觉识别操作图形界面软件，并详细阐述了其背后的技术实现与设计思考。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章围绕 Yandex 研究员 Gleb Rodionov 的论文《Reasoning Shift》展开，该论文揭示了大型语言模型在长上下文环境中性能退化的新机制：模型并非因信息过载而「迷失」，而是主动进行「认知压缩」，减少思考深度以节省认知资源。实验表明，即使模型能清晰区分信号与噪声，推理长度和准确性仍会随上下文长度线性下降，且推理能力越强的模型，这种「偷懒」倾向越明显。作者回顾了行业为应对长上下文问题搭建的三层工程脚手架（RAG、上下文工程、Harness），指出这些外部约束治标不治本。文章进一步引入 Anthropic 关于模型内部情绪向量（如 desperate， calm）因果性驱动行为的研究，提出通过探测和干预模型内部状态（如注入 calm 向量）来从根本上抑制认知压缩，从而可能让复杂的 Harness Engineering 变得不再必要。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是 MiniMax 官方对其 Agent 桌面端产品更新的技术发布与深度解析。文章宣布了两项核心功能：Pocket（Beta）允许用户通过飞书、微信等 IM 软件远程向自己电脑上的 Agent 发送指令并接收结果；Computer Use 则让 Agent 具备了通过视觉识别屏幕、操作鼠标键盘来直接控制本地图形界面软件的能力。文章通过远程找文件、筛选简历生成飞书文档、操作系统设置等三个具体案例，生动展示了新功能的实用价值。更重要的是，文章深入剖析了实现这些功能背后的四大技术思考：将桌面操作拆解为四个独立的工具域而非单一万能工具；通过坐标系统统一和自适应截图解决多屏幕视觉感知问题；采用“截图-验证-行动”循环确保多步任务的可靠性；以及通过 IM 进行远程权限授权来保障安全。这体现了 MiniMax 在 Agent 基础能力工程化上的深度探索。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">长上下文导致模型性能退化的核心机制是「认知压缩」，而非信息检索失败。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Yandex 论文通过实验证明，即使模型能完美识别无关信息，其推理长度和准确性仍会系统性下降，这是模型为节省认知资源而主动减少思考深度的结果。</span>
+                        <strong style="color: #1a365d">Agent 的操作范围从命令行扩展到完整的图形界面，实现了对本地软件和系统设置的直接控制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Computer Use 功能，Agent 能够“看到”屏幕并操作鼠标键盘，从而完成过去只能由人工在图形界面中执行的任务，如操作设计工具、内部系统或系统偏好设置，极大地扩展了 Agent 的适用场景。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">模型的推理能力越强，在拥挤的认知空间中「偷懒」的倾向越严重。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实验数据显示，从基础版到强推理版的模型，其推理长度在长上下文下的压缩幅度随能力增强而显著增大，表明当前强化推理的训练方式可能加剧了这一问题。</span>
+                        <strong style="color: #1a365d">通过 IM 集成（Pocket）实现远程、无缝的 Agent 交互与控制，并将权限管理融入其中。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Pocket 功能将飞书、微信等 IM 软件变为 Agent 的远程控制台，用户可随时随地发起任务。同时，关键操作（如删除文件）会在 IM 中请求用户授权，确保了远程操作的安全性，实现了便利与控制的平衡。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">通过干预模型内部情绪状态，可能从根源上解决认知压缩，从而颠覆外部约束工程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Anthropic 的研究表明，模型内部存在功能性情绪向量（如 desperate， calm），并能因果性地驱动行为。通过探测和注入特定向量（如 calm），可能直接抑制模型走捷径的冲动，使其在长上下文中保持深度思考，这为绕过复杂的 Harness 工程提供了新路径。</span>
+                        <strong style="color: #1a365d">实现稳定可靠的桌面自动化需要精细的工程架构，而非简单的像素坐标模拟。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> MiniMax 将桌面操作拆解为 Desktop Control、Window Manager、Browser Engine、Clipboard 四个工具域，并配合 CLI 工具，让 Agent 根据任务选择最优执行路径，提高了精度和可靠性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">“截图-验证-行动”循环与自适应视觉处理是保障长任务成功的关键技术。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过统一坐标系统和动态缩放截图解决多屏幕适配问题，并在每一步操作后自动截图验证结果，形成闭环。若失败则进入诊断和重试流程，显著降低了多步复杂任务的整体失败率。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型在长上下文里不是被噪声干扰了，也不是找不到信息。它做了一个主动的认知决策：少想一些。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每多塞进一个 Token 的上下文，都在对推理深度征收一笔隐性税。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">推理能力被训得越强，偷懒幅度越深。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Harness 从外面管住了跳步的后果，但病因深植在模型内部。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">吞没 harness 的，可能是一个更平静、更耐心的模型。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">命令行是 Agent 在终端中完成工作的常见形态，但用户的工作并不只发生在命令行内，电脑上还有大量任务藏在命令行无法触达的本地软件、内部系统和图形界面中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们将桌面操作拆成四个独立的工具域：Desktop Control、Window Manager、Browser Engine、Clipboard。这样做的原因是：不同任务的最优执行路径不一样。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型不直接输出像素坐标，而是输出一个 0 到 1 之间的相对位置，由系统根据当前屏幕分辨率换算为真实坐标执行。模型不需要知道用户用的是什么屏幕，操作精度在所有设备上保持一致。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们给每一步桌面操作都接上了一个验证环节：操作执行完，立刻自动截图，让模型看一眼‘刚才那一步真的做到了吗’。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 Agent 准备执行文件删除等操作时，会暂停下来，把这一步的具体内容推送到用户的 IM 对话里……用户能对 Agent 的每一个关键动作保持完整的知情权与控制权。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -62,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯科技</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯科技</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">MiniMax 稀宇科技</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">MiniMax 稀宇科技</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4971</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2693</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">长上下文</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推理偏移</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Harness Engineering</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型内部机制</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MiniMax</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Computer Use</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">桌面自动化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RPA</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/c7d5f93e" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/810d6b64" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/c7d5f93e">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS/SURBVO3BQY4bSRAEQY8C//9l3znmqYBGJ2clIcziD6qWHKoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWfXgpCb9JZUrCjcoTSXhDZUrCpPJEEn6TyhuHqkWHqkWHqkUflqlsSsKNyhNJmFRuVG6ScKMyJeFG5UZlUxI2HaoWHaoWHaoWffiyJDyh8kYS3lB5QmVKwqTyTUl4QuWbDlWLDlWLDlWLPvzlkjCpTEmYVG6SMKlMSZhUJpUpCTcq/5JD1aJD1aJD1aIP/5gkTCo3SfhNKlMSJpW/2aFq0aFq0aFq0YcvU/lNKlMSJpU3VKYkTCqTypSESeUNlT/JoWrRoWrRoWrRh2VJ+JupTEmYVJ5IwqQyJWFSuUnCn+xQtehQtehQtSj+4C+WhBuVN5IwqUxJeEPlX3KoWnSoWnSoWvThpSRMKk8kYVKZkvCEyk0SJpUblRuVKQmTypSEmyRsUrlJwqTyxqFq0aFq0aFqUfzBFyVhUpmSMKncJOENlZskvKGyKQm/SeWNQ9WiQ9WiQ9WiDy8l4YkkTCpTEm5UpiT8n1RukjCpTEnYpPJEEjYdqhYdqhYdqhZ9eEllSsImlRuVmyQ8ofJGEiaVKQlPqNwkYUrCpDIl4ZsOVYsOVYsOVYviD35REt5QuUnCEyo3SbhRmZKwSWVTEiaVTYeqRYeqRYeqRR9eSsKkcqMyJWFSuUnCpPKEypSESWVSmZLwhsoTSZhUpiS8kYRJ5Y1D1aJD1aJD1aIPX5aESeWJJNwkYVK5ScI3qUxJuEnCpPJNKlMSNh2qFh2qFh2qFn34MpUpCZPKjcoTSXhC5SYJTyThJgmbVJ5IwjcdqhYdqhYdqhZ9eEnlJgmTyhNJmFRuVKYkTCpvqDyhcpOEKQmTypSESeUNlU2HqkWHqkWHqkXxBy8kYVJ5Igk3KlMSnlCZkvCEypSEG5UpCZPKTRI2qUxJuFF541C16FC16FC16MNLKm+oTEmYknCj8oTKlIRNSZhUNqlMSZhUpiRMKlMSNh2qFh2qFh2qFsUffFESblSmJEwqN0mYVDYl4UZlSsKNypSESeWbknCj8sahatGhatGhatGHl5LwhMqUhEllSsKkcpOESeUmCZPKpDIl4QmVJ5KwSWVSmZKw6VC16FC16FC1KP7gL5aEN1SmJLyhcpOEG5UnkjCpPJGESeWNQ9WiQ9WiQ9WiDy8l4Tep3Ki8oTIl4Ublm5Iwqdwk4Ublmw5Viw5Viw5Viz4sU9mUhBuVmyTcqDyhMiXhRuUNlSdUbpIwqWw6VC06VC06VC368GVJeELliSTcqNwk4Q2VKQlvJOGNJEwqk8qUhEnljUPVokPVokPVog9/OZUpCd+UhBuVJ1SmJEwqUxImlT/JoWrRoWrRoWrRh7pSmZIwqUxJuFG5UblRuUnC/+lQtehQtehQtejDl6n8JpUpCTcqUxKeSMKNyk0SJpUpCZPKlIQblSkJ33SoWnSoWnSoWvRhWRJ+UxKeUNmkMiVhk8qUhBuVJ1Q2HaoWHaoWHaoWxR9ULTlULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULfoPQohADkneAL0AAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/810d6b64">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAToSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9GoOuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmgnIpOYGyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXkDyA2QSc2kZgJyo2ZSs0nNJiCbTqoWnVQtOqla9MmXAXlCzRNAJjUTkEnNJjU3QJ5Q8wSQJ9R800nVopOqRSdViz75x6mZgGwCcqNmAjKp+ZecVC06qVp0UrXok38MkEnNjZpvAvL/5KRq0UnVopOqRZ98mZo/CcgbQG7U3Ki5ATKpeULNf8lJ1aKTqkUnVYs+WQbkT1IzAZnUTEAmNTdqJiCTmgnIpOYNIP9lJ1WLTqoWnVQtwh/5iwG5UTMBuVFzA2RS8wSQSc2/5KRq0UnVopOqRfgjLwCZ1ExANqm5AfKEmgnIpOYGyI2aGyCTmgnIJjXfdFK16KRq0UnVIvyRRUBu1ExAbtTcAJnUTEAmNROQSc0EZFLzBpBvUvMEkEnNGydVi06qFp1ULcIfWQRkUnMDZFIzAZnU3ACZ1ExAfpOaGyA3av4mJ1WLTqoWnVQtwh/5g4DcqLkBMqmZgExqNgGZ1ExAvknNBGRSMwGZ1Gw6qVp0UrXopGoR/sgLQG7UTEAmNTdAbtQ8AWRSMwG5UXMD5EbNNwG5UfNNJ1WLTqoWnVQtwh/5IiCTmgnIpOYGyKTmDSCTmjeAfJOaCcik5gkgk5o3TqoWnVQtOqlahD/yApBNaiYgf5KaCcgTam6ATGpugExqJiA3ar7ppGrRSdWik6pFn7yk5gbIjZoJyKRmAjKpmYDcqJmATGreUHMDZBOQSc0NkEnNppOqRSdVi06qFn2yDMiNmgnIpGYCMqmZgExq3gAyqblRMwGZ1NyoeUPNBORGzTedVC06qVp0UrXok5eATGo2qZmA3ACZ1DyhZgIyqZmATGomIDdAJjUTkBsgk5oJyA2QSc0bJ1WLTqoWnVQt+uTLgNyouQHyBpBJzaRmAnIDZFLzhJobIJOaCcik5g01m06qFp1ULTqpWoQ/8gKQSc0E5EbNE0CeULMJyI2aJ4BMaiYgT6i5ATKp2XRSteikatFJ1aJPfpmaJ4BMam6ATEBu1ExAJjWTmhsgk5oJyA2QTUBugExq3jipWnRSteikahH+yF8MyKTmCSCTmgnIpGYCMql5Asik5gkgm9S8cVK16KRq0UnVok9eAvKb1ExqJiCTmgnIG0BugGwCMql5Q803nVQtOqladFK16JNlajYBuQEyqZmAvKHmDSBvqHlCzQ2QGzVvnFQtOqladFK16JMvA/KEmk1qNgGZ1ExAJjU3QCYgm4D8ppOqRSdVi06qFn3yjwFyo2YCMqm5UTMBmdS8oeYGyKRmAvInnVQtOqladFK16JN/jJobIJOaGyDfpOYGyA2QN9RsOqladFK16KRq0Sdfpuab1ExAbtRMQCY1k5oJyKTmBsikZgIyqZnUTEAmNROQSc0E5JtOqhadVC06qVr0yTIgvwnIpOYGyKTmCTU3QCY1E5BJzQRkUnMD5AbIpOabTqoWnVQtOqlahD9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9D8T8VwfbtIAaAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
