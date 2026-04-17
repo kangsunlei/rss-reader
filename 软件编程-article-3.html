@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>OpenClaw Agent 与 Skill 架构详解</title>
+        <title>AI 聚合 API 生意从冷门到爆发</title>
         <style>
             body {
                 padding: 12px;
@@ -15,79 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>OpenClaw Agent 与 Skill 架构详解</h2>
-        <p>4/15/2026, 12:08:00 PM</p>
+        <h2>AI 聚合 API 生意从冷门到爆发</h2>
+        <p>4/16/2026, 2:51:32 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了京东开源的 OpenClaw Agent 框架的核心架构，重点阐述了其 Agent 执行引擎、Skill 知识注入机制、主子 Agent 协作模式以及多层容错体系，旨在解决生产环境中 AI Agent 面临的多渠道集成、长时运行和灵活知识扩展等挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者回顾了 AI 聚合 API 生意从 2023 年仅服务于公司和研究所，到 2026 年需求激增、模式转变的观察。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章系统性地介绍了京东开源的 OpenClaw Agent 框架，这是一个旨在解决生产级 AI Agent 系统痛点的平台。作者首先阐述了 OpenClaw 的定位，即基于 pi-mono 嵌入式引擎，构建了包含渠道层、平台层和基础设施层的完整架构。核心内容围绕两大互补机制展开：一是 **Skill 机制**，通过结构化的 SKILL.md 文件为 Agent 动态注入领域知识，并详细说明了其多源加载、过滤、选择与执行的完整流程；二是 **主子 Agent 架构**，允许主 Agent 创建并管理多个子 Agent 以实现并行执行和上下文隔离，文中深入解析了子 Agent 的创建、生命周期管理（包括状态追踪和推送式结果返回）以及主 Agent 的 `steer`、`kill` 等管理工具。此外，文章还重点分析了 OpenClaw 构建的五层容错与可靠性机制，包括错误分类、认证熔断、模型回退、上下文恢复和智能重试策略。最后，文章厘清了 OpenClaw 与底层引擎 pi-mono 的关系，并分类介绍了其增强的工具系统。全文基于源码分析，提供了大量架构图、代码片段和配置示例，具有很高的技术深度和实践参考价值。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
-            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #d97706; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">OpenClaw 通过 Skill 与主子 Agent 两种互补机制，构建了灵活且强大的生产级 Agent 系统。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Skill 作为结构化的知识文档（SKILL.md），动态为 Agent 注入操作指南；主子 Agent 架构则支持任务并行与上下文隔离。两者结合，使得 Agent 既能获得特定领域知识，又能通过派生子 Agent 高效处理复杂任务。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Skill 机制的核心是动态加载与 Agent 自主选择，而非硬编码匹配，并设计了精细的资源控制策略。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Skill 从内置、项目、插件等 6 个来源按优先级加载，经过环境、配置等多层过滤后，仅将摘要菜单注入 System Prompt。Agent 在对话中自主决定读取哪个 Skill 的完整内容，且每次最多读取一个，有效控制 Token 消耗。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">主子 Agent 架构采用推送式结果返回和精细的生命周期管理，提升了系统的可靠性与资源利用率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 子 Agent 完成后立即将结果推送给父 Agent，支持提前终止和渐进式反馈。通过 Subagent Registry 追踪状态，主 Agent 可使用 `steer` 工具重定向偏离任务的子 Agent，实现了强大的容错和能力修正。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">OpenClaw 在 pi-mono 引擎之上构建了五层生产级容错体系，确保 Agent 服务的鲁棒性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从容错分类开始，依次经过智能重试、认证 Profile 轮换、模型回退链，到上下文窗口溢出时的自动压缩，形成了一套应对 LLM 服务各种不稳定性的完整防御策略，显著提升了系统的可用性。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
-            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">OpenClaw 中同时存在两种互补的架构模式：Agent + Skill 架构……主子 Agent（Subagent）架构……两者不是替代关系，而是互补关系。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skill 是以 SKILL.md 文件形式存在的知识/指令包，告诉 Agent ‘如何做某类事情’。它不是可执行代码，而是一份结构化的操作指南。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">推送式返回的优势：1. 提前处理：无需等待所有子 Agent 完成，先完成的先处理 2. 提前终止：发现答案后可以 kill 其余子 Agent，节省资源……</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当子 Agent 方向偏离或卡住时，主 Agent 可以通过 steer 重新指挥……（个人认为是灵魂）</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">整个容错体系形成五层防御：第 1 层：错误分类 → 统一识别错误类型 第 2 层：智能重试 → 临时故障自动重试 第 3 层：Auth 轮换 → API Key 级别的故障转移……</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者基于自身经验，分享了 AI 聚合 API 独立站生意模式的演变。他指出，在 2023 年，这类业务主要面向公司和研究所，渠道推广困难。而到了 2026 年，市场需求激增，商业模式转变为需要付费购买渠道的「跑起来卖」模式。推文表达了作者对这门「古早生意」借助 AI 时代浪潮重新腾飞的感慨，提供了来自一线的、关于 AI 基础设施服务商业生态变化的微观洞察。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">91</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">京东技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">京东技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">78</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Yangyi(@Yangyixxxx)</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Yangyi</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6874</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">116</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenClaw</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent 架构</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Skill 机制</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">主子 Agent</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 聚合 API</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">商业模式</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 基础设施</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">市场观察</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">独立站</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/e1df8f68" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/status/2044790801188925508" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/e1df8f68">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATCSURBVO3BSY4jSRAEQdMA//9lnT76KYBEOquXMRH8JVVLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkWfvATkJ6n5JiA3am6A3Kh5AshPUvPGSdWik6pFJ1WLPlmmZhOQGyCTmgnIjZpJzQTkBsik5pvUbAKy6aRq0UnVopOqRZ98GZAn1HyTmifUTEAmNTdAnlDzBJAn1HzTSdWik6pFJ1WLPvnHqZmAPKFmUnMDZFIzAfmXnVQtOqladFK16JO/nJobIJOab1IzAblR8y85qVp0UrXopGrRJ1+m5m8C5EbNBGRSM6m5ATKpeULNn+SkatFJ1aKTqkWfLAPyk4BMap4AMqmZgLwBZFLzBpA/2UnVopOqRSdViz55Sc2/TM0baiYgk5obNX+Tk6pFJ1WLTqoWffISkEnNJiCTmhsgT6iZgExqJiCTmgnIpGZSMwF5Qs0NkCfUbDqpWnRSteikatEnL6mZgNyomYBMaiY1T6iZgPwkNTdAJjVPALlRMwH5SSdVi06qFp1ULfrky9RMQCY1E5An1GxS8wSQGzWTmgnIjZpJzRNqftJJ1aKTqkUnVYs+eQnIJjVPAJnU/E5qJiBPqJmA3KiZgExqftJJ1aKTqkUnVYs+eUnNE2omIG+omYBMam6ATGpu1ExA/iRqngAyqXnjpGrRSdWik6pFnywDMqmZgDyhZgLyBJBJzaTmCSCTmgnIN6mZgExqboB800nVopOqRSdVi/CXfBGQGzUTkBs1E5A/mZobIJOaGyCTmgnIjZpvOqladFK16KRq0SfLgLyh5gk1E5AbNU8AmdS8AWRSMwF5AsikZgJyA2RS88ZJ1aKTqkUnVYs+WaZmAjKpmYBMaiYgN2pu1NwAuVEzAZnUTEAmNU+ouQEyqZmAPKFm00nVopOqRSdViz55Ccg3qdkEZFJzA+QGyKRmAnID5A0gk5oJyATkRs0bJ1WLTqoWnVQt+uTL1ExAngAyqZmATGpu1ExAJjWTmgnIDZBvUnMDZFJzA2TTSdWik6pFJ1WL8Je8AGRScwPkCTUTkEnNE0AmNW8AmdQ8AWSTmt/ppGrRSdWik6pFn3wZkBs1N0AmNROQJ9RMQG7U3KiZgExqJiA/CcgTat44qVp0UrXopGoR/pK/GJBJzRtAJjUTkEnNG0AmNU8AuVHzk06qFp1ULTqpWvTJS0B+kppJzQTkDTVPAPkmIJOaJ4BMar7ppGrRSdWik6pFnyxTswnIE2pugGxScwPkDTVPqHkCyKTmjZOqRSdVi06qFn3yZUCeUPMGkBs1N0CeADKpmdRMQG6AvAFkUjMBmdRsOqladFK16KRq0Sf/ODUTkCfUTEDeUDMBuVEzAZnUTEAmIJOaCcik5o2TqkUnVYtOqhZ98j+n5ndScwPkBsgTQCY1m06qFp1ULTqpWvTJl6n5SWo2AZnUTEBugExqboA8oWYCcqNmAjKpeeOkatFJ1aKTqkWfLAPyk4A8oWYCcqPmRs0EZFIzAZnU3KiZgExA3lCz6aRq0UnVopOqRfhLqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4Dzdg0KViGtYoAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/status/2044790801188925508">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

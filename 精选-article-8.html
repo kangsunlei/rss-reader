@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Harness 刚火，可能就要成为过去时了</title>
+        <title>深度解析 OpenClaw 在 Prompt / Context / Harness 三个维度中的设计哲学与实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Harness 刚火，可能就要成为过去时了</h2>
-        <p>4/13/2026, 12:00:00 AM</p>
+        <h2>深度解析 OpenClaw 在 Prompt / Context / Harness 三个维度中的设计哲学与实践</h2>
+        <p>4/13/2026, 12:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度解读了 Yandex 关于大模型在长上下文中会主动「偷懒」的论文《Reasoning Shift》，并结合 Anthropic 的情绪向量研究，探讨了从模型内部机制而非外部工程脚手架解决 Agent 长程任务退化的可能性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入剖析了 OpenClaw 这一现象级 AI Agent 系统的核心设计哲学，从 Prompt Engineering、Context Engineering 和 Harness Engineering 三个维度，提炼出其结构化动态组装、上下文压缩与分层记忆管理等可复用的方法论。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章围绕 Yandex 研究员 Gleb Rodionov 的论文《Reasoning Shift》展开，该论文揭示了大型语言模型在长上下文环境中性能退化的新机制：模型并非因信息过载而「迷失」，而是主动进行「认知压缩」，减少思考深度以节省认知资源。实验表明，即使模型能清晰区分信号与噪声，推理长度和准确性仍会随上下文长度线性下降，且推理能力越强的模型，这种「偷懒」倾向越明显。作者回顾了行业为应对长上下文问题搭建的三层工程脚手架（RAG、上下文工程、Harness），指出这些外部约束治标不治本。文章进一步引入 Anthropic 关于模型内部情绪向量（如 desperate， calm）因果性驱动行为的研究，提出通过探测和干预模型内部状态（如注入 calm 向量）来从根本上抑制认知压缩，从而可能让复杂的 Harness Engineering 变得不再必要。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章对 2026 年初爆火的 AI Agent 项目 OpenClaw 进行了深度源码级解析，旨在超越表面的“养虾热”，提炼其背后长效的设计价值。作者从现代 AI 系统的三个关键阶段——Prompt Engineering（如何说）、Context Engineering（让 AI 看什么）、Harness Engineering（构建怎样的运行环境）——展开分析。在 Prompt 层面，OpenClaw 展示了高度结构化的动态组装机制，通过 23 个模块化组件和 Markdown 文件驱动（如 AGENT.md， SOUL.md， USER.md）来构建系统提示词，并贯彻了“质量大于数量”的极简主义风格。在 Context 层面，文章重点分析了其可扩展的 Skills 机制、自适应的上下文压缩（Compaction）与修剪（Pruning）算法，以及分层的记忆存储系统（如 MEMORY.md），以应对上下文窗口爆炸的挑战。文章基于作者的个人技术实践与源码阅读，旨在为读者构建自己的 Agent 系统提供可落地的设计思路和方法论借鉴。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">长上下文导致模型性能退化的核心机制是「认知压缩」，而非信息检索失败。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Yandex 论文通过实验证明，即使模型能完美识别无关信息，其推理长度和准确性仍会系统性下降，这是模型为节省认知资源而主动减少思考深度的结果。</span>
+                        <strong style="color: #1a365d">Prompt Engineering 已从撰写固定文本进化为复杂的动态组装机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> OpenClaw 的系统提示词由 23 个模块化组件动态拼接而成，并引入 AGENT.md、SOUL.md 等 Markdown 文件驱动配置，实现了指令的结构化、模块化与外部化，在保证功能完整性的同时贯彻了极简主义，为业务数据留出了宝贵的上下文空间。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">模型的推理能力越强，在拥挤的认知空间中「偷懒」的倾向越严重。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实验数据显示，从基础版到强推理版的模型，其推理长度在长上下文下的压缩幅度随能力增强而显著增大，表明当前强化推理的训练方式可能加剧了这一问题。</span>
+                        <strong style="color: #1a365d">Context Engineering 的核心是高效管理有限的上下文窗口，防止信息爆炸。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> OpenClaw 通过可扩展的 Skills 机制实现能力的渐进式披露，并设计了自适应的上下文压缩算法（分块、分层摘要）和精细化修剪策略，以智能地保留关键信息（如活跃任务、决策、标识符），舍弃冗余内容，维持长对话的连贯性与系统性能。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">通过干预模型内部情绪状态，可能从根源上解决认知压缩，从而颠覆外部约束工程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Anthropic 的研究表明，模型内部存在功能性情绪向量（如 desperate， calm），并能因果性地驱动行为。通过探测和注入特定向量（如 calm），可能直接抑制模型走捷径的冲动，使其在长上下文中保持深度思考，这为绕过复杂的 Harness 工程提供了新路径。</span>
+                        <strong style="color: #1a365d">系统的设计哲学强调结构化、安全性与用户体验的平衡。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从文件驱动的配置解耦、Skills 市场的安全管控，到记忆的分层管理（区分日常记录 MEMORY.md 与长期记忆）、群聊中的行为准则（Quality &gt; quantity），都体现了 OpenClaw 在追求强大能力的同时，对可控性、安全性和人性化交互的深度思考。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">分析热门项目应超越现象，沉淀可复用的方法论与设计模式。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者主张冷静剖析 OpenClaw 这类集大成者背后的设计思路，而非仅仅跟风实践。文章提炼的 Prompt/Context/Harness 三维分析框架及其具体实践，为开发者设计自己的 Agent 系统提供了直接可借鉴的架构范式和实现细节。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型在长上下文里不是被噪声干扰了，也不是找不到信息。它做了一个主动的认知决策：少想一些。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每多塞进一个 Token 的上下文，都在对推理深度征收一笔隐性税。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">推理能力被训得越强，偷懒幅度越深。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Harness 从外面管住了跳步的后果，但病因深植在模型内部。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">吞没 harness 的，可能是一个更平静、更耐心的模型。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Prompt Engineering → Context Engineering → Harness Engineering 也是现代 AI 系统的三大关键阶段，分别聚焦于‘如何说’、‘让 AI 看什么’以及‘构建怎样的运行环境’，三者层层递进，共同致力于提升大模型在复杂任务中的可靠性与可控性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">优秀的 Prompt 不是写得越长越好，而是越清晰、越模块化、越节省资源越好。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在群聊的时候不要每条都回复，Prompt 通过一句 Quality &gt; quantity 就非常清晰地传达了‘注重核心信息、拒绝废话、保证高价值输出’的复杂指令。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">如果把对话过程比喻比为一场‘开卷考试’：明确了课本学到了第 50 页，然后最后的 45~50 页是最近学习的，是必考的部分，前面 40 页是内容随机抽查，而你只能带 10 页纸进入考场，你要如何规划这 10 页纸的内容，来提高你的成绩呢？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">技术浪潮总有起伏，在大潮来时，我们要敢于直面浪潮；而在大潮退去之时，我们更要能留下沉淀，汲取这场火热盛宴背后那些更本质、更长效的核心价值。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -62,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯科技</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯科技</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4971</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">80 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">19925</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">长上下文</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推理偏移</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Harness Engineering</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型内部机制</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenClaw</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Prompt Engineering</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Context Engineering</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/c7d5f93e" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/824a229d" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/c7d5f93e">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAS/SURBVO3BQY4bSRAEQY8C//9l3znmqYBGJ2clIcziD6qWHKoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWHaoWfXgpCb9JZUrCjcoTSXhDZUrCpPJEEn6TyhuHqkWHqkWHqkUflqlsSsKNyhNJmFRuVG6ScKMyJeFG5UZlUxI2HaoWHaoWHaoWffiyJDyh8kYS3lB5QmVKwqTyTUl4QuWbDlWLDlWLDlWLPvzlkjCpTEmYVG6SMKlMSZhUJpUpCTcq/5JD1aJD1aJD1aIP/5gkTCo3SfhNKlMSJpW/2aFq0aFq0aFq0YcvU/lNKlMSJpU3VKYkTCqTypSESeUNlT/JoWrRoWrRoWrRh2VJ+JupTEmYVJ5IwqQyJWFSuUnCn+xQtehQtehQtSj+4C+WhBuVN5IwqUxJeEPlX3KoWnSoWnSoWvThpSRMKk8kYVKZkvCEyk0SJpUblRuVKQmTypSEmyRsUrlJwqTyxqFq0aFq0aFqUfzBFyVhUpmSMKncJOENlZskvKGyKQm/SeWNQ9WiQ9WiQ9WiDy8l4YkkTCpTEm5UpiT8n1RukjCpTEnYpPJEEjYdqhYdqhYdqhZ9eEllSsImlRuVmyQ8ofJGEiaVKQlPqNwkYUrCpDIl4ZsOVYsOVYsOVYviD35REt5QuUnCEyo3SbhRmZKwSWVTEiaVTYeqRYeqRYeqRR9eSsKkcqMyJWFSuUnCpPKEypSESWVSmZLwhsoTSZhUpiS8kYRJ5Y1D1aJD1aJD1aIPX5aESeWJJNwkYVK5ScI3qUxJuEnCpPJNKlMSNh2qFh2qFh2qFn34MpUpCZPKjcoTSXhC5SYJTyThJgmbVJ5IwjcdqhYdqhYdqhZ9eEnlJgmTyhNJmFRuVKYkTCpvqDyhcpOEKQmTypSESeUNlU2HqkWHqkWHqkXxBy8kYVJ5Igk3KlMSnlCZkvCEypSEG5UpCZPKTRI2qUxJuFF541C16FC16FC16MNLKm+oTEmYknCj8oTKlIRNSZhUNqlMSZhUpiRMKlMSNh2qFh2qFh2qFsUffFESblSmJEwqN0mYVDYl4UZlSsKNypSESeWbknCj8sahatGhatGhatGHl5LwhMqUhEllSsKkcpOESeUmCZPKpDIl4QmVJ5KwSWVSmZKw6VC16FC16FC1KP7gL5aEN1SmJLyhcpOEG5UnkjCpPJGESeWNQ9WiQ9WiQ9WiDy8l4Tep3Ki8oTIl4Ublm5Iwqdwk4Ublmw5Viw5Viw5Viz4sU9mUhBuVmyTcqDyhMiXhRuUNlSdUbpIwqWw6VC06VC06VC368GVJeELliSTcqNwk4Q2VKQlvJOGNJEwqk8qUhEnljUPVokPVokPVog9/OZUpCd+UhBuVJ1SmJEwqUxImlT/JoWrRoWrRoWrRh7pSmZIwqUxJuFG5UblRuUnC/+lQtehQtehQtejDl6n8JpUpCTcqUxKeSMKNyk0SJpUpCZPKlIQblSkJ33SoWnSoWnSoWvRhWRJ+UxKeUNmkMiVhk8qUhBuVJ1Q2HaoWHaoWHaoWxR9ULTlULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULTpULfoPQohADkneAL0AAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/824a229d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATLSURBVO3BQY4jRxAEwfAC//9l1xzzVECjkyPtKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBpBJzQ2QSc0TQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gaQSc0bQCY1N2o2qdkEZNNJ1aKTqkUnVYs++TIgT6h5AsikZlIzAZnU3Kh5A8gTap4A8oSabzqpWnRSteikatEnfxkgbwDZpGYCMqn5m5xULTqpWnRSteiTv4yaGyATkEnNJiD/JydVi06qFp1ULfrky9T8JiDfBGRSc6PmBsik5gk1/yUnVYtOqhadVC36ZBmQf5OaCcikZgJyA2RSMwGZ1ExAJjVvAPkvO6ladFK16KRq0ScvqfmTqXkCyKTmRs0EZFJzo+ZPclK16KRq0UnVok9eAjKpmYBsUjOpeQPIjZobIDdqJjUTkEnNBGSTmm86qVp0UrXopGoR/sgXAZnU3ACZ1NwAeULNE0AmNW8A+SY1TwCZ1LxxUrXopGrRSdUi/JFFQL5JzRtAJjUTkEnNBOQJNTdAbtT8SU6qFp1ULTqpWoQ/8kVAJjUTkBs1E5AbNROQSc0EZFLzBJBJzQTkm9RMQCY1E5BJzaaTqkUnVYtOqhbhj/wiIJvUvAHkRs0TQG7UfBOQGzXfdFK16KRq0UnVok9eAjKpmYBMaiYgN2omIE8AeULNBGRS8waQN9RMQCY1TwCZ1LxxUrXopGrRSdWiT15S801AJjUTkBs1E5BJzQRkUjMBeULNDZBJzQ2QSc0E5EbNpGbTSdWik6pFJ1WLPlkG5Ak1E5BJzQTkm9S8oeYGyCYgk5obIJOaTSdVi06qFp1ULfrkJSA3aiYgTwC5UTMBeQPIpOZGzQRkUnOj5g01E5AbNd90UrXopGrRSdWiT74MyI2aCcik5g0gk5ongExqJiCTmgnIDZBJzQTkBsikZgJyA2RS88ZJ1aKTqkUnVYs+WaZmAjKpuVEzAZnU3Kh5Q80NkEnNE2pugExqJiCTmjfUbDqpWnRSteikahH+yAtAJjU3QCY1E5BJzRtAJjVPAHlCzRNAJjUTkCfU3ACZ1Gw6qVp0UrXopGrRJ79MzQTkBsik5g0gb6i5ATKpmYDcANkE5AbIpOaNk6pFJ1WLTqoW4Y/8wYBMaiYgk5oJyKTmCSCTmieATGqeALJJzRsnVYtOqhadVC365CUgv0nNpGYCsgnIE0A2AZnUvKHmm06qFp1ULTqpWvTJMjWbgNwAuVEzAXlCzRtA3lDzhJobIDdq3jipWnRSteikatEnXwbkCTWbgExqJiBPAJnUTEAmNTdAJiCbgPymk6pFJ1WLTqoWffKXUfMGkEnNpGYCMql5Q80NkEnNBOTfdFK16KRq0UnVok/+MkBu1NyomYB8k5obIDdA3lCz6aRq0UnVopOqRZ98mZpvUnMD5EbNG2pugExqJiCTmknNBGRSMwGZ1ExAvumkatFJ1aKTqkWfLAPym4DcqHkCyI2aGyCTmgnIpGYCMqm5AXIDZFLzTSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoH19s3NfphbkMAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
