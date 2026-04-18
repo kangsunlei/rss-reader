@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AI 聚合 API 生意从冷门到爆发</title>
+        <title>字节跳动首创 DisCoGC 架构，重塑 EB 级分布式存储 GC 范式</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,79 @@
         </style>
     </head>
     <body>
-        <h2>AI 聚合 API 生意从冷门到爆发</h2>
-        <p>4/16/2026, 2:51:32 PM</p>
+        <h2>字节跳动首创 DisCoGC 架构，重塑 EB 级分布式存储 GC 范式</h2>
+        <p>4/17/2026, 4:04:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者回顾了 AI 聚合 API 生意从 2023 年仅服务于公司和研究所，到 2026 年需求激增、模式转变的观察。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了字节跳动基础设施团队与清华大学合作提出的 DisCoGC 架构，这是一种融合 Discard 和 Compaction 的全新垃圾回收范式，旨在解决 EB 级分布式日志结构存储中写放大与空间放大的权衡难题，已在生产环境中实现 TCO 降低 20%。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者基于自身经验，分享了 AI 聚合 API 独立站生意模式的演变。他指出，在 2023 年，这类业务主要面向公司和研究所，渠道推广困难。而到了 2026 年，市场需求激增，商业模式转变为需要付费购买渠道的「跑起来卖」模式。推文表达了作者对这门「古早生意」借助 AI 时代浪潮重新腾飞的感慨，提供了来自一线的、关于 AI 基础设施服务商业生态变化的微观洞察。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细解读了字节跳动基础设施团队与清华大学合作、被 FAST‘26 收录的论文《Discard-Based Garbage Collection for Distributed Log-Structured Storage Systems in ByteDance》的核心技术与工程实践。针对支撑字节跳动 EB 级数据的自研分布式存储系统 ByteStore 面临的经典难题——日志结构存储中垃圾回收带来的写放大与空间放大权衡，团队通过分析海量生产 IO Trace，发现主流业务场景中超过 90% 的无效数据是长连续范围。基于此洞察，他们提出了 DisCoGC 架构，核心思想是放弃以 Compaction 为主的传统 GC 模式，转而以 Discard 操作为主力直接回收长连续无效数据，从根本上避免有效数据的重写以消除写放大，同时辅以低频 Compaction 回收碎片化数据。文章深入阐述了工程落地中解决跨层边界损耗、避免前台业务冲击、管理碎片化与元数据膨胀、适配底层 SSD Trim 硬件等挑战的具体方案。最终，DisCoGC 在字节大规模生产集群全量部署，实现了约 20% 的存储系统 TCO 降低，且对前台业务性能零影响。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">通过分析 PB 级生产 Trace，发现主流业务场景的无效数据多为长连续范围，这是设计新 GC 范式的关键洞察。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 团队对在线服务、搜索广告推荐、离线计算三大场景进行全量 IO Trace 分析，发现超过 70% 的写入流量会产生长连续无效数据，这为直接 Discard 而非搬运数据的方案提供了数据支撑。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">提出 DisCoGC 架构，以 Discard 为主、Compaction 为辅，从根本上打破写放大与空间放大的权衡。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对长连续无效数据，直接通过 Discard 操作标记回收，避免搬运有效数据，从而消除写放大；针对碎片化无效数据，使用低频 Compaction 作为兜底，二者协同实现高效低成本的空间回收。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">工程落地面临跨层边界、资源冲击、碎片化、硬件适配等多重挑战，需设计针对性解决方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过边界扩展机制、Discard 友好的 EC 条带设计解决跨层对齐问题；通过批量合并、调度流控避免冲击前台业务；通过 Discard 与 Compaction 的互补调度管理碎片化；通过 Trim Filter/Merger 机制适配不同 SSD 硬件。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">DisCoGC 已在字节超大规模生产环境验证，实现显著降本增效且不影响业务性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 全量部署后，系统空间放大和逻辑写放大均显著降低，综合实现约 20% 的 TCO 节约，同时业务延迟、带宽等核心性能指标无劣化，GC 相关 CPU 开销也得到优化。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">传统 Compaction 为了回收这 80% 的无效空间，必须把那 20% 的有效数据读出来、重新写一遍，为了回收垃圾，反而产生了大量的额外写入，这正是写放大的核心来源。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">既然无效数据是连续的，我们为什么非要去搬运那一小部分有效数据？为什么不能直接把这段连续的无效空间标记回收，完全不动有效数据？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">用 Discard 机制直接回收长连续的无效数据，从根源上避免有效数据的重写，写放大自然就消失了；再用低频的 Compaction 做兜底，回收碎片化的无效数据，解决 Discard 带来的碎片化问题。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在字节的超大规模体量下，哪怕是 10% 的空间放大，都会转化成巨额的硬件成本浪费。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">DisCoGC 能自动适配不同的业务负载，在极低的写放大下，实现高效的空间回收，大幅降低了运维成本。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">78</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Yangyi(@Yangyixxxx)</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Yangyi</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">字节跳动技术团队</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">字节跳动技术团队</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">116</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">29 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7219</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 聚合 API</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">商业模式</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 基础设施</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">市场观察</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">独立站</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式存储</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">垃圾回收</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">日志结构存储</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">字节跳动</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统优化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2044790801188925508" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/5adc23d1" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2044790801188925508">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/5adc23d1">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATZSURBVO3BQY4bSRAEwfAC//9lXx3zVECjk7MjIczwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAnKjZgIyqXkDyKRmAvKEmgnIT1LzxknVopOqRSdViz5ZpmYTkCfUTEB+EpAbNROQJ9RsArLppGrRSdWik6pFn3wZkCfUPKFmAjKpmYBMQG7UPKHmJwF5Qs03nVQtOqladFK16JO/HJAbIJOaGyATkBs1E5BJzQRkUvMvOaladFK16KRq0Sd/OTU3QCYgN2omIDdA3gAyqfmbnVQtOqladFK16JMvU/OTgNyomYDcqHkDyDep+U1OqhadVC06qVr0yTIgPwnIpGYC8gaQSc0EZFJzo2YC8gSQ3+ykatFJ1aKTqkWfvKTmN1MzAXlCzRNAboA8oeZvclK16KRq0UnVok9eAjKpmYDcqJmAPKHmBsikZgLyhpoJyCYgk5obIJOaCciNmjdOqhadVC06qVqEf+QFIDdqboDcqJmATGomIDdqngAyqXkDyDepeQLIpOaNk6pFJ1WLTqoWffKSmgnIG2omIDdAJjVvAHkCyKRmAjKpeQPIE0Bu1Gw6qVp0UrXopGrRJy8BmdRMQCY1N0AmNTdAJiCTmgnIE2omIJOaGzU3QCY1m9TcAJnUvHFSteikatFJ1SL8I18E5Ak1E5An1NwAeULNE0Bu1HwTkBs133RSteikatFJ1SL8Iy8AmdR8E5BJzRNAbtTcAJnUPAFkUnMD5EbNDZAn1LxxUrXopGrRSdWiT15ScwNkUjMBmdRMQCY1N0AmNZvU3AB5AsgbQCY1/6eTqkUnVYtOqhZ9sgzIpOZGzQRkUjMBmdRMaiYgk5oJyA2QJ9TcALlRcwPkCTUTkEnNppOqRSdVi06qFn3yywH5SUAmNW8AeQLIpGZSMwGZgExqftJJ1aKTqkUnVYs++TIgk5obNW8AeULNBOQGyKTmRs0NkCeATGomIBOQn3RSteikatFJ1aJPXgIyqZmAvAHkRs2k5g01E5A3gExqJjUTkDfUTEAmNd90UrXopGrRSdWiT15Sc6PmCSCTmhsgk5oJyBNqbtRMQL4JyKTmNzupWnRSteikatEny4BsAjKpuQEyqXlDzQRkE5AngPxmJ1WLTqoWnVQt+mSZmv+TmgnIE2omIJOaCcik5g01TwB5AsiNmjdOqhadVC06qVr0yUtAfpKaGyCTmgnIpOYnAXkCyKTmCTUTkEnNppOqRSdVi06qFn2yTM0mIE+omYBMaiYgTwB5Q80E5EbNJjXfdFK16KRq0UnVok++DMgTap5QMwGZ1ExAJjVPAJnUTEAmNU8AeUPNBOQJNW+cVC06qVp0UrXok78ckEnNG0CeAHIDZFIzqZmATGpugExAJjU3QDadVC06qVp0UrXok38MkEnNpGYCMqmZgExqngAyAZnUPAFkUnMDZFLzTSdVi06qFp1ULfrky9R8k5oJyA2QGyCTmgnIpOYJNROQSc0bQCY1E5BJzaaTqkUnVYtOqhZ9sgzITwLyhpoJyARkE5A31PxmJ1WLTqoWnVQtwj9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9B9zIRmDroy6lQAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

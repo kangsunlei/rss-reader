@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>这大概是我读过最硬核的一次 Linux 内核重构文章了</title>
+        <title>万字综述 Harness 革命！</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>这大概是我读过最硬核的一次 Linux 内核重构文章了</h2>
-        <p>4/12/2026, 9:51:00 AM</p>
+        <h2>万字综述 Harness 革命！</h2>
+        <p>4/13/2026, 3:10:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文系统梳理了腾讯工程师 Kairui Song 主导的 Linux 内核 Swap 子系统现代化重构工程，详细解读了从引入 swap table、移除 swap map 到探索虚拟 swap 空间等多个阶段的技术细节、性能收益与社区影响。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于 2026 年 AI 发展背景，系统阐述了 Agent Harness 作为驾驭智能体复杂性的战略基础设施，从软件工程演进史切入，分析了其核心组件、生态格局，并探讨了工程师在 Agent 时代的能力转型方向。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深度解析了腾讯 TencentOS 内核工程师 Kairui Song 对 Linux 内核 Swap 子系统进行的一系列系统性重构工作。该工程历时 18 个月，旨在解决 Swap 子系统数十年积累的代码复杂性问题。核心内容包括：引入 swap table 替代 XArray，带来 5%~20% 的性能提升；移除 swap map，统一元数据管理，节省约 30% 的内存开销；以及在此基础上探索虚拟 swap 空间等前瞻性方案。文章不仅翻译整理了 LWN.net 的三篇深度报道，还补充了腾讯团队提出的 Virtual GhostSwap 方案与 Meta 方案的对比，并展望了后续对 MGLRU 等内存管理子系统的优化工作，展现了大规模生产实践驱动内核创新的完整图景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章是新加坡 AI 研究员黄佳在 Datawhale 的深度分享，核心观点是：当大模型能力进入高原期，决定 Agent 系统成败的关键已从模型本身转向其外围工程——Harness。作者通过回顾 30 年软件工程演进史（从 GOF 设计模式到微服务、DDIA），论证了 Harness 是驾驭 Agent 这一“不确定性系统”复杂性的历史必然。文章详细定义了 Agent = Model + Harness，并解析了其六大核心组件（Agentic Loop、Tool System 等）以及解决的五大落地难题（如无限循环、权限失控）。同时，梳理了当前 Harness 生态格局，指出 Claude Code 是纵深型代表，OpenClaw 等是横向扩展代表。最后，文章强调工程师需从“码农”升级为“系统工程师”，掌握抽象、结构化思维和驾驭不确定性的能力，以设计可控的 Agent 系统，实现从写代码到设计系统的转型。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Swap 子系统的现代化重构通过引入 swap table 统一了元数据管理，显著提升了性能和可扩展性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用基于 swap cluster 的 C 数组（swap table）替代了原有的 XArray 和 address_space 两套机制，消除了锁竞争和查找开销，在基准测试中获得了 5%~20% 的吞吐量提升。</span>
+                        <strong style="color: #1a365d">Harness 是 Agent 时代的战略级基础设施，核心价值在于驾驭智能体的不确定性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当模型智力达到高原期，比拼的重点从模型能力转向其外围工程（Harness）。Harness 作为包裹模型的运行时和基础设施，负责工具调用、上下文管理、权限控制等，是将大模型“大脑”变为 Agent “身体”的关键，旨在构建可控的系统。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">移除独立的 swap map 并将引用计数整合进 swap table，是简化设计和降低内存开销的关键一步。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过重新设计 swap table entry 的格式，将引用计数、页面状态等信息统一存储，彻底移除了 swap map，为 1TB 的 swap 文件节省了约 256MB 的元数据内存。</span>
+                        <strong style="color: #1a365d">Harness 的出现是软件工程演进历史的必然，其本质是工程师与系统复杂性斗争的延续。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从 GOF 设计模式（驾驭对象）、企业架构模式（驾驭业务）、微服务（驾驭分布式通信）到 DDIA（驾驭数据系统），复杂性的中心不断转移。Agent 引入了概率和不确定性，Harness 正是应对这一新复杂性中心的“缰绳”，其核心方法论仍是抽象与结构化。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">生产环境的需求是驱动内核深度优化的核心动力，腾讯的实践体现了这一点。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文中所述的重构工作以及后续对 MGLRU 的优化补丁，均源于腾讯大规模服务器场景中遇到的实际性能与稳定性问题，验证了真实负载对内核演进的重要价值。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">虚拟 swap 空间是 Swap 子系统未来的重要方向，但社区在实现方案上存在分歧。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Meta 的方案主张一个强制的统一中间层以解耦 PTE 与物理设备，而腾讯团队则基于 swap table 提出了更灵活、可选的 Dynamic Ghost Swapfile 方案，两者的碰撞反映了在性能、内存开销和复杂度之间的不同权衡。</span>
+                        <strong style="color: #1a365d">工程师在 Agent 时代需从“码农”转型为“系统工程师”，核心能力是设计并驾驭复杂系统。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 单纯写代码的“码农”价值可能被 AI 替代，而能理解业务、具备抽象思维、能设计循环策略和质量审核机制的“系统工程师”将不可或缺。这要求工程师深度理解现代 IT 系统，掌握 Harness 设计能力，并以“懂业务”和“深度交互能力”构建个人护城河。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Swap 子系统自诞生以来，数十年间代码复杂度持续累积，逐渐成为内存管理子系统中公认的复杂地带。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">根据 Kairui 的测评，第一阶段工作就可以‘在基准测试和工作负载测试中，吞吐量、RPS 或构建时间性能提升高达约 5-20%’。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Swap 子系统约 30% 的元数据开销得以消除，对于 1TB 的 swap 文件来说，可节省约 256MB 内存。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">页面可以轻松地在不同 swap 设备之间迁移。例如，一个 zswap 页面被推送到存储设备时，只需修改 swp_desc 结构体中的两个字段即可。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">生产环境 OOM 问题也明显减少，代码复杂度也随之降低。值得一提的是，部分问题正是 Kairui Song 所在团队于腾讯生产环境中发现并着手解决的。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型智力已经在线，我们现在比拼的就是 Harness。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Harness 做的就是把大模型的大脑变成了 Agent 的身体。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">工程师永远不会失业，但码农可能会失业。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">技术架构演进二十几年不变的是什么？不变的就是如何驾驭复杂性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Harness 就是我们驾驭 Agent 这个‘不确定性系统’的缰绳。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -65,30 +62,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Datawhale</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Datawhale</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">39 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9731</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6906</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Linux 内核</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存管理</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Swap 子系统</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内核重构</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent Harness</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程演进</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/c67b2af9" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/f0f5a2f7" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/c67b2af9">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATaSURBVO3BQY4kRxIEQdNA/f/Lun30vQSQSK/mcGgi+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFn7wE5DepuQFyo2YCMqmZgExqngDyhJoJyG9S88ZJ1aKTqkUnVYs+WaZmE5An1NwAmdRMQG6ATGpu1GxSswnIppOqRSdVi06qFn3yZUCeUPMEkCfUTEAmNROQSc0EZFIzAXlCzRNAnlDzTSdVi06qFp1ULfqk/g+QGyA3QCY1E5BJzd/kpGrRSdWik6pFn/zHALlRswnIf8lJ1aKTqkUnVYs++TI1v0nNDZAbIJOaCciNmknNDZBJzRNq/iQnVYtOqhadVC36ZBmQPwmQSc0EZFIzAZnUTEBugExq3gDyJzupWnRSteikahH+yL8YkBs1E5BJzW8CMqn5m5xULTqpWnRStQh/5AUgk5oJyCY13wRkUjMBmdRMQCY1N0AmNROQTWq+6aRq0UnVopOqRfgjXwTkDTUTkEnNBORGzRNAJjUTkEnNDZBvUvMEkEnNGydVi06qFp1ULcIf+UVAJjUTkBs1E5BJzQ2QSc0EZFIzAXlCzQ2QGzX/JidVi06qFp1ULcIfWQRkUjMBeULNBOSb1DwBZFIzAfkmNROQSc0EZFKz6aRq0UnVopOqRZ+8BGRSMwF5Qs0E5Ak1bwC5UTOpmYDcqPlNQCY133RSteikatFJ1SL8kT8IkEnNE0AmNTdAJjVvAPkmNROQSc0TQCY1b5xULTqpWnRSteiTl4C8oeYGyKRmAvIEkEnNE0CeUHMDZFJzA2RSMwG5UTOp2XRSteikatFJ1aJPlqmZgDyhZhOQSc0TQJ5QcwNkE5BJzQ2QSc2mk6pFJ1WLTqoWffKSmhs1E5AJyKRmAjKpuVEzAXkCyBNqJiCTmhs1b6iZgNyo+aaTqkUnVYtOqhbhj7wA5EbNDZBJzRNAJjU3QCY1bwCZ1ExAnlAzAXlCzQRkUjMBmdS8cVK16KRq0UnVok+WqZmAvAHkRs0EZFLzBJAn1Dyh5gbIpGYCMql5Q82mk6pFJ1WLTqoW4Y+8AGRSMwGZ1GwCMqmZgDyh5gbIjZongExqJiBPqLkBMqnZdFK16KRq0UnVIvyRF4BMap4A8oSaGyCTmhsgN2qeADKpmYB8k5oJyBNq3jipWnRSteikahH+yL8YkDfUTEBu1ExAJjVPAJnUPAFkk5o3TqoWnVQtOqla9MlLQH6TmknNJjU3QG6AbAIyqXlDzTedVC06qVp0UrXok2VqNgG5AfKGmhsgk5ongLyh5gk1N0Bu1LxxUrXopGrRSdWiT74MyBNqNqmZgDyhZgIyqZmATGpugExANgH5TSdVi06qFp1ULfrkL6NmAjKpmYBMam7UTEAmNW+ouQEyqZmA/JNOqhadVC06qVr0yV9OzRNAJjUTkE1qboDcAHlDzaaTqkUnVYtOqhZ98mVqvknNBORGzRNAbtTcAJnUTEAmNZOaCcikZgIyqZmAfNNJ1aKTqkUnVYs+WQbkNwGZ1NwAmdRsAjKpmYBMaiYgk5obIDdAJjXfdFK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8Bg9hNHxIbezEAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/f0f5a2f7">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATVSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1JzA+QJNW8AmdRMQJ5QMwH5TWreOKladFK16KRq0SfL1GwCsknNBOQNNTdqNqnZBGTTSdWik6pFJ1WLPvkyIE+oeQLIpGYCcqPmCSBPAHlCzRNAnlDzTSdVi06qFp1ULfrkL6dmAvKEmhsgN2omIJOav8lJ1aKTqkUnVYs++Z9RMwGZ1ExAJjVPAPk/OaladFK16KRq0SdfpuY3AXlCzRNAJjU3am6ATGqeUPMnOaladFK16KRq0SfLgPyb1ExAJjUTkEnNjZoJyKRmAjKpeQPIn+ykatFJ1aKTqkWfvKTmT6bmRs03qZmATGpu1PyXnFQtOqladFK1CH/kBSCTmgnIJjU3QG7U3AB5Qs0EZFJzA2RSMwHZpOabTqoWnVQtOqlahD+yCMikZgIyqZmATGreAHKj5g0gk5obIN+k5gkgk5o3TqoWnVQtOqla9MlLQCY1E5An1ExAbtT8JiA3QCY1k5oJyI2ab1Kz6aRq0UnVopOqRfgji4BMan4TkEnNBGRScwNkUjMBmdRMQL5JzQRkUjMBmdRsOqladFK16KRq0ScvAbkB8oSaCciNmk1AJjU3aiYgN2p+E5BJzTedVC06qVp0UrUIf+RfBORGzQRkUvMGkEnNBGRScwPkm9RMQCY1TwCZ1LxxUrXopGrRSdUi/JEXgNyomYBMaiYgN2pugNyouQEyqZmAPKHmBsik5gbIpGYCcqPmm06qFp1ULTqpWvTJMjUTkCfUfBOQGzVvqLkBsgnIpOYGyKRm00nVopOqRSdViz75ZWpugNyomYC8oWYC8oSaCcik5kbNG2omIDdqvumkatFJ1aKTqkWfLAMyqXlDzRtqboBMap4AMqmZgNwAmdRMQG6ATGomIDdAJjVvnFQtOqladFK16JNlaiYgT6iZgExqngDyBJAn1Dyh5gbIpGYCMql5Q82mk6pFJ1WLTqoWffLL1ExAJiCTmifUTEAmNROQSc0NkAnIpGZScwNkUjMBuQEyqZnUTEAmNZtOqhadVC06qVr0yZepmYDcqJmATGomNROQN4BMaiY1N0AmNROQGyCbgNwAmdS8cVK16KRq0UnVIvyR/zAgk5oJyBNqJiCTmgnIpOYJIJOaJ4BsUvPGSdWik6pFJ1WL8EdeAPKb1LwB5E+mZgIyqZmAPKHmm06qFp1ULTqpWvTJMjWbgNwAuVFzo+YGyKTmCSBvqHlCzQ2QGzVvnFQtOqladFK16JMvA/KEmj+JmgnIpGYCMqm5ATIB2QTkN51ULTqpWnRSteiTv4yaCcgNkBs1k5oJyKTmDTU3QCY1E5B/00nVopOqRSdViz75y6l5AsgNkE1qboDcAHlDzaaTqkUnVYtOqhZ98mVqvknNG0BugNyouQEyqZmATGomNROQSc0EZFIzAfmmk6pFJ1WLTqoWfbIMyG8CMqmZgNyo2QRkUjMBmdRMQCY1N0BugExqvumkatFJ1aKTqkX4I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/AL0HTRlSYNJeAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

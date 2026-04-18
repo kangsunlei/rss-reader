@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cloudflare Email 发送服务进入公测，价格与 Resend 对比</title>
+        <title>从 Node.js 到 Bun：一次 5 倍吞吐量跃迁的全程实录</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,79 @@
         </style>
     </head>
     <body>
-        <h2>Cloudflare Email 发送服务进入公测，价格与 Resend 对比</h2>
-        <p>4/16/2026, 1:52:17 PM</p>
+        <h2>从 Node.js 到 Bun：一次 5 倍吞吐量跃迁的全程实录</h2>
+        <p>4/17/2026, 1:04:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Cloudflare 的 Email 发送服务进入公开测试阶段，支持 Worker 原生绑定和 REST API，并提供了与 Resend 的价格对比分析。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细记录了 Trigger.dev 团队将关键服务 Firestarter 从 Node.js 迁移至 Bun 的全过程，通过四轮性能优化（移除 SQLite、迁移 HTTP 栈、精简热路径、编译为二进制）和修复一个 Bun 特有的内存泄漏问题，最终实现了吞吐量提升 5 倍、延迟大幅降低、内存占用减少的显著成果。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">这条推文宣布了 Cloudflare Email 发送服务进入公开测试版。作者表达了期待之情，并介绍了核心功能：在 Cloudflare Worker 中可使用原生绑定一行代码发送邮件，非 Worker 环境也可使用 REST API。推文重点分析了服务定价：免费层仅限已验证域名测试；按量付费为每 1000 封 0.35 美元，无月费。作者将其与常用服务 Resend（每月免费 3000 封）进行了对比，得出结论：月发送量低于 4-5 万封时 Resend 更便宜或免费，超过此量级则 Cloudflare 更划算，因此 Resend 仍有市场空间。推文附带了 Cloudflare 官方博客链接和一张可能展示价格或界面的图片。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章分享了 Trigger.dev 团队对其热启动连接调度服务 Firestarter 进行深度性能优化的完整案例。该服务最初基于 Node.js 构建，存在 CPU 占用过高的问题。团队通过四轮系统性优化：首先用 Map 替换过度设计的 SQLite 查询，使吞吐量翻倍；接着将 HTTP 服务器从 Node.js 迁移至 Bun 的原生 `Bun.serve()`，再次实现性能翻倍；然后通过 CPU 性能分析，识别并移除了 Zod 解析、请求头转换和日志序列化等热路径开销；最后利用 `bun build --compile` 将服务编译为单一二进制文件，进一步提升了性能并减小了镜像体积。文章还重点剖析了在迁移过程中发现的一个 Bun 特有的内存泄漏陷阱——未 resolve 的 Promise 会持续占用内存，并给出了修复方案。整个过程附有详尽的基准测试数据、生产环境监控图表和可复现的调试方法，为从 Node.js 迁移至 Bun 提供了极具价值的实战参考。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">性能优化必须始于精准的性能分析，而非盲目猜测。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 团队通过 `node --prof` 和 Bun 的 `--cpu-prof-md` 等工具，准确识别出 SQLite 查询、HTTP 栈开销、Zod 解析等真正的性能瓶颈，从而进行针对性优化，避免了无效劳动。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">Bun 的 HTTP 模型与 Node.js 有本质区别，迁移时需特别注意 Promise 的生命周期管理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Bun 的 `fetch` handler 中，每个 `Promise<response>` 都必须被 resolve 或 reject，否则会导致请求上下文内存泄漏。这与 Node.js 中响应绑定在 socket 上的自动清理机制不同，是迁移长轮询或流式端点时的关键陷阱。</response></span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">`bun build --compile` 能为长期运行的服务带来显著的性能与部署收益。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将服务编译为单一可执行文件，在零代码改动的情况下，为团队带来了 14% 的吞吐量提升和 24% 的 p95 延迟改善，同时将容器镜像大小从约 120MB 缩减至 68MB，简化了部署。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">生产环境是性能优化的最终试金石，预发布环境的测试至关重要。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 本地基准测试与生产环境（尤其是云环境的 vCPU）存在差异。团队通过在预发布环境部署，发现了内存泄漏、`idleTimeout` 配置不当等仅在真实负载下才会暴露的问题。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们在一项对延迟极为敏感的服务中，用 Bun 替换了 Node.js，吞吐量直接提升了 5 倍。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Bun 中，fetch handler 的契约有所不同。每个 Promise<response> 都必须被 settle（这不是建议，而是硬性要求）。</response></li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">先做性能分析，再谈优化。移除 SQLite 事后看来显而易见（事后诸葛亮不都这样吗？），但我们之所以能发现它，纯粹是因为做了性能分析。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">修复内存泄漏后，CPU 上升了约 5%。这就是正确清理那些此前被悄悄泄漏的连接所需付出的成本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Bun 的 HTTP 模型与 Node 有本质区别。响应的生命周期绑定在 Promise 上，而非 socket 上。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Viking(@vikingmute)</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Viking</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">332</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">24 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5939</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Email 服务</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Workers</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">公测</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">价格对比</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Bun</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Node.js</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">内存泄漏</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">后端架构</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2044775894083146007" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/6a36852d" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2044775894083146007">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/6a36852d">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATvSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6NdKczwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzQRkUjMBmdQ8AeQJNROQ36TmjZOqRSdVi06qFn2yTM0mIN+kZgIyqZmA3KiZ1GxSswnIppOqRSdVi06qFn3yZUCeUPMEkBs1E5BJzaRmAnKj5gbIE2qeAPKEmm86qVp0UrXopGrRJ/8xaiYgk5obIJOaCcgNkEnNBGRS819yUrXopGrRSdWiT/5jgExqJiCTmknNBGRSMwGZ1ExA/k9OqhadVC06qVr0yZep+U1qJiCTmgnIE0AmNTdqboBMap5Q8yc5qVp0UrXopGrRJ8uA/M3UTEAmNROQSc0EZFLzBpA/2UnVopOqRSdViz55Sc2fTM0E5Ak1b6iZgExqbtT8TU6qFp1ULTqpWoQ/8gKQSc0EZJOaGyCTmgnIpGYCMqmZgDyh5gbIpGYCsknNN51ULTqpWnRStQh/ZBGQSc0E5EbNJiCTmhsgN2reAPJNap4AMql546Rq0UnVopOqRfgjXwTkN6mZgDyh5gbIE2pugNyo+ZucVC06qVp0UrXok3+ZmjeA/CY1E5BJzQTkDSA3aiYgk5oJyKRm00nVopOqRSdVi/BHfhGQN9TcALlRMwG5UfMEkBs13wTkRs03nVQtOqladFK16JN/mZongExq3lBzA2RS8waQN9RMQCY1TwCZ1LxxUrXopGrRSdWiT14CcqPmBsikZgIyqZmATGpugNyouQHyhJobIJOaGyCTmgnIjZpJzaaTqkUnVYtOqhZ98mVAJjU3QCY1E5AbIJOa36TmBsgmIJOaGyCTmk0nVYtOqhadVC365CU1E5A31ExAbtRMQCYgTwCZ1ExAJjUTkEnNjZo31ExAbtR800nVopOqRSdVi/BHXgDyhpoJyKTmDSBPqJmATGomIJOaCcgTaiYgT6iZgExqJiCTmjdOqhadVC06qVr0yTI1b6iZgNyomYA8oWYCMqmZgExqnlBzA2RSMwGZ1LyhZtNJ1aKTqkUnVYvwR14AMqmZgNyoeQLIpOYJIDdqboDcqHkCyKRmAvKEmhsgk5pNJ1WLTqoWnVQt+uTL1ExAngDyBpBJzQ2QGzU3QCY1E5AbIJuA3ACZ1LxxUrXopGrRSdUi/JG/GJBJzQRkUrMJyKTmCSCTmieAbFLzxknVopOqRSdViz55CchvUjOpmYBMam6ATGomIE8A2QRkUvOGmm86qVp0UrXopGrRJ8vUbAJyA2RS84SaGzVvAHlDzRNqboDcqHnjpGrRSdWik6pFn3wZkCfUvAFkUnMDZFJzA2RSMwGZ1NwAmYBsAvKbTqoWnVQtOqla9Mn/DJBJzQRkUjOpmYBMat5QcwNkUjMB+TedVC06qVp0UrXok/8ZNROQSc0E5JvU3AC5AfKGmk0nVYtOqhadVC365MvUfJOaCcgEZFIzqZmATGomIJOaGyCTmgnIpGZSMwGZ1ExAJjUTkG86qVp0UrXopGrRJ8uA/CYgk5oJyATkRs0EZFJzA2RSMwGZ1ExAJjU3QG6ATGq+6aRq0UnVopOqRfgjVUtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRf8AjexfIuAvT1cAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
