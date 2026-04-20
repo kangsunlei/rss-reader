@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>从 Vibe Coding 到 Agentic Engineering：重构后台开发全流程</title>
+        <title>大模型架构的下半场</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>从 Vibe Coding 到 Agentic Engineering：重构后台开发全流程</h2>
-        <p>4/17/2026, 9:36:00 AM</p>
+        <h2>大模型架构的下半场</h2>
+        <p>4/19/2026, 10:12:10 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了腾讯技术团队如何通过构建一套基于 Claude Code、自定义 Skill/Command/MCP 体系的 Agentic Engineering 工作流，将后台开发从需求到发布的全流程自动化，实现从“提示即祈祷”的 Vibe Coding 到“流程驱动、人工审核”的智能体工程的转变。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提出大模型架构已进入以「扩展通信」为核心的下半场，批判了传统残差连接的「累加」范式，并介绍了通过 Flash Depth Attention 和 MoDA 实现层间「选择性检索」的创新方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章系统阐述了作者在腾讯内部实践的一套名为 Agentic Engineering 的 AI 辅助开发工作流。该工作流旨在解决传统 Vibe Coding（即兴编码）模式在代码质量、审查流程和工程纪律上的不足。通过构建三层工具链（Skill、Command、MCP Server）并集成 superpowers 插件，作者将后台开发的 11 个关键阶段（需求获取、澄清、计划、开发、自审、部署、日志、创建 MR、AI 评审、修复、合入）串联成一个自动化流程。文章以“RedeemReward 接口数据上报逻辑变更”这一真实需求为例，逐步展示了 AI 如何作为自主智能体在结构化流程中执行任务，而开发者则转变为流程的编排者和关键节点的审核者。文章不仅提供了详尽的实践步骤和工具说明，还总结了流程耗时、工作方式变化，并反思了 Agentic Engineering 的核心价值在于用流程约束 AI 能力，实现高效且可控的工程化开发。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章由华中科技大学王兴刚团队投稿，系统论述了大模型架构发展的新阶段。作者指出，过去十年模型扩展主要聚焦于参数、数据和序列长度（层内能力），而层间通信机制自 ResNet 以来几乎停滞，仍依赖简单的残差累加（x + F(x)），导致深层网络出现「信息稀释」问题。文章批判了将层间通信视为「累加」的范畴谬误，提出应转向基于内容的「选择性检索」范式，即在深度维度引入注意力机制。团队为此开发了 Flash Depth Attention 以解决工程效率瓶颈，并进一步提出混合深度注意力（MoDA），将序列维度和深度维度的检索统一到一个 softmax 中。实验表明，该方案在主流开源模型上全面提升了性能，标志着大模型架构从「扩展组件」进入「扩展通信」的下半场。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Agentic Engineering 的核心是用结构化流程约束 AI，将人从执行者转变为编排者和审核者。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与依赖运气的 Vibe Coding 不同，Agentic Engineering 强调在需求澄清、计划制定、代码审查等关键节点设置人工审核，让 AI 在预设的工程框架内自主执行编码、测试、部署等重复性任务，确保结果的可控性和质量。</span>
+                        <strong style="color: #1a365d">大模型架构进入下半场，核心从「扩展组件」转向「扩展通信」。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 过去十年模型在参数、数据、序列长度上成功扩展，但层间通信机制自 2015 年 ResNet 的残差连接以来未有根本性革新，成为新的瓶颈。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">构建三层工具链（Skill/Command/MCP）是实现全流程自动化的技术基础。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Skill 封装核心业务逻辑，Command 提供用户调用入口，MCP Server 连接外部平台 API。这种架构实现了工具间的可组合与链式调用，例如 `pm-dev` 完成后自动触发 `brainstorming`，从而将离散的开发动作串联成自动化流水线。</span>
+                        <strong style="color: #1a365d">传统残差连接的「累加」范式存在「信息稀释」问题，限制了深度网络的有效性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 深层网络中，原始信号与层层叠加的信息混合，导致靠后的层难以有效访问早期层的特定信息，许多层因此变得「沉默」，实际有效深度不足。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Superpowers 插件提供了保障工程纪律的“强制流程”，是避免 AI 自由发挥的关键。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `brainstorming`、`writing-plans`、`executing-plans` 等结构化工作流 Skill 确保了 AI 先理解需求、再制定计划、最后按步骤执行，防止其跳过关键环节，这是工程化应用 AI 与随意使用聊天框的本质区别。</span>
+                        <strong style="color: #1a365d">层间通信应从「累加」范式转向「选择性检索」范式，即在深度维度引入注意力机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴序列维度注意力成功的经验，让每一层能根据当前内容（Query）直接检索（Key-Value）历史层中的特定信息，而非被动混合所有前序层输出。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI 代码评审能极大提升效率，但人工审核环节不可省略。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `/review-mr` 和 `code-review` 工具能基于团队规范进行系统化审查并精确定位问题，但 AI 可能误判业务上下文或给出不适用建议。因此，Reviewer 必须对 AI 的每条意见进行最终判断，交叉使用不同模型进行审查也能减少盲区。</span>
+                        <strong style="color: #1a365d">Flash Depth Attention 和 MoDA 是实践「深度检索」的高效工程方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Flash Depth Attention 通过优化数据布局适配 GPU 硬件，解决了深度注意力计算效率低下的问题。MoDA 进一步将序列注意力和深度注意力融合到一个统一的 softmax 操作中，实现了高效的双维度信息聚合。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Vibe Coding 是“提示即祈祷”（prompt-and-pray），你把需求扔给 AI，然后祈祷它别出错。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agentic Engineering 的核心思路是——人负责定义目标、约束条件和质量标准，AI 作为自主智能体在结构化流程中执行规划、编码、测试和迭代，每个关键节点都有人工审核。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">说到底，这就是 Agentic Engineering 的核心理念——人是编排者（Orchestrator），AI 是自主执行者。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这和 Vibe Coding 的本质区别在于：Vibe Coding 依赖运气，Agentic Engineering 依赖流程。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">自定义 Skill 的核心价值是编排和串联，而不是从零实现所有能力。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">研究者们花了十年去扩展层内的计算能力，却忘了扩展层间的通信能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">深度在数量上增长了，但在质量上却没有。层与层之间的通信机制几乎没有变化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这就是范畴谬误：把层间通信当作累加（用学习到的或生成的系数来组合信号）而非检索（通过基于内容的匹配来选择信息）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大模型架构的上半场是关于扩展组件的。下半场是关于扩展通信的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">深度残差的‘+’带我们跑过了一段极为精彩的旅程，但现在，是时候升级这座阶梯了。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">量子位</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">衡宇</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">45 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">11143</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5339</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agentic Engineering</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 辅助开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件开发工作流</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大模型架构</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Transformer</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">深度注意力</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">残差连接</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">神经网络</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/0c4e8a58" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/2ce38f07" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/0c4e8a58">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATJSURBVO3BQY4bSRAEwfAC//9lXx3zVECjk6PRIszwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAvKGmhsgk5ongDyhZgLyk9S8cVK16KRq0UnVok+WqdkE5Ak1E5BJzQRkUjOpuQHyhJoJyBNqNgHZdFK16KRq0UnVok++DMgTap5Qc6PmRs0EZFIzAblR85OAPKHmm06qFp1ULTqpWvTJPw7IjZoJyBNAbtRMQCY1E5BJzf/JSdWik6pFJ1WLPvnHqXlCzRNAboC8AWRS8y87qVp0UrXopGrRJ1+m5icBmdRMQN5QMwGZ1ExAvknNb3JSteikatFJ1aJPlgH5SUAmNROQSc0EZFIzAdmkZgLyBJDf7KRq0UnVopOqRfhH/mFAnlDzTUDeUPMvO6ladFK16KRq0ScvAZnUTEBu1ExAnlAzAZnUTEBu1PwmQCY1N0AmNROQGzVvnFQtOqladFK16JO/DMiNmhsgm4DcqLlRcwPkBsgNkBs1N2omIJtOqhadVC06qVr0yTIgT6i5ATKpuVEzAZnUTEAmNROQGyCTmgnIpOYNIE8AuVGz6aRq0UnVopOqRZ8sUzMBmdTcAJnUTEAmNROQGyA3QCY1E5BJzY2aGyCTmk1qboBMat44qVp0UrXopGoR/pEXgExqboBMaiYgN2pugExqJiBvqLkBcqPmm4DcqPmmk6pFJ1WLTqoW4R9ZBGRSswnIpOYGyKRmAjKpmYDcqHkCyKTmBsiNmhsgT6h546Rq0UnVopOqRZ/8MCA3aiYgk5oJyKTmDSCTmieAPAHkDSCTmr/ppGrRSdWik6pFn3wZkDfUTEAmNW+ouQHyhJobIDdqboA8oWYCMqnZdFK16KRq0UnVok9+mJongExqJiBPAHlDzRNAngAyqZnUTEAmIJOan3RSteikatFJ1SL8I4uAvKFmE5AbNROQJ9S8AeRGzQRkUjMBeULNppOqRSdVi06qFn3yEpBJzQ2QSc0NkBs1E5BJzQRkAjKpmYC8AWRSM6mZgLyhZgIyqfmmk6pFJ1WLTqoWffKSmhsgTwCZ1PxNam6AfBOQSc1vdlK16KRq0UnVok+WAXlDzQTkRs2kZgIyqZmAPAFkE5AngPxmJ1WLTqoWnVQt+mSZmk1qboBMap5QMwG5UTMBmdS8oeYJIE8AuVHzxknVopOqRSdViz55CchPUrMJyKRmArIJyBNAJjVPqJmATGo2nVQtOqladFK16JNlajYBeUPNBGRSMwGZ1ExA3lAzAblRs0nNN51ULTqpWnRSteiTLwPyhJon1ExAngAyqXlCzQRkUvMEkDfUTECeUPPGSdWik6pFJ1WLPvnHAdkE5AkgN0AmNZOaCcik5gbIBGRScwNk00nVopOqRSdViz75n1FzA2RScwNkUvMEkAnIpOYJIJOaGyCTmm86qVp0UrXopGrRJ1+m5pvU3AB5AsikZgIyqXlCzQRkUvMGkEnNBGRSs+mkatFJ1aKTqkWfLAPyk4B8E5BNQN5Q85udVC06qVp0UrUI/0jVkpOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRf+crF3CVg4lDAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2ce38f07">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATXSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzQRkUvMEkEnNBOQJNROQ36TmjZOqRSdVi06qFn2yTM0mIG+omYBMam6AvKFmk5pNQDadVC06qVp0UrXoky8D8oSaJ4A8oWYCMqm5UfMEkCfUPAHkCTXfdFK16KRq0UnVok/+cmqeADKpmYBMaiYgk5oJyKTmb3JSteikatFJ1aJP/meATGpugExqJiCTmgnI/8lJ1aKTqkUnVYs++TI1v0nNjZoJyI2aCcik5kbNDZBJzRNq/iQnVYtOqhadVC36ZBmQPwmQSc2NmgnIpGYCMqmZgExq3gDyJzupWnRSteikatEnL6n5kwCZ1ExANqm5UTMBmdTcqPkvOaladFK16KRqEf7IC0AmNROQTWreAPKEmgnIE2pugExqJiCb1HzTSdWik6pFJ1WL8Ed+EZAn1HwTkCfUvAHkm9Q8AWRS88ZJ1aKTqkUnVYs+WQZkUvMGkDfUPKHmBsgTaiY1E5AbNd+kZtNJ1aKTqkUnVYvwR/5DgNyomYBMaiYgk5ongExqJiDfpGYCMqmZgExqNp1ULTqpWnRSteiTfxmQSc0E5A01E5BJzQTkRs2kZgJyo+Y3AZnUfNNJ1aKTqkUnVYvwR14A8oSaGyCTmhsgb6jZBOSb1ExAJjVPAJnUvHFSteikatFJ1SL8kUVAJjUTkE1qboBMam6AbFJzA2RScwNkUjMBuVHzTSdVi06qFp1ULfrkJSA3QN5QMwG5AXID5EbNDZAbNTdANgGZ1NwAmdRsOqladFK16KRq0ScvqXkCyKTmBsgbaiYgN0AmNTdqJiCTmhs1b6iZgNyo+aaTqkUnVYtOqhZ98hKQSc0bQCY1E5BNam6ATGomIJOaCcgNkEnNBOQGyKRmAnIDZFLzxknVopOqRSdViz75MiCTmgnIDZBJzRtqJiCTmknNBGRS84SaGyCTmgnIpOYNNZtOqhadVC06qVr0yR9GzQ2QJ4BMajYBmdRMam6ATGomIDdAJjWTmgnIpGbTSdWik6pFJ1WL8EdeADKpuQEyqZmA3Ki5ATKpeQLIpOYJIJOaCcg3qZmAPKHmjZOqRSdVi06qFuGP/IcBeULNE0AmNROQSc0TQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+kZlJzA+QGyBNAboBsAjKpeUPNN51ULTqpWnRSteiTZWo2AbkBMql5Qs0NkEnNE0DeUPOEmhsgN2reOKladFK16KRq0SdfBuQJNW8AuQFyo2ZSMwGZ1ExAJjU3QCYgm4D8ppOqRSdVi06qFn3yl1HzBJAn1ExAJjVvqLkBMqmZgPybTqoWnVQtOqla9MlfBsikZgIyqbkB8k1qboDcAHlDzaaTqkUnVYtOqhZ98mVqvknNBGQCMqnZpOYGyKRmAjKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/CcikZgIyAblRc6PmBsikZgIyqZmATGpugNwAmdR800nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4BuDxHKE1jxIEAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
