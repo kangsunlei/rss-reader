@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>卡片式对话的协议方案探索和思考</title>
+        <title>大模型架构的下半场</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>卡片式对话的协议方案探索和思考</h2>
-        <p>4/17/2026, 8:01:00 AM</p>
+        <h2>大模型架构的下半场</h2>
+        <p>4/19/2026, 10:12:10 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文系统性地探讨了在智能助手对话流中实现卡片式交互的工程挑战，提出了包含 Markdown 标记、消息传输、UI 渲染及事件通信的四层统一协议体系，为构建标准化、可协作的卡片式对话系统提供了落地的架构参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提出大模型架构已进入以「扩展通信」为核心的下半场，批判了传统残差连接的「累加」范式，并介绍了通过 Flash Depth Attention 和 MoDA 实现层间「选择性检索」的创新方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了在 AI 智能助手对话流中嵌入可交互卡片所面临的系统性工程问题，并提出了从技术实现到团队协作的完整解决方案。文章围绕三个核心问题展开：1）卡片如何嵌入 Markdown 流，对比了代码块扩展、占位符替换和自定义标签三种方案的优劣及适用场景；2）卡片数据从何而来，分析了模型直出、增量 Patch 更新和 Tool 驱动三种数据获取模式的演进逻辑，并探讨了 MCP Apps 与 A2UI 等社区协议的设计哲学；3）多团队协作如何不乱，最终提出了一套四层统一协议体系，旨在通过标准化的 Markdown 标记、消息传输、UI 渲染和事件通信协议，解决 Agent 时代下多端一致性、数据实时性及跨团队协作混乱的问题。文章基于大淘宝技术的真实实践，提供了具体的代码示例、架构图和演进思考，具有很高的工程参考价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章由华中科技大学王兴刚团队投稿，系统论述了大模型架构发展的新阶段。作者指出，过去十年模型扩展主要聚焦于参数、数据和序列长度（层内能力），而层间通信机制自 ResNet 以来几乎停滞，仍依赖简单的残差累加（x + F(x)），导致深层网络出现「信息稀释」问题。文章批判了将层间通信视为「累加」的范畴谬误，提出应转向基于内容的「选择性检索」范式，即在深度维度引入注意力机制。团队为此开发了 Flash Depth Attention 以解决工程效率瓶颈，并进一步提出混合深度注意力（MoDA），将序列维度和深度维度的检索统一到一个 softmax 中。实验表明，该方案在主流开源模型上全面提升了性能，标志着大模型架构从「扩展组件」进入「扩展通信」的下半场。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">卡片嵌入对话流的核心是在不破坏 Markdown 流式解析的前提下嵌入 UI 语义，代码块扩展是稳健的实践方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过复用 Markdown 代码块的 language 字段作为组件标识，将 JSON 数据置于代码体内，前端解析后渲染对应组件。该方案复用现有解析链路，兼容流式渲染，且通过 System Prompt 约束模型输出格式即可实现。</span>
+                        <strong style="color: #1a365d">大模型架构进入下半场，核心从「扩展组件」转向「扩展通信」。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 过去十年模型在参数、数据、序列长度上成功扩展，但层间通信机制自 2015 年 ResNet 的残差连接以来未有根本性革新，成为新的瓶颈。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">卡片数据应与 UI 解耦，Tool 驱动是架构最清晰的方案，将数据生产和 UI 描述的责任从模型转移至工具链。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型直出数据不可靠，增量 Patch 存在体验断裂和工程复杂度问题。Tool 驱动方案（如 MCP Apps 或 A2UI）让 Agent 调用工具，工具直接返回结构化数据与 UI 描述，实现数据与 UI 一步到位，职责清晰。</span>
+                        <strong style="color: #1a365d">传统残差连接的「累加」范式存在「信息稀释」问题，限制了深度网络的有效性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 深层网络中，原始信号与层层叠加的信息混合，导致靠后的层难以有效访问早期层的特定信息，许多层因此变得「沉默」，实际有效深度不足。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">为应对多团队协作，需要建立四层统一协议体系，从标记、传输、渲染到事件形成标准化约束。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 四层协议包括：Markdown 标记协议（统一嵌入格式）、消息传输协议（定义流式数据包结构）、UI 渲染协议（采用如 A2UI 的声明式 JSON Schema）、事件通信协议（标准化交互动作）。该体系为复杂系统建立确定性，提升排查、复用和接入效率。</span>
+                        <strong style="color: #1a365d">层间通信应从「累加」范式转向「选择性检索」范式，即在深度维度引入注意力机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴序列维度注意力成功的经验，让每一层能根据当前内容（Query）直接检索（Key-Value）历史层中的特定信息，而非被动混合所有前序层输出。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">卡片式交互重新定义了 Agent 时代的前后端协作模式，前端演变为面向标准协议的渲染引擎。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型角色转变为“界面规划师”，后端成为“协议协调者”，而前端则从定制化页面渲染器转变为面向标准 JSON Schema 的“协议执行引擎”，这要求前后端共同面向协议而非具体业务实现进行开发。</span>
+                        <strong style="color: #1a365d">Flash Depth Attention 和 MoDA 是实践「深度检索」的高效工程方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Flash Depth Attention 通过优化数据布局适配 GPU 硬件，解决了深度注意力计算效率低下的问题。MoDA 进一步将序列注意力和深度注意力融合到一个统一的 softmax 操作中，实现了高效的双维度信息聚合。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">卡片式交互不是‘在聊天框里塞组件’这么简单。它重新定义了 Agent 时代的前后端协作方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">四层协议体系（Markdown 标记 → 消息传输 → UI 渲染 → 事件通信）的价值，不在于技术有多先进，而在于为复杂系统建立了确定性。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">核心方向是：把数据生产的责任从模型转移到工具链，让模型专注于意图理解和对话编排。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">理解这两个协议（MCP Apps 和 A2UI）的关键在于看它们的驱动方式：MCP Apps 是工具驱动，A2UI 是 Agent 驱动。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型从‘文本生成器’变成‘界面规划师’——它需要理解什么时候该展示卡片、展示什么类型的卡片。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">研究者们花了十年去扩展层内的计算能力，却忘了扩展层间的通信能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">深度在数量上增长了，但在质量上却没有。层与层之间的通信机制几乎没有变化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这就是范畴谬误：把层间通信当作累加（用学习到的或生成的系数来组合信号）而非检索（通过基于内容的匹配来选择信息）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大模型架构的上半场是关于扩展组件的。下半场是关于扩展通信的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">深度残差的‘+’带我们跑过了一段极为精彩的旅程，但现在，是时候升级这座阶梯了。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -65,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">量子位</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">衡宇</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">35 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8501</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5339</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">卡片式对话</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">协议设计</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">A2UI</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大模型架构</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Transformer</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">深度注意力</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">残差连接</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">神经网络</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/a82455f1" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/2ce38f07" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/a82455f1">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATySURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyCTmhsgk5oJyKTmCSBPqJmA/CY1b5xULTqpWnRSteiTZWo2AXlCzRtAJjUTkEnNjZpNajYB2XRSteikatFJ1aJPvgzIE2qeAHKj5kbNNwF5Qs0TQJ5Q800nVYtOqhadVC365B+j5g0gk5pJzQTkRs0EZFLzLzmpWnRSteikatEn/zggN2omNROQSc2k5gbI/5OTqkUnVYtOqhZ98mVqfhOQSc0E5A0gN2omNTdAJjVPqPmTnFQtOqladFK16JNlQP5LaiYgk5oJyKTmRs0E5AbIpOYNIH+yk6pFJ1WLTqoW4Y/8xYBMar4JyKTmCSCTmn/JSdWik6pFJ1WLPnkJyKRmArJJzaRmAjKpmYA8oeYJIJOaSc0EZFIzAdmk5ptOqhadVC06qVqEP7IIyKRmAvKEmgnIJjU3QCY1E5BJzQ2Qb1LzBJBJzRsnVYtOqhadVC3CH3kByKRmAnKj5gbIjZobIDdqboC8oeYGyI2av8lJ1aKTqkUnVYs+eUnNjZobIDdqNqmZgExqbtRMQCY1E5A3gNyomYBMaiYgk5pNJ1WLTqoWnVQt+uQlIJOaN9RMQJ5QcwNkUjMBmdTcqJmA3Kj5TUAmNd90UrXopGrRSdUi/JFFQG7UTEBu1DwBZFIzAblRMwGZ1NwA+SY1E5BJzRNAJjVvnFQtOqladFK16JNfBmRScwPkRs2kZgKyCcgTam6ATGpugExqJiA3aiY1m06qFp1ULTqpWvTJl6m5ATKpmdTcAPmTqLkBsgnIpOYGyKRm00nVopOqRSdViz55Ccik5gk1N0AmNZOaCcikZgIyqZmAPKFmAjKpuVHzhpoJyI2abzqpWnRSteikahH+yAtAbtQ8AWRScwNkk5ongExqJiBPqJmAPKFmAjKpmYBMat44qVp0UrXopGrRJ8vUTEAmNROQGyCTmhs1E5BJzQRkAvKEmifU3ACZ1ExAJjVvqNl0UrXopGrRSdUi/JEXgExqngAyqbkBMql5A8ik5gbIjZongExqJiBPqLkBMqnZdFK16KRq0UnVok9+GZBJzQTkDSCTmhs1E5BJzaTmBsikZgJyA2QTkBsgk5o3TqoWnVQtOqlahD/yFwMyqbkBMqm5ATKpmYBMap4AMql5AsgmNW+cVC06qVp0UrXok5eA/CY1k5obIJOaJ9RMQG6AbAIyqXlDzTedVC06qVp0UrXok2VqNgG5AXKjZgIyqbkBMql5Asgbap5QcwPkRs0bJ1WLTqoWnVQt+uTLgDyh5g01E5A31ExAJjUTkEnNDZAJyCYgv+mkatFJ1aKTqkWf/GOA3KiZgExqbtRMQCY1b6i5ATKpmYD8l06qFp1ULTqpWvTJP07NBOQGyKRmArJJzQ2QGyBvqNl0UrXopGrRSdWiT75MzTepeULNBGRSMwG5UXMDZFIzAZnUTGomIJOaCcikZgLyTSdVi06qFp1ULfpkGZDfBORGzSY1N0AmNROQSc0EZFJzA+QGyKTmm06qFp1ULTqpWoQ/UrXkpGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWvQ/bAtxBAkWuTMAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2ce38f07">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATXSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzQRkUvMEkEnNBOQJNROQ36TmjZOqRSdVi06qFn2yTM0mIG+omYBMam6AvKFmk5pNQDadVC06qVp0UrXoky8D8oSaJ4A8oWYCMqm5UfMEkCfUPAHkCTXfdFK16KRq0UnVok/+cmqeADKpmYBMaiYgk5oJyKTmb3JSteikatFJ1aJP/meATGpugExqJiCTmgnI/8lJ1aKTqkUnVYs++TI1v0nNjZoJyI2aCcik5kbNDZBJzRNq/iQnVYtOqhadVC36ZBmQPwmQSc2NmgnIpGYCMqmZgExq3gDyJzupWnRSteikatEnL6n5kwCZ1ExANqm5UTMBmdTcqPkvOaladFK16KRqEf7IC0AmNROQTWreAPKEmgnIE2pugExqJiCb1HzTSdWik6pFJ1WL8Ed+EZAn1HwTkCfUvAHkm9Q8AWRS88ZJ1aKTqkUnVYs+WQZkUvMGkDfUPKHmBsgTaiY1E5AbNd+kZtNJ1aKTqkUnVYvwR/5DgNyomYBMaiYgk5ongExqJiDfpGYCMqmZgExqNp1ULTqpWnRSteiTfxmQSc0E5A01E5BJzQTkRs2kZgJyo+Y3AZnUfNNJ1aKTqkUnVYvwR14A8oSaGyCTmhsgb6jZBOSb1ExAJjVPAJnUvHFSteikatFJ1SL8kUVAJjUTkE1qboBMam6AbFJzA2RScwNkUjMBuVHzTSdVi06qFp1ULfrkJSA3QN5QMwG5AXID5EbNDZAbNTdANgGZ1NwAmdRsOqladFK16KRq0ScvqXkCyKTmBsgbaiYgN0AmNTdqJiCTmhs1b6iZgNyo+aaTqkUnVYtOqhZ98hKQSc0bQCY1E5BNam6ATGomIJOaCcgNkEnNBOQGyKRmAnIDZFLzxknVopOqRSdViz75MiCTmgnIDZBJzRtqJiCTmknNBGRS84SaGyCTmgnIpOYNNZtOqhadVC06qVr0yR9GzQ2QJ4BMajYBmdRMam6ATGomIDdAJjWTmgnIpGbTSdWik6pFJ1WL8EdeADKpuQEyqZmA3Ki5ATKpeQLIpOYJIJOaCcg3qZmAPKHmjZOqRSdVi06qFuGP/IcBeULNE0AmNROQSc0TQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+kZlJzA+QGyBNAboBsAjKpeUPNN51ULTqpWnRSteiTZWo2AbkBMql5Qs0NkEnNE0DeUPOEmhsgN2reOKladFK16KRq0SdfBuQJNW8AuQFyo2ZSMwGZ1ExAJjU3QCYgm4D8ppOqRSdVi06qFn3yl1HzBJAn1ExAJjVvqLkBMqmZgPybTqoWnVQtOqla9MlfBsikZgIyqbkB8k1qboDcAHlDzaaTqkUnVYtOqhZ98mVqvknNBGQCMqnZpOYGyKRmAjKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/CcikZgIyAblRc6PmBsikZgIyqZmATGpugNwAmdR800nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4BuDxHKE1jxIEAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

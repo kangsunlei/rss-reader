@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>消耗了上百亿 Token 后，对于 Agent 时代软件构建、软件形态及未来发展的思考</title>
+        <title>我把 Karpathy 的 AutoResearch 搬到了软件开发领域，效果炸了</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>消耗了上百亿 Token 后，对于 Agent 时代软件构建、软件形态及未来发展的思考</h2>
-        <p>4/19/2026, 2:16:00 AM</p>
+        <h2>我把 Karpathy 的 AutoResearch 搬到了软件开发领域，效果炸了</h2>
+        <p>4/20/2026, 10:02:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于 TiDB CTO 黄东旭在 QCon 的演讲，分享了其消耗上百亿 Token 后对 Agent 时代软件生产、形态及未来趋势的深度思考，核心观点包括代码成为执行载体、软件生产民主化、软件形态向意图接口演进以及未来将出现超越 Skill 的复杂抽象。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了如何将 Andrej Karpathy 的 AutoResearch 思想迁移到软件开发领域，通过多 AI Agent 交叉审核、5 维度量化评分和反馈驱动迭代，构建了一个能全自动处理 GitHub Issue 的软件开发系统。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章是 TiDB 联合创始人兼 CTO 黄东旭在 QCon 2026 大会上的演讲实录。他基于过去几个月消耗上百亿 Token、与 Agent 协同开发并成功交付数百万行代码基础软件项目的实践经验，系统阐述了对 Agent 时代软件行业的深刻洞察。核心观点包括：1）软件生产发生根本性变革，代码已从思考载体退化为执行载体，软件生产走向民主化，新的思考媒介由 Goal（目标）、Context（上下文）、Constraints（约束）构成；2）人机协同需要人类通过 SPEC 定义规范并组织 Agent 团队，通过大量 Token 消耗激发模型的“灵光一闪”；3）软件形态从静态固定转向以“意图”为接口，Unix 哲学复兴，软件生态将向“贴近人”和“贴近机器”两端集中；4）Skill 并非最终形态，未来将出现能蒸馏人类专家知识、更复杂、可 Debug 的抽象，真正击穿软件开发门槛。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章作者受 Andrej Karpathy 的 AutoResearch 项目启发，将其核心思想——量化目标、自主循环、只保留改进——成功应用于通用软件开发。作者构建的系统通过多 AI Agent（如 Codex 和 Claude）交叉审核与实现，结合一个包含正确性、测试、代码质量、安全、性能的 5 维度加权评分体系，实现了从识别 Issue、自动编码、测试验证到审核合并的完整闭环。系统以 `program.md` 为规则核心，仅在少数情况下需要人工介入。实践案例表明，该系统能在约 10 分钟内自主完成中等复杂度的开发任务，并达到 9.0/10 的代码质量标准。文章详细阐述了系统架构、核心原则、评分体系、运行流程，并提供了实战案例和最佳实践。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">代码已从思考载体退化为执行载体，软件生产迎来编程语言发明级别的根本性变革。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者认为，在 Coding Agent 能力跨越阈值后，程序员已不再需要用代码思考，代码的作用类似于硬件，仅负责执行。这标志着自编程语言发明以来最重大的变革，软件生产将因此变得极度民主化。</span>
+                        <strong style="color: #1a365d">将 AutoResearch 思想从 AI 研究迁移到软件开发，实现了全自动的 Issue 处理闭环。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴 Karpathy 量化目标、自主循环、只保留改进的核心思想，构建了一个能自动读取 GitHub Issue、由 AI Agent 实现代码、运行测试、交叉审核并最终合并的系统，显著提升了开发效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Agent 时代软件构建的思考媒介是 Goal、Context、Constraints 三者的组合。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 人类应聚焦于定义清晰的 Goal（目标），而 Context（上下文工程如 RAG、Memory）和 Constraints（约束工程如 Sandbox、测试）则由相应的基础设施解决。当前 Agent 生态的所有技术都可纳入此框架。</span>
+                        <strong style="color: #1a365d">采用多 AI Agent 交叉审核机制，替代单 Agent 自审，有效提升了代码质量。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 让 Codex 和 Claude 等不同模型轮流担任实现者和审核者，利用不同模型的强项和视角差异，能发现单 Agent 难以察觉的问题，形成有效的质量对抗链。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">高效的人机协同需要人类定义工程规范（SPEC）并组织 Agent 团队，通过大量 Token 消耗激发创新。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 纯黑盒模式不可行，人类需扮演“HR”和资深工程师角色，提供清晰的需求规格说明书（SPEC）并管理 Agent 团队。通过让多个 Agent 反复重写和讨论，消耗大量 Token 以追求那 1% 的“灵光一闪”，从而实现代码质量的跃迁。</span>
+                        <strong style="color: #1a365d">设计了 5 维度加权评分体系，将主观的代码质量判断转化为客观的量化指标。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过正确性（35%）、测试（25%）、代码质量（20%）、安全（10%）、性能（10%）五个维度的加权评分，设定总分 ≥ 9.0 的达标线，为 AI 的自主迭代提供了明确的优化目标。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">软件形态正从静态固定转向以“意图”为接口，生态将向“面向人”和“面向机器”两端极化。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 未来的软件没有固定 UI，“意图”才是真正的操作接口，这导致 Unix 哲学复兴。软件产业将从纺锤形向哑铃形转变，创新和资本会涌向提供极致情绪价值的用户端和作为纯粹基础设施的机器端，中间层的 SaaS 市场将被压缩。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Skill 不是终点，未来需要能蒸馏人类专家知识的、更复杂的抽象。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当前的 Skill 过于简单粗糙，无法表达复杂软件的协同逻辑。未来将出现通过自然语言人机协同生成、结构清晰、可 Debug、可分发的更高级抽象，其核心是封装和蒸馏领域专家的知识，从而真正击穿各行业的软件开发门槛。</span>
+                        <strong style="color: #1a365d">系统以 `program.md` 为宪法，严格定义了 Agent 的权限边界、代码规范和迭代规则。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> `program.md` 文件规定了 Agent 可以修改和禁止修改的范围、Go 语言代码规范、测试要求等，确保自动化过程可控、可预测，防止 Agent 越权或产生不可控的代码。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当代码已经变成执行载体后，我们今天去生产和构建软件的‘思考媒介’是什么？我认为大概是由三个维度的组合：Goal（目标）、Context（上下文）和 Constraints（约束）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所以今天大家想做个好软件还要省 Token，是不行的，必须要大力出奇迹。其次，模型的智商是决定性要素。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">软件不会变革，但软件生产会变得非常民主化。想象一下，上一次这种级别的载体变革（编程语言的发明），诞生了整个软件行业；那这一次它会产生什么？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">今天，软件已经没有固定形态了。Open Claw（小龙虾）最大的意义，在于它定义了 Agent 时代软件的‘60 分及格线’。如果未来的新软件，体验和灵活性不如 Open Claw，那就是旧时代的东西。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skill 核心问题在于太简单、太粗糙了。今天我们交换 Skill 的方式，就跟当年这些交换奇奇怪怪的 recipe 的方式是一样的。但是未来像 AWS 或者 Photoshop 等庞杂的软件，是不可能通过‘一张纸’去交付的。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">本项目的 Autoresearch 在 Karpathy 思想基础上做了三个关键改进：1. 多 Agent 交叉审核，替代单 Agent 自审。2. 5 维度加权评分，替代单一 metric。3. 审核反馈驱动下一轮实现，替代盲循环。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">最终效果：人只提供 Issue 号，剩下的全自动——自动实现、自动测试、自动审核、自动迭代、评分达标后自动 PR + 合并。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实践证明，单 Agent 的效果远不如双 Agent 交叉审核。本项目创造性地使用两个 Agent 轮流审核和开发，极大地提高了代码质量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">审核评分是 AutoResearch 的量化核心——它把‘这段代码好不好’从一个模糊的主观判断，变成一个 5 维度加权计算出的精确分数。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">实测下来，10 分钟完成一个中等复杂 Issue，全程零人工干预，最终评分 9.0/10。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -66,31 +63,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">百度Geek说</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">百度Geek说</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7378</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">24 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5872</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人机协同</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件形态</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AutoResearch</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多 Agent 协作</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动化开发</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/2213cde5" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/0e35b414" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/2213cde5">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATYSURBVO3BQY4bSRAEwfAC//9lXx3zVECjk7MjIczwj1QtOaladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhZ98hKQn6RmAnKjZgIyqZmATGomIJOaGyCTmieA/CQ1b5xULTqpWnRSteiTZWo2AblRMwHZBGRS84SaCciNmhs1m4BsOqladFK16KRq0SdfBuQJNW+oeQLIpGYCcgPkRs03AXlCzTedVC06qVp0UrXok78ckEnNjZobIJOaCcik5gbIjZp/yUnVopOqRSdViz75xwCZ1PwmaiYgk5q/2UnVopOqRSdViz75MjU/Sc0NkBs1E5BJzRNqJiCTmjfU/CYnVYtOqhadVC36ZBmQ3wTIpGYC8gaQSc0EZFIzAZnU3AD5zU6qFp1ULTqpWvTJS2r+JkC+CcgNkEnNjZq/yUnVopOqRSdViz55Ccik5gkgk5oJyDepuVHzhpoJyA2QTWpugExq3jipWnRSteikahH+kS8CcqNmAjKp2QRkk5pvAvKT1LxxUrXopGrRSdWiT14CMqm5UXOjZgLyhJoJyI2aCcikZgLyBJBJzQRkk5ongGw6qVp0UrXopGrRJy+pmYA8AeRGzQRkUjMBeUPNBGRScwNkUjMBeULNDZAJyKRmAvJNJ1WLTqoWnVQt+uQlIDdqnlAzAbkBMqm5AfKEmgnIpOYGyDepeUPNppOqRSdVi06qFn3ykpoJyBNqJiCTmgnIpOYNID9JzRNAJjUTkDeATGreOKladFK16KRq0ScvAZnUTECeUDMBmdRMQCY1T6i5AfKEmgnIDZBJzTepmYBsOqladFK16KRq0ScvqXlCzQRkAjKpuVHzTWomIDdAboBsUvMEkG86qVp0UrXopGrRJ8uAPKFmAjIBmdRMQCY1E5BJzQRkUnOj5gk1N0AmIJOaCcik5g01m06qFp1ULTqpWoR/5AUgN2pugExqboDcqJmA3KiZgLyhZgIyqbkBsknNBORGzRsnVYtOqhadVC3CP/KDgLyhZgLyhpobIG+oeQLIjZoJyKRmAjKpmYBMat44qVp0UrXopGrRJ7+MmifUTEAmNROQTWomIBOQSc0EZFLzhJobNROQbzqpWnRSteikatEnLwF5Qs0NkJ8EZFKzSc0TQDapmdRMQDadVC06qVp0UrXok5fUbFLzBJAn1NwAmdRMQCYgk5obIDdqngAyqfk/nVQtOqladFK16JOXgPwkNTdqngAyqZmA3Kj5JiCTmhsgN2q+6aRq0UnVopOqRZ8sU7MJyI2aGyA3ap5QMwG5UfOGmifU3ACZ1Gw6qVp0UrXopGrRJ18G5Ak1TwB5A8gbaiYgbwB5A8ikZlIzAZnUvHFSteikatFJ1aJP/nJqJiBPqJmA3AC5UfOEmgnIpGYCMqn5TU6qFp1ULTqpWvTJP0bNBGRSMwGZ1NwAmdRMQG7U3Ki5UXMD5P90UrXopGrRSdWiT75Mzf9JzQRkUvMGkBs1N0AmNROQSc0E5EbNBOSbTqoWnVQtOqla9MkyID8JyI2aGyCTmgnIjZoJyCY1E5AbNU+o2XRSteikatFJ1SL8I1VLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkX/AaRWQDUQ6a4oAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/0e35b414">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATOSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpobIJOaCcik5gbIpOYJIE+omYD8SmreOKladFK16KRq0SfL1GwC8k1AbtRMQG7UTGo2qdkEZNNJ1aKTqkUnVYs++TIgT6h5AsgNkBs1N0DeAPKEmieAPKHmm06qFp1ULTqpWvTJP0bNG0AmNROQSc0EZFIzAZnU/EtOqhadVC06qVr0yT8GyKRmAjKpmdRMQCY1E5BJzQTk/+SkatFJ1aKTqkWffJmaP4maN4BMam7U3ACZ1Dyh5k9yUrXopGrRSdWiT5YB+Z3UTEAmNROQSc2NmgnIpGYCMql5A8if7KRq0UnVopOqRfgjfzEgN2omIDdqJiA3ap4AMqn5l5xULTqpWnRStQh/5AUgk5oJyCY1m4B8k5obIJOaCcgmNd90UrXopGrRSdWiT/4wan4nNd8E5AbIG2qeADKpeeOkatFJ1aKTqkX4Iy8AeUPNDZBJzQTkRs0E5Ak1E5An1NwAuVHzNzmpWnRSteikatEnfxggk5obNROQJ9Q8oWYCMqmZgLwB5EbNBGRSMwGZ1Gw6qVp0UrXopGoR/sgiIJOaCcikZgLyhprfCciNmm8CcqPmm06qFp1ULTqpWvTJMjUTkBsgk5obIG8AmdTcAJnUvAHkDTUTkEnNE0AmNW+cVC06qVp0UrUIf+QXAjKpmYBsUjMBmdQ8AeQJNTdAJjU3QCY1E5AbNd90UrXopGrRSdWiT14CMqmZgExqbtTcAJnUTEB+JzU3QDYBmdTcAJnUbDqpWnRSteikatEnL6m5UTMBmdRMQG7U3Kh5Asik5gk1E5BJzY2aN9RMQG7UfNNJ1aKTqkUnVYs+eQnIpGaTmhsgN2qeADKpmdRMQCY1E5AbIJOaCcgNkEnNBOQGyKTmjZOqRSdVi06qFn3ymwGZ1ExAJjWTmhsgT6iZgNyoeULNDZBJzQRkUvOGmk0nVYtOqhadVC3CH3kByKTmVwJyo+YGyCY1TwCZ1ExAnlBzA2RSs+mkatFJ1aKTqkWffBmQSc0NkCfUTEBugNyoeQPIpGYCcgNkE5AbIJOaN06qFp1ULTqpWoQ/8hcD8oSaGyA3aiYgk5ongExqngCySc0bJ1WLTqoWnVQt+uQlIL+SmknNE0AmNU8AuQGyCcik5g0133RSteikatFJ1aJPlqnZBOQGyI2aSc0EZFKzCcgbap5Q8wSQSc0bJ1WLTqoWnVQt+uTLgDyh5g01E5BJzaTmCSCTmgnIpOYGyARkE5BJzaRm00nVopOqRSdViz75xwC5AXKj5kbNBGRS84aaGyCTmgnIDZAbNW+cVC06qVp0UrXok/8ZNROQCcikZgKySc0NkBsgb6jZdFK16KRq0UnVok++TM03qfkmIDdqboBMaiYgk5pJzQRkUjMBmdRMQL7ppGrRSdWik6pFnywD8isBmdRMQCY1k5obIJOaGyCTmgnIpGYCMqm5AXIDZFLzTSdVi06qFp1ULcIfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfoPIU5EItl7LHAAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
