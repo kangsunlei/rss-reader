@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>一文讲透：Harness Engineering 即控制论！</title>
+        <title>大模型架构的下半场</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>一文讲透：Harness Engineering 即控制论！</h2>
-        <p>4/17/2026, 12:46:00 AM</p>
+        <h2>大模型架构的下半场</h2>
+        <p>4/19/2026, 10:12:10 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过将 OpenAI 提出的 Harness Engineering 与控制论（Cybernetics）进行深度类比，论证了 AI 编程的本质是构建一个以人类为“控制器”、AI 为“执行器”、代码仓库为“被控系统”的反馈循环，并系统阐述了如何通过设计环境、明确意图、构建传感器（验证工具）来高效驾驭 AI 生成代码。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文提出大模型架构已进入以「扩展通信」为核心的下半场，批判了传统残差连接的「累加」范式，并介绍了通过 Flash Depth Attention 和 MoDA 实现层间「选择性检索」的创新方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章从作者阅读《控制论和科学方法论》的感悟出发，结合 OpenAI 发布的《Harness engineering》及硅谷工程师 George 的分析，提出并深入论证了“Harness Engineering 就是控制论在编码世界的工程实现”这一核心观点。作者首先介绍了 Harness Engineering 的核心理念（人类掌舵，智能体执行）及其七条关键实践（如渐进式披露、规则沉淀、架构约束、构建可观测系统等）。随后，文章用通俗语言阐释了控制论的三个核心概念——信息、控制与反馈，并揭示了其“设定目标 → 感知偏差 → 施加干预 → 消除偏差”的逻辑循环与 AI 编程流程的高度一致性。在此基础上，作者进一步展开自己的思考，将控制论框架映射到 AI 编程的具体环节：如何清晰描述目标（需求）、如何通过框架和流程规划降低代码生成的可能性空间、如何利用共轭控制思想为 AI 提供工具（MCP/SKILL），以及如何构建“业务无关”与“业务相关”的传感器（验证工具）来形成闭环反馈。最后，文章反思了 AI 时代程序员角色的根本转变——从代码的“实现者”转变为环境的“架构师”和产出的“评估者”，其核心价值在于定义正确、发现偏差并设计反馈回路。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章由华中科技大学王兴刚团队投稿，系统论述了大模型架构发展的新阶段。作者指出，过去十年模型扩展主要聚焦于参数、数据和序列长度（层内能力），而层间通信机制自 ResNet 以来几乎停滞，仍依赖简单的残差累加（x + F(x)），导致深层网络出现「信息稀释」问题。文章批判了将层间通信视为「累加」的范畴谬误，提出应转向基于内容的「选择性检索」范式，即在深度维度引入注意力机制。团队为此开发了 Flash Depth Attention 以解决工程效率瓶颈，并进一步提出混合深度注意力（MoDA），将序列维度和深度维度的检索统一到一个 softmax 中。实验表明，该方案在主流开源模型上全面提升了性能，标志着大模型架构从「扩展组件」进入「扩展通信」的下半场。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Harness Engineering 的本质是控制论在软件工程中的体现。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> OpenAI 提出的“人类掌舵，智能体执行”模式，与控制论“通过信息反馈调节系统以实现目标”的核心逻辑完全一致。工程师的工作从编写代码转变为设计环境、明确意图和构建反馈回路，这正是控制器（人）对被控系统（代码库）施加影响的过程。</span>
+                        <strong style="color: #1a365d">大模型架构进入下半场，核心从「扩展组件」转向「扩展通信」。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 过去十年模型在参数、数据、序列长度上成功扩展，但层间通信机制自 2015 年 ResNet 的残差连接以来未有根本性革新，成为新的瓶颈。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI 时代程序员的角色发生根本性转变：从实现者变为架构师与评估者。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 程序员的核心价值不再是“写代码”，而是“评估”AI 的产出。工作内容转变为设计让 AI 正确编码的环境，包括将架构约束、业务规则编码成机器可读的文档，并构建自动化验证工具（传感器）来形成快速反馈闭环。</span>
+                        <strong style="color: #1a365d">传统残差连接的「累加」范式存在「信息稀释」问题，限制了深度网络的有效性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 深层网络中，原始信号与层层叠加的信息混合，导致靠后的层难以有效访问早期层的特定信息，许多层因此变得「沉默」，实际有效深度不足。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">必须将人类知识（规则、架构、业务逻辑）显式化并沉淀到代码仓库中。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI 只能看到代码仓库中的信息。所有设计决策、团队共识必须以版本化的形式（Markdown、代码、可执行计划）提交，否则 AI 会像新员工一样一无所知，导致架构漂移和错误复制。这是驾驭 AI 而非被其牵制的关键。</span>
+                        <strong style="color: #1a365d">层间通信应从「累加」范式转向「选择性检索」范式，即在深度维度引入注意力机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 借鉴序列维度注意力成功的经验，让每一层能根据当前内容（Query）直接检索（Key-Value）历史层中的特定信息，而非被动混合所有前序层输出。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">构建完善的“传感器”系统是实现高质量 AI 生成代码闭环的关键。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 需要建立两类传感器：业务无关的（语法检查、代码规范、安全扫描）和业务相关的（基于详尽业务规则的验证）。将这些验证工具嵌入 AI 执行循环，可实现错误的自动发现与修复，将反馈周期从数小时缩短到数分钟。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">当前向 Harness Engineering 的转型可能是一个需要“矫枉过正”的飞跃过程。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于缺乏完善的传感器和基建，当前 AI 编程仍需大量人工串联流程，感觉效率提升有限。但当基础设施完善到临界点，AI 编程将不再需要人工干预，开发模式会发生质的飞跃，就像从传统 IDE 切换到 Cursor 一样迅速。</span>
+                        <strong style="color: #1a365d">Flash Depth Attention 和 MoDA 是实践「深度检索」的高效工程方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Flash Depth Attention 通过优化数据布局适配 GPU 硬件，解决了深度注意力计算效率低下的问题。MoDA 进一步将序列注意力和深度注意力融合到一个统一的 softmax 操作中，实现了高效的双维度信息聚合。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">程序员的核心价值不再是‘实现’，而是‘评估’：定义什么是正确、看出哪里偏了、判断方向对不对。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你没写下来的规矩，AI 永远不知道。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 时代程序员的本职工作就是设计让 AI 正确写代码的环境，而不再是正确的写代码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">过去人们总是跳过编写规则直接写代码，因为他们要为此付出代价可能要在很久以后，但到了 AI 时代付出的代价会被成倍放大，因为 AI 代码生产效率实在是太高了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们不需要比机器写得更快，但是我们一定要高效评估它的产出。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">研究者们花了十年去扩展层内的计算能力，却忘了扩展层间的通信能力。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">深度在数量上增长了，但在质量上却没有。层与层之间的通信机制几乎没有变化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这就是范畴谬误：把层间通信当作累加（用学习到的或生成的系数来组合信号）而非检索（通过基于内容的匹配来选择信息）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大模型架构的上半场是关于扩展组件的。下半场是关于扩展通信的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">深度残差的‘+’带我们跑过了一段极为精彩的旅程，但现在，是时候升级这座阶梯了。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -68,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">量子位</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">衡宇</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">44 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">10960</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">22 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5339</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Harness Engineering</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">控制论</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">反馈回路</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大模型架构</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Transformer</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">深度注意力</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">残差连接</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">神经网络</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/0dc310c3" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/2ce38f07" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/0dc310c3">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATjSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpo3gNyoeQLIpGYC8oSaCcivpOaNk6pFJ1WLTqoWfbJMzSYgbwCZ1ExAJiCTmgnIpOZGzSY1m4BsOqladFK16KRq0SdfBuQJNU8AmdTcAJnU3AC5ATKpmYA8oeYJIE+o+aaTqkUnVYtOqhZ98o9TMwGZgNyomYBMaiYgk5oJyKTmX3JSteikatFJ1aJP/nFAbtTcAJnUTEAmNROQ/5OTqkUnVYtOqhZ98mVq/mRAbtRMQCY1N2pugExqnlDzJzmpWnRSteikatEny4D8ydRMQCY1E5BJzQRkUjMBmdS8AeRPdlK16KRq0UnVok9eUvM3ATKpeQLIpOZGzQRkUnOj5m9yUrXopGrRSdUi/JEXgExqJiCb1NwAeULNBGRSMwF5Qs0NkEnNBGSTmm86qVp0UrXopGrRJ8uATGqeADKpuQGySc0EZFLzBpAbIG+oeQLIpOaNk6pFJ1WLTqoW4Y8sAvKEmhsgN2omIDdq3gDyhJobIDdq/iYnVYtOqhadVC365CUgk5obIDdAJjU3QG7U3ACZ1ExAJjUTkEnNBOQNIDdqJiCTmgnIpGbTSdWik6pFJ1WL8Ee+CMikZgLyhpobIDdqJiCTmieA3Kj5JiA3ar7ppGrRSdWik6pF+CMvAJnU3AC5UXMD5A01E5BJzQRkUnMD5JvUTEAmNU8AmdS8cVK16KRq0UnVok+WAXlCzQTkRs0EZFKzSc0E5Ak1N0AmNTdAJjUTkBs1k5pNJ1WLTqoWnVQt+uQlNROQSc0EZAJyo+ab1GxScwNkE5BJzQ2QSc2mk6pFJ1WLTqoWffISkE1qJiBPAJnU3AB5Q80EZFJzo+YNNROQGzXfdFK16KRq0UnVIvyRF4B8k5oJyKTmdwIyqZmAPKFmAvKEmgnIpGYCMql546Rq0UnVopOqRZ8sU3MD5Akgk5obIJvUTEAmNU+ouQEyqZmATGreULPppGrRSdWik6pF+CMvAJnUTEAmNTdAJjU3QG7U3ACZ1ExAnlDzBJBJzQTkCTU3QCY1m06qFp1ULTqpWvTJbwZkUjMBmdRMajYBmdQ8AWRSMwG5AbIJyA2QSc0bJ1WLTqoWnVQtwh/5iwHZpGYCMqmZgExqngAyqXkCyCY1b5xULTqpWnRSteiTl4D8SmomNROQSc0E5AbIpGYCcgNkE5BJzRtqvumkatFJ1aKTqkWfLFOzCcgNkCfUTEAmNROQSc0TQN5Q84SaGyA3at44qVp0UrXopGrRJ18G5Ak13wTkCTUTkEnNBGRScwNkArIJyK90UrXopGrRSdWiT/4xaiYgN2qeUDMBmdS8oeYGyKRmAvI7nVQtOqladFK16JN/nJongExqJiCb1NwAuQHyhppNJ1WLTqoWnVQt+uTL1HyTmgnIpGYCMql5Q80NkEnNBGRSM6mZgExqJiCTmgnIN51ULTqpWnRStQh/5AUgv5KaCcgbajYBmdRMQCY1E5BJzQTkDTXfdFK16KRq0UnVIvyRqiUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVov8Asv9RLc/lbQQAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2ce38f07">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATXSURBVO3BQY4jRxAEwfAC//9l1xzzVECjk6PVKszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1LzBJBJzQRkUvMEkEnNBOQJNROQ36TmjZOqRSdVi06qFn2yTM0mIG+omYBMam6AvKFmk5pNQDadVC06qVp0UrXoky8D8oSaJ4A8oWYCMqm5UfMEkCfUPAHkCTXfdFK16KRq0UnVok/+cmqeADKpmYBMaiYgk5oJyKTmb3JSteikatFJ1aJP/meATGpugExqJiCTmgnI/8lJ1aKTqkUnVYs++TI1v0nNjZoJyI2aCcik5kbNDZBJzRNq/iQnVYtOqhadVC36ZBmQPwmQSc2NmgnIpGYCMqmZgExq3gDyJzupWnRSteikatEnL6n5kwCZ1ExANqm5UTMBmdTcqPkvOaladFK16KRqEf7IC0AmNROQTWreAPKEmgnIE2pugExqJiCb1HzTSdWik6pFJ1WL8Ed+EZAn1HwTkCfUvAHkm9Q8AWRS88ZJ1aKTqkUnVYs+WQZkUvMGkDfUPKHmBsgTaiY1E5AbNd+kZtNJ1aKTqkUnVYvwR/5DgNyomYBMaiYgk5ongExqJiDfpGYCMqmZgExqNp1ULTqpWnRSteiTfxmQSc0E5A01E5BJzQTkRs2kZgJyo+Y3AZnUfNNJ1aKTqkUnVYvwR14A8oSaGyCTmhsgb6jZBOSb1ExAJjVPAJnUvHFSteikatFJ1SL8kUVAJjUTkE1qboBMam6AbFJzA2RScwNkUjMBuVHzTSdVi06qFp1ULfrkJSA3QN5QMwG5AXID5EbNDZAbNTdANgGZ1NwAmdRsOqladFK16KRq0ScvqXkCyKTmBsgbaiYgN0AmNTdqJiCTmhs1b6iZgNyo+aaTqkUnVYtOqhZ98hKQSc0bQCY1E5BNam6ATGomIJOaCcgNkEnNBOQGyKRmAnIDZFLzxknVopOqRSdViz75MiCTmgnIDZBJzRtqJiCTmknNBGRS84SaGyCTmgnIpOYNNZtOqhadVC06qVr0yR9GzQ2QJ4BMajYBmdRMam6ATGomIDdAJjWTmgnIpGbTSdWik6pFJ1WL8EdeADKpuQEyqZmA3Ki5ATKpeQLIpOYJIJOaCcg3qZmAPKHmjZOqRSdVi06qFuGP/IcBeULNE0AmNROQSc0TQCY1TwDZpOaNk6pFJ1WLTqoWffISkN+kZlJzA+QGyBNAboBsAjKpeUPNN51ULTqpWnRSteiTZWo2AbkBMql5Qs0NkEnNE0DeUPOEmhsgN2reOKladFK16KRq0SdfBuQJNW8AuQFyo2ZSMwGZ1ExAJjU3QCYgm4D8ppOqRSdVi06qFn3yl1HzBJAn1ExAJjVvqLkBMqmZgPybTqoWnVQtOqla9MlfBsikZgIyqbkB8k1qboDcAHlDzaaTqkUnVYtOqhZ98mVqvknNBGQCMqnZpOYGyKRmAjKpmdRMQCY1E5BJzQTkm06qFp1ULTqpWvTJMiC/CcikZgIyAblRc6PmBsikZgIyqZmATGpugNwAmdR800nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4BuDxHKE1jxIEAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
