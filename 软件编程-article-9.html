@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>鹅厂员工，最近看的一本书是什么？</title>
+        <title>elasticpp：重塑 Elasticsearch 查询性能的 C++内核引擎</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>鹅厂员工，最近看的一本书是什么？</h2>
-        <p>4/24/2026, 9:24:00 AM</p>
+        <h2>elasticpp：重塑 Elasticsearch 查询性能的 C++内核引擎</h2>
+        <p>4/24/2026, 10:31:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">腾讯技术工程在世界读书日之际，邀请内部员工分享近期阅读书单，涵盖编程、科幻、心理学、商业等多个方向，旨在为技术从业者提供一份有深度的阅读参考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了阿里智能引擎团队如何通过 C++ 重写 Elasticsearch 查询内核（elasticpp 插件），以消除 JVM GC 抖动并大幅提升长尾查询性能的实践。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是腾讯技术工程推出的「大厂书单」第一期，在世界读书日之际，邀请来自不同岗位的鹅厂员工分享他们最近在读的书。书单分为四个方向：在 AI 浪潮中重新理解编程（如《程序员的自我修养》、《人比 AI 凶》）；技术之外的长期判断（如《第五消费时代》、《挽救计划》）；理解系统与理解自己（如《控制论与科学方法论》、《蛤蟆先生去看心理医生》）；以及做事与做人的方式（如《因为独特》、《咸的玩笑》）。文章通过书单推荐，鼓励技术从业者在效率狂奔的时代慢下来阅读，给自己留出思考空间。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章从 Elasticsearch 集群在数据量增长后出现的两大痛点——长尾查询导致的线程池饱和与 JVM GC 引起的延迟毛刺——出发，提出了一个根本性的解决方案：用 C++ 重写 ES 的查询执行路径。团队将 elasticpp 设计为 ES 插件，通过 JNI 调用 C++ 动态库，对用户完全透明，不改变 DSL 或数据。在 C++ 侧，团队完整实现了 Lucene 索引格式的读取能力，并针对中长尾查询的瓶颈进行了三项核心优化：批处理（将逐条文档处理改为批量模式，降低函数调用开销）、预取（批量加载 DocValue 到连续内存以提升缓存命中率）、零拷贝与解压缓存（合并解码与处理步骤，避免重复解压）。文章还详细复盘了一个因批处理改造导致的分数不一致的棘手问题，强调了性能优化不能以牺牲正确性为代价。最终，通过 ES Rally 基准测试和线上真实业务场景验证，elasticpp 在聚合和排序类长尾查询上取得了显著的性能提升，并已在数十 TB 规模的索引上稳定运行。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">在 AI 时代，技术人需要重新理解编程的本质和个人价值。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 推荐《程序员的自我修养》、《人比 AI 凶》等书，引导读者思考当 AI 能写代码时，程序员的独特价值何在，强调底层原理和人文思考的重要性。</span>
+                        <strong style="color: #1a365d">Elasticsearch 集群的脆弱性源于长尾查询和 JVM GC 抖动，且两者会互相放大。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 长尾查询长时间占用线程池导致短查询排队，而 JVM GC 的不确定性会加剧查询延迟，两者共同导致集群响应时间恶化且难以预测。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">技术人应培养技术之外的长期判断力，不被眼前问题困住。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 推荐《第五消费时代》和《挽救计划》，前者帮助理解社会消费趋势，后者通过科幻故事锻炼宏观视角，共同提升对未来的洞察力。</span>
+                        <strong style="color: #1a365d">elasticpp 通过 C++ 重写 ES 查询内核，以插件形式嵌入，对用户完全透明。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 团队选择不替换整个 ES，而是将最耗性能的查询路径用 C++ 实现，通过 JNI 调用，用户无需修改 DSL 或迁移数据，不支持的查询自动回退到原生路径。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">理解系统与理解自己是技术人持续成长的双重基石。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 《控制论与科学方法论》帮助理解复杂系统的运作规律，《蛤蟆先生去看心理医生》则引导自我认知和情绪管理，两者结合能更从容地应对工作和生活。</span>
+                        <strong style="color: #1a365d">性能提升的核心来自批处理、预取和零拷贝三项针对性的架构级优化。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 批处理将逐条文档处理改为批量模式，大幅降低函数调用开销；预取通过批量加载 DocValue 到连续内存提升缓存命中率；零拷贝与解压缓存合并解码与处理步骤，减少数据拷贝。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">批处理改造需警惕隐式的顺序依赖和状态改写，正确性是性能优化的前提。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章通过一个分数不一致的 Bug 案例说明，Lucene 查询体系中存在二次改写分数的逻辑，在批处理模式下需要重新审视这些顺序依赖，否则会导致结果错误。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 AI 替你写代码，你的价值在哪里？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">《第五消费时代》、《挽救计划》一本看世界，一本看自己——都在练一种不被眼前困住的眼光。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">《控制论与科学方法论》、《蛤蟆先生去看心理医生》一本让你看懂系统，一本让你看懂自己。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">没有标准答案，也没有必读清单。他们只是用一场慢下来的阅读，给自己留一点空间。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">性能优化永远不能以正确性为代价。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">GC 的问题根源在 JVM，只要还在 JVM 上跑，就无法彻底消除；而长尾查询的性能瓶颈，很大程度上来自 Lucene 查询引擎本身的实现方式。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">批处理不是简单地把'处理一个'改成'处理一批'。原有的逐条处理逻辑中，可能隐含着各种顺序依赖和状态改写，这些在批量化之后都需要被重新审视。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们希望用户在不改变任何东西的前提下就能享受到加速，也就是用户可以在不改查询 DSL，不迁移数据，甚至不需要知道 elasticpp 的存在情况下，就能享受到 elasticpp 带来的性能和稳定性的提升。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -60,31 +63,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">个人成长</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">610</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">12 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2993</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">书单推荐</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">世界读书日</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术人阅读</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">个人成长</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">认知提升</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Elasticsearch</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">C++</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">搜索引擎</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JVM</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/ad68dc96" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/5823bd86" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/ad68dc96">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATkSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaGyBvqJmATGqeAPKEmgnIb1LzxknVopOqRSdViz5ZpmYTkDfUPAHkBsik5kbNJjWbgGw6qVp0UrXopGrRJ18G5Ak1TwCZ1ExAJjUTkEnNDZAJyKRmAvKEmieAPKHmm06qFp1ULTqpWvTJP07NjZoJyKTmRs0EZFIzAZnU/EtOqhadVC06qVr0yT8GyI2aCcgNkEnNBGRSMwH5f3JSteikatFJ1aJPvkzNf0nNBGRS8wSQJ9TcAJnUPKHmT3JSteikatFJ1aJPlgH5L6mZgExqJiCTmgnIpGYCcgNkUvMGkD/ZSdWik6pFJ1WL8Ef+YkAmNROQGzVPAJnUPAFkUvMvOaladFK16KRq0ScvAZnUTEA2qZnUTEAmNROQGyBvAJnUTGomIJOaCcgmNd90UrXopGrRSdWiT36ZmgnIpOYJIDdAJjU3ap4AMqm5AXID5A01TwCZ1LxxUrXopGrRSdUi/JEXgLyhZgJyo2YCcqNmAjKpuQHyhpobIDdq/iYnVYtOqhadVC3CH3kByI2aTUAmNW8AmdQ8AWRSMwH5JjUTkEnNBGRSs+mkatFJ1aKTqkWfvKRmArIJyBtAJjU3QG7UTGomIDdqfhOQSc03nVQtOqladFK16JNlam6A3KiZ1ExAboC8oeabgLyhZgIyqXkCyKTmjZOqRSdVi06qFn3yEpBJzY2aCcgE5DepmYBMaiYgT6i5ATKpuQEyqZmA3KiZ1Gw6qVp0UrXopGrRJy+pmYDcqJnU/EnUTECeUHMDZBOQSc0NkEnNppOqRSdVi06qFn3yEpBJzRtAnlAzqZmA3AC5UTMBmdRMQCY1N2reUDMBuVHzTSdVi06qFp1ULcIfeQHIjZobIDdqngDyhJoJyI2aCcikZgLyhJoJyBNqJiCTmgnIpOaNk6pFJ1WLTqoWfbJMzSYgN2omNROQGyCTmhsgk5on1NwAmdRMQCY1b6jZdFK16KRq0UnVIvyRF4BMaiYgk5oJyKTmBsiNmieATGomIE+oeQLIpGYC8oSaGyCTmk0nVYtOqhadVC365A8HZFIzAZmATGqeADKpeQLIpGYCcgNkE5AbIJOaN06qFp1ULTqpWoQ/8hcDMqmZgExqngAyqZmATGqeADKpeQLIJjVvnFQtOqladFK1CH/kBSC/Sc0bQP5kaiYgk5oJyBNqvumkatFJ1aKTqkWfLFOzCcgNkCfU/CYgb6h5Qs0NkBs1b5xULTqpWnRSteiTLwPyhJo31ExANgGZ1ExAJjU3QCYgm4D8ppOqRSdVi06qFn3yj1MzAZnUTEAmNZOaCcik5g01N0AmNROQ/9JJ1aKTqkUnVYs++ccAuVEzAXkCyCY1N0BugLyhZtNJ1aKTqkUnVYs++TI136TmDTVvqLkBMqmZgExqJjUTkEnNBGRSMwH5ppOqRSdVi06qFn2yDMhvAjKpmYBMam6ATGomNTdAJjUTkEnNBGRScwPkBsik5ptOqhadVC06qVqEP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0P/eSUC4XfV9LAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/5823bd86">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATiSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OI0uSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtA/iQ1TwCZ1ExAJjUTkEnNE0CeUDMB+ZPUvHFSteikatFJ1aJPlqnZBOQJIJOaCcgNkEnNBGRSc6Nmk5pNQDadVC06qVp0UrXoky8D8oSaJ4BMaiYgk5oJyKRmE5An1DwB5Ak133RSteikatFJ1aJP/jFAJjVPAJnUTGomIDdqJiCTmn/JSdWik6pFJ1WLPvnHqLkBcqNmAjKpmdTcAPl/clK16KRq0UnVok++TM1vomYCMgGZ1ExAbtRMam6ATGqeUPObnFQtOqladFK16JNlQH4TIJOaGzUTkEnNBOQGyKTmDSC/2UnVopOqRSdViz55Sc1vAuSbgDyhZgIyqblR8zc5qVp0UrXopGoR/sgLQCY1E5BNar4JyCY1N0AmNROQTWq+6aRq0UnVopOqRfgjLwC5UTMBmdQ8AWRSMwF5Qs2fBOSb1DwBZFLzxknVopOqRSdVi/BHFgG5UXMD5EbNG0CeUDMBeULNDZAbNX+Tk6pFJ1WLTqoW4Y+8AGRSMwG5UTMBmdRMQCY1N0AmNZuATGomIN+kZgIyqZmATGo2nVQtOqladFK16JNfDsikZgIyqbkBMqmZgNyomdRMQG7U/ElAJjXfdFK16KRq0UnVok9eUvOEmgnIjZoJyBtqbtR8E5A31ExAJjVPAJnUvHFSteikatFJ1aJPXgLyBJAngPyXgLyh5gbIpOYGyKRmAnKjZlKz6aRq0UnVopOqRfgji4BMap4AMqm5AXKjZgJyo+YGyI2aGyA3am6A3Ki5ATKp2XRSteikatFJ1aJPXgIyqZmAPKFmAjKpmdTcALlRMwGZ1NyomYBMam7UvKFmAnKj5ptOqhadVC06qVr0yTIgk5oJyA2QSc0TQDYBmdRMQCY1E5AbIJOaCcgNkEnNBOQGyKTmjZOqRSdVi06qFn2yTM0TaiYgE5BJzTepuQEyqXlCzQ2QSc0EZFLzhppNJ1WLTqoWnVQt+uTLgExqJiCTmieATGomIJOaCcik5gkgk5pJzQ2QSc0E5AbIpGZSMwGZ1Gw6qVp0UrXopGrRJ78ckCeA3AC5ATKpmdTcAJnUTEBugGwCcgNkUvPGSdWik6pFJ1WL8Ef+YkBu1ExAJjU3QCY1E5BJzRNAJjVPANmk5o2TqkUnVYtOqhbhj7wA5E9ScwPkRs0E5DdRMwGZ1ExAnlDzTSdVi06qFp1ULfpkmZpNQG6ATGomIE+o2QTkDTVPqLkBcqPmjZOqRSdVi06qFn3yZUCeUPMGkEnNBOQNIJOaCcik5gbIBGQTkD/ppGrRSdWik6pFn/xj1Dyh5gk1E5BJzRtqboBMaiYg/6WTqkUnVYtOqhZ98o8B8gSQ/5KaGyA3QN5Qs+mkatFJ1aKTqkWffJmab1JzA+RGzQ2QGzU3QCY1E5BJzaRmAjKpmYBMaiYg33RSteikatFJ1aJPlgH5k4A8oWYCMqm5UXMDZFIzAZnUTEAmNTdAboBMar7ppGrRSdWik6pF+CNVS06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pF/wMt+kc6zrcPHQAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

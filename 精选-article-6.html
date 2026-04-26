@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>深入源码：Hermes Agent 如何实现 "Self-Improving"</title>
+        <title>从第一性原理思考 Agentic Engineering</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>深入源码：Hermes Agent 如何实现 "Self-Improving"</h2>
-        <p>4/23/2026, 12:30:00 AM</p>
+        <h2>从第一性原理思考 Agentic Engineering</h2>
+        <p>4/23/2026, 12:46:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过深入分析 Hermes Agent 的源码，系统阐述了其实现自我进化的核心机制，包括 Memory、Skill 和 Nudge Engine 三个子系统的协同工作，并与 OpenClaw 进行对比，最后介绍了其商业化产品 RDSHermes 如何降低使用门槛。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文从第一性原理出发，系统性地推导了 Agentic Engineering 的六条核心最佳实践，并介绍了一个基于 Skill 的模块化开源框架，旨在将工程纪律与 AI 能力结合，在复杂约束下可靠地提升软件工程质量。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了近期在 OpenRouter 排行榜上快速崛起的 Hermes Agent 的核心设计哲学——自我进化。作者通过解读源码，详细拆解了支撑这一能力的三个子系统：Memory（记忆）、Skill（技能）和 Nudge Engine（提醒引擎）。Memory 系统通过容量限制和声明式事实存储，迫使 Agent 主动压缩和更新对用户及环境的认知。Skill 系统允许 Agent 将成功解决复杂任务的经验（包括踩过的坑）自动提炼为可复用的操作手册，并能进行自我修补。Nudge Engine 则在后台定时触发独立的 Review Agent，在不打扰用户的情况下进行静默复盘和学习。文章通过一个从冷启动到精通的 K8s 部署案例，生动展示了三个系统协同工作带来的效率提升。最后，文章对比了开源 Hermes 与阿里云 RDSHermes 的区别，后者通过预装技能、托管安全和零配置部署，将自我进化能力从开发者工具扩展至整个团队。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章批判性地审视了当前 AI 辅助开发中的流行假设（如 vibe coding），并从三条基本公理（软件工程的信息损耗、LLM 的本质特征、人类认知的稀缺性）出发，演绎推导出 Agentic Engineering 的六条核心最佳实践：Context Engineering、基于知识不对称的人机分工、AI 全链条参与、小任务推进与多层次验证、Knowledge as Code 以及 Error-Driven Context Refinement。作者进一步将这些实践落地为一个基于 Skill 的模块化开源框架，该框架通过 Workflow、Best Practices、Standards 等模块，实现了 SDLC 全链条的 AI 协作，并内置了自迭代反馈闭环。文章强调，Agentic Engineering 的目标不是让 AI 替代工程师，而是在保留工程纪律和质量标准的前提下，最大化人机协作的总产出价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Hermes Agent 的核心竞争力在于其自我进化能力，区别于 OpenClaw 等需要手动维护技能的 Agent。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Hermes 通过 Memory、Skill、Nudge Engine 三个子系统构成闭环，使 Agent 能在完成任务后自动提炼经验、修补技能，实现越用越强，而非依赖人工喂养。</span>
+                        <strong style="color: #1a365d">Agentic Engineering 的核心是在工程约束下引入 AI 作为协作者，而非替代者。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与追求速度的 vibe coding 不同，Agentic Engineering 强调保留质量、安全、可维护性等约束，通过系统性的方法论将 AI 能力融入软件开发生命周期，旨在同步提升效率与质量。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Memory 系统采用容量限制和声明式事实存储，倒逼 Agent 进行主动信息整理和压缩。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过设置字符上限（如 MEMORY 2200 chars）和返回当前条目列表，引导模型主动决定替换或合并过时信息，这本身就是一种自我反思过程，避免了文件无限膨胀。</span>
+                        <strong style="color: #1a365d">从三条公理出发，可以推导出六条关键实践，构成方法论的核心。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 公理包括软件工程的信息损耗、LLM 的上下文决定性/概率性/工作记忆有限性、人类认知的稀缺性。基于此，推导出 Context Engineering、基于乔哈里窗的人机分工、AI 全链条参与、小任务与多层次验证、Knowledge as Code 以及从错误中学习的反馈闭环。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Skill 系统实现了从经验到可复用知识的自动化转换与迭代修补。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当 Agent 通过多次工具调用成功解决复杂任务或克服错误后，Nudge Engine 会触发后台 Review Agent 创建新 Skill 或使用模糊匹配对现有 Skill 进行局部 patch，将踩坑经验（Pitfalls）固化下来。</span>
+                        <strong style="color: #1a365d">Context Engineering 是管理 AI 输出质量上限的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 LLM 的输出严格由上下文决定且窗口有限，必须构建高信噪比的上下文供给系统，通过 Spec-First、Docs as Code、渐进式披露等策略，将团队私有知识结构化为 AI 可消费的形式并按需注入。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Nudge Engine 通过后台 fork 独立 Agent 进行静默审查，实现了学习与执行的无感分离。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在主对话流之外，定时触发独立的 Review Agent 对会话快照进行复盘，决定是否创建或更新 Memory/Skill，整个过程输出重定向，用户无感知，保证了交互流畅性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">RDSHermes 将 Hermes 的自我进化能力产品化，解决了团队落地的安全、易用性和冷启动问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过加密托管凭证、预装领域技能（如数据库巡检）、提供 WebUI 和审计链路，RDSHermes 使非技术成员也能安全、便捷地使用具备自进化能力的 AI Agent。</span>
+                        <strong style="color: #1a365d">基于 Skill 的模块化框架是实现最佳实践的可落地工程载体。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者将方法论落地为开源框架，通过 Workflow、Best Practices、Standards 等模块，以纯文本 Skill 的形式封装知识和流程。框架支持按需加载、知识版本化演进，并内置自迭代机制，实现了工程纪律与灵活性的平衡。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">区别在哪？OpenClaw 的 Skill 是手写的 Markdown 文件------你写多少它会多少，你不写它就不会。Hermes 做了一件 OpenClaw 架构上做不了的事：Agent 干完活之后，会自动把踩坑经验提炼成可复用的 Skill，下次遇到同类问题直接调用。用得越久，能力越强。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Memory 容量有限就迫使 Agent 挑重要的记，不重要的自然被挤掉。对比 OpenClaw------它的 MEMORY.md 是纯追加模式，用几个月就膨胀成几万行的怪兽文件... Hermes 的做法反过来：容量有限就倒逼 Agent 做信息压缩。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">HN 上有个帖子叫'Data Is the Final Moat'------当模型智能被商品化、Agent 框架被开源，真正的护城河是 Agent 在工作中积累的领域知识。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Nudge 触发后怎么处理？它不会在主对话中插一条'让我想想有没有什么该记的'------那样太打扰用户了。而是在后台 fork 一个独立的 Agent 实例，拿着主对话的快照去做审查。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">开源 Hermes 是给开发者的引擎，RDSHermes 是给整个团队的成品车。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agentic Engineering 代表了一种截然不同的范式。它是一种工程师与 AI Agent 深度协作的模式——AI 不仅是代码的执行者，也是问题分析、方案设计等环节的思考伙伴；但最终的判断和决策权始终在工程师手中。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LLM 是一个基于上下文进行概率性推理的系统，具有三个并列的本质特征：（1）输出由上下文决定，（2）输出是概率性的，（3）工作记忆是有限且易失的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Context Engineering 正是解决这一矛盾的系统性方法……其指导原则是：寻找能够最大化产生期望结果可能性的最小、高信号 Token 集。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">必须将大任务拆解为可独立验证的子任务，每步由 AI 执行、人类校验，通过后再进入下一步。这同时控制了三个风险：错误累积、上下文退化、验证成本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">把每一次错误都变成进化的机会。与其反复提醒 AI 同样的事，不如把缺失的规范和知识沉淀下来。错误不是负担，而是系统生长的养料。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -66,32 +63,32 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">93</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯云开发者</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7260</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">76 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">18901</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Hermes Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Self-Improving</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源码分析</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agentic Engineering</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">第一性原理</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 辅助开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人机协作</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/97a41c9c" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/f5d1601a" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/97a41c9c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAToSURBVO3BS6ocQRAEwfBi7n9ll5a5Kmg65+lDmOFvqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSA/Sc0E5Ak1N0DeUDMBmdQ8AeQnqXnjpGrRSdWik6pFnyxTswnIjZobIJvUTEBu1ExAbtTcqNkEZNNJ1aKTqkUnVYs++TIgT6j5SUAmNROQGzUTkEnNNwF5Qs03nVQtOqladFK16JN/HJAbNROQSc0EZFIzAZnUTGomIDdq/icnVYtOqhadVC365D+j5kbNn6RmAjKp+ZedVC06qVp0UrXoky9T85OAfJOaCcikZlIzAZnUvKHmb3JSteikatFJ1aJPlgH5k9RMQCY1E5BJzQRkUvMEkEnNBGRScwPkb3ZSteikatFJ1SL8Lf8wIJOaCcgTam6AbFLzPzmpWnRSteikatEnLwGZ1DwBZFIzAXkCyBNqboC8oWYCcgNkk5obIJOaN06qFp1ULTqpWvTJDwMyqZmATGreAPIEkEnNBGRS84SaGzUTkDeA/KSTqkUnVYtOqhZ98mVAboDcAJnUTEBu1NwAmdRsAjKpmYBsUvMEkE0nVYtOqhadVC365CU1E5BJzQ2QSc0NkCeATGqeADKpuQEyqZmAPKHmBsgEZFIzAfmmk6pFJ1WLTqoWffJlQN4AMqn5SWomIJOaGyDfpOYNNZtOqhadVC06qVr0yUtAbtRMQCY1N2omIJOaCcikZgJyA+Sb1DwBZFIzAXkDyKTmjZOqRSdVi06qFn3ykpobIJOaCcikZgIyqblRMwF5Q80E5EbNBOQGyKTmm9RMQDadVC06qVp0UrXok2VAnlAzAZnUPAHkDTUTkCeA3ADZpOYJIN90UrXopGrRSdWiT/5yQG7U3KiZgExqnlDzhJobIBOQSc0EZFLzhppNJ1WLTqoWnVQtwt/yApBJzQ2QJ9RMQCY1E5AbNROQSc0NkBs1E5BJzQ2QTWomIDdq3jipWnRSteikatEnL6l5Q80EZAIyqZmATGomIBOQbwIyqdmkZgIyqZmATGomIJtOqhadVC06qVr0yZcBmdRMQG7UTEAmNROQGzUTkBsgN2omIBOQSc0EZFLzhJobNROQbzqpWnRSteikatEnLwF5Q80NkCfUbFIzAXlCzRNANqmZ1ExANp1ULTqpWnRStQh/yz8MyI2aCcg3qbkBcqPmCSCTmieATGreOKladFK16KRq0ScvAflJam7U3KiZgNyomYBMar4JyKTmBsiNmm86qVp0UrXopGrRJ8vUbAJyo+YGyKTmRs0EZFIzAblR84aaJ9TcAJnUbDqpWnRSteikatEnXwbkCTVPAJnU3ACZ1ExAnlAzAXkDyBtAJjWTmgnIpOaNk6pFJ1WLTqoWffKPUzMBuVEzAZnUTEAmIDdqnlAzAZnUTEAmNX+Tk6pFJ1WLTqoWffKfUTMBmYDcAJnUTEAmNROQGzU3am7U3AD5k06qFp1ULTqpWvTJl6n5k9RMQCY1bwC5UXMDZFIzAZnUTEBu1ExAvumkatFJ1aKTqkWfLAPyk4DcqJnUTEBu1NyomYBsUjMBuVHzhJpNJ1WLTqoWnVQtwt9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9AuKv0ZK4OIeRAAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/f5d1601a">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATMSURBVO3BQY4bSRAEwfAC//9l3znmqYBGJ0fSIszwR6qWnFQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYs+eQnIb1IzAZnUvAHkDTUTkEnNE0B+k5o3TqoWnVQtOqla9MkyNZuA3KiZgDyh5kbNDZAbNROQGzU3ajYB2XRSteikatFJ1aJPvgzIE2o2qbkBMqm5ATKpmYBMar4JyBNqvumkatFJ1aKTqkWf/OOATGomIE8AmdQ8oWYCcqPm/+SkatFJ1aKTqkWf/M8AmdTcAPlNaiYgk5p/2UnVopOqRSdViz75MjW/Sc0EZFIzqZmATEAmNU+omYBMat5Q8zc5qVp0UrXopGrRJ8uA/EuATGomIDdAJjUTkEnNBGRScwPkb3ZSteikatFJ1aJPXlLzNwEyqfkmNROQGyCTmhs1/5KTqkUnVYtOqhZ98hKQSc0TQCY1E5A3gExqJjXfpGYCcgNkk5obIJOaN06qFp1ULTqpWoQ/8gKQb1IzAZnUTEA2qZmA3KjZBOQ3qXnjpGrRSdWik6pFn/xham6ATGqeUDMBmdRMQCYgN2pugExqJiCb1DwBZNNJ1aKTqkUnVYvwRxYBmdRMQCY1E5BJzQ2QSc2fBGRSMwF5Qs0NkBs1E5AbNW+cVC06qVp0UrXok5eA3ACZ1ExAJjUTkCeA3Kh5AsiNmhsg36TmDTWbTqoWnVQtOqla9MmXqXlDzRNAboBMaiYgk5oJyBtqngAyqZmAvAFkUvPGSdWik6pFJ1WLPlmmZgIyqbkBcqNmAjKpuQFyo+YNNROQGyCTmm9SMwHZdFK16KRq0UnVok9+GZAn1ExAJjU3QH4TkBsgm9Q8AeSbTqoWnVQtOqla9MlLaiYgN2omIJOaCcgTQDYBmdQ8oeYGyARkUjMBmdS8oWbTSdWik6pFJ1WL8EdeAHKjZgIyqXkCyCY1E5BJzQTkRs0EZFJzA2STmgnIjZo3TqoWnVQtOqla9MlLat4AMqmZgDyhZgLyhJo3gExqNqmZgExqJiCTmgnIppOqRSdVi06qFuGPfBGQSc0NkEnNDZAbNW8AuVEzAblRMwGZ1HwTkBs1b5xULTqpWnRStQh/5AUgb6i5AbJJzRtAJjUTkEnNDZBvUnMDZFLzxknVopOqRSdViz55Sc03qbkBMqmZgNwAeQPIpOYGyI2aJ4BMav6kk6pFJ1WLTqoWffISkN+k5gbIDZAbNTdAJjXfBGRScwPkRs03nVQtOqladFK16JNlajYBuVEzAblR8wSQSc0E5EbNG2qeUHMDZFKz6aRq0UnVopOqRZ98GZAn1DwB5EbNE0CeUDMBeQPIG0AmNZOaCcik5o2TqkUnVYtOqhZ98o9TMwH5JiA3ap5QMwGZ1ExAJjV/k5OqRSdVi06qFn3yP6NmAvKEmhsgk5oJyI2aGzU3am6A/EknVYtOqhadVC365MvU/CYgk5oJyA2QJ4DcqLkBMqmZgExqJiA3aiYg33RSteikatFJ1aJPlgH5TUA2qZmA3KiZgGxSMwG5UfOEmk0nVYtOqhadVC3CH6laclK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC36D+RKMEJ07rXMAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
