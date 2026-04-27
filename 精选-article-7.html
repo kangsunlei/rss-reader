@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>深入源码：Hermes Agent 如何实现 "Self-Improving"</title>
+        <title>中美 AI 创业的生态差异---对谈 Google Cloud 北亚区创投生态负责人</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>深入源码：Hermes Agent 如何实现 "Self-Improving"</h2>
-        <p>4/23/2026, 12:30:00 AM</p>
+        <h2>中美 AI 创业的生态差异---对谈 Google Cloud 北亚区创投生态负责人</h2>
+        <p>4/23/2026, 10:32:18 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过深入分析 Hermes Agent 的源码，系统阐述了其实现自我进化的核心机制，包括 Memory、Skill 和 Nudge Engine 三个子系统的协同工作，并与 OpenClaw 进行对比，最后介绍了其商业化产品 RDSHermes 如何降低使用门槛。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Google Cloud 北亚区创投生态负责人 Warren Li 深度剖析中美 AI 创业生态差异，探讨中国在场景应用上的优势与美国在基础创新和容错环境上的领先地位。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了近期在 OpenRouter 排行榜上快速崛起的 Hermes Agent 的核心设计哲学——自我进化。作者通过解读源码，详细拆解了支撑这一能力的三个子系统：Memory（记忆）、Skill（技能）和 Nudge Engine（提醒引擎）。Memory 系统通过容量限制和声明式事实存储，迫使 Agent 主动压缩和更新对用户及环境的认知。Skill 系统允许 Agent 将成功解决复杂任务的经验（包括踩过的坑）自动提炼为可复用的操作手册，并能进行自我修补。Nudge Engine 则在后台定时触发独立的 Review Agent，在不打扰用户的情况下进行静默复盘和学习。文章通过一个从冷启动到精通的 K8s 部署案例，生动展示了三个系统协同工作带来的效率提升。最后，文章对比了开源 Hermes 与阿里云 RDSHermes 的区别，后者通过预装技能、托管安全和零配置部署，将自我进化能力从开发者工具扩展至整个团队。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本期播客在 Google Cloud Next 2026 大会现场录制，主播庄明浩与 Google Cloud 北亚区创投生态负责人 Warren Li 进行对谈。节目深入探讨了中美 AI 创业生态的系统性差异：中国创业者擅长在已定义的赛道上进行快速应用和产品打磨，而美国则在底层研究和定义创新范式上更具优势。Warren 指出，AI 技术的快速迭代正在缩小这一差距，尤其体现在应用侧。此外，节目详细分析了亚洲各主要市场（中国、印度、日本、韩国、东南亚）在 AI 创业浪潮中的不同机遇与挑战，强调付费习惯和市场成熟度是关键变量。最后，核心讨论了 AI 如何大幅降低创业门槛、大公司与创业公司在细分市场的竞合关系，以及美国独特创新文化（高容错性、丰富的早期资金来源、法律保护、个人使命感）对 AI 发展的根本性驱动作用。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Hermes Agent 的核心竞争力在于其自我进化能力，区别于 OpenClaw 等需要手动维护技能的 Agent。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Hermes 通过 Memory、Skill、Nudge Engine 三个子系统构成闭环，使 Agent 能在完成任务后自动提炼经验、修补技能，实现越用越强，而非依赖人工喂养。</span>
+                        <strong style="color: #1a365d">中美 AI 创业生态存在结构性差异：中国重应用落地，美国重基础创新。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 中国创业者擅长在 iPhone 这类已定义平台上快速复制和优化，美国则更多扮演定义新品类和探索前沿的角色。AI 技术极新，加速了双方在应用层面的趋同。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Memory 系统采用容量限制和声明式事实存储，倒逼 Agent 进行主动信息整理和压缩。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过设置字符上限（如 MEMORY 2200 chars）和返回当前条目列表，引导模型主动决定替换或合并过时信息，这本身就是一种自我反思过程，避免了文件无限膨胀。</span>
+                        <strong style="color: #1a365d">AI 大幅降低了创业门槛，技术与产品逻辑成为关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 技术不再构成绝对壁垒，创业者只需具备敏锐的产品直觉和清晰的逻辑思维，即可借助 Prompt Engineering 等工具将创意快速变为产品，降低了沟通损耗和开发成本。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Skill 系统实现了从经验到可复用知识的自动化转换与迭代修补。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当 Agent 通过多次工具调用成功解决复杂任务或克服错误后，Nudge Engine 会触发后台 Review Agent 创建新 Skill 或使用模糊匹配对现有 Skill 进行局部 patch，将踩坑经验（Pitfalls）固化下来。</span>
+                        <strong style="color: #1a365d">亚洲各国 AI 创业生态分化明显，付费习惯是核心差异。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 中国领跑，但日本 B2B 付费习惯好且有本土化壁垒；韩国在半导体、机器人和医疗有亮点但市场小；印度和东南亚则受困于消费市场薄弱和付费意愿低。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Nudge Engine 通过后台 fork 独立 Agent 进行静默审查，实现了学习与执行的无感分离。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在主对话流之外，定时触发独立的 Review Agent 对会话快照进行复盘，决定是否创建或更新 Memory/Skill，整个过程输出重定向，用户无感知，保证了交互流畅性。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">RDSHermes 将 Hermes 的自我进化能力产品化，解决了团队落地的安全、易用性和冷启动问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过加密托管凭证、预装领域技能（如数据库巡检）、提供 WebUI 和审计链路，RDSHermes 使非技术成员也能安全、便捷地使用具备自进化能力的 AI Agent。</span>
+                        <strong style="color: #1a365d">美国创业生态的优势源自高容错性、多样化的早期融资与法律保护。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 美国有大量个人天使、独立研究项目支持创新，法律体系对知识产权保护完善、退出渠道多样，且容错文化浓厚，鼓励创业者以使命驱动而非纯商业目标出发。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">区别在哪？OpenClaw 的 Skill 是手写的 Markdown 文件------你写多少它会多少，你不写它就不会。Hermes 做了一件 OpenClaw 架构上做不了的事：Agent 干完活之后，会自动把踩坑经验提炼成可复用的 Skill，下次遇到同类问题直接调用。用得越久，能力越强。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Memory 容量有限就迫使 Agent 挑重要的记，不重要的自然被挤掉。对比 OpenClaw------它的 MEMORY.md 是纯追加模式，用几个月就膨胀成几万行的怪兽文件... Hermes 的做法反过来：容量有限就倒逼 Agent 做信息压缩。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">HN 上有个帖子叫'Data Is the Final Moat'------当模型智能被商品化、Agent 框架被开源，真正的护城河是 Agent 在工作中积累的领域知识。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Nudge 触发后怎么处理？它不会在主对话中插一条'让我想想有没有什么该记的'------那样太打扰用户了。而是在后台 fork 一个独立的 Agent 实例，拿着主对话的快照去做审查。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">开源 Hermes 是给开发者的引擎，RDSHermes 是给整个团队的成品车。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">国内的人比较注重实践，做题很厉害，但比较难跳出框去定义新事情。美国这边则是在定义这个事情上更强。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 最大的价值点还是提升了生产力。人力成本越高的行业，AI 生产力提升的效应就越明显，比如金融、专业服务、医疗和科技。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在美国你只要做出了一个东西，有了 traction，大公司不太会来抄你，而是会来买你。整个法律体系对创新有很好的保护。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">创业者的动机如果只是为了赚钱，那这个项目大概率做不大。那些最终做出最大成就的人，他们想的是要 make an impact，钱只是副产品。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -68,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">屠龙之术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">屠龙之术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7260</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">501</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Hermes Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Self-Improving</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源码分析</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 创业</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">中美对比</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">创业生态</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Google Cloud</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">风险投资</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/97a41c9c" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/podcast/0e548b8" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            收听完整播客
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/97a41c9c">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAAToSURBVO3BS6ocQRAEwfBi7n9ll5a5Kmg65+lDmOFvqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSA/Sc0E5Ak1N0DeUDMBmdQ8AeQnqXnjpGrRSdWik6pFnyxTswnIjZobIJvUTEBu1ExAbtTcqNkEZNNJ1aKTqkUnVYs++TIgT6j5SUAmNROQGzUTkEnNNwF5Qs03nVQtOqladFK16JN/HJAbNROQSc0EZFIzAZnUTGomIDdq/icnVYtOqhadVC365D+j5kbNn6RmAjKp+ZedVC06qVp0UrXoky9T85OAfJOaCcikZlIzAZnUvKHmb3JSteikatFJ1aJPlgH5k9RMQCY1E5BJzQRkUvMEkEnNBGRScwPkb3ZSteikatFJ1SL8Lf8wIJOaCcgTam6AbFLzPzmpWnRSteikatEnLwGZ1DwBZFIzAXkCyBNqboC8oWYCcgNkk5obIJOaN06qFp1ULTqpWvTJDwMyqZmATGreAPIEkEnNBGRS84SaGzUTkDeA/KSTqkUnVYtOqhZ98mVAboDcAJnUTEBu1NwAmdRsAjKpmYBsUvMEkE0nVYtOqhadVC365CU1E5BJzQ2QSc0NkCeATGqeADKpuQEyqZmAPKHmBsgEZFIzAfmmk6pFJ1WLTqoWffJlQN4AMqn5SWomIJOaGyDfpOYNNZtOqhadVC06qVr0yUtAbtRMQCY1N2omIJOaCcikZgJyA+Sb1DwBZFIzAXkDyKTmjZOqRSdVi06qFn3ykpobIJOaCcikZgIyqblRMwF5Q80E5EbNBOQGyKTmm9RMQDadVC06qVp0UrXok2VAnlAzAZnUPAHkDTUTkCeA3ADZpOYJIN90UrXopGrRSdWiT/5yQG7U3KiZgExqnlDzhJobIBOQSc0EZFLzhppNJ1WLTqoWnVQtwt/yApBJzQ2QJ9RMQCY1E5AbNROQSc0NkBs1E5BJzQ2QTWomIDdq3jipWnRSteikatEnL6l5Q80EZAIyqZmATGomIBOQbwIyqdmkZgIyqZmATGomIJtOqhadVC06qVr0yZcBmdRMQG7UTEAmNROQGzUTkBsgN2omIBOQSc0EZFLzhJobNROQbzqpWnRSteikatEnLwF5Q80NkCfUbFIzAXlCzRNANqmZ1ExANp1ULTqpWnRStQh/yz8MyI2aCcg3qbkBcqPmCSCTmieATGreOKladFK16KRq0ScvAflJam7U3KiZgNyomYBMar4JyKTmBsiNmm86qVp0UrXopGrRJ8vUbAJyo+YGyKTmRs0EZFIzAblR84aaJ9TcAJnUbDqpWnRSteikatEnXwbkCTVPAJnU3ACZ1ExAnlAzAXkDyBtAJjWTmgnIpOaNk6pFJ1WLTqoWffKPUzMBuVEzAZnUTEAmIDdqnlAzAZnUTEAmNX+Tk6pFJ1WLTqoWffKfUTMBmYDcAJnUTEAmNROQGzU3am7U3AD5k06qFp1ULTqpWvTJl6n5k9RMQCY1bwC5UXMDZFIzAZnUTEBu1ExAvumkatFJ1aKTqkWfLAPyk4DcqJnUTEBu1NyomYBsUjMBuVHzhJpNJ1WLTqoWnVQtwt9SteSkatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqla9AuKv0ZK4OIeRAAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/podcast/0e548b8">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATNSURBVO3BSY4jSRAEQdMA//9lnTr6KYBEOnsbE8EfqVpyUrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULfrkJSC/kpongNyouQEyqXkCyBNqJiC/kpo3TqoWnVQtOqla9MkyNZuAPAFkUrMJyI2aSc0mNZuAbDqpWnRSteikatEnXwbkCTVPAJnUPAFkUrMJyBNqngDyhJpvOqladFK16KRq0Sf/GCCTmieATGomIJOaCcikZgIyqfmXnFQtOqladFK16JP/GSCTmhsgk5oJyKRmAvJ/clK16KRq0UnVok++TM2fRM0EZFJzA2RSc6PmBsik5gk1f5KTqkUnVYtOqhZ9sgzI76RmAjKpeUPNBGRSMwGZ1LwB5E92UrXopGrRSdUi/JG/GJBJzQTkRs0TQCY1TwCZ1PxLTqoWnVQtOqla9MlLQCY1E5BNaiY1T6iZgNyouQFyo2ZSMwGZ1ExANqn5ppOqRSdVi06qFuGPvADkCTU3QCY1E5AbNTdAJjUTkBs1bwD5JjVPAJnUvHFSteikatFJ1SL8kT8IkBs1E5AbNROQGzU3QJ5QcwPkRs3f5KRq0UnVopOqRfgjXwRkUjMBuVEzAblR8ysBmdRMQL5JzQRkUjMBmdRsOqladFK16KRqEf7IIiBvqJmATGpugDyhZgJyo+YGyI2abwJyo+abTqoWnVQtOqla9MmXqZmA3ACZ1ExA3lAzAZnUfBOQN9RMQCY1TwCZ1LxxUrXopGrRSdUi/JFFQJ5QMwG5UfMGkCfUTEAmNROQSc0NkEnNDZBJzQTkRs03nVQtOqladFK16JNlaiYgk5obNW8AmdTcqHkDyKTmBsgmIJOaGyCTmk0nVYtOqhadVC365CUgN2omIJvUPKHmBsik5gkgk5obNW+omYDcqPmmk6pFJ1WLTqoWffJlQCY1E5BJzZ8EyKRmAjKpeQLIpGYCcgNkUjMBuQEyqXnjpGrRSdWik6pFnyxTMwG5UXMD5EbNpGYC8oSaGyBPAJnU3ACZ1ExAJjVvqNl0UrXopGrRSdUi/JEXgExqngAyqbkB8oSaCcik5puATGomIJOaCcgTam6ATGo2nVQtOqladFK16JM/DJBfCcik5gbIE2omIDdANgG5ATKpeeOkatFJ1aKTqkX4I38xIG+omYBMam6APKFmAjKpeQLIJjVvnFQtOqladFK16JOXgPxKaiY1N0AmNU8AeUPNBOQJIJOaN9R800nVopOqRSdViz5ZpmYTkBsgk5pJzQ2QGzUTkEnNN6l5Qs3vdFK16KRq0UnVok++DMgTat4AMql5Qs0E5Akgk5pJzQRkArIJyBNq3jipWnRSteikatEn/zggN2omIJOaGyCTmgnIpOZGzQ2QSc0E5Hc6qVp0UrXopGrRJ/84NU+ouQHyhJobNTdAboC8oWbTSdWik6pFJ1WLPvkyNd+k5gbIjZon1DwBZFIzAZnUTGomIJOaCcikZgLyTSdVi06qFp1ULfpkGZBfCciNmk1AJjUTkEnNBGRSMwGZ1NwAuQEyqfmmk6pFJ1WLTqoW4Y9ULTmpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXopGrRSdWik6pFJ1WLTqoW/QdvvkgVZvjgMAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AWS 新发布的 S3 Files 适合作为 Kafka 的存储吗？</title>
+        <title>paper2code：输入 arXiv 链接即可生成带引用的论文代码实现</title>
         <style>
             body {
                 padding: 12px;
@@ -15,76 +15,51 @@
         </style>
     </head>
     <body>
-        <h2>AWS 新发布的 S3 Files 适合作为 Kafka 的存储吗？</h2>
-        <p>4/25/2026, 7:30:00 AM</p>
+        <h2>paper2code：输入 arXiv 链接即可生成带引用的论文代码实现</h2>
+        <p>4/26/2026, 1:30:05 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深入分析了 AWS 新发布的 S3 Files 是否适合作为 Kafka 的存储后端，指出直接挂载存在持久性、可用性、延迟和成本四大挑战，并介绍了 AutoMQ 基于可插拔 WAL 的共享存储架构作为更优解。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">GitHub 开源项目 paper2code 通过输入 arXiv 链接，自动生成带有详细引用标注的完整代码实现，解决论文复现痛点。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章以 AWS 新发布的 S3 Files（为 S3 提供 NFS 接口，小文件读取延迟亚毫秒级）为切入点，探讨了将 Kafka 构建在共享存储上的可行性。作者首先分析了共享存储对 Kafka 的吸引力：消除跨 AZ 流量费、实现存算分离、简化运维。随后，文章深入剖析了直接将原生 Kafka 跑在 S3 Files 上会遇到的四个根本问题：持久性缺口（Kafka 异步 I/O 依赖副本，单副本下 Page Cache 数据易丢）、可用性耦合（无 Follower 副本导致故障转移机制失效）、延迟现实（P99 尾延迟高达 704ms，不可预测）以及成本结构不匹配（按流量计费 + 高额 EFS 驻留费，对持续高吞吐写入场景极不友好）。文章随后介绍了 AutoMQ 的解决方案：通过可插拔的 WAL（Write-Ahead Log）层作为写入缓冲，实现低延迟持久化、S3 API 成本优化和真正的无状态 Broker。文章最后评估了 S3 Files 作为 WAL 后端的可能性，认为技术上可行但当前定价模型使经济账算不过来，并展望了云存储分化趋势下，AutoMQ 可插拔架构的适应性。</p>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
-            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #d97706; margin-right: 8px">💡</span> 主要观点
-            </h3>
-            <ol style="margin: 0; padding-left: 20px; color: #334155">
-                <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">直接使用 S3 Files 作为 Kafka 的存储后端存在根本性架构不匹配。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Kafka 的异步 I/O、基于副本的 HA 机制与共享存储的设计哲学冲突，导致持久性缺口、可用性耦合和不可预测的尾延迟等问题，无法通过简单配置解决。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">S3 Files 的定价模型与 Kafka 的工作负载特征严重不匹配。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> S3 Files 按流量计费且数据默认在 EFS 高性能层驻留 30 天，对于 Kafka 这种持续高吞吐写入、所有数据皆为活跃数据的场景，成本会随吞吐量线性增长，远高于传统方案。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AutoMQ 通过可插拔 WAL 层实现了生产级的共享存储 Kafka 架构。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> WAL 层作为写入缓冲，解决了持久性缺口和 S3 API 成本问题，同时实现了真正的无状态 Broker，支持秒级故障转移和零跨 AZ 流量，在延迟和成本之间提供了可配置的 trade-off。</span>
-                    </li>
-            </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
-            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不是把 Kafka 搬到共享文件系统上，而是从存储引擎层重新设计，让 Kafka 真正运行在共享存储架构上。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">从 P95 到 P99 出现了断崖式跳跃：5ms 直接飙到 704ms，延迟放大了 140 倍。这意味着每一百次请求就有一次要等超过一秒。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">S3 Files 的定价模型是为「读多写少、活跃工作集小」的场景设计的------Kafka 恰好相反：持续高吞吐写入，所有数据都是「活跃」的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AutoMQ 的架构已经为那一天做好了准备。</li>
-            </ul>
+            <p style="margin: 0; line-height: 1.8; color: #334155">该推文介绍了一个名为 paper2code 的开源项目，旨在解决算法工程师和科研人员在复现论文时遇到的常见痛点。用户只需输入一个 arXiv 链接，该项目就能自动输出完整的代码实现，并且每一行关键代码都会在注释中明确标注对应的论文章节和公式序号，清晰区分了原作者意图和 AI 生成部分。此外，该项目还可作为技能安装到 Claude Code 等 Agent 工具中使用，通过命令行即可快速本地部署。对于经常需要与前沿论文打交道的技术从业者来说，这是一个非常实用的工具。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHubDaily(@GitHub_Daily)</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHubDaily</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">21 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5067</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">319</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Kafka</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">S3 Files</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">共享存储</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AutoMQ</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">消息队列</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">paper2code</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">论文复现</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHub</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 代码生成</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/e227dffb" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/status/2048394184181338173" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/e227dffb">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATgSURBVO3BQY4cSRIEQdNA/f/Lun30UwCJ9OohuSaCP1K15KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVr0yUtAfpOaTUAmNROQSc0TQJ5QMwH5TWreOKladFK16KRq0SfL1GwC8gaQSc0NkEnNBGRSc6Nmk5pNQDadVC06qVp0UrXoky8D8oSaJ4BMap5Q84SaJ4A8oeYJIE+o+aaTqkUnVYtOqhZ98o8BMqmZgExqJiCTmgnIE2omIJOaf8lJ1aKTqkUnVYs++ceomYDcAJnUTEAmNU8A+X9yUrXopGrRSdWiT75MzX9JzQTkBsgNkBs1k5obIJOaJ9T8SU6qFp1ULTqpWvTJMiB/EiCTmgnIpGYCMqmZgNwAmdS8AeRPdlK16KRq0UnVok9eUvMnATKpmYC8AeQJNROQSc2Nmr/JSdWik6pFJ1WL8EdeADKpmYBsUvMEkBs1E5An1ExAJjU3QCY1E5BNar7ppGrRSdWik6pFn3yZmgnIpOYNIJOaSc0NkEnNE0AmNTdAboC8oeYJIJOaN06qFp1ULTqpWoQ/8gKQGzU3QJ5QcwNkUjMBuVEzAXlDzQ2QGzV/k5OqRSdVi06qFuGP/IeATGqeAHKj5puATGomIN+kZgIyqZmATGo2nVQtOqladFK16JOXgNyomYA8AeRGzRNA3lAzqZmA3Kj5TUAmNd90UrXopGrRSdWiT15SswnIpOYGyI2aGzW/CcgbaiYgk5ongExq3jipWnRSteikatEnLwGZ1Dyh5gbIjZon1NwA2aTmBsik5gbIpGYCcqNmUrPppGrRSdWik6pFn7ykZgJyo+YJNTdAbtTcAJnU3AC5UXMDZBOQSc0NkEnNppOqRSdVi06qFn3yEpBJzQ2QGzUTkDeATGomNROQJ9RMQCY1N2reUDMBuVHzTSdVi06qFp1ULfrky4BMaiYgN2omIDdqngAyqXkCyKRmAnIDZFIzAbkBMqmZgNwAmdS8cVK16KRq0UnVok++TM2NmhsgN2pugNyomYA8oeYJNTdAJjUTkEnNG2o2nVQtOqladFK1CH/kBSCTmhsgN2qeALJJzQ2QGzVPAJnUTECeUHMDZFKz6aRq0UnVopOqRZ98GZA3gLyh5gbIBORGzQ2QSc0E5AbIJiA3QCY1b5xULTqpWnRStQh/5C8G5A01bwCZ1DwBZFLzBJBNat44qVp0UrXopGrRJy8B+U1qJjUTkCeA3KiZgNwA2QRkUvOGmm86qVp0UrXopGrRJ8vUbAJyA2RSMwGZ1ExAJjU3ap4A8oaaJ9TcALlR88ZJ1aKTqkUnVYs++TIgT6j5JiBvAJnUTEAmNTdAJiCbgPymk6pFJ1WLTqoWffKPATKpeQLIpGZSMwGZ1Lyh5gbIpGYC8l86qVp0UrXopGrRJ/8YNTdAJjWTmhsgm9TcALkB8oaaTSdVi06qFp1ULfrky9R8k5oJyI2aCciNmhs1N0AmNROQSc2kZgIyqZmATGomIN90UrXopGrRSdWiT5YB+U1AJjU3QCY1E5AJyKTmBsikZgIyqZmATGpugNwAmdR800nVopOqRSdVi/BHqpacVC06qVp0UrXopGrRSdWik6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi/4HN1k/QisHf6EAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/status/2048394184181338173">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
