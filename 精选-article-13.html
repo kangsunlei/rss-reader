@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Qwen3.6-27B：无需 MoE 路由，旗舰级编程能力</title>
+        <title>深入源码：Hermes Agent 如何实现 "Self-Improving"</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Qwen3.6-27B：无需 MoE 路由，旗舰级编程能力</h2>
-        <p>4/22/2026, 1:02:00 PM</p>
+        <h2>深入源码：Hermes Agent 如何实现 "Self-Improving"</h2>
+        <p>4/23/2026, 12:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">通义实验室发布 Qwen3.6-27B，以 270 亿稠密参数在编程基准上全面超越前代 397B MoE 旗舰模型，并原生支持多模态与长上下文。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过深入分析 Hermes Agent 的源码，系统阐述了其实现自我进化的核心机制，包括 Memory、Skill 和 Nudge Engine 三个子系统的协同工作，并与 OpenClaw 进行对比，最后介绍了其商业化产品 RDSHermes 如何降低使用门槛。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">通义实验室于 2026 年 4 月 22 日开源发布 Qwen3.6-27B 模型。该模型采用 270 亿稠密参数架构，无需 MoE 路由，显著降低了部署门槛。其核心亮点在于编程能力的突破：在 SWE-bench Verified（77.2）、SWE-bench Pro（53.5）、Terminal-Bench 2.0（59.3）和 SkillsBench（48.2）等关键基准上全面超越前代 397B MoE 旗舰模型 Qwen3.5-397B-A17B。此外，模型原生支持多模态，可处理图像、视频与文本，具备视觉推理、文档理解和视觉问答能力。在推理任务 GPQA Diamond 上达到 87.8 分，展现出与超大参数模型相当的深度思考能力。模型已开源权重，并计划集成至阿里云百炼 API 及主流编程助手如 OpenClaw、Claude Code 和 Qwen Code。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章深入剖析了近期在 OpenRouter 排行榜上快速崛起的 Hermes Agent 的核心设计哲学——自我进化。作者通过解读源码，详细拆解了支撑这一能力的三个子系统：Memory（记忆）、Skill（技能）和 Nudge Engine（提醒引擎）。Memory 系统通过容量限制和声明式事实存储，迫使 Agent 主动压缩和更新对用户及环境的认知。Skill 系统允许 Agent 将成功解决复杂任务的经验（包括踩过的坑）自动提炼为可复用的操作手册，并能进行自我修补。Nudge Engine 则在后台定时触发独立的 Review Agent，在不打扰用户的情况下进行静默复盘和学习。文章通过一个从冷启动到精通的 K8s 部署案例，生动展示了三个系统协同工作带来的效率提升。最后，文章对比了开源 Hermes 与阿里云 RDSHermes 的区别，后者通过预装技能、托管安全和零配置部署，将自我进化能力从开发者工具扩展至整个团队。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Qwen3.6-27B 以 270 亿稠密参数实现编程能力全面超越前代 397B MoE 旗舰。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 SWE-bench Verified、Terminal-Bench 2.0 等多个核心编程基准上，该模型均取得领先分数，证明了稠密架构在小参数规模下的巨大潜力。</span>
+                        <strong style="color: #1a365d">Hermes Agent 的核心竞争力在于其自我进化能力，区别于 OpenClaw 等需要手动维护技能的 Agent。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Hermes 通过 Memory、Skill、Nudge Engine 三个子系统构成闭环，使 Agent 能在完成任务后自动提炼经验、修补技能，实现越用越强，而非依赖人工喂养。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">模型原生支持多模态与长上下文，可处理图文推理等复杂任务。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Qwen3.6-27B 支持视觉语言思考与非思考模式，能够完成视觉推理、文档理解和视觉问答，扩展了应用场景。</span>
+                        <strong style="color: #1a365d">Memory 系统采用容量限制和声明式事实存储，倒逼 Agent 进行主动信息整理和压缩。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过设置字符上限（如 MEMORY 2200 chars）和返回当前条目列表，引导模型主动决定替换或合并过时信息，这本身就是一种自我反思过程，避免了文件无限膨胀。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">模型已开源并计划集成主流编程助手，降低开发者使用门槛。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 权重已在 Hugging Face 和 ModelScope 开源，未来将支持阿里云百炼 API，并兼容 OpenClaw、Claude Code 等工具。</span>
+                        <strong style="color: #1a365d">Skill 系统实现了从经验到可复用知识的自动化转换与迭代修补。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当 Agent 通过多次工具调用成功解决复杂任务或克服错误后，Nudge Engine 会触发后台 Review Agent 创建新 Skill 或使用模糊匹配对现有 Skill 进行局部 patch，将踩坑经验（Pitfalls）固化下来。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">Nudge Engine 通过后台 fork 独立 Agent 进行静默审查，实现了学习与执行的无感分离。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在主对话流之外，定时触发独立的 Review Agent 对会话快照进行复盘，决定是否创建或更新 Memory/Skill，整个过程输出重定向，用户无感知，保证了交互流畅性。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">RDSHermes 将 Hermes 的自我进化能力产品化，解决了团队落地的安全、易用性和冷启动问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过加密托管凭证、预装领域技能（如数据库巡检）、提供 WebUI 和审计链路，RDSHermes 使非技术成员也能安全、便捷地使用具备自进化能力的 AI Agent。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">270 亿稠密参数，无需 MoE 路由，部署门槛直降</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">编程能力全面超越前代 Qwen3.5-397B-A17B MoE 旗舰模型，小身材大能量</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">原生多模态+长上下文，图文推理&amp;复杂任务轻松应对</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">SWE-bench Verified 77.2，SWE-bench Pro 53.5、Terminal-Bench 2.0 59.3、SkillsBench 48.2</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">区别在哪？OpenClaw 的 Skill 是手写的 Markdown 文件------你写多少它会多少，你不写它就不会。Hermes 做了一件 OpenClaw 架构上做不了的事：Agent 干完活之后，会自动把踩坑经验提炼成可复用的 Skill，下次遇到同类问题直接调用。用得越久，能力越强。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Memory 容量有限就迫使 Agent 挑重要的记，不重要的自然被挤掉。对比 OpenClaw------它的 MEMORY.md 是纯追加模式，用几个月就膨胀成几万行的怪兽文件... Hermes 的做法反过来：容量有限就倒逼 Agent 做信息压缩。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">HN 上有个帖子叫'Data Is the Final Moat'------当模型智能被商品化、Agent 框架被开源，真正的护城河是 Agent 在工作中积累的领域知识。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Nudge 触发后怎么处理？它不会在主对话中插一条'让我想想有没有什么该记的'------那样太打扰用户了。而是在后台 fork 一个独立的 Agent 实例，拿着主对话的快照去做审查。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">开源 Hermes 是给开发者的引擎，RDSHermes 是给整个团队的成品车。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -62,30 +68,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">通义大模型</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">通义大模型</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里云开发者</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">373</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7260</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Qwen3.6-27B</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">通义千问</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程能力</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多模态</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Hermes Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Self-Improving</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">源码分析</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/8c23d079" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/97a41c9c?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/8c23d079">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAACUCAYAAAB1PADUAAAAAklEQVR4AewaftIAAATVSURBVO3BQY4cSRIEQdNA/f/Lujz6KYBEejXZsyaCf6RqyUnVopOqRSdVi06qFp1ULTqpWnRSteikatFJ1aKTqkUnVYtOqhadVC06qVp0UrXok5eA/CQ1E5BJzQTkDTUTkEnNDZBJzRNAfpKaN06qFp1ULTqpWvTJMjWbgNyomYBMaiYgN2omIJOaCcikZlIzAblRc6NmE5BNJ1WLTqoWnVQt+uTLgDyh5l+i5gkgk5pvAvKEmm86qVp0UrXopGrRJ78ckEnNBGRSMwGZgExqJiA3aiYgN2r+S06qFp1ULTqpWvTJ/xkgk5oJyDepmYBMan6zk6pFJ1WLTqoWffJlan4SkBs1N2omIJOaJ9RMQCY1b6j5l5xULTqpWnRSteiTZUD+JjUTkBsgk5ongExqJiCTmgnIpOYGyL/spGrRSdWik6pFn7yk5jdT8wSQGyA3QCY1N2p+k5OqRSdVi06qFn3yEpBJzRNAJjUTkCeAPAFkUjOpmYA8oWYCcgNkk5obIJOaN06qFp1ULTqpWoR/5AcBuVHzBJC/Sc03AflJat44qVp0UrXopGrRJ18GZFIzAbkBMqmZ1ExAJjVvAHkDyKRmArJJzRNANp1ULTqpWnRStQj/yAtAJjU3QJ5QMwF5Qs0NkEnNG0AmNROQJ9TcALlRMwG5UfPGSdWik6pFJ1WLPnlJzQRkUvOEmgnIG0CeAPKEmhsg36TmDTWbTqoWnVQtOqla9MmXAZnUTEAmIJOaCcik5gbIjZoJyKRmAvKGmieATGomIG8AmdS8cVK16KRq0UnVok++TM2NmgnIBGRS801q3lAzAbkBMqn5JjUTkE0nVYtOqhadVC365CUgTwCZ1ExqfhKQSc0bQG6AbFLzBJBvOqladFK16KRq0ScvqbkBMqmZgDyhZpOaCciNmifU3ACZgExqJiCTmjfUbDqpWnRSteikahH+kReATGomIJOaGyCTmgnIjZoJyKTmCSBPqJmATGpugGxSMwG5UfPGSdWik6pFJ1WLPnlJzY2aCcgTQCY1E5AbNTdAJjVvAJnUbFIzAZnUTEAmNROQTSdVi06qFp1ULfrkh6mZgExqboD8JDUTkEnNBGQCMqmZgExqnlBzo2YC8k0nVYtOqhadVC365CUgT6i5AbIJyKRmUjMBmdS8oeYJIJvUTGomIJtOqhadVC06qVr0yUtq3lDzBpAngExqJjUTkBsgk5obIDdqngAyqfmbTqoWnVQtOqla9MlLQH6SmjfU3AB5Qs03AZnU3AC5UfNNJ1WLTqoWnVQt+mSZmk1AbtRMQCY1E5BJzaRmAjKpmYDcqHlDzRNqnlCz6aRq0UnVopOqRZ98GZAn1DwBZFLzBpAn1ExA3gDyBpBJzQRkUrPppGrRSdWik6pFn/xyaiYgb6iZgExAbtQ8oWYCMqmZgExqnlAzAZnUvHFSteikatFJ1aJP6krNBGRSMwG5UXOj5kbNDZC/6aRq0UnVopOqRZ98mZp/GZAbNTdAbtTcAJnUTEAmNROQGzUTkG86qVp0UrXopGrRJ8uA/CQgT6jZpGYCsknNBORGzRNqNp1ULTqpWnRStQj/SNWSk6pFJ1WLTqoWnVQtOqladFK16KRq0UnVopOqRSdVi06qFp1ULTqpWnRSteikatH/AEgHQDK14K5XAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/97a41c9c?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
