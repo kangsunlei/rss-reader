@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>关于低算力 gpu 推理时 prefill 在总时长中的占比问题</title>
+        <title>让 Claude Code 拥有自我进化和记忆系统｜得物技术</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,24 @@
         </style>
     </head>
     <body>
-        <h2>关于低算力 gpu 推理时 prefill 在总时长中的占比问题</h2>
-        <p>6/9/2026, 4:18:31 AM</p>
+        <h2>让 Claude Code 拥有自我进化和记忆系统｜得物技术</h2>
+        <p>6/10/2026, 10:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文指出在低算力 GPU 本地推理场景中，prefill 阶段耗时占比显著，尤其在工具调用密集型 agent 任务中可能主导总延迟，纠正了「prefill 可忽略不计」的常见认知。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了为 Claude Code 构建持久化记忆与自我学习系统的完整设计，通过 Hook 机制、模式提炼和向量检索，实现跨会话的行为习惯学习与知识复用。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章针对「LLM 推理速度中 prefill 可忽略不计」的普遍说法提出纠正。作者通过对比高算力 GPU（如 RTX 5090）与低算力设备（如 M3 Ultra）在 Qwen3.6 27B 模型上的实测数据，结合自身 Hermes Agent 的实际运行日志（输入/输出 token 比约 12.9:1），论证在工具调用密集的本地 agent 场景下，prefill 时长占比可达 56% 甚至更高。文章强调，prefill 是否主导取决于硬件算力、量化精度与输入/输出比例，不能一概而论。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章来自得物技术团队，记录了一套为 Claude Code 打造的「自我进化与记忆系统」的完整实现。系统由行为观测层（Observation Engine）、模式提炼层（Instinct Engine）和记忆注入层（Memory Engine）三个子系统构成，形成从工具调用捕获、行为模式分析到跨会话知识注入的自学习闭环。
+
+行为观测层通过 Claude Code 原生 Hook 机制（PreToolUse/PostToolUse/Stop）100% 捕获每次工具调用，写入 JSONL 观测流，并设计了数据分片与生命周期管理防止膨胀。模式提炼层在会话结束时自动运行，通过统计模式检测（5 种硬编码模式）和 AI 语义分析（调用 Claude 模型）两条并行路径提炼行为模式，生成原子化的 Instinct 规则，并基于 Jaccard 相似度的 Union-Find 算法进行语义去重，按 domain 聚合后写入规则文件。记忆注入层则处理知识性记忆，使用本地 nomic-embed-text 模型进行向量化，通过 SessionStart Hook 在会话启动时自动检索 Top-5 相关记忆并注入系统提示。
+
+文章还提供了量化收益：上下文冷启动时间从 10 分钟降至 30 秒，Token 消耗降低约 78%，错误重复率下降 80%，并指出记忆系统的价值随时间呈指数增长。整体设计理念强调原子性优先、隐私边界（观测数据仅存本地）、置信度演化和 Hook 优先于 Skill 的确定性触发。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +40,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Prefill 是否主导取决于硬件算力与输入/输出比例。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 高算力 GPU 上 prefill 极快、可忽略；低算力设备上 prefill 耗时显著，在输入远大于输出的 agent 场景中甚至占主导地位。</span>
+                        <strong style="color: #1a365d">系统通过 Hook 机制实现 100% 确定性触发，替代了依赖模型主动调用的 Skill 方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 早期版本使用 Skill 触发学习，触发率不稳定。v2 改用 Claude Code 原生 Hook 机制（PreToolUse/PostToolUse/Stop），在工具调用生命周期中强制捕获数据，确保数据采集的完整性和可靠性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">本地 agent 场景的输入/输出比远高于密集推理。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者以 Hermes Agent 三天数据为例，输入/输出 token 比约 12.9:1，远高于密集推理常见的 2:1，导致 prefill 时间占比大幅上升。</span>
+                        <strong style="color: #1a365d">模式提炼采用统计检测与 AI 语义分析双路径互补。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 统计路径通过 5 种硬编码模式快速识别高频工具调用序列，语义路径调用 Claude 模型分析观测摘要，捕获统计方法无法识别的深层行为规律，两者结合兼顾了速度与深度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">量化精度越低，prefill 时间占比越高。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 低精度量化（如 4bit）会进一步降低 prefill 速度，使 prefill 在总时长中的占比更加突出。</span>
+                        <strong style="color: #1a365d">记忆系统使用本地 Embedding 模型进行向量检索，兼顾语义理解与隐私保护。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 选用本地运行的 nomic-embed-text 模型配合 qdrant 向量库，避免将包含项目路径、函数名等敏感信息的记忆内容上传到第三方服务，在 M 系列芯片上推理速度约 10ms/条。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">系统带来可量化的效率提升：冷启动时间降至 30 秒，Token 消耗降低 78%，错误重复率下降 80%。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> SessionStart Hook 自动注入项目记忆和高置信度规则，使模型首条响应即体现上下文感知；精确召回 Top-5 记忆而非全量粘贴，大幅节省 input token；Instinct 系统记住历史错误模式，有效避免同类问题重复发生。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +59,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对于低算力/大显存设备，prefill 所用时长是相当显著的，在工具调用密集型 agent 中甚至占有主导地位。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这只对高算力 gpu/代码等密集推理来说是客观的，本地 agent 场景并不是这样。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">每次打开 Claude Code 开始新对话，它都是一张白纸。昨天你花了 10 分钟解释的项目架构、你反复纠正的代码风格偏好、你建立的特殊开发规范——全部归零。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Hook 优先于 Skill：确定性触发是数据质量的保障。放弃依赖模型主动调用的 Skill 触发，改用系统级 Hook 确保 100% 采集率。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">记忆系统的价值随时间指数增长，而非线性增长。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -60,31 +67,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">V2EX</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">zzutmebwd</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">得物技术</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">424</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">21 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5174</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 推理</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">本地部署</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型评测与基准</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">记忆系统</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/f0babc57?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/2e919d70?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/f0babc57?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/2e919d70?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
