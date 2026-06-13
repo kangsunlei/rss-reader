@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>跨端页面秒开，腾讯开源框架 Kuikly 是怎么做到的？</title>
+        <title>深度思考：架构腐朽 & Loop Engineering</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,26 @@
         </style>
     </head>
     <body>
-        <h2>跨端页面秒开，腾讯开源框架 Kuikly 是怎么做到的？</h2>
-        <p>6/10/2026, 9:37:00 AM</p>
+        <h2>深度思考：架构腐朽 & Loop Engineering</h2>
+        <p>6/12/2026, 12:27:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细解析腾讯开源跨端框架 Kuikly 自研的首屏加速方案 TurboDisplay，通过双线并行、节点采集与增量更新三大核心机制，在页面二次打开场景下实现秒开，并在线上业务中取得 60%-80% 的耗时优化。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文从软件工程实践出发，深入剖析系统架构腐朽的本质、成因与应对策略，并提出在 AI Agent 时代通过 Loop Engineering 建立持续排熵能力的工程框架。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章首先指出移动端页面打开耗时是共性体验问题，传统优化方案（如数据预取、图片缓存、预渲染等）各有局限，难以实现秒开。Kuikly 团队由此提出 TurboDisplay 方案，核心思路是缓存渲染节点而非仅缓存数据或图片，并将缓存恢复从主链路中拆出，形成独立快速路径。方案设计包含三项核心机制：双线并行（端侧直出缓存节点树 + 跨端侧后台构建真实页面）、节点采集（系统比较缓存与真实节点树差异并自动更新缓存）、增量更新（通过属性、布局、事件等差异比较，实现缓存首屏到真实首屏的无抖动平滑切换）。文章还重点解决了状态恢复与事件保序的难题，提出由跨端侧调度 diff 的延迟 diff 方案，避免端侧已恢复/交互状态被覆盖。性能验证显示，在 iPhone 7 Plus 和 iPhone 13 Pro Max 上均有显著加速效果，QQ 游戏、输入法、腾讯地图等线上业务取得 65%-80% 的耗时优化。业务接入仅需实现一个开关接口，后续规划将覆盖首次打开场景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章以「屎山」这一工程现象为切入点，系统性地探讨了软件架构腐朽的根源、表现与治理方法。作者首先给出一个工程上可用的判别标准：屎山不是代码质量差，而是「删除任何东西的风险都大于保留它的成本」。在此基础上，文章从经济、认识、组织三个维度归纳了七条腐朽路径，包括定价倒挂、例外累积、真相分裂、概念通胀、治理自腐、组织断层和重写引力。
+
+作者进一步提出「架构 = 被持续执行的约束 × 能被追溯的理由链」这一工作定义，并引入适应度函数、类型系统约束等可操作工具。文章还重点讨论了时间边界问题，指出许多工程问题不发生在空间边界上，而发生在时间边界上。
+
+通过对 Linux、PostgreSQL、SQLite 三个长寿系统的分析，作者提炼出边界分级、所有权显式、变化制度化、不变量下沉、删除合法化等共同机制。在此基础上，给出七个具体的排熵机制：定价对齐、棘轮、守卫自检、熵增仪表、生命周期、不对称稳定性和理由保鲜。
+
+最后，文章将讨论延伸到 AI Agent 时代，提出 Loop Engineering 的概念——把反馈环路设计成可观察、可约束、可验证的工程机制，并强调循环不会替代判断，只会放大判断。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +42,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">TurboDisplay 的核心思路是缓存渲染节点而非数据或图片。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统方案缓存数据或图片，仍需执行业务代码、布局测量、节点构建等环节；缓存渲染节点可直接跳过这些中间步骤，实现秒级呈现。</span>
+                        <strong style="color: #1a365d">屎山的本质不是代码质量差，而是系统失去了删除能力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者给出的判别标准是：删除任何东西的风险都大于保留它的成本。系统只进不出，导致局部性丧失、承重 bug 和疤痕组织三个症状，形成自我强化的正反馈环。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">双线并行机制将缓存恢复从主链路中拆出，形成独立快速路径。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 端侧在容器构建完成后直接读取缓存并上屏，同时跨端侧在后台正常执行业务逻辑构建真实页面，两者并行，互不阻塞。</span>
+                        <strong style="color: #1a365d">架构不是蓝图，而是被持续执行的约束网络。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者提出「架构 = 被持续执行的约束 × 能被追溯的理由链」的工作定义。只有能通过 CI、类型系统等工具验证的规则才是真正存在的架构，否则只是文档里的愿望清单。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">增量更新通过差异比较实现缓存首屏到真实首屏的无抖动切换。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 系统比较缓存节点树与真实节点树的属性、布局、事件等差异，仅局部更新变化部分，避免全量刷新导致的闪屏和跳变。</span>
+                        <strong style="color: #1a365d">治理路径必须是最便宜的路径，否则每道墙都在为翻墙者训练肌肉。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当合规路径比绕行路径更贵时，腐败不需要任何人主观为恶。作者建议定期审计合规路径与绕行路径的成本差，优先投资降低正门价格，而不是加高墙。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">延迟 diff 方案解决了状态恢复与事件保序的覆盖问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由跨端侧在生成渲染指令前先执行恢复逻辑（回放交互事件、应用滚动偏移），使交付给端侧的真实首屏已处于恢复后状态，diff 对比基础一致，避免已交互状态被覆盖。</span>
+                        <strong style="color: #1a365d">长寿系统的秘密不是从不腐朽，而是代谢率长期高于腐朽率。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过对 Linux、PostgreSQL、SQLite 的分析，作者提炼出边界分级、所有权显式、变化制度化、不变量下沉、删除合法化等共同机制。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">Loop Engineering 不是让 AI 替你思考，而是把工程判断变成系统可反复执行的循环。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 AI Agent 时代，工程师的价值从推动每一步执行转向设计目标、上下文、动作、反馈、停止条件和责任边界。循环会放大设计者的认知质量，好的循环积累秩序，坏的循环放大混乱。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +64,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">缓存的对象不能只是图像或数据，而应该深入到框架自身的渲染产物——缓存构建好的渲染节点。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">首屏加速不再只是「把原链路做快一点」，而是要把缓存恢复从原链路中拆出来，形成一条独立执行路径。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">端侧无法预知跨端侧的真实页面何时构建完成……既然端侧无法判断，那就让拥有完整时序信息的跨端侧来负责调度恢复。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">屎山源于不敢删，架构活于持续排熵。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">治理路径必须是最便宜的路径，否则你建的每一道墙，都在为翻墙者训练肌肉。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">架构 = 被持续执行的约束 × 能被追溯的理由链</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个 prompt 给 Agent 一条指令；一个 loop 给 Agent 一套工作机制。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">循环不会替代判断，只会放大判断。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,32 +72,32 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">91</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">腾讯技术工程</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">浮之静</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">浮之静</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4083</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">65 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">16080</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">跨端开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">移动开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">前端与 Web</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件架构</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工程实践</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术债务</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">架构治理</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/993cf31c?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/1706c463?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/993cf31c?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAApQSURBVO3BQY7gRpIAQXei/v9l3z7GKQGCWS1pNszsD9ZaVzysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rfvhI5W+q+E0qN1VMKlPFpDJVTCpTxaQyVbyh8kbFFypTxaTyN1V88bDWuuZhrXXNw1rrmh8uq7hJ5QuVqWJSOan4QuULlROVE5WpYlI5qZhUTlSmikllqnij4iaVmx7WWtc8rLWueVhrXfPDL1N5o+INld+k8kXFpHJScaJyUnGTyr+ZyhsVv+lhrXXNw1rrmoe11jU//I+pmFROKiaVqeJE5UTlRGWqmFTeUDmpmCpOVN6oeENlqvgve1hrXfOw1rrmYa11zQ//z6i8oTJVnFScqJyo3FTxhsobKlPFpPL/ycNa65qHtdY1D2uta374ZRX/JhVvqEwqU8WJylQxqUwVb6hMFZPKVHFScVPFb6r4N3lYa13zsNa65mGtdc0Pl6n8l6hMFScVk8pUcZPKVHGTylQxqUwVk8pUMalMFZPKVHGi8m/2sNa65mGtdc3DWusa+4P/MJWTiptUpopJ5aRiUpkq3lA5qZhUflPFGypTxX/Zw1rrmoe11jUPa61r7A8+UJkqJpWbKk5UpopJZar4QmWqmFT+TSreUDmpOFGZKt5QuaniNz2sta55WGtd87DWusb+4B+kMlX8k1ROKiaVNyreUDmpmFSmihOVLyreUDmpeEPlpGJSOan44mGtdc3DWuuah7XWNT/8ZSpvqLxRcaLyhcpvUnlD5URlqjipOFF5Q2WqOFF5o+JE5aTipoe11jUPa61rHtZa19gffKAyVUwqU8WkclIxqUwVb6h8UfGGyhcVk8pJxYnKGxWTyhsVk8pJxaRyU8VvelhrXfOw1rrmYa11zQ+XqUwVb1RMKicqU8Wk8kbFpDKpTBWTyknFpDJVTCpTxRsqU8WJyhsVJyonFZPKVPGbVKaKLx7WWtc8rLWueVhrXfPDZRWTyknFScWk8kbFicqkclIxqUwVJypvVLyhMlV8ofKGylRxojJVnKi8UfE3Pay1rnlYa13zsNa6xv7gIpWTijdUpopJ5aRiUvkvqZhUTiomlTcqTlSmihOVqeJE5aTiROWNipse1lrXPKy1rnlYa13zwz9MZaqYKiaVqeKLikllqvhC5aTii4qTiknlDZWpYlKZKqaKSeWNihOVNyomlanii4e11jUPa61rHtZa19gffKDyRcWk8kXFpDJVTConFZPKTRWTyhcVX6hMFZPKVPGGylQxqUwV/yUPa61rHtZa1zysta754bKKSeWLikllqphUpoqTihOVNypOVE4qTlSmikllqvhCZaqYVKaKN1R+k8pUMalMFV88rLWueVhrXfOw1rrG/uAilaniC5WTiknljYpJ5aaKSeU3VUwqJxWTylTxhsobFScqX1RMKlPFTQ9rrWse1lrXPKy1rvnhsooTlanipOJEZao4UTmpOFGZKiaVNyomlaliUjlROamYVN5Q+U0qU8WJyonKicpU8cXDWuuah7XWNQ9rrWvsDz5QmSomlX9SxaTyRsUbKicVk8pNFV+ovFHxhspvqjhROan44mGtdc3DWuuah7XWNfYHF6mcVEwqU8UbKjdVnKi8UTGpnFS8oXJScaLymyomlZOKN1TeqJhUpoovHtZa1zysta55WGtd88NHKlPFicobKlPFScWkMlWcqEwV/ySVqeKkYlKZKr6oeEPlC5Wp4qRiUplUpoqbHtZa1zysta55WGtd88O/XMW/ScUXFZPKScUXFZPKGxWTyknFVHGiclLxhsobKlPFFw9rrWse1lrXPKy1rrE/+ItU/qaKSWWq+ELlpGJS+SdVnKi8UXGiMlVMKr+p4m96WGtd87DWuuZhrXWN/cEHKlPFb1KZKiaVk4oTlZOKSWWqmFR+U8UbKlPFpHJSMalMFV+oTBWTylQxqZxUTCpTxRcPa61rHtZa1zysta754ZepTBUnKm+o3FQxqZxUTCpTxYnKScUXKlPFpPKGylRxojJVTCpvVHyhMlXc9LDWuuZhrXXNw1rrmh8uU5kqTlSmijdUvlCZKm5SmSqmihOVNyqmiknlpGJSOVE5qZhUpooTlTcqJpUTlanii4e11jUPa61rHtZa19gfXKQyVbyhclIxqUwVk8pJxaQyVUwqJxV/k8obFScqb1T8JpWpYlKZKk5UpoqbHtZa1zysta55WGtd88NHKlPFTRVvqLyh8kbFicpJxRsqX1RMKlPFFypTxd9UMam8oTJVfPGw1rrmYa11zcNa65ofLlN5o+JE5YuKSWWqmFROVE4q3lCZKk4q3lCZKt6omFROVL6omComlanii4qbHtZa1zysta55WGtd88NlFW+onFScqJyovFExqZxU/KaKSeWkYqqYVN5QmSomlaniRGWqOFH5L3lYa13zsNa65mGtdY39wV+kMlWcqEwVk8pUcaJyUjGpTBVvqJxUvKEyVUwqU8UXKicVf5PKScWJylRx08Na65qHtdY1D2uta374ZSonKlPFVDGpvKEyVXyh8kbFpDKpTBWTym9SeaNiUpkqTlRuqphU/kkPa61rHtZa1zysta6xP/gHqUwVk8oXFZPKVPGGyhcVf5PKScUbKl9UTConFScqX1Tc9LDWuuZhrXXNw1rrGvuDi1S+qDhR+aJiUjmpuEllqnhD5Y2KSeWNiknlpGJSeaNiUjmpmFTeqLjpYa11zcNa65qHtdY1P3ykMlWcqLyhMlVMKl9UvKEyVZyoTBWTyt9UcaLyRsVJxYnKpPKGyknFpDKpTBVfPKy1rnlYa13zsNa65oePKt6oeKPijYo3VKaKL1S+qHhD5QuVE5WpYlKZKk5UTireUDlRmSomlZse1lrXPKy1rnlYa13zw0cqf1PFVDGpTBVvqLyh8obKGypTxRcqU8WkMlWcVJyofKEyVZxUTCqTylRx08Na65qHtdY1D2uta364rOImlROVqeKLikllqphUTipOVE4qvlA5UflCZaqYKiaVNyreUPknPay1rnlYa13zsNa65odfpvJGxd9UMalMFZPKb1L5omJSmSpOVN6oOFF5Q+WmihOVqeKLh7XWNQ9rrWse1lrX/PA/TmWqmFT+JpWTihOVE5WpYlJ5Q2WqOFGZKiaVqWJS+U0qv+lhrXXNw1rrmoe11jU//I+rmFROKiaVk4pJ5aTiROWk4g2Vk4o3VKaKE5UTlZOKN1TeqLjpYa11zcNa65qHtdY1P/yyit9UMamcVHxR8YbKVDGpTBWTyqQyVUwqU8WJylQxqZyonFTcpDJVTBWTylTxmx7WWtc8rLWueVhrXfPDZSp/k8pJxaTyRsUXFZPKVPFGxaTyRcVJxRcqJxWTyknFicpUMalMFTc9rLWueVhrXfOw1rrG/mCtdcXDWuuah7XWNQ9rrWse1lrXPKy1rnlYa13zsNa65mGtdc3DWuuah7XWNQ9rrWse1lrXPKy1rnlYa13zsNa65v8AQOFcFCxXY+MAAAAASUVORK5CYII=" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/1706c463?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>

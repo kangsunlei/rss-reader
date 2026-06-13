@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Splunk Enterprise 曝高危漏洞，CVSS 评分 9.8</title>
+        <title>Agent skill 迭代式编写实战</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Splunk Enterprise 曝高危漏洞，CVSS 评分 9.8</h2>
-        <p>6/11/2026, 10:00:00 AM</p>
+        <h2>Agent skill 迭代式编写实战</h2>
+        <p>6/12/2026, 7:02:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Splunk Enterprise 被披露多个高危漏洞，其中 CVE-2026-20253 允许未授权文件操作，CVSS 评分高达 9.8，需紧急修复。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文系统梳理 Agent Skill 的概念、三层渐进式加载架构与迭代式编写实战经验，强调用决策树替代模糊判断、建立双重验证机制，将隐性专家经验转化为可复用的知识资产。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文报道了 Splunk Enterprise 近期披露的多个高危安全漏洞。文章重点介绍了四个漏洞：CVE-2026-20253（CVSS 9.8）允许攻击者在 PostgreSQL 辅助服务端点上进行未经验证的任意文件创建和截断操作；CVE-2026-20251（CVSS 8.8）允许低权限用户通过 Splunk Secure Gateway 应用实现远程代码执行；以及两个中等严重程度的漏洞，分别涉及存储型 XSS（CVSS 7.1）和 SSRF（CVSS 7.6）。文章最后给出了升级至特定版本或采取临时缓解措施的修复建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章来自淘天集团物流技术团队，是一篇关于 Agent Skill 的深度实践总结。作者首先定义 Agent Skill 为模块化的领域知识资产 bundle，类比为给 AI 的「操作手册」，并介绍了其基于文件系统的标准目录结构（SKILL.md、references/、scripts/）。核心部分详细阐述了迭代式编写经验：采用三层渐进式加载架构（目录/概要 → 详细指令 → 完整资源）；用决策树替代模糊判断，让 agent 行为可控；负向约束必须配替代方案；建立内部自查与外部 eval 的双重验证机制。文章还对比了 Skill 与 LangGraph 等专用 Agent 框架的差异，指出 Skill 本质是用文件系统结构 + 文本决策树替代运行时服务，以零基础设施依赖换取极简部署，但确定性不如专用框架。最后总结了适用场景与边界，强调 Skill 的价值在于将隐性专家经验转化为显性、可执行、可验证的知识资产。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Splunk Enterprise 曝出多个高危漏洞，最严重的 CVE-2026-20253 允许未授权文件操作。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该漏洞 CVSS 评分 9.8，攻击者无需凭证即可在 PostgreSQL 辅助服务端点上创建或截断文件，可能导致数据库破坏或恶意文件植入。</span>
+                        <strong style="color: #1a365d">Agent Skill 是模块化的领域知识资产，本质是给 AI 的「操作手册」。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Skill 以文件系统结构（SKILL.md + references/ + scripts/）封装执行流程、背景知识与工具使用说明，让 Agent 在需要时自动加载，实现零依赖部署。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">另一个高危漏洞 CVE-2026-20251 允许低权限用户实现远程代码执行。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该漏洞源于 Splunk Secure Gateway 应用对 KV Store 数据的不安全反序列化，攻击者可利用特制 JSON 输入重建任意 Python 对象。</span>
+                        <strong style="color: #1a365d">核心设计原则是三层渐进式加载架构。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将技能信息拆为目录/概要、详细指令、完整资源三层，Agent 平时只需知道手册目录，需要时才按需加载具体章节，避免上下文窗口被无关知识占满。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">官方建议升级至特定版本，无法升级时可采取临时缓解措施。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 修复版本包括 10.4.0、10.2.4 等；临时措施可关闭 Splunk Web 或禁用 Splunk Secure Gateway 应用。</span>
+                        <strong style="color: #1a365d">用决策树替代模糊判断是高质量 Skill 的关键标志。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 决策树将专家判断知识显性化为可执行的分支逻辑，Agent 无需推理、顺着树走即可，比模糊描述的可执行性高很多，是 skill-judge 工具明确列出的加分项。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">建立内部自查与外部 eval 的双重验证机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 内部自查是执行后的规范符合性与覆盖完整性检查；外部 eval 通过有无 Skill 的输出对比进行迭代优化，两者定位不同但都不可或缺。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">Skill 是简化版的专用 Agent，以确定性换极简部署。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比 LangGraph 等框架，Skill 用文件系统 + 文本决策树替代运行时服务，部署成本极低；但当流程确定性要求 100% 或逻辑复杂时，仍需回归专用 Agent 框架。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">该脆弱端点「缺乏身份验证控制，任何可访问网络的用户都可在无需凭证的情况下调用文件操作」。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skill 本质是以文件系统结构替代复杂运行时服务，实现零依赖部署。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">决策树把「应该怎么判断」写清楚，而不是用模糊语言把判断压力甩给 agent。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">能写成脚本的就不要靠 agent 推理——脚本的稳定性和可复现性远高于让 agent 猜。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Skill 的价值不在于技术本身，而在于能否将隐性专家经验转化为显性、可执行、可验证的知识资产。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -60,31 +66,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">78</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">媒体资讯</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">大淘宝技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">880</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">16 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3866</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">科技新闻</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全漏洞</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">漏洞预警</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent Skill</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 工程实践</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/7e06e29a?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/a9e14e48?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/7e06e29a?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAAphSURBVO3BQY7gRpIAQXei/v9l3z7GKQGCWS1pNszsD9ZaVzysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rfvhI5W+qOFE5qThRualiUpkqJpWpYlKZKiaVqeINlTcqvlCZKiaVv6nii4e11jUPa61rHtZa1/xwWcVNKm9UTConKicVX6h8oXKicqIyVUwqJxWTyonKVDGpTBVvVNykctPDWuuah7XWNQ9rrWt++GUqb1S8ofKbVL6omFROKk5UTipuUvk3U3mj4jc9rLWueVhrXfOw1rrmh/8xFZPKScWkMlWcqJyonKhMFZPKGyonFVPFicobFW+oTBX/ZQ9rrWse1lrXPKy1rvnh/xmVN1SmipOKE5UTlZsq3lB5Q2WqmFT+P3lYa13zsNa65mGtdc0Pv6zi36TiC5Wp4kRlqphUpoo3VKaKSWWqOKm4qeI3VfybPKy1rnlYa13zsNa65ofLVP5LVKaKSWWqmFSmiptUpoqbVKaKSWWqmFSmikllqphUpooTlX+zh7XWNQ9rrWse1lrX2B/8h6mcVLyh8kbFpHJSMalMFW+onFRMKr+p4g2VqeK/7GGtdc3DWuuah7XWNfYHH6hMFZPKTRUnKlPFpDJVnKi8UTGp/JtUvKFyUnGiMlW8oXJTxW96WGtd87DWuuZhrXWN/cEHKm9UTCpTxT9JZaqYVL6oeEPlpGJSmSpOVL6oeEPlpOINlZOKSeWk4ouHtdY1D2utax7WWtf88FHFGypvqLxRcaLyhspUMancpPKGyonKVHFScaLyhspUcaLyRsWJyknFTQ9rrWse1lrXPKy1rrE/+EBlqnhD5aRiUjmpOFH5ouINlS8qJpWTihOVNyomlTcqJpU3KiaVLyp+08Na65qHtdY1D2uta364TGWqeKNiUpkq3lB5o2JSmVSmiknlpGJSmSomlaniDZWp4kTljYpJZVI5qZhUTipuUpkqvnhYa13zsNa65mGtdc0Pl1VMKicVJxVfVJyoTConFZPKVHGi8kbFGypTxRcqX1ScqEwVJypvVPxND2utax7WWtc8rLWusT+4SOWk4g2V/88qJpWTiknljYoTlaniROWmihOVNypuelhrXfOw1rrmYa11zQ//MJWpYqqYVKaKN1SmikllqvhC5aTii4qTiknlDZWpYlKZKqaKSeWNihOVNyomlanii4e11jUPa61rHtZa19gffKDyRcWk8kXFpDJVTConFZPKTRWTyhcVX6hMFZPKVPGGylQxqUwV/yUPa61rHtZa1zysta754bKKSeWLikllqnhD5aRiUnmj4kTlpOJEZaqYVKaKL1SmikllqnhD5TepTBWTylTxxcNa65qHtdY1D2uta+wPLlKZKr5QOamYVE4qTlRuqphUflPFpHJSMalMFW+ovFFxovJFxaQyVdz0sNa65mGtdc3DWuuaHy6rOFGZKiaVqeJEZao4UTmpOFGZKiaVNyomlaliUjlROamYVN5Q+U0qU8Wk8obKicpU8cXDWuuah7XWNQ9rrWvsDz5QmSomlX9SxaTyRsUbKicVk8pNFV+ovFHxhspvqjhROan44mGtdc3DWuuah7XWNfYHF6mcVEwqU8UbKjdVnKi8UTGpnFS8oXJScaLymyomlZOKN1TeqJhUpoovHtZa1zysta55WGtd88NHKlPFicobKlPFScWkMlW8ofJPUpkqTiomlanii4o3VL5QmSpOKiaVSWWquOlhrXXNw1rrmoe11jU/fFQxqUwVX1T8TSonFV9UTConFV9UTCpvVEwqJxVTxYnKScUbKm+oTBVfPKy1rnlYa13zsNa6xv7gIpWp4kTlN1VMKlPFpHJSMamcVEwq/6SKE5U3Kk5UpopJ5TdV/E0Pa61rHtZa1zysta754SOVqeKLihOVqWJSmVSmijcq3qiYVH5TxRsqU8UbFZPKVDFVnFRMKlPFGyqTylQxqUwVXzysta55WGtd87DWuuaHX6byhsobKjdVTConFZPKVHGiclLxhcpUMam8oTJVnKhMFZPKFypvqEwVNz2sta55WGtd87DWusb+4AOVk4rfpPJGxaQyVUwqJxWTyknFGypvVJyonFRMKr+p4kRlqnhD5Y2KLx7WWtc8rLWueVhrXWN/cJHKVPGGyknFpDJVTConFZPKVDGpnFT8TSpvVJyovFHxm1SmikllqjhRmSpuelhrXfOw1rrmYa11zQ8fqUwVN1W8ofKGyhsVJyonFW+ofFExqUwVX6hMFX9TxaTyhspU8cXDWuuah7XWNQ9rrWt+uEzljYoTlTcqJpWTiknlROWNihOVqeKk4g2VqeKNiknlROWLiqliUpkqvqi46WGtdc3DWuuah7XWNT9cVvGGyknFicpNFZPKScWkclPFpHJSMVVMKm+oTBWTylRxojJVnKj8lzysta55WGtd87DWusb+4C9SmSpOVKaKSWWqOFGZKk5UpoovVKaKN1SmikllqvhC5aTiC5Wp4kTlpOJEZaq46WGtdc3DWuuah7XWNT/8MpUTlaliqjipmFSmihOVqeJE5SaVqWJS+U0qb1RMKlPFicpU8UXFpPJPelhrXfOw1rrmYa11zQ+/rOJE5URlqrip4qRiUvmi4o2KNyomlZOKN1ROVE4qJpWp4qRiUvk3eVhrXfOw1rrmYa11zQ+XqdxUMalMFScqb6hMFVPFFypTxRsqb1RMKpPKScUbFZPKpHKi8kbFpPJPelhrXfOw1rrmYa11zQ8fqUwVJypvqEwVk8obFScVJypTxYnKVDGp/E0VJypvVJxUnKh8oXJSMalMKlPFFw9rrWse1lrXPKy1rvnho4o3Kt6oeKPiDZWp4guVLyreUPlC5URlqphUpooTlZOKN1ROVKaKSeWmh7XWNQ9rrWse1lrX/PCRyt9UMVVMKlPFGypTxYnKGypvqEwVX6hMFZPKVHFScaLyhcpUcVIxqUwqU8VND2utax7WWtc8rLWu+eGyiptUTlSmii8qJpWpYlI5qThROan4QuVE5QuVqWKqmFTeqHhD5Z/0sNa65mGtdc3DWuuaH36ZyhsVf1PFScWkMlVMKl+ofFExqUwVJypvVJyovKFyU8WJylTxxcNa65qHtdY1D2uta374H6cyVUwqb1RMKm+onFScqJyoTBWTyhsqU8WJylQxqUwVk8pvUvlND2utax7WWtc8rLWu+eF/XMWkclIxqUwqU8WkclJxonJS8YbKScUbKlPFicqJyknFGypvVNz0sNa65mGtdc3DWuuaH35ZxW+qmFROKr6oeENlqphUpopJZVKZKiaVqeJEZaqYVE5UTipuUpkqpopJZar4TQ9rrWse1lrXPKy1rvnhMpW/SeWkYlJ5o+KLikllqnijYlL5ouKk4iaVqWJSOak4UZkqJpWp4qaHtdY1D2utax7WWtfYH6y1rnhYa13zsNa65mGtdc3DWuuah7XWNQ9rrWse1lrXPKy1rnlYa13zsNa65mGtdc3DWuuah7XWNQ9rrWse1lrX/B8OVm8NbeknmQAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/a9e14e48?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
