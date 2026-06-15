@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>写了个 macOS 小工具：给每个常用 app 绑个全局快捷键，不用再 Cmd+Tab 数位置</title>
+        <title>「原生 IP」到底在比对什么:WHOIS、BGP、geofeed 和定位库打架时信谁？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>写了个 macOS 小工具：给每个常用 app 绑个全局快捷键，不用再 Cmd+Tab 数位置</h2>
-        <p>6/13/2026, 6:29:42 PM</p>
+        <h2>「原生 IP」到底在比对什么:WHOIS、BGP、geofeed 和定位库打架时信谁？</h2>
+        <p>6/14/2026, 3:11:22 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了一款 macOS 小工具 HotkeyLauncher，能为每个常用 app 绑定全局快捷键，解决 Cmd+Tab 切换效率低的问题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文拆解「原生 IP」概念，指出其本质是 WHOIS、BGP、定位库和 geofeed 四路地理/归属信号的自洽性，并给出实操判定优先级。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章作者分享了自己开发的一款 macOS 小工具 HotkeyLauncher，旨在解决 Cmd+Tab 切换应用时顺序不固定、需要视觉定位的痛点。该工具基于 Carbon 注册全局快捷键，允许用户为任意 app 绑定固定组合键（如 Option+Cmd+C 打开 Chrome），实现纯肌肉记忆的快速切换。文章介绍了工具的核心功能：全局生效、菜单栏常驻、开机自启、快捷键配置可导出为 JSON 方便迁移。还特别处理了一个常见坑点：当 app 在运行但无可见窗口时，工具会自动发送 Cmd+N 将窗口拉出。工具使用原生 Swift 编写，支持 macOS 12+，免费开源。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章针对出海选机房和风控场景中「原生 IP」概念模糊的问题，系统梳理了一个 IP 地址的四路独立地理/归属信息来源：RIR 注册国（WHOIS）、BGP 实际宣告、IP 定位库和 geofeed。作者逐一分析了每路信号的含义、可信度与常见陷阱，指出 WHOIS 城市级信息不可信、定位库是估计值、BGP 反映当前事实、geofeed 是权威声明。在此基础上给出判定优先级：有可验证 geofeed 时以它为准，否则以 BGP 宣告为锚点，定位库仅作参照。文章进一步解释了代理和 VPN 如何利用这几层信号之间的不一致来伪装，以及如何通过承载 ASN、连接类型和同段画像来识别伪装。最后给出三条可直接使用的实操建议，并附带作者自建工具的简要说明。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">HotkeyLauncher 通过全局快捷键实现 app 的固定、快速切换。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工具基于 Carbon 注册全局快捷键，用户可为每个常用 app 绑定固定组合键，在任何界面下触发，无需视觉定位，形成肌肉记忆。</span>
+                        <strong style="color: #1a365d">「原生 IP」的本质是多路地理/归属信号的自洽性，而非单一字段。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 一个 IP 的 WHOIS 注册国、BGP 宣告位置、定位库估计和 geofeed 声明四路信号是否收敛，决定了它是否「原生」。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">工具解决了 app 无可见窗口时的激活问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当目标 app 在运行但窗口被关闭时，普通快捷键会失效。HotkeyLauncher 会自动发送 Cmd+N 将窗口拉出，确保切换有效。</span>
+                        <strong style="color: #1a365d">判定优先级：geofeed &gt; BGP 宣告 &gt; 定位库 &gt; WHOIS 城市级信息。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 有可验证 geofeed 时以权威声明为准；否则以 BGP 宣告为现实锚点；定位库仅作参照；WHOIS 城市级信息基本不可信。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">工具支持配置导出与导入，方便多设备迁移。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 快捷键配置可导出为 JSON 文件，换机器时直接导入，省去重复设置的麻烦。</span>
+                        <strong style="color: #1a365d">代理和 VPN 的识别关键在于各层信号之间的不一致。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 机房承载网络与伪装住宅定位库之间的不匹配，比单看任何一项都更能暴露代理身份。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">实操建议：只信国家级定位、先看承载 ASN 与连接类型、优先查 geofeed。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 城市级定位噪声大；承载网络比定位库标签更可靠；geofeed 是持有者的权威声明。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我想要的其实很简单：按一个固定的键 = 永远跳到那个 app ，纯肌肉记忆，不用看屏幕。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所谓「原生/native」，本质不是某个单一字段，而是同一个 IP 的几路地理与归属信号是否自洽。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">四者全打架时，优先信「现在的事实」（BGP）和「权威声明」（geofeed），贬低「历史登记」（WHOIS 城市）和「第三方猜测」（定位库）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">想清楚「原生 = 多信号自洽」而非某个字段，比用哪个查询入口都重要。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -60,31 +63,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">78</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">85</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">V2EX</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">zjy4fun</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">个人成长</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">hnlszcl611</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">289</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1208</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">macOS</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">效率工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">个人效率</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">快捷键</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络技术</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">IP 地址</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">BGP</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">WHOIS</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">geofeed</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/1bf1bca9?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/d4e2ce79?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/1bf1bca9?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/d4e2ce79?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
