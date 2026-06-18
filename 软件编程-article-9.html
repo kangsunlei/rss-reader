@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>思科 SD-WAN vManage 漏洞遭 0Day 攻击，可提权至 root</title>
+        <title>揭秘 Agent Tesla 的隐蔽感染链</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>思科 SD-WAN vManage 漏洞遭 0Day 攻击，可提权至 root</h2>
-        <p>6/16/2026, 10:00:00 AM</p>
+        <h2>揭秘 Agent Tesla 的隐蔽感染链</h2>
+        <p>6/17/2026, 11:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">思科 Catalyst SD-WAN Manager（原 vManage）存在一个正在被 0Day 攻击利用的任意文件写入漏洞（CVE-2026-20262），攻击者可提权至 root，思科已发布修复版本。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细解析 Agent Tesla 恶意软件通过钓鱼邮件触发多阶段隐蔽感染链的技术细节，涵盖脚本加载器、进程注入、反分析与数据外传等环节。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文报道了思科 Catalyst SD-WAN Manager（原 vManage）中的一个重大安全漏洞 CVE-2026-20262。该漏洞为 Web 管理界面中的任意文件写入缺陷，CVSS 评分为 6.5。攻击者利用此漏洞可上传特制文件，在底层操作系统任意位置创建或覆盖文件，进而部署 Web Shell 并将权限提升至 root 级别。思科 PSIRT 已确认该漏洞在真实环境中被有限利用，属于 0Day 攻击。文章详细说明了受影响范围（所有部署模式，包括本地、云和 FedRAMP 环境）、攻击痕迹识别（通过检查 vmanage-server.log、vmanage-appserver.log 等日志文件）、以及修复建议（升级至指定修正版本）。文章强调目前没有可行的临时解决方案，立即打补丁是唯一有效的缓解措施。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章基于安全研究报告，系统梳理了 Agent Tesla 的现代攻击链。首先指出攻击手段从利用 Office 漏洞转向高度混淆的脚本加载器，以绕过已修复的旧漏洞。随后分阶段拆解感染流程：钓鱼邮件诱饵 → 解压后触发混淆批处理脚本 → 静默启动 PowerShell 在内存中拉取恶意代码 → 通过进程镂空技术将恶意载荷注入 charmap.exe 等可信进程 → 利用反调试、反沙箱和反 VM 检测技术规避分析 → 最终通过 SMTP、FTP 或 Telegram 等合法协议外传窃取的浏览器凭据、键盘记录和屏幕截图。文章最后给出防御建议，强调需要 EDR 方案与员工培训相结合。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,47 +36,61 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">思科 SD-WAN vManage 存在一个正在被利用的 0Day 漏洞。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该漏洞编号 CVE-2026-20262，是 Web 管理界面中的任意文件写入缺陷，攻击者可利用其上传恶意文件并提权至 root。</span>
+                        <strong style="color: #1a365d">Agent Tesla 的攻击手段已从利用 Office 漏洞转向脚本加载器。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 旧漏洞（如 CVE-2017-11882）多已修复，现代攻击者改用高度混淆的批处理脚本和 PowerShell，利用系统原生工具实现初始入侵，绕过安全防护。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">漏洞影响所有部署模式，且无临时解决方案。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 受影响范围包括本地系统、思科 SD-WAN Cloud、Cloud-Pro 及 FedRAMP 环境，立即打补丁是唯一有效的缓解措施。</span>
+                        <strong style="color: #1a365d">无文件技术是规避传统杀毒软件的关键。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 恶意代码直接在内存中执行，不在硬盘留下可识别痕迹，极大缩短了防御者的检测响应时间。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">攻击痕迹可通过特定日志文件识别。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章提供了具体的入侵指标（IOCs），如 vmanage-server.log 中的未授权文件上传记录，帮助企业检测潜在攻击。</span>
+                        <strong style="color: #1a365d">进程镂空技术用于绕过应用程序白名单和防火墙。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过创建挂起的合法进程（如 charmap.exe），卸载其原始代码后注入恶意载荷，使恶意软件难以被标准安全软件察觉。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">内置反分析能力显著提升了恶意软件的隐蔽性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> VB.NET 载荷包含反调试、反沙箱 DLL 检查和反 VM 检测，一旦发现分析环境特征即终止执行，远超普通凭据窃取程序。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">数据外传模块高度可配置，使用合法协议伪装流量。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 窃取的浏览器凭据、键盘记录和屏幕截图通过 SMTP、FTP 或 Telegram 等协议外传，伪装成正常网络流量，增加检测难度。</span>
                     </li>
             </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">看似普通的附件背后，隐藏着精心设计的攻击链，包括隐蔽脚本执行、基于 PowerShell 的有效载荷投递、内存加载恶意软件、进程注入以及旨在长期潜伏的数据窃取技术。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">受害者打开看似无害的文件时，背后高度混淆的批处理脚本已悄然启动 PowerShell，进而直接在内存中拉取并执行额外恶意代码。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">80</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">媒体资讯</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">5 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1226</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1591</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">科技新闻</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">漏洞通报</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产业动态</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SD-WAN</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">恶意软件分析</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">威胁情报</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">端点安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络钓鱼</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/6830552a?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/99b1aa04?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/6830552a?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/99b1aa04?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
