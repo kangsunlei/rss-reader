@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>出大事了！ [安全公告] 哪吒面板存在多个高危漏洞</title>
+        <title>Android 上直接用 Lua 调 Java API 写脚本——AutoLua 技术分享</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>出大事了！ [安全公告] 哪吒面板存在多个高危漏洞</h2>
-        <p>6/17/2026, 11:49:39 AM</p>
+        <h2>Android 上直接用 Lua 调 Java API 写脚本——AutoLua 技术分享</h2>
+        <p>6/18/2026, 10:59:54 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">哪吒面板（Nezha Dashboard）被披露存在多个高危漏洞，其中 CVE-2026-53519 无需认证即可利用，影响 v2.0.13 以下所有版本，建议立即升级。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">AutoLua 通过 LuaJava 桥接层，在 Android 上提供完整 Lua 5.3 运行时，让用户直接用 Lua 调用任意 Java API，实现免 Root 或 Root 模式下的自动化脚本编写。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是一篇安全公告，披露了哪吒面板（Nezha Dashboard）存在的多个高危漏洞。其中最严重的 CVE-2026-53519（未授权路径穿越）CVSS 评分 9.1，攻击者无需登录即可读取配置文件、获取 JWT 密钥并完全控制面板。文章还列出了普通用户权限提升、SSRF 内网探测、CSRF 攻击等其他漏洞，明确了影响范围（v2.0.13 以下所有版本），并给出了具体的修复方案，包括升级版本、更换密钥、审计日志和限制公网访问。作者提示该漏洞已出现在野利用，并基于自身客户案例提醒用户尽快处理。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍 AutoLua 这一 Android 自动化工具的技术思路与核心能力。与按键精灵、Tasker 等「封装功能」的工具不同，AutoLua 选择「桥接 API」：通过 LuaJava 在进程内直接桥接 Lua 与 Java，零序列化开销，让用户能用 Lua 调用 Android 任意 API。文章详细展示了触控、图色、截图、应用管理等常用脚本 API，并重点演示了通过 `luajava.bindClass` 直接使用 Intent、File、Bitmap 等系统类的能力，以及用代码动态创建 UI 的灵活性。技术栈包括完整 Lua 5.3 运行时、无障碍服务与 Root Shell 双模式、`.alp` 工程格式、内置编辑器与加解密库。文章强调，AutoLua 不限制用户能力边界，能写出什么取决于用户的想象力。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">哪吒面板存在多个高危漏洞，最严重的 CVE-2026-53519 无需认证即可利用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该漏洞 CVSS 评分 9.1，攻击者可读取配置文件并获取 JWT 密钥，从而完全控制面板，风险极高。</span>
+                        <strong style="color: #1a365d">AutoLua 的核心思路是桥接而非封装，让用户直接调用任意 Java API。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与按键精灵、Tasker 等工具限制用户于预设功能不同，AutoLua 通过 LuaJava 桥接层，让 Lua 脚本能直接 new Java 对象、调 Java 方法，能力边界等同于原生 Android 开发。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">漏洞影响 v2.0.13 以下所有版本，且已出现在野利用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者基于自身客户案例确认漏洞已被利用，用于发包攻击，提示用户需立即处理。</span>
+                        <strong style="color: #1a365d">LuaJava 桥接层实现同进程零序列化开销的 Lua ↔ Java 双向映射。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 桥接不是 IPC 或 WebSocket，而是同一进程内的直接调用，性能开销极低，使得脚本可以高效操作 Android 系统 API。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">修复方案包括升级版本、更换密钥、审计日志和限制公网访问。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章给出了明确的修复步骤：升级至 v2.0.13 或更高版本，更换 jwt_secret_key，检查 config.yaml 是否被非法读取，并在升级完成前限制面板公网访问。</span>
+                        <strong style="color: #1a365d">支持无障碍服务与 Root 双模式，兼顾兼容性与权限。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 无障碍模式免 Root，兼容 Android 5.0 到 13；Root 模式权限更高、延迟更低，用户可根据场景选择。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">UI 完全由代码动态创建，自由度等同原生开发。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 `luajava.newInstance` 创建 Android 原生控件，用 `createProxy` 设置监听器，不受可视化模板限制。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">攻击者无需登录即可读取配置文件，获取 JWT 密钥并完全控制面板。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我的客户已经出现很多客户中招了 被拿来发包 有用这个的火速处理</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你能用 Java 做什么，就能用 Lua 做什么。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">剩下能写出什么、用到哪里——是你的想象力决定的，不是工具决定的。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -62,29 +65,29 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">V2EX</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">catyun88</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">媒体资讯</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">haikejishu</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">306</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1266</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全公告</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">漏洞披露</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">运维安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">科技新闻</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Android 开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动化脚本</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Lua</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/469fb6e5?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/4e74626f?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/469fb6e5?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/4e74626f?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
