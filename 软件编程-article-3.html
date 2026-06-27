@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>红队 AI 工具漏洞致攻击者可窃取 API 密钥并入侵操作者系统</title>
+        <title>Node 中文周刊 #232 - Node 26.4 实验性引入 Package Maps，可从静态 JSON 解析依赖</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>红队 AI 工具漏洞致攻击者可窃取 API 密钥并入侵操作者系统</h2>
-        <p>6/25/2026, 11:00:00 AM</p>
+        <h2>Node 中文周刊 #232 - Node 26.4 实验性引入 Package Maps，可从静态 JSON 解析依赖</h2>
+        <p>6/26/2026, 10:09:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Cracken 安全研究人员首次系统分析了 12 款 AI 驱动红队渗透测试工具，发现重大架构漏洞，可导致 LLM API 密钥泄露、沙箱逃逸和宿主机沦陷，并提出防护建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本期周刊涵盖 Node.js 26.4 实验性 Package Maps、npm v12 安装脚本讨论、WebSocket 服务器基准测试、Eve 框架、TypeScript 7.0 RC 等 Node 生态动态。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章编译自 cybersecuritynews.com 的报道，详述了 Cracken 研究团队对 12 款主流 AI 驱动自主红队系统（如 PentestGPT、RedAmon、DarkMoon 等）的安全分析。研究人员打造了专属攻击杀伤链，包括通过蜜罐获取工作容器 RCE、横向移动到编排器、持久化控制、沙箱逃逸直至主机沦陷。还揭示了成功率高达 97.8% 的新型 Agent 钓鱼技术（无需提示注入），成功绕过了 Claude Opus 4.8、GPT-5.5、Gemini 3.1 Pro 等多个主流 LLM 的检测。研究发现 11 款工具存在密钥泄露风险，现有防护措施均无效。文章最后给出严格的工作—编排分离、密钥隔离、不可变文件系统等防护原则。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本周刊汇总了近期 Node.js 生态的多条重要动态。头条是 Node 26.4 实验性引入 Package Maps，允许从静态 JSON 文件解析依赖，减少对 node_modules 的遍历。同时，文章对 npm v12 默认禁用安装脚本的措施进行了锐评，指出仅移除触发点不够，还需结合权限模型。其他内容包括：Node.js 五款 WebSocket 服务器的基准测试（附带调试过程中的有趣发现）、Vercel 推出的类 Next.js 风格的 AI 代理构建框架 Eve、TypeScript 7.0 RC（Go 驱动，性能提升约 10 倍）、以及 Deno 跨平台桌面应用新特性、Vercel Functions 支持 WebSockets、pnpm 的 Rust 版注册中心项目 pnpr 等。工具方面还介绍了 AccessControl v3.0、Camaro v6.5、Tedious v20.0 等。每条条目均附原文链接，便于深入阅读。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,55 +36,53 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI 红队工具存在重大架构缺陷，可致 LLM API 密钥泄露与宿主机沦陷。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工作容器与编排器隔离薄弱，攻击者通过蜜罐获取 RCE 后横向移动到编排器，实现持久化并逃逸至宿主机。</span>
+                        <strong style="color: #1a365d">Node.js 26.4 实验性引入 Package Maps 和 node:vfs 子系统。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Package Maps 允许从静态 JSON 文件解析包依赖，有望减少长时间以来对 node_modules 目录的深度遍历，提升模块查找效率。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">新型 Agent 钓鱼技术无需提示注入，成功率高达 97.8%。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 攻击者在蜜罐部署含自植入漏洞的二进制文件，Agent 自动下载执行后控制流被劫持，绕过多个主流 LLM 的安全检测。</span>
+                        <strong style="color: #1a365d">npm v12 禁止安装脚本并非安全万能解。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章引用 Ulises Gascon 的观点，指出禁用安装脚本仅去除了一个触发点，真正被攻陷的代码在 import 时仍会执行，需要配合 Node 的 permissions 模型或沙箱机制。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">现有防护措施无一有效，需重构安全架构。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 11 款工具的规则过滤或 LLM 验证均被绕过，研究者建议将工作容器视为不可信环境，实施密钥隔离、网络分段与不可变文件系统。</span>
+                        <strong style="color: #1a365d">WebAssembly 运行时性能测评聚焦专用运行时及 Node/V8。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 2026 年的基准测试涵盖了多个 Wasm 运行时，包括专用运行时和 V8 引擎，为开发者选择提供参考。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">Vercel 推出 Eve 框架，用于构建 AI 代理。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Eve 提供类似 Next.js 的开发体验，支持 TypeScript 和 Markdown，可默认绑定 Vercel 生态，但也支持脱离 Vercel 运行。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">TypeScript 7.0 RC 发布，Go 驱动带来约 10 倍构建性能提升。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新版编译器由 Go 实现，性能显著提升，同时 moduleResolution: node/node10 已不再支持，需要显式列出 @types 包。</span>
                     </li>
             </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
-            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">研究人员建议将 LLM 工作容器视为不可信环境，采用严格的工作-编排分离架构、认证网络分段、密钥隔离等防护原则。</li>
-            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">80</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">印记中文</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">印记中文</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1279</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1563</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">红队测试</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">渗透测试</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API 安全</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Node.js</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工程实践</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源与工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">周报</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/49b9c21b?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/bf792a08?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/49b9c21b?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/bf792a08?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

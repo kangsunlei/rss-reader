@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>慢即是快：用 AI 写出更好的代码</title>
+        <title>OpenSandbox 再进化：Credential Vault 让真实密钥不再进入沙箱</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>慢即是快：用 AI 写出更好的代码</h2>
-        <p>6/25/2026, 1:00:00 AM</p>
+        <h2>OpenSandbox 再进化：Credential Vault 让真实密钥不再进入沙箱</h2>
+        <p>6/26/2026, 8:07:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍一种利用多模型交叉审查来发现深层 Bug 的慢速 AI 编程工作流，以更高质量替代快速产出，并整合社区实践与理性思考。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">OpenSandbox 推出 Credential Vault 功能，通过出站代理在沙箱外注入凭据，使 AI Agent 沙箱不再需要保存真实密钥。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章基于原作者 Nolan 的实践，提出通过 Claude、Codex、Cursor Bugbot 等多模型交叉审查 PR，以低误报率发现从严重安全漏洞到性能问题的各类 Bug。典型工作流包括：先修复严重和高优先级 Bug、跳过低 ROI 问题、必要时放弃整个 PR。作者强调这种慢速、审慎的方式能提升代码库健康度，并让开发者深入理解底层架构。文章后半部分整理了社区讨论，补充了多角色对抗审查、上下文隔离等高级方法，以及应用于安全漏洞、老旧项目翻新、新人入职等场景的价值，同时提醒了领域知识门槛与行业短视环境的挑战。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章分析了 AI Agent 沙箱中直接使用密钥的安全风险，如 Prompt Injection、恶意依赖、日志泄露等。然后介绍了 OpenSandbox 新推出的 Credential Vault 方案：真实凭据保存在沙箱外，由 egress sidecar 在出站请求经过时按规则注入认证信息；沙箱内仅使用假值，确保密钥不进入环境变量、命令行、文件系统和日志。文章以 Claude Code 调用模型 API、私有 Git 仓库 clone、内部 API 访问等典型场景说明工作原理，并建议与默认拒绝的出站网络策略配合，实现更细粒度的安全边界。同时指出当前不支持与透明 service mesh sidecar 共存。最后总结该功能将沙箱隔离从进程/文件/网络层推进到凭据隔离层，是 AI Agent 生产化的重要补全。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">多模型交叉审查能显著降低误报率，有效发现深层 Bug。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 同时运行 Claude、Codex、Cursor Bugbot 等多个模型独立审查同一 PR，综合结果排除幻觉，误报率接近零，能发现从安全漏洞到性能问题的各类 Bug。</span>
+                        <strong style="color: #1a365d">沙箱内直接暴露密钥会放大 Prompt Injection、恶意依赖、日志泄露等风险。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AI Agent 执行链路长且不可预测，密钥一旦进入沙箱环境变量、命令行或配置文件，任意工具链环节失控都可能导致密钥泄露。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">慢速工作流先修复严重 Bug，跳过低 ROI 问题，必要时放弃问题过多的 PR。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 典型流程包括：让智能体修复所有严重和高优先级 Bug，跳过投入产出比不高的中低级问题；若严重问题过多则直接放弃 PR，说明整体方案有误。</span>
+                        <strong style="color: #1a365d">Credential Vault 通过 egress sidecar 在出站请求时注入认证信息，沙箱内只保存假值。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 宿主 SDK 将真实凭据和绑定规则写入 sidecar，沙箱进程仅持有假 API Key 等；当匹配的出站请求经过时，sidecar 自动注入 real auth header，密钥决不进入沙箱。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">该方法能提升代码库整体健康度，但要求开发者具备较高的领域知识。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在修复 Bug 过程中常发现更古老的缺陷，促使编写单元测试，长期积累提升代码质量；同时辨别真正 Bug 与极低概率边缘情况需要扎实的领域知识。</span>
+                        <strong style="color: #1a365d">该方案适用于模型 API、Git clone、内部 API 等多种开发者工具场景。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 无论 HTTP Basic Auth、Header Token 还是复杂路径匹配，Credential Vault 都可通过绑定规则实现精确授权。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">建议与默认拒绝的出站网络策略配合，实现凭据与服务、路径、方法的多维绑定。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 只允许工具真正需要的服务 Host，再通过 Vault 将凭据限制到更窄的请求范围，提升安全边界精细度。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">当前不支持与 Istio/Envoy 等透明 service mesh sidecar 共存。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 两层 sidecar 在同一网络命名空间内会冲突，平台需注意部署环境的兼容性。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">大语言模型非常灵活。你也可以用它们以较慢的速度同样高效地编写高质量的代码。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你让越多不同的模型来审查同一个 PR，出现幻觉或虚假 Bug 的概率就越低。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我觉得，这种编程风格是我在大语言模型出现之前就一直追求的那种编程方式的超级加强版：审慎、有条不紊、对质量近乎偏执，一心想着让后来的开发者过得更好。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真实密钥应该留在沙箱外，由平台在受控的出站链路上按规则注入。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">沙箱负责执行，Vault 负责授权，egress policy 负责边界。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Credential Vault 不是让沙箱更方便地保存密钥，而是让沙箱不再需要保存真实密钥。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -60,31 +66,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">前端早读课</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">91</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2556</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1972</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">代码质量</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工具</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 安全与对齐</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">沙箱安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">凭据管理</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenSandbox</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/d9821caf?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/eb89e83b?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/d9821caf?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/eb89e83b?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAAqFSURBVO3BQY7gRpIAQXei/v9l3z7GKQGCWS1pNszsD9ZaVzysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rfvhI5W+qmFROKk5UpooTlaniC5U3Kt5QmSomlaliUpkqJpWp4g2VqWJS+ZsqvnhYa13zsNa65mGtdc0Pl1XcpPKFyknFicoXKlPFScWkMqmcVEwVk8qJylRxk8pU8UbFTSo3Pay1rnlYa13zsNa65odfpvJGxU0VJypTxRcqU8VJxU0qU8VUcaIyqUwVU8WkMlX8JpU3Kn7Tw1rrmoe11jUPa61rfviPq5hU3qiYVG5SOamYVKaKSeULlZOKSWVSuUllqvgve1hrXfOw1rrmYa11zQ//cSpTxaQyVUwqJxUnKicVk8qkcqLyhcpUcVPFicr/Jw9rrWse1lrXPKy1rvnhl1X8popJZaqYVKaKE5Wp4g2VqWJSmSreUJkqJpVJ5Y2KN1Smit9U8W/ysNa65mGtdc3DWuuaHy5T+ZtUpopJZaqYVKaKLyomlS9UpoovKiaVqWJSmSomlaliUpkqJpWp4kTl3+xhrXXNw1rrmoe11jU/fFTxT6o4qTipmFSmipOKSeVE5Y2Kv0nljYpJZar4ouK/5GGtdc3DWuuah7XWNT98pDJVnKj8m1RMFZPKScVUMalMFZPKpPJPqphU3qh4o2JSmSpOVKaKSeWNii8e1lrXPKy1rnlYa13zw2UqU8VJxRcqb1S8UTGpTCq/qWJSmSomlROVqWJSOVH5TRWTyknFpDJVTCpTxU0Pa61rHtZa1zysta754aOKE5WpYlL5ouILlZOKk4oTlS9UpopJ5aTiROWkYlI5qZhUTiomlaliUnlD5URlqvjiYa11zcNa65qHtdY19gcfqEwVk8pJxRsqX1RMKm9UTCo3VUwqU8WkMlX8JpWTijdUpoqbVKaK3/Sw1rrmYa11zcNa65of/rKKE5WTikllqripYlI5qZhUTipOKiaVqWJSmSpOVKaKk4pJZVI5qZgqJpWp4kTlpGJSmSpuelhrXfOw1rrmYa11zQ+XqUwVb1S8UTGpTBVvVNxU8YbKVDFVnFRMKicVk8pJxUnFGyonKlPFv9nDWuuah7XWNQ9rrWt++KjiRGWqmFSmiknlpOINlTdUTiomlZOKSeVE5W+qeKPiDZWTiknlC5Wp4jc9rLWueVhrXfOw1rrG/uAilaliUpkq3lB5o2JSmSomlS8qJpXfVHGiMlW8oTJVnKj8TRWTyknFb3pYa13zsNa65mGtdc0PH6n8JpWTijcq/ssqJpWp4qaKSeWk4guVk4o3Kk5UpoovHtZa1zysta55WGtd88NlFZPKVDGpTBVTxaTyhsobFZPKVHGiMlVMKlPFpPJGxaQyVUwqJxWTylQxqUwqJxWTyknFpPKGylTxmx7WWtc8rLWueVhrXfPDRxU3qZxUTConFZPKGxWTylQxVZxUvFFxovKbKiaVNypOKiaVNyr+TR7WWtc8rLWueVhrXfPDZSpvVEwqU8WkMlVMKm9UTConFScqU8WJylRxonJS8YXKVDFVvKFyUjFVTCpTxaTyRsVUcdPDWuuah7XWNQ9rrWvsDz5Q+V9S8YbKv1nFicobFW+o/E0Vb6hMFV88rLWueVhrXfOw1rrG/uAilaliUjmpeENlqjhROamYVKaKE5WpYlI5qXhD5YuKSeWNihOVNyreUHmj4jc9rLWueVhrXfOw1rrmh49UpopJ5QuVqeINlZOKSeVE5aTiJpWp4qTiDZWpYlKZKiaVqeKkYlI5UZkqvlA5qfjiYa11zcNa65qHtdY19gcXqUwVJypTxRsqJxWTylTxhsobFScqU8UbKlPFb1L5TRVvqEwVk8obFV88rLWueVhrXfOw1rrmh1+mMlWcqNykMlW8oXJScZPK36QyVUwqU8WkMlWcqJyo3FQxqfymh7XWNQ9rrWse1lrX2B98oDJVnKhMFZPKVHGiMlVMKlPFGypTxaQyVUwqU8UbKicVk8pJxYnKGxWTylTxhcpJxaTyRsVND2utax7WWtc8rLWusT/4QOWmikllqphUTireULmpYlL5ouJE5aTiROWk4iaVqeINlTcqftPDWuuah7XWNQ9rrWvsDz5Q+aLin6QyVZyoTBWTyknFpHJSMamcVEwqU8UbKicVJyonFW+onFRMKicVNz2sta55WGtd87DWusb+4CKVk4o3VKaKN1SmihOVmypOVKaKE5U3Kr5QeaNiUjmp+ELlpGJSOan44mGtdc3DWuuah7XWNT98pDJVnKicVEwVJypTxVRxonJSMamcVEwqU8VUMalMFVPFpPKFylTxhcpNKm9UTCp/08Na65qHtdY1D2uta374l1OZKqaKSeWkYqo4UTmpOKmYVKaKqeJEZaqYVG6qeENlqjhR+ZsqJpWbHtZa1zysta55WGtd88NlKl+oTBWTylRxUjGpTBWTylTxhspU8YbKVHGicqIyVZyovFHxhspUMalMFW+o/JMe1lrXPKy1rnlYa11jf3CRylQxqZxUTCo3VUwqb1RMKicVX6icVHyhMlVMKlPFGypTxYnKGxX/Jg9rrWse1lrXPKy1rvnhsoqTijcqJpWp4kTljYo3Kk5UTiomlaliUjlReaNiUvlC5Q2VqWJSmSomlZsqvnhYa13zsNa65mGtdc0P/zCVqWJSmSomlZOKSWWqOFF5o+KkYlKZKr6oOFF5o2JSmSr+TSomlb/pYa11zcNa65qHtdY1P1ymclPFGxVvqJxUTConKlPFpDJVTConFZPKScVUcVLxhspJxRsqf1PFTQ9rrWse1lrXPKy1rrE/+EBlqjhROamYVE4qJpWpYlKZKiaV/7KKSWWqmFSmijdUpopJ5W+q+Cc9rLWueVhrXfOw1rrG/uA/TOWk4kTljYoTlS8q3lCZKiaV31QxqUwVk8pJxRsqX1Tc9LDWuuZhrXXNw1rrmh8+UvmbKt5QmSpOKk5Upoo3KiaVE5Wp4o2KSeWNiknlpOImlanipGJSmSp+08Na65qHtdY1D2uta364rOImlX+SyhcVX1S8oTJVTBUnKicVJyo3VbyhcqJyUvHFw1rrmoe11jUPa61rfvhlKm9UfFFxojJVnFRMKpPKVPGFyhcVX1S8oTJVTCpTxaQyqXxR8U96WGtd87DWuuZhrXXND/9jVKaKE5U3Kr5Q+aJiUplUpoovVKaKqeKLiknlpOILlZOKLx7WWtc8rLWueVhrXfPDf1zFicpUMamcVEwqJxU3VUwqU8WkcqLyRsWJyknFicpUMamcqEwVJxWTyk0Pa61rHtZa1zysta754ZdV/JtVTCpvVEwqb1RMKpPKGxWTyhsVk8pUMVV8UTGpvFExqfyTHtZa1zysta55WGtdY3/wgcrfVDGp3FTxhspJxW9SmSreUJkqTlSmikllqphUpooTlaliUpkq/kkPa61rHtZa1zysta6xP1hrXfGw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWu+T9u/NSMEEhpIgAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
