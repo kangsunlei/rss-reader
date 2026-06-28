@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>分享一些 RAG 工作的排查经验</title>
+        <title>做了好几个后台系统之后，我把这套多租户中后台底座开源了（XiHan.BasicApp 基于.NET 10 + Vue 3）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>分享一些 RAG 工作的排查经验</h2>
-        <p>6/26/2026, 10:10:26 AM</p>
+        <h2>做了好几个后台系统之后，我把这套多租户中后台底座开源了（XiHan.BasicApp 基于.NET 10 + Vue 3）</h2>
+        <p>6/27/2026, 10:23:58 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于 RAG 项目的排查实践，指出系统出错的根源往往不在模型而在评测与数据，并给出从评测建立、数据整理到业务接入的系统化经验。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了作者基于 .NET 10 + Vue 3 开源的 XiHan.BasicApp 多租户中后台底座，重点讲解了设计理念中的登录后选租户、字段级权限、动态 API、菜单单一事实源等关键点。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者结合自身开发 RAG 系统的经验，批评了团队一出错就怀疑模型的倾向，提出一套从评测到部署的排查方法论。文章以员工差旅报销场景为例，说明数据清洗的核心不是删除冗余，而是建立知识的版本、适用范围与替代关系（本体）。作者强调 50% 的精力应放在评测、40% 在数据整理、8% 在业务对接，最后才是模型训练；并指出当事实频繁变化时，应将其留在检索层而非训练进模型。文末介绍了作者的开源工具 Knowhere，采用树形解析保留文档结构以实现溯源。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章由作者分享其开源项目 XiHan.BasicApp 的设计与实践。项目定位为一套基于 .NET 10 + Vue 3 的企业级多租户中后台内核，采用 DDD 分层 + CQRS 架构，前端使用 Vue 3.5 + TypeScript + Naive UI。作者重点阐述了几个关键设计：登录后按归属智能落点选择租户、三层权限体系（RBAC + ABAC + 字段级安全）、后端无 Controller 的动态 API、前后端菜单纯一事实源、前端列表页通过 Schema 配置生成等。此外还介绍了偏好同步、灵动岛、移动端重做、六类审计日志等技术细节。文章最后给出了快速启动命令和开源地址。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">排查 RAG 问题时，应先建立评测框架，而非急于更换模型。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 评测不仅要给出对错，还要揭示错误类型（如文档定位错误、版本错误、适用范围错误），才能指导修复方向。</span>
+                        <strong style="color: #1a365d">登录后按归属智能落点选择租户，而非登录前选择。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 以邮箱为全平台唯一身份，登录后系统根据用户归属自动跳转：平台管理员进控制台，单租户用户直接工作台，多租户成员进选择页，超级管理员可切换任意租户。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">数据清洗的本质是建立知识的「状态」与「关系」。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文档不是独立文本片段，而应当保留版本效力、适用对象、替代关系等上下文，形成可被模型理解的本体（ontology）。</span>
+                        <strong style="color: #1a365d">权限体系覆盖字段级安全（FLS），实现数据脱敏与细粒度控制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> RBAC 控制页面和按钮，ABAC 控制数据范围（全部/本部门/本人），字段级安全控制敏感字段是否可见或脱敏，越权请求在服务端拦截。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">评测与数据整理是持续轮动的工作，而非一次性的前置步骤。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 生产环境中的知识会不断变化，每次更新都应同步调整测试用例，并回测历史问题以确保修复未破坏已有能力。</span>
+                        <strong style="color: #1a365d">后端通过 DynamicApi 直接暴露应用服务为 REST 接口，零 Controller 样板代码。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 应用服务加 [DynamicApi] 特性即自动生成 REST API 和 Scalar 文档，减少胶水代码。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">经常变化的事实应留在检索层，而非训练进模型。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将报销金额、产品价格等高频变动信息隐藏在模型内部会导致更新困难与溯源缺失，更稳妥的做法是让模型只负责阅读和表达。</span>
+                        <strong style="color: #1a365d">菜单、路由、权限码、国际化键统一在后端 PageRegistry 登记，保证前后端契约一致。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 避免前端配菜单、后端配权限两边不同步的问题，菜单只有一个事实源。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">前端列表页采用 Schema 驱动配置生成，支持列设置、高级搜索、习惯同步等。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 全站二十多个列表页使用统一配置框架，搜索、表格、导出、列拖拽等开箱即用，用户设置同步到云端。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">生产系统的质量，恰恰是在这些‘稳’中体现的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">知识，也是有状态的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">系统不是靠一次大升级变得可靠，而是靠每一次错误都留下可以学习的东西。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">登录后再选租户，而不是登录前</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">权限一直做到了「字段级」</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">写应用服务 = 写接口，没有 Controller。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">谁、在什么时候、做了什么必须查得到。系统内置六类日志……</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +66,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">V2EX</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">cxd8190102</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">zhaifanhua</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2360</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2485</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">RAG</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 应用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工程实践</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">.NET</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Vue.js</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多租户</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">中后台</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/ba290bfd?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/953e2a7a?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/ba290bfd?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/953e2a7a?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAApMSURBVO3BQY7gRpIAQXei/v9lXx3jlADBrG5pNszsH6y1rnhYa13zsNa65mGtdc3DWuuah7XWNQ9rrWse1lrXPKy1rnlYa13zsNa65mGtdc3DWuuah7XWNQ9rrWse1lrX/PCRyp9UMalMFX+SyknFicpUcaIyVZyonFRMKicVk8pJxYnKVDGp/EkVXzysta55WGtd87DWuuaHyypuUjmpmFS+qJhUTipOVKaKN1ROVKaKqWJSmVROKt6oOFGZKt6ouEnlpoe11jUPa61rHtZa1/zwy1TeqLipYlI5UflNKlPFGxVfVHyhMlVMKlPFb1J5o+I3Pay1rnlYa13zsNa65of/OJWp4qaKLyomlUllqpgq3lA5qZhUTireqHhDZar4L3tYa13zsNa65mGtdc0P/2NUvqg4UTmpOKmYVCaVLyomlUllqphUJpWp4kTl/7OHtdY1D2utax7WWtf88Msq/k0qvqh4Q+WNijdUJpWpYlI5qThReaPiN1X8mzysta55WGtd87DWuuaHy1T+popJ5URlqphUpopJZao4qZhUTlSmipOKSWWqmFSmikllqphUpopJZaqYVKaKE5V/s4e11jUPa61rHtZa19g/+A9TuaniROWk4g2VqeINlZOKSWWqeEPlpGJSOan4X/Kw1rrmYa11zcNa65ofPlKZKt5QmSomlTcqTlSmikllqjipOFGZKk5Uvqi4SWWqmFQmlZOKE5WbKk5UpoovHtZa1zysta55WGtd88O/XMWkcqIyVUwVb6i8oXKiclPFicqJym+qmFT+TSpuelhrXfOw1rrmYa11zQ+/TOWkYlL5omJSmSq+qJhUpoovVKaKN1ROKk5UTlSmiv8Slanipoe11jUPa61rHtZa19g/+A9TmSomlaniROWmiknli4ovVKaKE5WbKk5UpopJZar4N3lYa13zsNa65mGtdc0PH6lMFZPKGxWTyhsqJypvVLyhMqmcVEwqX6hMFW+oTBUnKicVb1RMKjepTBU3Pay1rnlYa13zsNa65ofLVKaKLyreUJkqTlSmihOVk4qbKt6omFS+UJkqTipOVL6omFROKv6kh7XWNQ9rrWse1lrX/PDLVKaKSeVvqphU3qh4Q+UNlanib1KZKv5NKv6mh7XWNQ9rrWse1lrX/PCXVUwqU8WkMlV8oXJScaJyUnFScaJyojJVTBWTyhsVJypTxaRyUjGpTBUnFW9UTCpTxRcPa61rHtZa1zysta754bKKm1SmijdUpoqp4kRlqnhDZaqYVKaKE5UTlb9JZaqYVE4qJpWTijdUftPDWuuah7XWNQ9rrWt+uExlqvii4kRlqpgq3lCZKt6o+EJlqphUpooTlS9UTiomlTdUpoqbVE4qbnpYa13zsNa65mGtdc0Pf5nKicpJxaQyVXyhclJxonJTxU0qU8WkMlV8UTGp/C95WGtd87DWuuZhrXXND5dVnKhMFV+oTBWTylQxqUwVJyqTylTxRsWkMqlMFScqJxVfqPwmlanii4pJZVKZKr54WGtd87DWuuZhrXWN/YMPVE4qTlRuqjhROamYVE4qJpX/kopJ5aRiUjmpmFR+U8Xf9LDWuuZhrXXNw1rrGvsHf5DKScUbKlPFpHJTxaRyUnGiMlW8oTJVTCo3VXyhclLxhsoXFTc9rLWueVhrXfOw1rrmh49UTiq+UJkq3qiYVN6omFSmihOVL1Smii8q/qaKSeVEZap4o2JS+U0Pa61rHtZa1zysta754V+u4k+qOKmYVN6omFROKr6omFSmihOVNyomlS8q3qh4Q2Wq+OJhrXXNw1rrmoe11jU/fFQxqXyh8idVTConFVPFpDJVvKHyN6mcVEwqk8pJxaQyqXyhMlX8SQ9rrWse1lrXPKy1rrF/8IHKVPGGyknFicpUMalMFScqU8WkclIxqUwVb6icVEwqJxUnKm9UTCpTxRcqU8WJyhsVNz2sta55WGtd87DWuuaHjyreUJkqTlTeUJkqJpWTikllqphUvlD5QmWqmFTeqDhROak4UZkqJpWp4kRlqjhR+U0Pa61rHtZa1zysta754TKVqeJE5aTiROWLii8qTipOKn5TxaQyVUwqU8WJylQxqUwVk8pUMamcVEwqU8WJylTxxcNa65qHtdY1D2uta364rGJSOamYVCaVk4pJZVL5TSpTxYnKGxUnKlPFTSpTxaQyqbxRMalMFZPKpDJVnFRMKjc9rLWueVhrXfOw1rrmh49UflPFpHJSMamcqEwVJypTxaRyk8oXKlPFTRWTylTxmyomlZOKqeKmh7XWNQ9rrWse1lrX/PBRxaTyhspUMamcqEwVU8WJyqQyVUwqb1ScqEwVJyo3qUwVk8qkcpPKVPGGylRxojJV3PSw1rrmYa11zcNa65ofLqu4qeJE5aaKSeVEZaq4SWWqeKNiUpkqTipOVKaKSWWqmCpOVP5LHtZa1zysta55WGtd88NlKicVb6hMFScqU8WkcqIyVUwqU8WkMlW8oTJVTCpTxYnKFypTxYnKVPGGyknFpPJGxaQyVXzxsNa65mGtdc3DWuuaH35ZxYnKVDFVvFFxUnGiclIxqUwVb1RMKpPKb1J5Q2WqmFS+qHijYlI5qfhND2utax7WWtc8rLWu+eGyiptUTiomlS8qTlSmipsqJpUTlaniT1J5Q2WqmFSmijcqTlSmipse1lrXPKy1rnlYa11j/+AilS8qTlTeqDhROak4Ufmi4kRlqjhRmSomlaniROWNiptU3qg4UZkqbnpYa13zsNa65mGtdY39gw9UpooTlZOKSeWk4kRlqjhROal4Q+VPqphUTiomlaniROWk4kTlN1X8SQ9rrWse1lrXPKy1rrF/8B+mclJxovJGxYnKFxVvqEwVk8pvqphUpopJ5aTiDZUvKm56WGtd87DWuuZhrXXNDx+p/EkVb6icVJyoTCpTxVRxovKGylRxojJVTConFZPKVHFScVIxqZyoTBVvVEwqv+lhrXXNw1rrmoe11jU/XFZxk8pJxYnKGypTxRcqU8WkclLxhcpJxRcqU8WkMlW8UfFGxd/0sNa65mGtdc3DWuuaH36ZyhsVb6icVLxR8YbKScWkcqJyU8WkcqIyVUwqJyonKicqX6hMFX/Sw1rrmoe11jUPa61rfviPq5hUJpWpYlJ5o+KLihOVqWJSOamYVKaKSeVE5Y2KE5Wp4guVNyp+08Na65qHtdY1D2uta374H1MxqZxUnKicVJyoTBV/k8pNFZPKVDFVnKhMFW9UTConFTc9rLWueVhrXfOw1rrG/sEHKlPFTSpTxYnKVDGpnFRMKm9UvKEyVbyhclLxhspUMan8pooTlTcq/qSHtdY1D2utax7WWtf8cJnKn6QyVfxJFZPKVPGGyknFScWkclIxVdxUMalMFV9UTCpvqEwVXzysta55WGtd87DWusb+wVrrioe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXN/wFDsHDw9D0lYAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

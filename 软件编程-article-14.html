@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AI 时代的新可观测性：不只看系统崩没崩，还要看模型有没有胡说</title>
+        <title>分库分表下，如何实现分页查询功能？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>AI 时代的新可观测性：不只看系统崩没崩，还要看模型有没有胡说</h2>
-        <p>6/26/2026, 6:06:00 AM</p>
+        <h2>分库分表下，如何实现分页查询功能？</h2>
+        <p>6/27/2026, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">New Relic 首席技术战略官 Nic Benders 在访谈中阐述可观测性从仪表盘/告警向 AI 驱动的智能理解演进，并探讨了 AI 系统本身的监控挑战与工程师的未来角色。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析了数据库分库分表后分页查询的问题根源，介绍了全局查询法及其优化方案——禁止跳页法。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文基于对 New Relic 首席技术战略官 Nic Benders 的播客访谈编译整理。Benders 回顾了可观测性从代码插桩、数据平台到智能时代的演进，指出当前以仪表盘和告警为核心的模式已触及天花板——数据太多，人看不过来。他提出可观测性本质应是可理解性（understandability），并将技术路径分为统计方法、机器学习和神经网络三类，认为三者协同才是最佳方案。文章重点讨论了告警疲劳的根源与解决思路：增加告警反而训练人延迟响应，AI 应主动过滤和优先级排序。对于 AI 系统本身的监控，Benders 强调需要新的 golden signals（如 Token 使用量、答案质量、用户情绪），并建议结合 OpenTelemetry 推动标准化。面对新人入行的焦虑，他建议积极使用 AI 工具但不依赖它，把 AI 当作可以解释的导师。最后指出真正的 truth of source 始终是业务目标本身。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章从分库分表导致数据分散、失去全局视野入手，解释分页查询失效的原因。详细介绍了全局查询法（每个分库查询足够多的数据后在服务层排序合并），分析了其优缺点（数据精准但深度分页性能差）。进而介绍禁止跳页法——通过记录当前页最大 ID 进行游标式分页，可有效提升性能。最后总结了几种实践方案：业务层面折衷（不提供跳页）、使用 ES 等中间件、利用 ShardingSphere 的内置优化等。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">可观测性的本质不是观察，而是理解。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 仪表盘和告警只是工具，而非目标。用户最终只想知道系统到底发生了什么，AI 应帮助从海量数据中提取可行动的见解。</span>
+                        <strong style="color: #1a365d">分库分表后分页查询失效的根本原因是各分库失去全局视野，无法直接通过 OFFSET/LIMIT 获取正确数据。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 单表下 limit+offset 可以精准定位，但数据分散后每个分库只能看到局部数据，直接查询会遗漏或重复。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">增加告警反而降低响应能力，告警疲劳是头号问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 噪音越多，工程师越倾向于等待自愈而非立即响应。AI 应在通知人之前先过滤、关联和判断严重程度，甚至自动执行已知修复。</span>
+                        <strong style="color: #1a365d">全局查询法通过扩大查询范围并在服务层内存排序来获得全局视野，但存在深度分页的性能问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 每个分库需要返回更多数据（如 M 页数据），网络传输和内存排序随页码增加而线性增长，导致性能瓶颈。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI 与统计方法、机器学习应协同工作，而非替代。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 先将海量数据通过统计方法降维到万级，再交给 LLM 做总结和推理，才是可落地的路径。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI 系统需要新的可观测性信号，如答案质量和用户情绪。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 非确定性输出使传统性能指标不够，需引入语义质量评估，甚至用更强的模型作为“主管”抽样评判 AI 的输出。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">最终真相来源是业务目标本身。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 无论监控什么系统，最核心的信号永远是业务指标（如成交额、用户互动），其他都是诊断工具。</span>
+                        <strong style="color: #1a365d">禁止跳页法利用上一页最大 ID 作为游标，可大幅降低查询复杂度，是一种有效的业务折衷方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 只支持下一页，不支持直接跳页，每次只需查询大于上一页最大 ID 的数据，避免深度分页中的大量资源浪费。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +52,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">没人真的想‘观察’，大家要的是‘理解’。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">增加 alert 并不会提升响应能力。它会训练人产生一种反应：‘先等一下，看看它会不会自己恢复。’结果响应时间反而被拉长了。噪音越多，响应越慢，但团队却误以为 alert 越多越安全。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">真正的‘source of truth’始终是业务本身。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 不是减少工作，而是让每个人产出更多，历史上从来没有哪次技术进步让人类真的减少工作量。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">禁止跳页法可以有效的提升全局查询法的效率！</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">全局查询法虽然性能较差，但是其业务数据无损查询，数据精准。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -66,31 +60,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">81</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">36 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8927</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1690</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AIOps</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">运维实践</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">后端开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分库分表</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分页查询</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/f563746b?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/d9733752?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/f563746b?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/d9733752?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
