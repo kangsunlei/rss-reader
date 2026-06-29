@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Hitmux-Context-Engine——开源替代 ACE</title>
+        <title>本地部署 GLM-5.2 的门槛太高了，根本玩不起！</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Hitmux-Context-Engine——开源替代 ACE</h2>
-        <p>6/27/2026, 2:17:00 PM</p>
+        <h2>本地部署 GLM-5.2 的门槛太高了，根本玩不起！</h2>
+        <p>6/28/2026, 9:51:51 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了开源上下文引擎 HCE 的部署与使用方法，强调其低成本、开源可自部署的特点，并给出基于 Qwen3 Embedding 和 Milvus 的详细配置步骤。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者测试发现本地部署 GLM-5.2 需要超大显存（量化版 436G，FP8 版 704G），在 H20 上推理速度慢且并发能力差，硬件门槛极高。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章首先对比了 ACE 与 HCE，指出 HCE 的开源、自部署和低成本优势。随后依次介绍了准备条件：向量数据库 Milvus（可本地或使用免费 Zilliz Cloud 实例）、向量嵌入模型 Qwen3 Embedding 4B（通过硅基流动等 API 调用，成本极低）以及 HCE 的安装配置（npm 安装、配置文件编写、MCP 集成）。作者通过估算 100 万行代码库的索引与查询成本（约 2 元人民币）来说明其经济性。最后附带了效果展示与原理说明的链接。全文以步骤为导向，适合希望替换 ACE 或自建上下文引擎的开发者。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文是作者在算力服务器上部署 GLM-5.2 的实测记录。尝试了两个版本：unsloth 的 UD-Q4_K_XL 量化版本（436G gguf 文件，4 张 H20 共 560G 显存）和智谱官方的 FP8 量化版本（704G 权重，8 张 H20 共 1.1T 显存）。量化版仅 20-30 tokens/秒，无法支持并发；FP8 版在 1.1T 显存下无法开启 1M 上下文，256K 上下文仅支持 2.5 并发，多路 Claude Code 连接即卡顿。作者指出其缓存架构基于 DeepSeek 3.2，显存利用效率明显低于 DeepSeek 4 和 Qwen 3.5/3.6，得出结论：没有 H200/B300 级别设备不建议尝试。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,47 +36,55 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">HCE 是完全开源的上下文引擎，可自部署且成本极低。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 与 ACE 相比，HCE 不仅开源，还允许用户完全控制后端（向量数据库、嵌入模型），使用 Qwen3 Embedding 4B 的成本几乎可以忽略不计。</span>
+                        <strong style="color: #1a365d">GLM-5.2 本地部署显存需求极高，远超常规企业可负担水平。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> UD-Q4_K_XL 量化版需 4 张 H20（560G 显存），FP8 版需 8 张 H20（1.1T 显存），对多数团队不可行。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">部署流程清晰，核心组件包括 Milvus 向量数据库和嵌入 API。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章给出了从环境准备到配置 MCP 的完整步骤，兼顾本地与云端方案，对用户友好。</span>
+                        <strong style="color: #1a365d">在 H20 上推理速度不理想，并发能力弱。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 量化版仅 20-30 tokens/秒，FP8 版 50 tokens/秒，但 256K 上下文仅支持 2.5 并发，实际多路调用卡顿明显。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">通过 MCP 协议集成到开发环境，支持快速索引与查询。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 配置 MCP 后，开发者可在支持 MCP 的客户端（如 Cursor、Claude 等）中直接使用 HCE 提供的上下文检索功能，查询速度约 3-5 秒。</span>
+                        <strong style="color: #1a365d">缓存架构基于 DeepSeek 3.2，显存效率低于最新竞品。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者从 vLLM 日志推断显存利用效率比 DeepSeek 4 和 Qwen 3.5/3.6 差很多，这是部署门槛高的内在原因。</span>
                     </li>
             </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">劝大家如果没有 h200/b300 级别的装备的话，还是算了吧！😂</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">80</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">78</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">V2EX</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Hitmux</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">beginor</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">3 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">722</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">426</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP 协议</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量数据库</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型部署与推理</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI硬件与芯片</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能评测</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/1e6171ca?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/0862c645?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/1e6171ca?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAApnSURBVO3BQY7gRpIAQXei/v9l3z7GKQGCWS1pNszsD9ZaVzysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rfvhI5W+qmFSmiknlpOINlaniC5U3Kt5QmSomlaliUpkqJpWp4g2VqWJS+ZsqvnhYa13zsNa65mGtdc0Pl1XcpPKGyk0qX6hMFScVk8qkclIxVUwqJypTxU0qU8UbFTep3PSw1rrmYa11zcNa65offpnKGxU3VfxNKlPFScVNKlPFVHGiMqlMFVPFpDJV/CaVNyp+08Na65qHtdY1D2uta374j6uYVL5QuUnlpGJSmSomlS9UTiomlUnlJpWp4r/sYa11zcNa65qHtdY1P/zHqUwVk8pUMamcVJyonFRMKpPKicoXKlPFTRUnKv+fPKy1rnlYa13zsNa65odfVvGbKiaVqWJSmSpOVKaKN1SmikllqnhDZaqYVCaVNyreUJkqflPFv8nDWuuah7XWNQ9rrWt+uEzlb1KZKiaVqWJSmSq+qJhUvlCZKr6omFSmikllqphUpopJZaqYVKaKE5V/s4e11jUPa61rHtZa1/zwUcU/qeKk4qTii4pJ5UTljYq/SeWNikllqvii4r/kYa11zcNa65qHtdY1P3ykMlWcqPybVEwqU8WkclIxqUwVk8qk8k+qmFTeqHijYlKZKk5UpopJ5Y2KLx7WWtc8rLWueVhrXfPDZSonFTepvFFxUjGpnFRMKjdVTCpTxaRyojJVTConKr+pYlI5qZhUpopJZaq46WGtdc3DWuuah7XWNT98VHGiMqncVPGFyknFicpUMal8oTJVTConFScqJxWTyknFpHJSMalMFZPKGyonKlPFFw9rrWse1lrXPKy1rvnhI5WpYqqYVKaKN1QmlTcq3lA5qZhUTlROKiaVNyreqPibKiaVNypOKiaVqeI3Pay1rnlYa13zsNa65odfpjJVnKicVEwqU8VNFZPKpDJVTConFScVk8pUMalMFScqU8VJxaTyRcWJylQxqZxUTCpTxU0Pa61rHtZa1zysta754TKVqeKNijcqJpWp4o2KmyreUJkqpoqTiknlpGJSOak4UZkqTlT+lzysta55WGtd87DWuuaHjypOVKaKSWWqmFTeqJhUvlA5qZhUTiomlROVv6nijYpJ5URlqjhR+UJlqvhND2utax7WWtc8rLWusT+4SGWqmFSmijdUTipOVKaKSeWLiknlN1WcqEwVb6hMFScqf1PFpHJS8Zse1lrXPKy1rnlYa13zw0cqv0nlpGJSeUPlv6RiUpkqbqqYVE4qvlA5qXij4kRlqvjiYa11zcNa65qHtdY1P1xWMalMFZPKVDFVTCpfVEwqU8WkMlWcqEwVk8pUMam8UTGpTBWTyknFpDJVTCqTyknFpHJSMam8oTJV/KaHtdY1D2utax7WWtf88FHFTSonFZPKScVJxUnFpDJVTBUnFW9UnKj8popJ5Y2Kk4pJ5Y2Kf5OHtdY1D2utax7WWtfYH1ykclJxojJVTCpTxaQyVUwqX1ScqEwVJypTxYnKScWJyhsVX6icVJyoTBWTyhsVv+lhrXXNw1rrmoe11jX2Bx+o/C+peEPl36ziROWNijdU/qaKN1Smii8e1lrXPKy1rnlYa11jf3CRylQxqZxUvKEyVZyonFRMKlPFicpUMamcVLyh8kXFpPJGxYnKGxVvqLxR8Zse1lrXPKy1rnlYa13zw0cqU8Wk8oXKVPGGyknFpDJVTConFTepTBUnFW+oTBWTylQxqUwVJxWTyonKVPGFyknFFw9rrWse1lrXPKy1rvnhl1WcqJxUvKEyVUwqv0llqpgqJpWTit9UcVIxqZyonKi8UfFGxaTyNz2sta55WGtd87DWuuaHX6byhspNKlPFTRU3qfxNKlPFpDJVTCpTxYnKicpNFZPKb3pYa13zsNa65mGtdY39wT9IZap4Q2WqmFSmijdUpoo3VKaKN1ROKiaVk4oTlTcqJpWp4guVk4pJ5Y2Kmx7WWtc8rLWueVhrXfPDRyonFV+oTBUnKlPFGypfqEwVk8oXFf+kipOKN1SmiqniROWNit/0sNa65mGtdc3DWuuaH/4ylTcqTiq+UJkqTlTeUJkqJpWTiknlpGJSeaNiUplUpooTlZOKmyomlUllqrjpYa11zcNa65qHtdY1P3xUMalMKlPFGypTxRsqU8VUMancVPFGxRcqU8VvUpkq/kkqU8WkMqlMFV88rLWueVhrXfOw1rrmh49UpooTlZOKqeJEZaqYKk5UTiomlZOKSWWqmComlaliqphUvlCZKr5QuUnljYpJ5W96WGtd87DWuuZhrXXND/9yKlPFVPFFxYnKScWkcqIyVUwVJypTxaRyU8UbKlPFGyq/qWJSuelhrXXNw1rrmoe11jU/XKbyhcpUMalMFW+oTBWTylTxRsWJyonKVHGicqIyVZyovFHxhsobFW+o/JMe1lrXPKy1rnlYa11jf3CRylQxqZxUTCpTxaQyVXyhclIxqZxUfKFyUvGFylQxqUwVb6hMFV+oTBX/Jg9rrWse1lrXPKy1rrE/+B+i8kXFFypTxaQyVUwqU8WkMlVMKm9UTConFScqJxWTylTxhspNFV88rLWueVhrXfOw1rrmh3+YylQxqUwVk8pJxYnKicobFZPKVDGpTBVfVJyovFExqUwVb6i8oTJVnFRMKn/Tw1rrmoe11jUPa61rfrhM5aaKSWWquEllqphUTlSmikllqphUTiomlZOKqeKk4g2Vk4oTlUnlb6q46WGtdc3DWuuah7XWNfYHH6hMFScqJxWTyknFpDJVTCpTxaTyX1YxqUwVk8pU8YbKVDGp/E0V/6SHtdY1D2utax7WWtfYH/yHqZxUnKi8UXGi8kXFGypTxaTymyomlaliUjmpeEPli4qbHtZa1zysta55WGtd88NHKn9TxRsqU8UbFZPKVPFGxaRyojJVvFExqbxRMamcVNykMlWcVEwqU8VvelhrXfOw1rrmYa11zQ+XVdyk8l9W8UXFGypTxVRxonJScaJyU8UbKicqJxVfPKy1rnlYa13zsNa65odfpvJGxRcVJypTxYnKGxVfqHxR8UXFGypTxaQyVUwqk8oXFf+kh7XWNQ9rrWse1lrX/PA/RmWqOFGZKt5QmSpOVL6omFQmlaniC5WpYqr4omJSOan4QuWk4ouHtdY1D2utax7WWtf88B9XcaIyVUwqk8pUMan8TRWTylQxqZyovFFxonJScaIyVUwqJypTxUnFpHLTw1rrmoe11jUPa61rfvhlFf9mFZPKFypvVEwqk8obFZPKGxWTylQxVXxRMam8UXGi8jc9rLWueVhrXfOw1rrG/uADlb+pYlK5qeINlZOK36QyVbyhMlWcqEwVJyonFScqU8WkclLxNz2sta55WGtd87DWusb+YK11xcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrm/wCY85XX7tnoiQAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/0862c645?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

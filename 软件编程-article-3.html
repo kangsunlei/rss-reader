@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>「缓存命中率」是个伪指标，应该看未命中的缓存</title>
+        <title>自己做中转站遇到的坑总结</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>「缓存命中率」是个伪指标，应该看未命中的缓存</h2>
-        <p>6/27/2026, 8:58:49 AM</p>
+        <h2>自己做中转站遇到的坑总结</h2>
+        <p>6/28/2026, 3:27:13 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章提出在 AI 编程工具 OpenCode 中，缓存命中率百分比是伪指标，应改用未命中绝对 token 数来衡量缓存效率，并基于 16 万条消息实测给出不同模型的表现差异及可视化工具。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者分享运营 AI 中转站过程中在框架选择、号池构建、稳定性保障、客户信任维护和恶意攻击防御等方面的实际踩坑经验与教训。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章以 AI 编程工具 OpenCode 的缓存问题切入，指出缓存命中率作为百分比指标存在根本缺陷：分母受上下文长度、新输入量、子 Agent 数量等用户使用方式影响，无法真实反映 provider 缓存质量。作者提出改用未命中绝对 token 数（上一条总 token 数减当前从缓存读回的 token 数），理想值为 0，值越大浪费越多。作者基于自己 16 万条消息的实测数据，展示了 DeepSeek-v4、GLM-4.7、GPT-5.5 等模型在输出侧 KV 缓存复用上的巨大差异（85%、63%、0.3%），并提供了一个开源可视化看板工具，可直接读取 OpenCode 本地 SQLite 数据库，按日下钻到具体会话查看缓存细节。文章观点清晰，数据扎实，对使用 OpenCode 的开发者有直接实用价值。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章基于作者运营 AI 中转站鱼鱼连线的亲身实践，详细总结了从技术选型到日常运营的六大类问题。框架层面比较了 sub2api 和 newapi 的优劣，指出两者均需大量二次开发才能满足需求；号池构建中揭示了虚拟卡与 U 卡封控严格的现实，建议使用正规实体卡提升稳定性；稳定性方面，官方 SLA 波动、Cloudflare 超时限制以及账号封禁导致的自动切换问题需要持续优化；客户质疑集中于模型替用、计费、数据隐私等方面，作者通过解释和合同建立信任；恶意攻击包括内容违规、蒸馏攻击和伪装请求，目前只能被动加防护。全文信息密度高，对有意从事 AI 中转服务的读者有直接参考价值。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">缓存命中率是伪指标，因分母受用户使用方式影响。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 命中率百分比的总 token 数取决于上下文长度、新输入量和子 Agent 数量，与 provider 缓存质量无关，无法诊断问题。</span>
+                        <strong style="color: #1a365d">开源中转框架各有利弊，二次开发成本高。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> sub2api 与 newapi 功能互补，但两者源码庞大，直接修改容易引入新问题，需深入理解后再定制。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">应改用未命中绝对 token 数来衡量缓存效率。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 未命中 token 数=上一条总 token 数-当前从缓存读回的 token 数，直接反映浪费量，理想值为 0，飙升说明缓存异常。</span>
+                        <strong style="color: #1a365d">虚拟卡号段易被封控，建议使用正规实体卡。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> U 卡和虚拟卡支付成功率低且稳定性差，Anthropic 等平台对号段严格审核，只有正规银行发行的信用卡才能保证长期可用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">不同模型的输出侧缓存复用能力差异巨大。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者实测 16 万条消息发现 DeepSeek-v4 有 85%对话能缓存上一轮输出，GLM-4.7 为 63%，而 GPT-5.5 仅 0.3%，不支持 KV 复用的模型浪费严重。</span>
+                        <strong style="color: #1a365d">稳定性瓶颈来自官方 SLA 与基础设施限制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 官方 SLA 波动（如 Anthropic 低于 99%）、Cloudflare 对超时请求（&gt;120s）的切断、以及大量账号封禁后自动切换逻辑，都是稳定性短板。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">客户信任是运营的核心难点，需投入大量沟通。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 客户常质疑模型替用、计费精确性和数据隐私，作者通过技术验证视频、合同条款和耐心解释来化解疑虑，沟通成本占工作量 50%。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">恶意攻击类型多样，缺乏历史数据导致防护滞后。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 常见攻击包括违规提问、色情图片生成、蒸馏攻击和伪装请求，因未留存原始数据，只能通过报错信息被动应对。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个百分比把「你怎么用」和「 provider 缓存好不好」混在一起，根本看不出问题出在哪。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">发现不同模型差异巨大：DeepSeek-v4 有 85% 的对话连上一轮的输出都能缓存住，GLM-4.7 有 63%，但 GPT-5.5 只有 0.3%。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">越容易搞到的虚拟卡搞到中转站封控规则越严格。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">继续给赛博菩萨上香。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -60,31 +66,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">85</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">V2EX</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">heimoshuiyu</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Croath</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">429</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1494</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存策略</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型评测与基准</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工具</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 商业化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全性</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">稳定性</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/7ae2227d?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/d1b6e8ae?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/7ae2227d?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/d1b6e8ae?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
