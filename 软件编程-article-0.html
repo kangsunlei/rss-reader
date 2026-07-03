@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>从 10 分钟到 1 秒：ES 深度分页任意跳页的三轮优化实战</title>
+        <title>Agent Loop 深度调研：把决定权交给模型的一次换代，为什么发生在现在😄</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>从 10 分钟到 1 秒：ES 深度分页任意跳页的三轮优化实战</h2>
-        <p>7/1/2026, 12:00:00 PM</p>
+        <h2>Agent Loop 深度调研：把决定权交给模型的一次换代，为什么发生在现在😄</h2>
+        <p>7/3/2026, 12:38:05 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍 vivo 团队通过三轮优化（分段缓存、锚点定位+ES 查询提速、大区间预热+小区间锚点），将 Elasticsearch 深度分页任意跳页的响应时间从 10 分钟级降至 1 秒以内。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文从控制权移交视角梳理 LLM 应用的三代范式演变，解释 Agent loop 为何在 2024-2026 年爆发。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章以 vivo 活动系统的摄影比赛后台为背景，阐述了对 Elasticsearch 深度分页任意跳页功能的优化实践。第一轮采用 search_after 配合分段预热缓存，但首次跳深页仍耗时 10 分钟。第二轮引入最近锚点定位（Redis ZSet）并禁用_source/关闭 track_total_hits 减少 ES 查询开销，预热后跳页降至约 3 秒。第三轮使用大区间同步预热+小区间异步细粒度锚点，将缓存粒度对齐最小分页大小，实现预热后任意跳页响应时间稳定在 1 秒内。最后讨论了数据漂移问题及应对策略，强调该方案适合数据相对稳定的场景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章提出 Agent loop 的核心变化是把「下一步做什么」的判定权从开发者的代码交到模型手里。沿这条控制权移交线，梳理了三代范式：Prompt 时代（全部由开发者写死）→ RAG/框架时代（部分路由由模型决定）→ Agent loop 时代（模型自主规划与结束）。并分析为什么这种结构 2022 年就已存在，却直到近两年才爆发：模型单步准确率跨过可用阈值、MCP 等标准化工具接口降低了集成成本、编码场景率先完成商业验证。文章视角独特，提炼出「上一代主角降级为新范式组件」的规律。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,61 +36,47 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">选择 search_after 作为深度分页基础，配合锚点缓存实现跳页。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对比 from+size（有上限）、scroll（有状态、占用内存），search_after 无状态且适合在线查询，但需要额外缓存记录位置才能实现随机跳页。</span>
+                        <strong style="color: #1a365d">Agent loop 改的是控制权：从开发者代码交给模型。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LLM 应用六年来第一次把「下一步做什么、什么时候算完成」的判定权从开发者代码交到模型手里，这是代际变化的本质。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">最近锚点定位通过 Redis ZSet 大幅减少顺序推进次数。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将查询位置存为 score、sortValues 存为 value，利用 ZSet 的 reverseRangeByScore 快速找到离目标最近的锚点，将几十万量级扫描压缩到 1000 条以内。</span>
+                        <strong style="color: #1a365d">三代范式遵循「上一代主角降级为新范式组件」的规律。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Prompt 时代是手工编排，RAG/框架时代引入检索和模板，Agent loop 时代模型自主规划，前代技术成为新范式的基础设施。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">禁用_source 和关闭 track_total_hits 显著降低 ES 查询耗时。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 预热阶段不需要完整文档和总数，禁用后单次查询从数秒降至约 500ms，配合增大步长进一步提升预热效率。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">大区间预热+小区间异步构建细粒度缓存实现任意跳页 1 秒内。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 以 5000 条为大区间同步预热，获取结果后异步以最小分页大小（如 10 条）切分并缓存锚点，使用户跳转到任何页都能直接命中缓存。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">数据漂移是缓存一致性问题，需根据数据变更频率评估方案适用性。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 缓存锚点与 ES 数据并非强一致，新数据写入或删除可能导致跳页偏差，该方案更适合数据在查询后期趋于稳定的场景。</span>
+                        <strong style="color: #1a365d">Agent loop 在 2024-2026 年爆发有三个推动因素。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型单步准确率过阈值、MCP 标准化工具接口、编码场景先完成商业验证，三者共同促使 Agent loop 从实验室走向生产。</span>
                     </li>
             </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
-            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">将 50 万数据量下的任意跳页响应时间从 10 分钟级优化至 1 秒以内。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这次优化的过程，本质上不只是一次 Elasticsearch 性能调优，更是一次面对多目标约束时如何拆解问题、逐步逼近最优解的工程实践。</li>
-            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">89</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">78</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">V2EX</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">chaosdefense</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">20 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4868</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">173</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Elasticsearch</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">后端开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">缓存</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">search_after</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent Loop</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">范式演变</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/701c372f?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/eed5675f?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/701c372f?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAApgSURBVO3BQY7gRpIAQXei/v9l3z7GKQGCWS1pNszsD9ZaVzysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rfvhI5W+qOFE5qZhUflPFpDJVTCpTxaQyVUwqU8UbKm9UfKEyVUwqf1PFFw9rrWse1lrXPKy1rvnhsoqbVN6omFQmlTcqvlD5QuVE5URlqphUTiomlROVqWJSmSreqLhJ5aaHtdY1D2utax7WWtf88MtU3qh4Q+WLikllUvmiYlI5qThROam4SeXfTOWNit/0sNa65mGtdc3DWuuaH/7HVEwqU8UbFScqJyonKlPFpPKGyknFVHGi8kbFGypTxX/Zw1rrmoe11jUPa61rfvh/RuUNlanipOJE5UTlpoo3VN5QmSomlf9PHtZa1zysta55WGtd88Mvq/g3qThRmSomlaniRGWqmFSmijdUpopJZao4qbip4jdV/Js8rLWueVhrXfOw1rrmh8tU/ktUpopJZaqYVKaKm1SmiptUpopJZaqYVKaKSWWqmFSmihOVf7OHtdY1D2utax7WWtf88FHFv4nKVHFSMalMFZPKVDGp3FTxhspUMamcqJyovFHxRcV/ycNa65qHtdY1D2uta+wPPlCZKiaVmypOVKaKSWWqmFSmii9U/k0q3lA5qThRmSreULmp4jc9rLWueVhrXfOw1rrG/uADlZsq/kkqv6niDZWTikllqjhR+aLiDZWTijdUTiomlZOKLx7WWtc8rLWueVhrXfPDRxUnKlPFpHKi8kbFicoXFZPKTSpvqJyoTBUnFScqb6hMFScqb1ScqJxU3PSw1rrmYa11zcNa6xr7gw9UpopJZaqYVE4qJpWp4g2V31QxqXxRMamcVJyovFExqZxUnKicVJyofFHxmx7WWtc8rLWueVhrXfPDZSpTxRsVk8pU8YbKGxWTyknFpHJSMalMFZPKVPGGylRxovJGxYnKScUbFTepTBVfPKy1rnlYa13zsNa65ofLKiaVk4qTikllqjipOFGZVE4qJpWp4kTljYo3VKaKL1TeUJkqTlSmihOVNyr+poe11jUPa61rHtZa19gfXKRyUvGGylQxqZxU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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/eed5675f?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
