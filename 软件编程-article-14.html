@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Fuck My Shit Mountain：AI 编程 Agent 代码审计工具</title>
+        <title>Cloudflare 如何解决了 quiche 中的一个拥塞漏洞</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,80 @@
         </style>
     </head>
     <body>
-        <h2>Fuck My Shit Mountain：AI 编程 Agent 代码审计工具</h2>
-        <p>7/6/2026, 7:30:03 AM</p>
+        <h2>Cloudflare 如何解决了 quiche 中的一个拥塞漏洞</h2>
+        <p>7/7/2026, 8:25:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Fuck My Shit Mountain 是为 Codex、Claude Code 等编程 Agent 设计的代码审计工具，覆盖 25 个维度并提供修复建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Cloudflare 团队如何发现并修复 quiche 库中 CUBIC 拥塞控制算法在连接初段严重丢包时无法恢复的 Bug，定位到空闲时间计算错误导致陷入无休止恢复循环，并仅用一行代码完成修复。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">介绍了 Fuck My Shit Mountain 这一款开源代码审计工具，专为编程 Agent 设计，覆盖安全、稳定性、性能、测试等 25 个审计维度，每个发现都附带证据、严重程度和修复建议，支持 Markdown 和 HTML 格式输出，具有良好的审计透明度和实用性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章由 InfoQ 编译自 Cloudflare 官方博客，记录了团队排查 quiche 库中 CUBIC 拥塞控制算法 Bug 的全过程。问题源于集成测试中连接初始阶段高丢包率下的异常失败。团队通过构建本地模拟环境复现问题：配置 10ms RTT 和 30%随机丢包，约 60%测试无法在 10 秒超时内完成。监控发现，出现故障时拥塞窗口无法扩大，状态在“拥塞避免”和“恢复”之间快速转换（6.7 秒内 999 次）。与 Reno 算法对比后，问题锁定在 CUBIC。根因是空闲时间计算方式：从上次发送数据时开始计时，导致在高丢包慢启动阶段传输入字节归零后触发空闲期优化，进而形成自我实现的循环，使应用程序始终处于恢复状态并设定遥远的恢复时间。修复方案是将空闲时间计算起点改为上次收到 ACK 时——仅一行代码改动，即打破循环，使测试通过率恢复 100%。文章体现了从现象到根因的严谨调试流程，对网络协议开发者有重要参考价值。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">连接初始阶段严重丢包导致 CUBIC 算法无法恢复拥塞窗口。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 约 60%的测试在 10 秒超时内未完成，且拥塞窗口毫无增长迹象，表明算法陷入死锁。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">根因是空闲时间计算方式触发无休止恢复循环。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从上次发送数据时计算空闲时间，在高丢包慢启动阶段传输入字节归零后触发空闲期优化，使状态始终停留在恢复状态。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">通过对比 Reno 算法缩小问题范围。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Reno 算法测试 100%通过，排除通用拥塞控制问题，将定位锁定在 CUBIC 的特定实现上。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">一行代码修复：将空闲时间计算起点改为收到最后一个 ACK。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 这一改动打破了恢复循环，使拥塞窗口正常扩大，测试通过率恢复 100%。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">这是一个圆满的结局：一个（几乎）仅需一行代码的优雅的修复方案，成功打破了这一循环。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">（1）如果没有数据包丢失，则提高发送速率（即提高带宽利用率）；
+（2）如果发生数据包丢失，那么基于丢包率的算法就会认为已经超过网络容量，发送方必须进行退避（即降低带宽利用率）。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">84</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHubDaily(@GitHub_Daily)</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHubDaily</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">81</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">335</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1735</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Code Audit</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agents</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Security</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Open Source</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">QUIC</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">拥塞控制</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Cloudflare</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Rust</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CUBIC</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2074033118345101418?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/4781e1e6?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2074033118345101418?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/4781e1e6?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
