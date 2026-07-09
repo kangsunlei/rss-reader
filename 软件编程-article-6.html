@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>grok build 简单心得（和 claude code 对比）</title>
+        <title>当 AI 进入推荐系统：从“推什么”到“怎么选”</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>grok build 简单心得（和 claude code 对比）</h2>
-        <p>7/7/2026, 9:49:44 AM</p>
+        <h2>当 AI 进入推荐系统：从“推什么”到“怎么选”</h2>
+        <p>7/8/2026, 12:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文分享 Grok Build 的使用心得，对比 Claude Code，指出其模型能力尚可但 TUI 体验差、工程习惯理解弱，建议当 CLI 使用。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探索在推荐系统排序之后，利用大模型构建游戏理解与表达层，将推荐从“推什么”推进到“帮用户看懂差异、完成选择”。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者为完成优化画图 prompt 的任务，试用 Grok Build 并与 Claude Code 对比。主要发现：Grok Build 调用的模型文字输出尺度比 Claude 大，但图片生成限制严格；意图理解能力尚可，但对用户工程习惯的理解较弱，常放错文件位置；TUI 界面设计反人类，输出区小且历史记录被清除，无法回滚；Ctrl+C 终止不灵敏。结论是 Grok Build 更适合作为 CLI 工具使用，其模型能力值得利用，但 TUI 体验糟糕。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章分享了 vivo 互联网产品团队在游戏分发场景下的实践探索。核心问题是：推荐排序已足够精准，但用户面对多款相似游戏时仍难以抉择。团队没有重做推荐系统，而是在排序之后补上了一层“表达与决策”能力。做法是先利用大模型进行开放式探索，挖掘出传统标签体系缺失的“游戏动机”与“付费机制”等深层信息，再通过人工收敛为闭集 Schema，并辅以工程化兜底（normalize），实现稳定生产。在此基础上，文章深入探讨了大模型对单款游戏底层逻辑的理解上限，并重点介绍了“多游对比”系统如何从一次性的成功走向可配置、可复用的稳定生产管线。最后，文章展示了同一套理解能力在推荐解释、场景化引导等方向的复用潜力，并总结了 AI 的边界、可复用的工程经验以及产品视角的变化。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Grok Build 模型文字输出尺度大，但图片生成限制严格。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 相比 Claude，Grok 的文字输出更开放，但 imggen 仍严防死守，比 Grok imagine API 版还严格。</span>
+                        <strong style="color: #1a365d">推荐系统的瓶颈已从“推得准不准”转向“用户能否看懂差异并做出选择”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在游戏这类高决策成本场景中，排序优化边际收益递减，用户需要的是可解释、可比较的信息来走完选择的最后一步。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">意图理解能力尚可，但对用户工程习惯的理解较弱。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Claude 能快速识别目录结构和命名习惯，而 Grok 常放错文件位置，甚至将应 gitignore 的内容提交到 tracked 目录。</span>
+                        <strong style="color: #1a365d">大模型的价值在于发现信息增量，而工程约束的价值在于稳定输出。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 团队采用“模型放开探索 → 撞出边界 → 人工收敛成 Schema → 规模化生产”的路径，用闭集 Schema 和 normalize 层解决了模型输出不稳定的问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">TUI 设计反人类，输出区小且历史被清除。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> TUI 有过多无意义 padding，输出区仅约 20 行，每次新指令会 flush 历史输出，无法像 Claude Code 那样回滚查看。</span>
+                        <strong style="color: #1a365d">多游对比系统的核心是先锁死“必须产出什么”，再让结构保证产出。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过品类配置（core_dimensions， expression_schema， highlight_priority）驱动模型，确保跨品类对比信息对齐且稳定，避免了复杂化 pipeline 吃掉价值的陷阱。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">建议将 Grok Build 作为 CLI 使用，利用其模型能力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者认为 Grok Build 的模型能力值得利用，但 TUI 体验差，更适合让其他终端白嫖 Grok 模型。</span>
+                        <strong style="color: #1a365d">AI 将“系统结构”本身变成了产品设计的一部分。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 像 core_dimensions、expression_schema 这类配置，既是工程实现，又直接决定了用户看到什么，模糊了传统 PM 与工程、策略与体验的分工边界。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">AI 的边界在于“事实来自数据，表达来自模型”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型只负责理解、归纳和表达，不创造事实或替代排序，这条边界确保了系统的可解释性与可追溯性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">grok build 是设计给「不懂代码只在意结果的小白」，不是「需要 human-in-loop 的程序员」。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">grok build 最好是当 cli 用，让其他终端白嫖 grok 模型。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">排序解决的是“推什么”，它并不负责让用户看懂差异；而当候选池越收越窄，再优化排序的边际收益也越来越小。真正没被接住的那一步，不是“推得准不准”，是“看懂差异、把选择走完”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">自由生成是大模型的能力上限，稳定输出得靠约束。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">复杂化本身会吃掉价值。加 pipeline 不是天然的进步——只有当它产出的东西不比直出版本少、还能稳定复现，才算进步。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 没让产品设计变简单，它把“系统结构”本身变成了产品的一部分。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +66,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">75</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">V2EX</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">383394544</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">406</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">30 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7438</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具对比</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 产品与应用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">使用心得</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI产品与应用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推荐系统</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI工作流</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产品管理</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/47938958?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/eaf67964?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/47938958?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/eaf67964?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
