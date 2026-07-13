@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>arXiv：高阶网络的统一框架</title>
+        <title>万字复盘：从模型到可用 Agent，WorkBuddy 的 Harness 工程是怎么做的？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>arXiv：高阶网络的统一框架</h2>
-        <p>7/11/2026, 6:30:00 AM</p>
+        <h2>万字复盘：从模型到可用 Agent，WorkBuddy 的 Harness 工程是怎么做的？</h2>
+        <p>7/12/2026, 6:30:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文系统解读 arXiv 最新综述，系统梳理高阶网络的四大理论体系（集合递归、几何拓扑、张量因子、知识语义），并重点介绍完全高阶图结构（CHGS）这一统一框架，为复杂系统建模与 AI 应用提供新视角。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文从产品视角系统拆解 Agent 运行机制，重点阐述 Context Engineering 与 Harness Engineering 如何让 Agent 从能执行任务到稳定可控地完成任务。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是对 arXiv 综述《Representing Higher-Order Networks》的深度解读，系统梳理了高阶网络的四大理论体系。第一部分「集合与递归」从超图出发，通过超超图、元图、嵌套超图等结构实现顶点和边的递归扩展；第二部分「几何、拓扑与复形」引入单纯复形、胞腔复形、路径复形与层论，从拓扑视角刻画高维空间结构；第三部分「因子化与张量」引入因子图、多层网络、时序网络与张量网络，支持动态建模；第四部分「语义与知识」引入类型论与范畴论，实现语义富集与可组合性。文章核心贡献是介绍完全高阶图结构（CHGS）作为统一元框架，通过 8 个可选层（上下文层、关系签名层、操作签名层、解释层、等式层、属性层、权重层、闭包层）的自由组合，容纳超图、拓扑复形、张量网络、知识图谱等多种模型，为复杂系统分析和 AI 建模提供统一视角。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章由腾讯 WorkBuddy 策略产品经理 Anne 撰写，分为基础概念与工程实践两部分。前半部分清晰定义了大语言模型作为无状态函数的抽象，并逐一解释工具调用、MCP、Skill、Plugin 四个概念及其关系，强调模型只承担语言理解与推理，工具接入、上下文组织、权限边界等需由产品侧工程实现。后半部分聚焦 WorkBuddy 的实践：Context Engineering 包含写入、选择、检索、压缩、隔离五类动作，追求相关而非堆 token；Memory 系统将长期信息分为五类，并明确不将程序性记忆纳入长期记忆，而是沉淀为可版本化的 Skill；还讨论了渐进式加载、意图识别、Prompt Cache 等工程手段。文章以一次完整任务的信息流串联所有概念，展示了 Agent 从意图识别到多轮 ReAct 循环的全过程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">传统图网络难以建模多元交互与层级嵌套，高阶网络理论应运而生。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 真实系统中普遍存在多体交互（如科研团队协作、蛋白质反应），需要超图等高阶结构来直接表示多元关系。</span>
+                        <strong style="color: #1a365d">模型是无状态的函数，Agent 的可靠性依赖产品侧的工程机制。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型只提供语言理解与推理，工具接入、上下文组织、权限校验、结果验证等均由产品在模型外部实现，System Prompt 只能引导不能强制。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">高阶网络理论可归纳为四大体系：集合递归、几何拓扑、张量因子、知识语义。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 四大体系分别从对象扩展、空间结构、动态计算、语义组合四个维度丰富了图论的表达能力。</span>
+                        <strong style="color: #1a365d">Context Engineering 追求相关、准确、及时，而非单纯堆 token。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过写入、选择、检索、压缩、隔离五类动作，确保每次模型决策前只看到当前所需信息，降低上下文成本并提高判断准确度。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">完全高阶图结构（CHGS）是统一元框架，通过 8 个可选层自由组合。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CHGS 容纳了超图、单纯复形、张量网络、知识图谱等多种模型，读者可根据需求选择配置不同层级，实现精确建模。</span>
+                        <strong style="color: #1a365d">Memory 系统需做准入判断，程序性记忆不应纳入长期记忆。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用户事实、偏好等陈述性记忆可注入上下文，但程序性记忆（做事方法）应沉淀为可版本化、可评审的 Skill，避免局部经验误升为通用策略。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">CHGS 天然适配程序合成与 AutoML，可自动选取高阶网络配置。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于 CHGS 完全形式化和模块化，可用于自动对复杂系统应用高阶网络，降低建模门槛。</span>
+                        <strong style="color: #1a365d">工具、MCP、Skill、Plugin 解决不同层次的能力组织问题。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工具调用是基础协议，MCP 标准化外部系统接入，Skill 沉淀任务流程，Plugin 打包组合能力，设计外接能力时需按边界、更新频率、权限风险等选择合适形态。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">渐进式加载与意图识别共同控制上下文规模。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 默认只暴露工具名称和简介，按任务需要逐步加载完整定义；意图识别先选方向，渐进式加载再按需展开，避免一次性铺开所有能力。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">CHGS 将超图、拓扑复形、张量网络、知识图谱等多种模型纳入同一理论体系，为高阶网络的表示、推理与学习提供了统一视角。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">通过将层级嵌套的语义（集合论）与高维拓扑的形变（几何学）整合，单纯超超复形为描述极度复杂的社会组织、生物细胞集群或宇宙大尺度结构提供了数学工具。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型决定上限、上下文和 harness 决定能否落地。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Context Engineering 追求相关、准确、及时，不是单纯堆 token。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">System Prompt 只能引导，不能强制。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +66,32 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">85</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">集智俱乐部</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">集智俱乐部</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Founder Park</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Founder Park</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">37 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9248</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">73 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">18234</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">复杂网络</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">高阶网络</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">图神经网络</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">拓扑学</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">超图</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具调用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP协议</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent工程</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/940e0ed7a8?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/5044bf45a4?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/940e0ed7a8?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/5044bf45a4?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=3">返回目录</a>
     </body>
     <script>
