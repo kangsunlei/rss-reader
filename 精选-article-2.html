@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>万字复盘：从模型到可用 Agent，WorkBuddy 的 Harness 工程是怎么做的？</title>
+        <title>当一个年轻人空降：改造腾讯混元的 300 天</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>万字复盘：从模型到可用 Agent，WorkBuddy 的 Harness 工程是怎么做的？</h2>
-        <p>7/12/2026, 6:30:00 AM</p>
+        <h2>当一个年轻人空降：改造腾讯混元的 300 天</h2>
+        <p>7/13/2026, 1:55:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文从产品视角系统拆解 Agent 运行机制，重点阐述 Context Engineering 与 Harness Engineering 如何让 Agent 从能执行任务到稳定可控地完成任务。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度复盘了 OpenAI 前研究员姚顺雨空降腾讯后，如何通过重构组织、回归基础数据与 Infra，试图带领腾讯混元大模型实现从落后到追赶第一梯队的变革历程。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章由腾讯 WorkBuddy 策略产品经理 Anne 撰写，分为基础概念与工程实践两部分。前半部分清晰定义了大语言模型作为无状态函数的抽象，并逐一解释工具调用、MCP、Skill、Plugin 四个概念及其关系，强调模型只承担语言理解与推理，工具接入、上下文组织、权限边界等需由产品侧工程实现。后半部分聚焦 WorkBuddy 的实践：Context Engineering 包含写入、选择、检索、压缩、隔离五类动作，追求相关而非堆 token；Memory 系统将长期信息分为五类，并明确不将程序性记忆纳入长期记忆，而是沉淀为可版本化的 Skill；还讨论了渐进式加载、意图识别、Prompt Cache 等工程手段。文章以一次完整任务的信息流串联所有概念，展示了 Agent 从意图识别到多轮 ReAct 循环的全过程。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章通过对腾讯混元大模型负责人姚顺雨的深度观察，揭示了腾讯在 AI 浪潮下的组织变革与技术转型。文章详细梳理了混元此前面临的困境：数据污染、算力基础薄弱、组织架构割裂以及过度追求榜单成绩。姚顺雨通过“守正出奇”的策略，强调回归基础数据质量与重构 Infra（基础设施），并试图打破腾讯内部的“部门墙”，建立模型与产品“联合设计（Co-design）”的新模式。文章不仅探讨了技术路径的选择，更深入剖析了大公司在面对颠覆性技术变革时，如何处理组织惯性、资源分配与决策权力的复杂博弈。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">模型是无状态的函数，Agent 的可靠性依赖产品侧的工程机制。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型只提供语言理解与推理，工具接入、上下文组织、权限校验、结果验证等均由产品在模型外部实现，System Prompt 只能引导不能强制。</span>
+                        <strong style="color: #1a365d">混元面临的核心问题是“基础不牢”与“数据污染”。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 早期的混元存在数据标注质量差、过度追求榜单成绩导致数据污染、以及 Infra 基础建设不足等问题，导致模型在真实场景表现不佳。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Context Engineering 追求相关、准确、及时，而非单纯堆 token。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过写入、选择、检索、压缩、隔离五类动作，确保每次模型决策前只看到当前所需信息，降低上下文成本并提高判断准确度。</span>
+                        <strong style="color: #1a365d">姚顺雨推行“守正出奇”的训练哲学。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 他主张先回归常识，把最基础的预训练、强化学习和 Infra 建设做对，而非盲目追求参数规模或新奇架构，强调实用性与成本效益。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Memory 系统需做准入判断，程序性记忆不应纳入长期记忆。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 用户事实、偏好等陈述性记忆可注入上下文，但程序性记忆（做事方法）应沉淀为可版本化、可评审的 Skill，避免局部经验误升为通用策略。</span>
+                        <strong style="color: #1a365d">试图通过“联合设计”打破大公司的部门墙。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过让模型团队与产品团队（如元宝、WorkBuddy）深度绑定，实现模型与业务场景的协同开发，以解决模型与产品割裂的问题。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">工具、MCP、Skill、Plugin 解决不同层次的能力组织问题。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 工具调用是基础协议，MCP 标准化外部系统接入，Skill 沉淀任务流程，Plugin 打包组合能力，设计外接能力时需按边界、更新频率、权限风险等选择合适形态。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">渐进式加载与意图识别共同控制上下文规模。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 默认只暴露工具名称和简介，按任务需要逐步加载完整定义；意图识别先选方向，渐进式加载再按需展开，避免一次性铺开所有能力。</span>
+                        <strong style="color: #1a365d">大公司变革的本质是与组织惯性的对抗。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管获得了高层授权，但如何处理内部资源分配、应对决策层干预以及克服既有的组织记忆，仍是混元能否成功的关键。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">模型决定上限、上下文和 harness 决定能否落地。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Context Engineering 追求相关、准确、及时，不是单纯堆 token。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">System Prompt 只能引导，不能强制。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">做大模型没有魔法，也不要相信别人有魔法。真正难的是把最基础、确定能做对的事情都做对。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">神经科学里有个理论，大脑学会新东西的前提，是修剪掉一部分旧的连接。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -66,32 +63,32 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Founder Park</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Founder Park</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">晚点LatePost</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500"> 晚点LatePost</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">73 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">18234</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">39 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">9501</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具调用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP协议</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent工程</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">腾讯</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">混元大模型</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">姚顺雨</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">组织变革</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 商业化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/5044bf45a4?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/c2fec5d26e?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/5044bf45a4?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/c2fec5d26e?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
