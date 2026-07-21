@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>NadMesh 僵尸网络利用 Shodan 劫持暴露的 AI 与 MCP 基础设施</title>
+        <title>15 年历史的 NGINX 漏洞可致 Worker 崩溃并实现远程代码执行</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>NadMesh 僵尸网络利用 Shodan 劫持暴露的 AI 与 MCP 基础设施</h2>
-        <p>7/19/2026, 10:00:00 AM</p>
+        <h2>15 年历史的 NGINX 漏洞可致 Worker 崩溃并实现远程代码执行</h2>
+        <p>7/20/2026, 8:37:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">NadMesh 僵尸网络利用 Shodan API 自动化侦察暴露的 AI 服务，通过超过 20 种漏洞利用向量感染基础设施，并窃取高价值的 AI 凭证与模型令牌。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">NGINX 存在一个长达 15 年的严重堆溢出漏洞 (CVE-2026-42533)，可能导致工作进程崩溃或远程代码执行，建议用户立即升级。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细分析了 NadMesh 僵尸网络的技术细节，该网络自 2026 年 7 月初以来利用 Shodan API 自动化侦察暴露的 AI 服务（如 ComfyUI、Ollama、n8n），将获取的 IP 注入扫描队列。它采用 5 阶段工业化攻击链，包括集中控制、多态二进制构建和主动投递，针对 Kubernetes、Docker API、Redis 和遗留系统等超过 20 个向量。恶意软件窃取 AWS 密钥、Kubernetes 令牌和 AI 模型令牌，并使用 Garble 混淆和蜜罐规避来逃避检测。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文报道了 NGINX 中一个严重的堆缓冲区溢出漏洞 CVE-2026-42533。该漏洞存在于 NGINX 的脚本引擎中，特别是在使用正则表达式的 map 指令时，由于其“双遍评估”机制（第一遍测量缓冲区大小，第二遍进行写入）在处理捕获状态时存在逻辑缺陷，导致第二遍写入时会覆盖第一遍测量时使用的状态，从而引发缓冲区溢出。该漏洞影响范围极广，从 2011 年起的几乎所有版本均受影响。攻击者可通过构造特定 HTTP 请求触发拒绝服务（DoS）或在特定条件下实现远程代码执行（RCE）。文章详细分析了技术原理，提供了官方修复版本建议、临时缓解措施（使用命名捕获）以及研究人员对漏洞深层设计缺陷的洞察。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">利用 Shodan API 优先扫描暴露的 AI 服务。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ai_harvest.py 脚本定位 ComfyUI、Ollama 等特定端口，将 IP 注入扫描队列，避免在无效地址空间上浪费带宽。</span>
+                        <strong style="color: #1a365d">漏洞成因在于脚本引擎的双遍评估机制存在逻辑缺陷。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在处理 map 指令时，第一遍测量缓冲区大小时使用的捕获状态，在第二遍写入时会被正则评估覆盖，导致分配的缓冲区过小，从而引发溢出。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">采用 5 阶段工业化攻击链与 Web 管理面板。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 包含情报收集、集中控制、任务供给、二进制构建与投递，具备转化漏斗分析等企业级功能，远超传统恶意代码特征。</span>
+                        <strong style="color: #1a365d">受影响版本跨度极大，可追溯至 2011 年。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从 NGINX 0.9.6 到 1.31.2 的版本均受影响，这与 2011 年 map 指令开始支持正则表达式的时间点吻合。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">窃取高价值 AI 凭证与内部工具配置。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 提取 AWS 密钥、Bedrock 凭证、Kubernetes 令牌及本地 AI 模型令牌，威胁情报价值高于被攻陷的计算资源本身。</span>
+                        <strong style="color: #1a365d">除了拒绝服务，该漏洞还具备实现远程代码执行（RCE）的潜力。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 虽然 F5 强调需绕过 ASLR，但研究人员指出该漏洞本身可能提供绕过手段，在特定构建环境下可实现高危攻击。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">官方建议立即升级，并提供了临时缓解方案。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 应升级至 1.30.4 或 1.31.3 等修复版本；若无法立即升级，可尝试将正则 map 中的编号捕获替换为命名捕获。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">NadMesh 将自主扫描、超过 20 种独特漏洞利用向量以及基于 Shodan 的情报收集整合成一个闭环系统，其运营者称之为'n4d mesh 控制器'。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一旦发现暴露的服务，恶意软件会自动将获取的 IP 地址以最高优先级注入其扫描队列。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所有恢复的数据都被传回一个中央仪表盘，该仪表盘跟踪汇总的证书数量、活跃的 MCP 漏洞以及可逃逸的 Docker 主机------对于运营者而言，这些威胁情报比被攻陷的计算资源本身更具价值。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">阅读 F5 安全公告的人可能会合理地认为，在默认系统上该漏洞仅导致拒绝服务。但事实并非如此。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">共同弱点是信任自身测量的双遍设计。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,28 +66,28 @@
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">87</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2007</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2154</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">恶意软件</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">僵尸网络</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Shodan</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">MCP</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">NGINX</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">CVE-2026-42533</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">堆溢出</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">远程代码执行</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络安全</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/54bcc89f0a?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/3a802e4339?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/54bcc89f0a?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAAowSURBVO3BQY4YybLgQDJR978yR0tfBZDIKKn/GzezP1hrXfGw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWu+eEjlb+p4kTljYpJ5YuK36QyVUwqU8WJyhcVX6hMFZPK31TxxcNa65qHtdY1D2uta364rOImld+kMlW8oXKi8kbFGypTxaRyUjGpTBWTyonKVDGpTBVvVNykctPDWuuah7XWNQ9rrWt++GUqb1S8oTJVTCpTxaTyRcVJxRsqU8UbKlPFpDKpfKHyL6m8UfGbHtZa1zysta55WGtd88P/GJUvVP6liknljYqTihOVNyq+UJkq/i97WGtd87DWuuZhrXXND/+fq/hCZao4UTlR+UJlqjhROVGZKiaVqWJS+f/Jw1rrmoe11jUPa61rfvhlFX9TxYnKScWkMlWcqEwVU8WkMlW8oTJVTConFZPKVHFScVLxmyr+Sx7WWtc8rLWueVhrXfPDZSr/JSpTxaRyU8WkMlW8oTJVfFExqUwVk8pUMalMFZPKVDGpTBUnKv9lD2utax7WWtc8rLWusT/4P0zlX6qYVE4qJpWp4g2Vk4pJ5YuKSWWqOFGZKv6XPKy1rnlYa13zsNa6xv7gA5WpYlK5qeINlTcqJpWpYlKZKiaV/5KKv0nlpOJE5aaK3/Sw1rrmYa11zcNa6xr7gw9UTiomlZOKE5Wp4g2VqWJSOal4Q2WqOFG5qeJE5Y2Km1SmijdUTiomlZOKLx7WWtc8rLWueVhrXfPDRxUnKlPFGyonKm9U/CaVN1SmihOVN1SmijcqJpWp4kTlDZU3Kk5UTipuelhrXfOw1rrmYa11jf3BL1I5qfhNKm9U3KRyUvGGyhcVk8pUMan8popJZao4UXmj4jc9rLWueVhrXfOw1rrmh49Upoo3VKaKSeWLihOVm1S+UPmbKiaVqeINlaliUjmpeKPiC5Wp4ouHtdY1D2utax7WWtf88FHFpDJVTCpvVEwqJxWTyknFpHJSMalMFScqJxWTylRxojJVTCpvqJxUvFExqZxUvKEyVUwqv+lhrXXNw1rrmoe11jX2B79IZao4Ufmi4iaVqWJSualiUvlNFZPKVPGFyknFicpUcaLyRsVND2utax7WWtc8rLWusT/4QOWLii9UpooTlaniC5Wp4kRlqnhD5aTiROWkYlKZKiaVqWJSmSomlZOKSeU3VXzxsNa65mGtdc3DWusa+4NfpHJTxaRyUnGiclIxqdxUMamcVEwqJxVvqEwVk8pU8YbKVHGTyhcVXzysta55WGtd87DWuuaH/5iKE5Wp4g2VqeJEZaqYVE4qJpVJZap4o2JSeUPlRGWqmFSmijdUTipuqphUbnpYa13zsNa65mGtdY39wQcqU8WJym+qOFGZKiaVqWJS+S+rmFSmiknlpOINlTcqTlSmihOVNypuelhrXfOw1rrmYa11zQ8fVbxRcaIyVfxLKicVk8obFZPKVDGpTBW/SeWNihOVNypOVN6o+E0Pa61rHtZa1zysta6xP/hA5aTiROWmihOVqWJSmSreUPkvqXhD5Y2KSWWqOFH5TRWTylRx08Na65qHtdY1D2uta374j6l4Q+ULlaniRGWqOKmYVE4q3lD5QuWmihOVk4o3VE5UpopJZar44mGtdc3DWuuah7XWNT98VPGGyhsqU8UXFScqU8VU8UXFpHKiMlWcVEwqU8UbFZPKpDJVTCpfqEwVJxWTyqQyVdz0sNa65mGtdc3DWuuaHy5TOamYVE4q/iWVNypuqviiYlJ5Q2WqmFROKk5UTireUHlDZar44mGtdc3DWuuah7XWNfYH/5DKb6qYVKaKSeWk4kRlqphU/qWKE5U3Kk5U/qWKv+lhrXXNw1rrmoe11jU/XKZyUvFGxRcqU8VvqphUbqqYVKaKE5Wp4jdVvKHyRsWkMqlMFZPKVPHFw1rrmoe11jUPa61rfvhI5YuKE5Wp4kTlDZWp4g2VqeKkYlKZKiaVk4oTlaliUjmpmFTeUJkqJpWp4jepTBU3Pay1rnlYa13zsNa6xv7gH1I5qXhD5Y2KSeWkYlI5qbhJ5Y2KE5WpYlKZKiaVLypOVKaKN1ROKm56WGtd87DWuuZhrXXNDx+pTBWTyknFicoXFV9UTCr/UsWk8kXFpDJVTCpTxb+kMlVMFScqU8UXD2utax7WWtc8rLWu+eEylZOKE5WpYlI5qZhU3qiYVG5SOamYVP4llaniv6RiUpkq/qaHtdY1D2utax7WWtf8cFnFpDKpnFRMKlPFicpvqnhDZap4o+INlUnlpOImlZOKSWWqmComlaniDZWp4qaHtdY1D2utax7WWtf88FHFpDJVnKhMKlPFFxUnKpPKVDGpTBVfqEwVk8pNFTepTBUnKlPFicoXKicqU8UXD2utax7WWtc8rLWusT/4RSpvVEwqb1TcpPJGxRsqU8UbKicVX6icVEwqJxVfqJxU/EsPa61rHtZa1zysta754TKVk4pJ5aTiROVEZao4UZkqJpWpYlJ5o2JSeaNiUvlC5aRiUpkqTlROKiaVqeINlTcqvnhYa13zsNa65mGtdY39wT+kMlVMKlPFpDJVvKFyU8WkMlWcqJxUnKicVEwqU8WJyhcVk8pJxYnKVHGiMlXc9LDWuuZhrXXNw1rrGvuDi1S+qPhNKm9UTCpvVEwqJxUnKicVX6jcVDGpnFRMKicVk8obFTc9rLWueVhrXfOw1rrG/uADlaniROWkYlKZKt5Q+ZsqTlT+pYo3VKaKE5WTiknlpooTlanipoe11jUPa61rHtZa19gf/B+mMlV8ofJFxYnKScUbKicVb6i8UfGGyknFGypvVEwqU8UXD2utax7WWtc8rLWu+eEjlb+pYqp4Q+Wk4kRlqphUpoovVKaKk4pJZaqYVKaKN1SmiknlC5Wp4qRiUplUpoqbHtZa1zysta55WGtd88NlFTepnKh8UTGpvKEyVdxU8YbKicqJyknFGxWTyhsVb6j8Sw9rrWse1lrXPKy1rvnhl6m8UfFFxRsqb1RMKm9UTCqTyhcVk8pU8YbKpDJVnKi8oXJTxYnKVPHFw1rrmoe11jUPa61rfvgfpzJVTBVvqEwVJypTxUnFGyqTylQxqfwmlaniC5WbVH7Tw1rrmoe11jUPa61rfvgfo/KFylRxonJScVJxojJVnFRMKicVb6i8ofJFxRsqb1Tc9LDWuuZhrXXNw1rrmh9+WcVvqjhRualiUvlCZap4o+KkYlKZVE4qTlSmii9UvqiYVKaK3/Sw1rrmYa11zcNa65ofLlP5m1Smir+p4g2VqeINlZOKSWWqOFE5qThRuUllqphUTiomlanipoe11jUPa61rHtZa19gfrLWueFhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtf8P2OhU+yfAQiRAAAAAElFTkSuQmCC" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/3a802e4339?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
