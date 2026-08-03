@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>“榨”出硅的极限：怎么让 GPU 不“闲着”？</title>
+        <title>全球大学，开始集体向中国迁移？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>“榨”出硅的极限：怎么让 GPU 不“闲着”？</h2>
-        <p>8/1/2026, 7:49:00 AM</p>
+        <h2>全球大学，开始集体向中国迁移？</h2>
+        <p>8/2/2026, 5:16:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文结合专家访谈与行业数据，系统拆解 AI Infra 的四层架构，解释 GPU 利用率低下的原因，并剖析 KV Cache 复用、连续批处理、PD 分离、投机采样等关键技术如何把算力效率榨到极限。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">全球高校因财政压力和亚洲教育市场崛起，纷纷在中国设立中外合作办学项目，而中国高校则将其转化为引进国际前沿技术和人才的战略平台。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">在推理需求爆发与 GPU 短缺并存的背景下，AI Infra 成为新的千亿级赛道。文章从谷歌、OpenAI 自研芯片的造芯大战切入，指出相比继续采购硬件，提升已部署 GPU 的利用率是更现实的方向。作者给出 AI Infra 的四层架构：能源基础设施、计算硬件、系统软件与服务编排，并用 CMU 对 756 块 GPU 的 31 天遥测数据说明 GPU 存在大量执行空转。随后围绕四个核心问题展开：哪些计算不用重做、哪些等待可消除、哪些算力没吃满、哪些资源没协同，逐一介绍了 SGLang 的 RadixAttention（KV Cache 复用、缓存感知调度与淘汰机制）、连续批处理、Prefill/Decode 分离、低精度计算、投机采样，以及面向强化学习后训练的框架 Miles。文章结合 RadixArk 团队与数据中心专家的访谈，展望 AI Infra 作为 AI 时代操作系统的角色，并认为 Infra 公共化将显著降低从事 AI 的门槛。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章指出，受签证政策收紧、地缘政治紧张及生活成本上升的冲击，许多海外大学（尤其是英国、澳洲院校）出现财政赤字，因而将中国视为重要的收入来源和合作市场。与此同时，亚洲高等教育需求快速增长，预计到 2030 年全球新增高等教育学生中有 79%来自亚洲，这促使西方高校重新审视并加大在中国的布局。在中国一方，新一轮中外合作办学呈现明显转变：理工类专业占比升至三分之二，985 高校侧重打造标杆实体学院并开展科研合作，211 高校则承接高层次人才培训，整体从过去的“留学平替”转向“产业攻坚”。此外，这些合作项目正成为中国吸引和培养国际型人才的重要渠道，有助于构建全球教育枢纽并留住高端人才，符合国家建设具有全球影响力的重要教育中心的战略目标。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,20 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">GPU 看似繁忙，实际大量时间在空转等待。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> CMU 对 756 块 GPU 的 31 天遥测显示，近 20% 执行时间和约 11% 能耗浪费在等待上，推理场景的空转浪费更严重。</span>
+                        <strong style="color: #1a365d">海外大学财政困难促使其看向中国合作办学以弥补收入缺口。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 受签证收紧、地缘政治敏感度上升和生活成本危机影响，英国、澳洲等高校出现亏损，中国成为重要的收入来源和市场，因而推动中外合作办学项目快速扩容。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI Infra 优化重心在系统软件与服务编排两个软层。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 能源与硬件层改造周期长且优化空间见顶，软层本质是工程与算法问题，优化后可带来数倍性能提升。</span>
+                        <strong style="color: #1a365d">亚洲高等教育需求快速增长，尤其是中国和印度，使得西方高校重新审视亚洲市场并加大在中国的布局。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 泰晤士高等教育数据显示亚洲高校上榜数量创新高，预计 2030 年全球新增高等教育学生中 79%来自亚洲，这为具有全球野心的大学提供了不可忽视的战略市场。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">SGLang 用 RadixAttention 实现跨请求的 KV Cache 复用。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过基数树组织缓存、缓存感知调度把相似请求排在一起、淘汰低价值缓存，省掉重复计算的推理税。</span>
+                        <strong style="color: #1a365d">中国高校在新一轮中外合作中侧重理工类和“卡脖子”领域，实现从“留学平替”到“产业攻坚”的转变。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新增项目中理工类占三分之二，985 高校负责打造标杆实体学院并推进联合实验室、课题和师资互访，211 高校则承接高层次人才培养，整体更聚焦产业需求和科研合作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">连续批处理与 PD 分离是消除 GPU 等待的关键手段。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 连续批处理让 GPU 保持满载，吞吐可提升 2-4 倍；Prefill/Decode 拆到不同 GPU 互不拖累，DeepSeek 已采用。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI Infra 公共化将降低从事 AI 的门槛。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> SGLang 等开源引擎实现新模型 day-0 支持并跨硬件运行，像操作系统一样连接模型与芯片，让团队不必自建基础设施。</span>
+                        <strong style="color: #1a365d">中外合作办学正成为中国吸引和培养国际型人才的重要渠道，有助于构建全球教育枢纽和留住高端人才。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 例如港大在张江的双城模式、西交利物浦和宁波诺丁汉的本土化培养，以及来华留学生人数持续增长，表明中国正从单向输出转向双向流动的人才格局。</span>
                     </li>
             </ol>
         </div>
@@ -58,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">所以，当 AI Infra 能力从少数前沿模型巨头的独家资源，变成任何一家创业公司都能直接调用的公共品，从事 AI 工作的门槛会被显著降低。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">推理框架正越来越像 AI 时代的“操作系统”，成为连接模型与芯片的关键一层。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">你以为 GPU 很忙，其实大多数时候，GPU 是很“闲”的。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">业界现在把它称为“推理税”，这意思大概跟智商税也差不太多，反正都是白花的钱。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">众多海外大学在本土赚不到钱了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">中外合作办学的底层逻辑，正在被彻底重写。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -66,31 +63,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">90</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">硅谷101</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">硅谷101</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">正和岛</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">正和岛</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">商业科技</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">42 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">10290</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">16 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3929</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Infra</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型训练与推理</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GPU</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推理引擎</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">中外合作办学</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">教育国际化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">产业攻坚</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人才枢纽</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">亚洲教育市场</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/b466a8df2d?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/1178a69154?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/b466a8df2d?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/1178a69154?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=3">返回目录</a>
     </body>
     <script>
