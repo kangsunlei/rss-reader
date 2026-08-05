@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>给 Codex 和 Claude Code 接入 DeepSeek-V4-Flash，夯爆了！</title>
+        <title>别让 Agent 每次都重新开始</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>给 Codex 和 Claude Code 接入 DeepSeek-V4-Flash，夯爆了！</h2>
-        <p>8/3/2026, 8:07:00 AM</p>
+        <h2>别让 Agent 每次都重新开始</h2>
+        <p>8/4/2026, 6:33:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍如何将 DeepSeek-V4-Flash 模型接入 Codex 和 Claude Code，提供配置步骤、模型性能对比及视觉能力扩展方法，强调其性价比与降低 AI 编程门槛的优势。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析 AI Agent 在研发场景中面临的记忆问题，介绍腾讯开源项目 TencentDB Agent Memory 的四层解决方案：定义可复用资产、构建资产目录、实现记忆召回与治理，以及开源评测验证，旨在让 Agent 能够继承团队经验而非每次重新开始。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章围绕 DeepSeek-V4-Flash 的 API 公测展开，首先对比模型性能（Terminal-Bench 82.7 分超 V4-Pro），强调其低价策略（输入 1 元/百万 token）。主体部分分步骤讲解接入 Codex 和 Claude Code 的两种方法：1. 官方一键脚本配置（支持 Responses API，无需协议转换）；2. 手动修改配置文件。补充了通过 CC Switch 工具实现 Claude Code 的模型切换，以及为 DeepSeek 增加视觉能力的 Vision Skill 安装方法。文章以实战教程为主，附赠免费开源教程链接。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章指出 AI Agent 在真实研发中面临每次对话如重新开始的痛点，进而探讨腾讯开源项目 TencentDB Agent Memory 的解决方案。该方案通过四类记忆资产（Chat Memory、LLM-Wiki、Code Graph、Skill）将团队经验沉淀为可复用单元，并由 Memory Core 与 Proxy 构建资产目录实现治理与精准召回。项目已于 2026 年 7 月开源发布 2.0.0 beta 版本，包含完整工具链与 SDK，公开评测显示记忆功能显著提升任务成功率。文末呼吁开发者试用并参与开源项目。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">DeepSeek-V4-Flash 性能突破与性价比优势</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型在 Terminal-Bench 测试中得分 82.7（超 V4-Pro 72.1），输入成本仅 1 元/百万 token，输出 2 元/百万 token，强调低价策略降低使用门槛。</span>
+                        <strong style="color: #1a365d">AI Agent 缺乏记忆导致重复劳动与经验无法复用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当前 Agent 每次对话独立进行，无法继承历史决策、代码理解或团队经验，导致重复推理与低效协作。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Codex 接入的官方脚本与手动配置方法</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 提供两种配置方式：1. 官方脚本自动化配置（支持 Responses API）；2. 手动编辑 models.json 和 config.toml 文件，详细说明路径与参数设置。</span>
+                        <strong style="color: #1a365d">TencentDB Agent Memory 构建四类记忆资产进行经验沉淀。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Chat Memory、LLM-Wiki、Code Graph 与 Skill 四类资产，结构化存储任务背景、项目知识、代码关系与团队方法，形成可复用经验库。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Claude Code 的模型切换与视觉扩展方案</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过开源工具 CC Switch 实现 Claude Code 的模型切换，支持 DeepSeek-V4-Flash；补充视觉能力扩展方法，结合通义千问等多模态模型解决 DeepSeek 无图像理解问题。</span>
+                        <strong style="color: #1a365d">资产目录与 Proxy 机制实现记忆的精准治理与调用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 资产目录定义资产身份、范围、权限与生命周期管理，Proxy 根据任务需求动态调用相关记忆，避免上下文噪声与过期信息干扰。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">开源评测验证记忆结构有效性。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 项目开源后通过 PersonaMem 测试，记忆功能使 Agent 回答准确率从 48% 提升至 76%，证明架构可行且提升效率。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">学习 AI 编程的门槛真的低到不能再低了</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">工具和模型，都不该成为你学习路上的拦路虎</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 原生研发工具最大的价值，不是让 Agent 每次都更努力地重新开始，而是让它从团队已经知道的地方继续往前走。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">记忆不是给 Agent 加一个更大的知识库，而是要让有效状态可以跨 session、跨 Agent、跨框架继承。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -60,31 +63,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">程序员鱼皮</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">程序员鱼皮</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">89</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4079</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1807</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型集成</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Codex</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Code</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepSeek</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">记忆机制</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">研发工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">团队协作</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/fe6ab09f2d?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/26165c2b6b?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/fe6ab09f2d?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/26165c2b6b?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
