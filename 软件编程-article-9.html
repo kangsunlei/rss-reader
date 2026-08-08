@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>外网跟着玩疯了，只因 Karpathy 做了个《指环王》实验。</title>
+        <title>UniRL：统一多模态 RL 框架的 2.4X 端到端性能优化实践｜AICon 深圳</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>外网跟着玩疯了，只因 Karpathy 做了个《指环王》实验。</h2>
-        <p>8/6/2026, 5:20:00 AM</p>
+        <h2>UniRL：统一多模态 RL 框架的 2.4X 端到端性能优化实践｜AICon 深圳</h2>
+        <p>8/7/2026, 7:52:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文汇总了开发者们在 Andrej Karpathy 的启发下，利用 Claude Opus 5 通过 Three.js 等工具将文本直接转化为 3D 动画和可玩世界的系列实验案例。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍腾讯 UniRL 框架在多模态强化学习中的架构设计、FalconGEMM 优化、训推一致性及异步引擎，实现 2.4X 端到端性能提升。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章报道了由 Andrej Karpathy 发起的「文本转 3D 世界」实验引发的开发者接力浪潮。通过分析《星球大战》、《哈利·波特》等多个实践案例，展示了 AI Agent 如何在数小时内生成数千行 Three.js 代码以构建 3D 场景、镜头和逻辑。文章总结了当前的三条技术路线：程序化电影、长时运行 Agent 以及可玩世界的构建，并指出目前 AI 在自我验收和细节打磨（如穿模、碰撞检测）方面仍是主要短板。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章围绕腾讯多模态 RL Infra 负责人朱文希在 AICon 深圳的演讲《UniRL：统一多模态 RL 框架的 2.4X 端到端性能优化实践》展开，说明 Diffusion RL 与 LLM RL 在基础设施上的三大差异（Rollout compute‑bound、混合调度困难、Reward 异构 bursty），并详细阐述 UniRL 在角色/工作器分离、原子化插件、类单机编程抽象、Bitwise 训推一致性（通过解耦计算与规约、K 维等价分段迭代）、自研 FalconGEMM 算子（代数级优化、Group 融合、缓存感知调度）以及异步训推引擎（Green Context Sharing、统一 Reward 资源池）四大支柱的设计与实测性能（BF16 +15.3%、FP8 最高 36%），同时分享了组织层面的沟通桥梁实践。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI 已能实现从纯文本到复杂 3D 场景的端到端代码生成。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过给模型充足的 token 预算和时间，AI 可以独立完成场景搭建、人物摆放、镜头设计及音效合成，生成数千行可运行的代码。</span>
+                        <strong style="color: #1a365d">Role/Worker 分离架构降低跨模型适配成本。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过配置文件驱动资源拓扑，算法逻辑与物理资源解耦，实现插件式接入，避免为每种「模型×算法」手写 pipeline。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI 3D 生成正从「短片实验」向「连续叙事」与「可玩世界」演进。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实践路径分化为：追求连续剧情的程序化电影、测试模型稳定性的长时运行 Agent，以及结合 MCP 协议构建可交互游戏的尝试。</span>
+                        <strong style="color: #1a365d">FalconGEMM 通过代数级优化和群融合显著提升算子性能。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 O(N³) 降至 O(N^2.807)，通过 Group 并行融合消除冗余访存与写冲突，拆分组并行恢复负载均衡，缓存感知调度提升 L2 命中率，实测 BF16 +15.3%、FP8 最高 36%。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Agent Harness（代理框架）对最终产出质量影响显著。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在相同模型和预算下，任务拆分、上下文管理和检查循环的不同会导致成品质量出现明显差距，模型名称不再是衡量能力的唯一指标。</span>
+                        <strong style="color: #1a365d">Bitwise 训推一致性方案确保低精度训练可收敛。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 解耦计算与规约两阶段，固定拓扑顺序串行累加解决 split‑k 导致的浮点累加顺序不一致；采用 K 维等价分段迭代 + 定序序列化规约应对多维并行切换导致的形状变化。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">缺乏高效的自我验收机制是当前最大的技术瓶颈。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型虽能写大量代码，但无法像人类一样直观地「观看」或「体验」作品来发现并修复穿模、节奏等细节问题。</span>
+                        <strong style="color: #1a365d">异步训推引擎通过 Green Context Sharing 和统一 Reward 资源池实现算力带宽满载。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基于 NV Green Context 动态分配 SM/MEM 资源，让 PE/Tool/Reward/Train/Diffusion 同卡共享；Reward 服务化资源池支持弹性伸缩与 SLA 保障，解决 GPU 利用率低和长尾问题。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">以后看 Agent 能力，只报一个模型名字已经不太够了。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">目前最明显的短板，依然是模型不会高效验收自己的作品。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当人人都能获得强大的模型能力之后，真正的竞争力还剩下什么？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Rollout 是 compute-bound 的密集矩阵运算（难以靠调度优化）</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +63,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">83</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">逛逛GitHub</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500"> 逛逛GitHub</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2631</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3023</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Three.js</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Claude Opus 5</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">程序化生成</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">3D 建模</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多模态 RL</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">强化学习</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 基础设施</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">FalconGEMM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">训推一致性</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/3d6999a52b?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/7daaae7c9e?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/3d6999a52b?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/7daaae7c9e?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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oTJVfPGw1rrmYa11zcNa65offlnFpDJVTCpfVEwqU8WJylRxonJS8UbFpHJS8W9WMalMKv9LHtZa1zysta55WGtd88NHFScqJyonFZPKb6qYVKaKqWJSmVROKiaVN1SmijcqJpW/qWJSmSreUDmpmCpuelhrXfOw1rrmYa11zQ+XqbxRcaJyUnFS8YbKicpU8YXKVDGpTBWTyhsVk8pUMalMFV9UfKEyVUwVJypTxU0Pa61rHtZa1zysta754ZdVTCpvVJyonFRMKlPFpHJSMan8popJZaqYVL5QuUllqphUTlROVKaKSeVvelhrXfOw1rrmYa11jf3BP0hlqphUpopJZar4QmWqmFS+qJhUvqiYVKaKE5WTikllqphUflPFpHJSMamcVHzxsNa65mGtdc3DWuuaHy5TuanipGJSOamYVN6o+ELli4pJZao4UTmpmFROVKaKSWWqmFSmiknljYpJ5aTipoe11jUPa61rHtZa19gffKAyVZyonFRMKm9UvKEyVZyoTBWTylRxonJTxRsqv6liUvmbKk5UpoovHtZa1zysta55WGtdY3/wH6ZyUvGbVKaKN1SmijdUpopJ5aRiUjmpmFROKiaVk4o3VL6ouOlhrXXNw1rrmoe11jU/fKTyN1WcVEwqb1ScqJyoTBVfqEwVJyonFScVJyonFTepTBUnFZPKVPGbHtZa1zysta55WGtd88NlFTepfFExqUwVk8pJxRcqb1R8UfGGyknFicpNFW+onKicVHzxsNa65mGtdc3DWuuaH36ZyhsVf5PKFyonFVPFpDKpfFHxm1ROKiaVqWJSmVS+qPgnPay1rnlYa13zsNa65of/MSpTxUnFpDJVfKEyVfwmlanijYpJ5aTiDZWp4kRlqvhC5aTii4e11jUPa61rHtZa1/zwH1cxqXxRMamcVLyhclJxovKFyhsVJyonFScqU8UbKlPFScWkctPDWuuah7XWNQ9rrWt++GUV/ySVqeI3qUwVJxWTyknFicqkMlVMKl9UfFHxhspUcaLyNz2sta55WGtd87DWuuaHy1T+JpWp4qaKE5Wp4qTipOJE5Z+kMlW8oXJScVJxojJV/E0Pa61rHtZa1zysta6xP1hrXfGw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWu+T8YoY7JlaismwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
