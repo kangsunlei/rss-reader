@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>UniRL：统一多模态 RL 框架的 2.4X 端到端性能优化实践｜AICon 深圳</title>
+        <title>不碰核心代码、把 7-Zip 压缩速度提高 97%：一个“外行”与 AI 的极致优化实验</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>UniRL：统一多模态 RL 框架的 2.4X 端到端性能优化实践｜AICon 深圳</h2>
-        <p>8/7/2026, 7:52:00 AM</p>
+        <h2>不碰核心代码、把 7-Zip 压缩速度提高 97%：一个“外行”与 AI 的极致优化实验</h2>
+        <p>8/7/2026, 5:24:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍腾讯 UniRL 框架在多模态强化学习中的架构设计、FalconGEMM 优化、训推一致性及异步引擎，实现 2.4X 端到端性能提升。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文报道一家公司将 7-Zip 压缩速度最高提升 97% 的实践，核心是由无编程背景员工借助 AI 完成“内容感知路由器”分派层优化，且未改动核心算法，并已开源。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章围绕腾讯多模态 RL Infra 负责人朱文希在 AICon 深圳的演讲《UniRL：统一多模态 RL 框架的 2.4X 端到端性能优化实践》展开，说明 Diffusion RL 与 LLM RL 在基础设施上的三大差异（Rollout compute‑bound、混合调度困难、Reward 异构 bursty），并详细阐述 UniRL 在角色/工作器分离、原子化插件、类单机编程抽象、Bitwise 训推一致性（通过解耦计算与规约、K 维等价分段迭代）、自研 FalconGEMM 算子（代数级优化、Group 融合、缓存感知调度）以及异步训推引擎（Green Context Sharing、统一 Reward 资源池）四大支柱的设计与实测性能（BF16 +15.3%、FP8 最高 36%），同时分享了组织层面的沟通桥梁实践。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章介绍语生科学内部完成的一项 7-Zip 优化实践：一名无编程背景员工在 AI 辅助下，针对 7-Zip 对所有文件采用统一压缩策略导致大量无效计算的问题，设计了一套“内容感知路由器”方案。方案包括多级探测机制（文件头识别、抽样试压、多点采样投票）、十档编码通道路由以及以试压对比和容差护栏为核心的安全网。实际测试中，macOS 多文件归档场景压缩速度最高提升 97%，日志类文件体积最大缩减 40.7%，且所有结果均可被官方 7-Zip 直接解压。文章同时指出其代价：文本与日志类文件解压耗时增加 2 到 3 倍，超大不可压文件存在误判风险，部分二进制文件以约 2% 体积换取速度。作者认为这是 AI 改造基础软件的低风险示范，展示了“外行”通过 AI 参与技术创新的新协作模式。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Role/Worker 分离架构降低跨模型适配成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过配置文件驱动资源拓扑，算法逻辑与物理资源解耦，实现插件式接入，避免为每种「模型×算法」手写 pipeline。</span>
+                        <strong style="color: #1a365d">7-Zip 统一压缩策略对不同类型文件产生大量无效计算。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 无论文本、JSON 还是已压缩多媒体，LZMA2 都消耗同等算力搜索字典，这是优化空间的根本来源。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">FalconGEMM 通过代数级优化和群融合显著提升算子性能。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 将 O(N³) 降至 O(N^2.807)，通过 Group 并行融合消除冗余访存与写冲突，拆分组并行恢复负载均衡，缓存感知调度提升 L2 命中率，实测 BF16 +15.3%、FP8 最高 36%。</span>
+                        <strong style="color: #1a365d">“内容感知路由器”通过多级探测和十档路由实现量体裁衣。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 先识别文件头、抽样试压并多点投票，再按探测结果分配至不同编码通道，规避了对所有文件一刀切。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Bitwise 训推一致性方案确保低精度训练可收敛。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 解耦计算与规约两阶段，固定拓扑顺序串行累加解决 split‑k 导致的浮点累加顺序不一致；采用 K 维等价分段迭代 + 定序序列化规约应对多维并行切换导致的形状变化。</span>
+                        <strong style="color: #1a365d">优化以安全网确保压缩率和兼容性不退化。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 切换前用 1MB 样本对比、体积增量须小于 2%、输出保持标准 .7z，官方 7-Zip 可直接解压，实现零侵入。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">异步训推引擎通过 Green Context Sharing 和统一 Reward 资源池实现算力带宽满载。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 基于 NV Green Context 动态分配 SM/MEM 资源，让 PE/Tool/Reward/Train/Diffusion 同卡共享；Reward 服务化资源池支持弹性伸缩与 SLA 保障，解决 GPU 利用率低和长尾问题。</span>
+                        <strong style="color: #1a365d">性能提升伴随解压耗时增加等副作用。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 更复杂编码通道使文本日志类解压慢 2 到 3 倍，5GB 以上不可压文件可能误判，部分二进制文件牺牲 2% 体积。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">AI 让非技术背景员工也能参与基础软件优化。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实验的重点不是替代工程师，而是让业务一线的洞察借助 AI 快速转化为技术方案，形成人机协作新模式。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当人人都能获得强大的模型能力之后，真正的竞争力还剩下什么？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Rollout 是 compute-bound 的密集矩阵运算（难以靠调度优化）</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">当 AI 从工具变成协作者，软件工程、产品创新乃至组织协作方式，都正在迎来新的变化。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">解码端无需任何改动，堪称 AI 改造基础软件的“低风险示范”。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +66,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">82</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">81</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">InfoQ 中文</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">13 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3023</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1625</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多模态 RL</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">强化学习</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 基础设施</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">FalconGEMM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">训推一致性</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">压缩算法</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">人机协作</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/7daaae7c9e?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/d9361b0928?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/7daaae7c9e?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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oTJVfPGw1rrmYa11zcNa65offlnFpDJVTCpfVEwqU8WJylRxonJS8UbFpHJS8W9WMalMKv9LHtZa1zysta55WGtd88NHFScqJyonFZPKb6qYVKaKqWJSmVROKiaVN1SmijcqJpW/qWJSmSreUDmpmCpuelhrXfOw1rrmYa11zQ+XqbxRcaJyUnFS8YbKicpU8YXKVDGpTBWTyhsVk8pUMalMFV9UfKEyVUwVJypTxU0Pa61rHtZa1zysta754ZdVTCpvVJyonFRMKlPFpHJSMan8popJZaqYVL5QuUllqphUTlROVKaKSeVvelhrXfOw1rrmYa11jf3BP0hlqphUpopJZar4QmWqmFS+qJhUvqiYVKaKE5WTikllqphUflPFpHJSMamcVHzxsNa65mGtdc3DWuuaHy5TuanipGJSOamYVN6o+ELli4pJZao4UTmpmFROVKaKSWWqmFSmiknljYpJ5aTipoe11jUPa61rHtZa19gffKAyVZyonFRMKm9UvKEyVZyoTBWTylRxonJTxRsqv6liUvmbKk5UpoovHtZa1zysta55WGtdY3/wH6ZyUvGbVKaKN1SmijdUpopJ5aRiUjmpmFROKiaVk4o3VL6ouOlhrXXNw1rrmoe11jU/fKTyN1WcVEwqb1ScqJyoTBVfqEwVJyonFScVJyonFTepTBUnFZPKVPGbHtZa1zysta55WGtd88NlFTepfFExqUwVk8pJxRcqb1R8UfGGyknFicpNFW+onKicVHzxsNa65mGtdc3DWuuaH36ZyhsVf5PKFyonFVPFpDKpfFHxm1ROKiaVqWJSmVS+qPgnPay1rnlYa13zsNa65of/MSpTxUnFpDJVfKEyVfwmlanijYpJ5aTiDZWp4kRlqvhC5aTii4e11jUPa61rHtZa1/zwH1cxqXxRMamcVLyhclJxovKFyhsVJyonFScqU8UbKlPFScWkctPDWuuah7XWNQ9rrWt++GUV/ySVqeI3qUwVJxWTyknFicqkMlVMKl9UfFHxhspUcaLyNz2sta55WGtd87DWuuaHy1T+JpWp4qaKE5Wp4qTipOJE5Z+kMlW8oXJScVJxojJV/E0Pa61rHtZa1zysta6xP1hrXfGw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWu+T8YoY7JlaismwAAAABJRU5ErkJggg==" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/d9361b0928?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
