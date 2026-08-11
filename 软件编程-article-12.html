@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>兄弟们，你们技术生涯中写过最大的 bug 是什么？</title>
+        <title>Agent 评测漫谈 —— 由浅入深讲解 Agent 评测</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>兄弟们，你们技术生涯中写过最大的 bug 是什么？</h2>
-        <p>8/9/2026, 12:00:00 AM</p>
+        <h2>Agent 评测漫谈 —— 由浅入深讲解 Agent 评测</h2>
+        <p>8/10/2026, 8:22:04 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文精选了五位程序员分享的职业生涯中严重的 Bug 经历，涵盖删库、配置错误、误操作根目录及性能崩溃等典型事故及其教训。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文由美团图灵评测团队基于两年业务实践，系统讲解 Agent 评测的定义、核心方法论与演进趋势，提出观测驱动、人人一致人机一致、数据飞轮等关键实践认知。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章汇总了知乎上关于「程序员写过最大的 Bug」的高赞回答。通过五个具体案例，描述了由于权限管理混乱导致生产环境删库、测试代码硬编码导致公司巨额亏损、环境变量配置不一致导致生产环境破图、误操作 mv 命令导致根目录文件丢失以及缺乏缓存导致数据库崩溃等事故。文章通过这些真实（或半真实）的工程灾难，反向强调了代码审计、环境统一、备份快照以及容错机制在软件工程中的重要性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章由美团图灵 Agent 评测团队基于两年 BP 各业务线的实践总结而成，系统阐述 Agent 评测的完整认知框架。第一章从核心目的出发，说明评测要回答「Agent 好不好、哪里好哪里不好」，并区分 Agent 评测与模型评测的差异，强调行为与过程观测的重要性。第二章提出评测核心方法论：指标体系要在业务指标与模型能力之间「搭桥」，客观与主观评测并行，通过「人人一致、人机一致」的对齐方法（指标下钻加 Rubric 二元化）提升评测置信度，并指出评测是一门实践科学，应从高频场景、Bad/Good Case 出发让数据飞轮运转。第三章分析短程与长程 Agent 评测的范式差异，讨论 Skill 评测兴起、面向 Task 的评测以及人评走向机评的趋势，给出评测基础设施应具备的能力清单。附录调研了开源长程 Agent 评测生态的术语与代表性项目。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">生产环境权限管理与代码审计是防止重大事故的底线。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 案例中提到删库事故和硬编码导致亏损，直接促使公司建立了权限上收和强制代码过审制度。</span>
+                        <strong style="color: #1a365d">Agent 评测的核心是回答好不好，且必须同时看结果与行为过程。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 两个 Agent 同样做对任务，工程价值可能差别巨大；评测需覆盖结果、过程、效率、风险四层，避免把偶然命中误判为真实能力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">环境一致性（Environment Consistency）是发布成功的关键。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 由于测试环境与生产环境的环境变量命名不一致，导致功能在测试阶段正常但在生产环境失效。</span>
+                        <strong style="color: #1a365d">评测体系的核心不是堆指标，而是在业务指标与模型能力之间搭桥。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型能力指标与业务结果指标之间存在天然鸿沟，需要面向任务系统的桥梁指标串联，才能回答业务指标为何变差或模型能力提升为何没带来收益。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">备份与快照是应对极端误操作的最后一道防线。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在误将根目录文件移动的极端案例中，缺乏快照使得恢复过程极其惊险，依赖于对 Linux 动态链接器的底层理解才得以挽回。</span>
+                        <strong style="color: #1a365d">主观评测应通过人人一致、人机一致来对齐标准。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 关键做法是让权威角色拉齐各方标准、将模糊指标下钻并二元化为 Rubric，用一致率阈值反查定义是否合理；数字站长案例人机一致率达 99%。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">性能预估与缓存机制在面对高并发时至关重要。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 缺乏缓存直接导致数据库服务器崩溃，且不合理的容错重启机制引发了连锁反应，导致主进程挂掉。</span>
+                        <strong style="color: #1a365d">Agent 评测是实践科学，起步阶段应让数据飞轮高效运转。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 采集、清洗、评测、质检、分析五环节构成迭代飞轮；先定义少量关键指标，用 Bad Case 暴露短板、Good Case 定义范式，逐步沉淀评测资产。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">长程 Agent 时代，评测从答案评测走向行为评测，从人评主导走向机评主导。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 评测对象从单一模型变为模型加系统、工具、流程的复杂系统，关注任务完成度与轨迹质量；人工聚焦标准设计与 Rubric 对齐，AI 承担规模化评测。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">道路千万条，安全第一条。命令不检查，运维两行泪。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在几十秒的挣扎后，我还是鼓起勇气走向了老大，跟他说：老大我知道什么原因了。……我可能解决不了，我不小心删错库了。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">观测 + 评测 = 持续迭代</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">ChatAgent 评测关心“说得好不好”，长程 Agent 评测关心“事情做成没有，以及是怎么做成的”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">起步阶段“让数据飞轮高效运转起来”的意义远大于“设计一个复杂精妙的评测体系”。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">看不见的问题，几乎不可能被稳定解决。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">1 个“独裁者”好过 10 个“民主者”。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +66,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">76</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">美团 · 技术团队</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">美团 · 技术团队</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">16 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3803</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">34 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">8291</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工程实践</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Bug 复盘</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">运维安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">软件质量</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型评测与基准</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">LLM</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 工作流</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 产品与应用</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/a4192b7cd9?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/03bf3c3268?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/a4192b7cd9?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/03bf3c3268?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAApASURBVO3BQY4YybLgQDJR978yR0tfBZDIKOn1HzezP1hrXfGw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWu+eEjlb+pYlJ5o+ILlaliUpkqJpWTikllqnhDZap4Q2WqmFSmijdUpopJ5W+q+OJhrXXNw1rrmoe11jU/XFZxk8obFZPKpHKTylQxqUwVJypTxaTyRsUbKlPFTSpTxRsVN6nc9LDWuuZhrXXNw1rrmh9+mcobFTdVTCpvVJyonFRMKlPFicobFScqU8VNKlPFb1J5o+I3Pay1rnlYa13zsNa65of/uIo3KiaVLyomlZsqJpU3VE5U3lC5SWWq+C97WGtd87DWuuZhrXXND/9xKl9UnKhMFZPKScWkMqmcqLyhclIxqUwVk8pU8YbK/08e1lrXPKy1rnlYa13zwy+r+E0Vk8pJxaQyVZyoTBVvVEwqU8UbKlPFpPJFxRsqU8Vvqvhf8rDWuuZhrXXNw1rrmh8uU/mbVKaKSeWmikllqphUpoo3VKaKv0llqphUpopJZaqYVKaKE5X/ZQ9rrWse1lrXPKy1rrE/+D9M5aaKE5UvKt5QmSomlaliUvmiYlKZKiaVqeL/koe11jUPa61rHtZa1/zwkcpUcaLymyqmiknlpOINlaliUpkqJpVJ5V+qOFE5qfhCZao4UZkqJpU3Kr54WGtd87DWuuZhrXXND79MZar4QuVE5Y2KSWWqOKm4qeJE5UTlRGWqmFROKiaVNyomlaliUjmpmFSmikllqrjpYa11zcNa65qHtdY1P3xUcVLxhsobFZPKb1I5qXij4o2KSeWk4kRlqjhROamYVN5QmSomlTdUTlSmii8e1lrXPKy1rnlYa13zwy9T+aJiUnmj4kRlqjipmFQmlROVqWJSOal4Q+WkYlL5mypuqphUporf9LDWuuZhrXXNw1rrmh8+UjmpmFSmikllUvlC5Q2Vk4qTikllqphUTireqHhDZao4UXmjYlKZKt6omFROKiaVqeKmh7XWNQ9rrWse1lrX/PBRxYnKVDGpTBVvqHxR8YbKGxVfqEwVU8WJylRxovI3qUwVk8pJxaRyUvGbHtZa1zysta55WGtd88NlKl+ovFExqUwVb6icVJyonFScVJyonFScqLxRMancVDGpnFRMKicqU8VvelhrXfOw1rrmYa11jf3BByonFScqU8UXKm9UnKicVLyh8psqJpWp4g2VqeJEZao4UXmj4kTljYqbHtZa1zysta55WGtdY3/wF6mcVEwqU8UXKlPFpPJFxaTyv6TiC5WTiptUpoo3VE4qbnpYa13zsNa65mGtdY39wS9SmSpOVKaKSWWqmFSmihOVqWJSOal4Q+WmikllqphUpooTlaliUnmjYlI5qZhUTiomlaliUpkqvnhYa13zsNa65mGtdc0PH6m8oTJVTBWTylRxUjGpnFT8JpWp4kRlqjhReaPijYpJ5Y2Kk4pJ5aRiUvlf8rDWuuZhrXXNw1rrmh8+qphUvlCZKiaVNypOVKaKqeINlTdUpooTlaliUjlR+aLiROVEZao4UXlD5UTlNz2sta55WGtd87DWuuaHj1SmijdUTlTeqJhUTiq+ULlJ5Q2VqeKkYlL5TSpTxaTymyr+poe11jUPa61rHtZa19gffKByU8UbKjdVTCpTxaRyUjGpnFS8ofJFxaTyL1W8ofJGxW96WGtd87DWuuZhrXXNDx9VnKh8oTJVnFScqEwVk8pUcVLxRsWkcqIyVZxUvKEyVZyoTBUnKlPFpHKiMlV8oXJS8cXDWuuah7XWNQ9rrWt+uEzlpoo3VG5SmSpOVKaKLyp+U8WJylQxqbyh8kbFGxWTyt/0sNa65mGtdc3DWuuaHz5SmSreUJlUflPFScUXFV+o/E0qU8UXFW+oTCo3VUwqv+lhrXXNw1rrmoe11jU//GMVb6j8JpWTikllqphUpoqp4kRlqphUJpWTiqliUvlCZao4qbhJ5Y2Kmx7WWtc8rLWueVhrXfPDX6ZyU8WkMlWcqJxU3KRyUjFVnFRMKjdVnFR8oXJSMal8UfGbHtZa1zysta55WGtdY3/wi1TeqHhDZao4UZkqJpWp4kTlpOJE5V+qOFE5qThROan4QmWqmFTeqPjiYa11zcNa65qHtdY1P3ykMlVMFZPKVDGpvFExqUwVX6i8UfFFxYnKFxVvVJyoTBX/kspU8Tc9rLWueVhrXfOw1rrmh8tU3lCZKk5UJpU3KiaVqWJSmSq+UDlRmSqmiknlpGJSOamYVKaKv0nljYo3VKaKLx7WWtc8rLWueVhrXfPDL6uYVKaKSeVfUpkqTlSmii8qJpWTiv9lFZPKicp/2cNa65qHtdY1D2uta+wPfpHKFxWTyknFpDJVTCpTxaQyVbyhclIxqXxRcaIyVUwqb1RMKlPFpPJGxRsqJxW/6WGtdc3DWuuah7XWNT9cpvJGxYnKVHGi8oXKicpUMam8oTJVTCpTxaTyRsWkMlVMKlPFFxWTyhsqU8VUcaIyVdz0sNa65mGtdc3DWuuaH35ZxaTyRsWJylTxmyomld9UMalMFZPKFyo3qZxUfKEyVUwqf9PDWuuah7XWNQ9rrWvsD/4hlaliUnmj4guVqWJS+aJiUvmiYlKZKk5UTiomlaliUvlNFZPKScWkclLxxcNa65qHtdY1D2uta364TOWmihOVSeWNijcqvlD5omJSmSpOVE4qJpUTlaliUpkqJpWpYlJ5o2JSOam46WGtdc3DWuuah7XWNfYHH6hMFScqJxWTyhsVb6hMFScqU8WkMlWcqNxU8YbKb6qYVP6mihOVqeKLh7XWNQ9rrWse1lrX2B/8h6mcVPwmlaniDZWp4g2VqWJSOamYVE4qJpWTiknlpOINlS8qbnpYa13zsNa65mGtdc0PH6n8TRUnFZPK36QyVXyhMlWcqJxUnFScqJxU3KQyVZxUTCpTxW96WGtd87DWuuZhrXXND5dV3KTyRcWkMlWcqEwVX6i8UfFFxRsqJxUnKjdVvKFyonJS8cXDWuuah7XWNQ9rrWt++GUqb1T8TSo3qUwVU8WkMql8UfGbVE4qJpWpYlKZVL6o+Jce1lrXPKy1rnlYa13zw/8xKlPFScWJyhcqU8VvUpkq3qiYVE4q3lCZKk5UpoovVE4qvnhYa13zsNa65mGtdc0P/3EVk8q/VHGiclJxovKFyhsVJyonFScqU8UbKlPFScWkctPDWuuah7XWNQ9rrWt++GUV/5LKVPGbVKaKk4pJ5aTiRGVSmSomlS8qvqh4Q2WqOFH5mx7WWtc8rLWueVhrXfPDZSp/k8pUcVPFicpUcVJxUnGi8i+pTBWTylQxqZxUnFScqEwVf9PDWuuah7XWNQ9rrWvsD9ZaVzysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61r/h+1alQKPZNCXwAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
