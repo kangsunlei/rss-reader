@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Qwen3.8，正式开源</title>
+        <title>DeepSeek Harness 极简模式实测：快与稳的取舍</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Qwen3.8，正式开源</h2>
-        <p>8/14/2026, 3:39:00 PM</p>
+        <h2>DeepSeek Harness 极简模式实测：快与稳的取舍</h2>
+        <p>8/15/2026, 12:40:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">阿里技术官方宣布开源 Qwen3.8 系列模型，其中 Qwen3.8-27B 为原生多模态稠密模型，270 亿参数规模超越 Qwen3.7-Plus，采用 Apache2.0 协议，可在消费级显卡上运行。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过两个实战项目对比 DeepSeek Harness 标准模式与极简模式的表现，发现极简模式在纯编码任务上更快，但复杂任务需联网或协调多工具时标准模式更稳定，并介绍了一种两阶段插件优化方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文是阿里技术官方发布的 Qwen3.8 系列模型开源公告。核心内容包括：Qwen3.8-27B 作为原生多模态稠密模型，270 亿参数规模，整体水平超越 Qwen3.7-Plus，在编程及办公场景表现突出；采用 Apache2.0 宽松协议开源，量化后可在消费级显卡上流畅运行；旗舰模型 Qwen3.8-Max 的权重也已开源。公告同时披露了千问系列的开源规模数据：累计开源 460 余个模型，全球下载总量超 30 亿次，衍生模型数超 30 万个，成为全球 AI 社区最受欢迎的开源模型家族。文章末尾表达了继续与开源社区同行的愿景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者程序员鱼皮对 DeepSeek Harness 的极简模式进行了实测。极简模式仅保留终端和文件编辑器两个工具，官方定位为跑模型基准测试用。作者通过两个任务对比：3D 射击游戏开发中，极简模式快 10 分钟且成品质量相当；AI 宠物领养系统开发中，极简模式快 21 分钟但缺少筛选功能等细节。文章解释了极简模式更快的原因——减少工具选择开销和上下文占用。最后介绍了社区开发者发现的两阶段插件方案：先用极简模式对齐训练状态，再恢复完整工具，可在评测中达到 98-99 分。结论是图快用极简模式，图稳用标准模式。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Qwen3.8-27B 是原生多模态稠密模型，270 亿参数规模超越 Qwen3.7-Plus。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 新模型在文本和视觉能力上均有提升，编程及办公真实场景表现突出，量化后可在消费级显卡上流畅运行。</span>
+                        <strong style="color: #1a365d">极简模式通过减少工具数量提升执行效率</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 标准模式有 20 多个工具，模型每步需先选择工具，占用推理能力；极简模式只留终端和编辑器，模型直接动手写代码，减少选择开销。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">旗舰模型 Qwen3.8-Max 权重也已同步开源。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Max 系列作为旗舰版本，其权重开源进一步丰富了千问系列的开源矩阵，满足不同场景需求。</span>
+                        <strong style="color: #1a365d">极简模式适合纯编码任务，复杂任务表现下降</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 3D 游戏开发中极简模式更快且质量相当；但宠物领养系统需要联网搜索、读取环境变量等，极简模式因缺少工具导致交付质量下降。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">千问系列已成为全球最受欢迎的开源模型家族。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 累计开源 460 余个模型，全球下载超 30 亿次，衍生模型超 30 万个，体现了开源策略的规模化影响力。</span>
+                        <strong style="color: #1a365d">两阶段插件可兼顾速度与完整能力</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 先用极简模式让模型进入训练时的思维状态，再恢复全部工具，可在工程维护评测中达到 98-99 分，追平甚至反超纯极简模式。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">DeepSeek V4 Pro 对自家 Harness 格式存在过拟合</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> V4 Pro 在不同 Harness 下分数波动大，而 V4 Flash 稳定在 90-95 分，说明 V4 Pro 训练时使用了极简模式的格式，换工具后会「找不着北」。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 最大的想象力不在手机屏幕，而是改变物理世界。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我们相信开源就是让这件事发生得最快的方式。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent = Model + Harness</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">同一个模型，思维方式完全不同</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">图快就用它，图稳就用标准模式</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -60,31 +63,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">76</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里技术</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">77</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">程序员鱼皮</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">程序员鱼皮</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">492</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">23 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">5689</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型发布</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源模型</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多模态AI</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">大语言模型</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI开发</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">DeepSeek</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">工具调用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型评测</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/dd681754fe?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/c00cb4c81f?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/dd681754fe?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/c00cb4c81f?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAApaSURBVO3BQY4YybLgQDJR978yR0tfBZDIKKn/GzezP1hrXfGw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWu+eEjlb+p4guV31Txm1SmikllqjhR+aLiC5WpYlL5myq+eFhrXfOw1rrmYa11zQ+XVdyk8obKScVNKicqb1S8oTJVTConFZPKVDGpnKhMFZPKVPFGxU0qNz2sta55WGtd87DWuuaHX6byRsUbKlPFpDKpnFS8UXFS8YbKVPGGylQxqUwqX6j8SypvVPymh7XWNQ9rrWse1lrX/PA/RuWkYlKZVP6liknljYqTihOVNyq+UJkq/i97WGtd87DWuuZhrXXND/+fq/hCZao4UTlR+UJlqjhROVGZKiaVqWJS+f/Jw1rrmoe11jUPa61rfvhlFX9TxYnKScWkMlWcqEwVU8WkMlW8oTJVTConFZPKVHFScVLxmyr+Sx7WWtc8rLWueVhrXfPDZSr/JSpTxaRyU8WkMlW8oTJVfFExqUwVk8pUMalMFZPKVDGpTBUnKv9lD2utax7WWtc8rLWusT/4P0zlX6qYVE4qJpWp4g2Vk4pJ5YuKSWWqOFGZKv6XPKy1rnlYa13zsNa6xv7gA5WpYlK5qeINlb+pYlL5L6n4m1ROKk5Ubqr4TQ9rrWse1lrXPKy1rvnhl1VMKicVJypTxUnFpDJVfKHyRsWJyk0VJypvVLxRcaIyVUwVJyonFZPKScUXD2utax7WWtc8rLWusT/4D1O5qeJE5aRiUnmjYlKZKk5UvqiYVE4qJpWp4kTlN1WcqJxU3PSw1rrmYa11zcNa6xr7g1+kMlV8oXJSMam8UXGiMlWcqJxUvKHyRcWkMlVMKm9UnKhMFV+ovFHxmx7WWtc8rLWueVhrXfPDRypTxYnKScWkclIxqUwVJypvVJyofKHyN1VMKlPFGypTxW+q+EJlqvjiYa11zcNa65qHtdY19gcXqUwVk8pJxYnKScWkclIxqZxUTCpTxYnKVHGiMlWcqEwVk8oXFZPKVPGGylTxhcpUMamcVHzxsNa65mGtdc3DWusa+4NfpDJVnKicVLyhMlW8oTJVTCo3VUwqv6liUpkqJpWpYlI5qThROak4UXmj4qaHtdY1D2utax7WWtfYH3yg8kXFFypTxYnKVPGFylRxojJVvKFyUnGiclIxqUwVk8pUMalMFZPKScWk8psqvnhYa13zsNa65mGtdY39wS9SualiUpkqJpWpYlI5qZhUbqqYVE4qJpWTijdUpopJZap4Q2WquEnli4ovHtZa1zysta55WGtd88N/TMWJylQxqbxRcaIyVUwqJxWTyqQyVbxRMam8oXKiMlVMKlPFGyonFTdVTCo3Pay1rnlYa13zsNa6xv7gA5Wp4kTlN1WcqEwVk8pUMan8l1VMKlPFpHJS8YbKGxUnKlPFicobFTc9rLWueVhrXfOw1rrmh48q3qiYVKaKv0nlROWkYlJ5o2JSmSomlaniN6m8UXGi8kbFicobFb/pYa11zcNa65qHtdY19gcfqJxUnKjcVHGiMlVMKlPFGyr/JRVvqLxRMalMFScqv6liUpkqbnpYa13zsNa65mGtdc0P/zEVb6h8oTJVnKhMFScVk8pJxRsqX6jcVHGiclLxhsqJylQxqUwVXzysta55WGtd87DWuuaHyypOVN5QmSq+qHhDZar4omJSOVGZKk4qJpWp4o2KSWVSmSomlS9UpoqTikllUpkqbnpYa13zsNa65mGtdc0PH1VMKicVk8pJxd+kcqJyUnFTxRcVk8obKlPFpHJScaJyUvGGyhsqU8UXD2utax7WWtc8rLWusT+4SGWqmFT+popJZap4Q2WqmFSmiknlX6o4UXmj4kTlX6r4mx7WWtc8rLWueVhrXfPDRypTxRcVN6lMFW+onKhMFZPKTRWTylRxojJV/KaKN1TeqJhUJpWpYlKZKr54WGtd87DWuuZhrXXND5epfKFyUnGi8obKVDFVnKi8UTGpTBWTyknFicpUMamcVEwqb6hMFZPKVPGGyhsqU8VND2utax7WWtc8rLWusT/4RSpTxW9SeaNiUrmp4iaVNypOVKaKSWWqmFROKiaVqeJE5aTiROWk4qaHtdY1D2utax7WWtf88JHKVHGiMlWcqHxR8UXFpPIvVUwqX1RMKlPFpDJVnKhMFV9UTCpTxVRxojJVfPGw1rrmYa11zcNa65ofLlM5qThRmSomlZOKSeWNiknlJpWTiknlX1J5Q2Wq+E0Vk8pU8Tc9rLWueVhrXfOw1rrmh8sqJpVJ5aRiUpkq/qWKN1Smijcq3lCZVE4q3qg4qZhUpopJZaqYKiaVqeINlanipoe11jUPa61rHtZa19gfXKQyVZyonFS8oXJSMamcVEwqU8WkMlWcqEwVk8pNFScqJxWTylRxojJVnKicVEwqX1R88bDWuuZhrXXNw1rrGvuDX6TyRsWkMlVMKicVX6i8UTGpTBWTylTxhspJxRcqJxWTyknFFyonFf/Sw1rrmoe11jUPa61rfrhM5aRiUjmpmFSmiknlDZWTikllqnhDZaqYVN6omFS+UDmpmFSmihOVk4qTijdU3qj44mGtdc3DWuuah7XWNfYH/5DKVDGpnFTcpPJFxaQyVZyonFScqJxUTCpTxYnKFxWTyknFicpUcaIyVdz0sNa65mGtdc3DWuuaHy5TuaniRGWqOFGZKk4qJpUTlaliUjmpOFE5qXijYlK5qWJSOamYVE4qJpV/6WGtdc3DWuuah7XWNfYHH6hMFScqJxWTylTxhsrfVHGi8i9VvKEyVZyonFRMKjdVnKhMFTc9rLWueVhrXfOw1rrG/uD/MJWp4guVLypOVE4q3lA5qXhD5Y2KN1ROKt5QeaNiUpkqvnhYa13zsNa65mGtdc0PH6n8TRVTxRsqJxWTyknFpDJVfKEyVZxUTCpTxaQyVbyhMlVMKl+oTBUnFZPKpDJV3PSw1rrmYa11zcNa65ofLqu4SeVE5YuKSWWqmFQmlanipoo3VE5UTlROKt6omFTeqHhD5V96WGtd87DWuuZhrXXND79M5Y2KLyreUJkqTiq+qJhUJpUvKiaVqeINlUllqjhReUPlpooTlanii4e11jUPa61rHtZa1/zwP05lqpgq3lA5qZhUpoqTijdUJpWpYlL5TSpTxRcqN6n8poe11jUPa61rHtZa1/zwP0blC5WpYqqYVCaVqeKk4kRlqjipmFROKt5QeUPli4o3VN6ouOlhrXXNw1rrmoe11jU//LKK31RxovJfpjJVvFFxUjGpTConFScqb1ScqNykMlX8poe11jUPa61rHtZa1/xwmcrfpDJV/E0Vb6hMFW+onFRMKlPFicpJxYnKVDGpvKEyVUwqU8WJylRx08Na65qHtdY1D2uta+wP1lpXPKy1rnlYa13zsNa65mGtdc3DWuuah7XWNQ9rrWse1lrXPKy1rnlYa13zsNa65mGtdc3DWuuah7XWNQ9rrWv+Hxg4is0BrwzzAAAAAElFTkSuQmCC" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>

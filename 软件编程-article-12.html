@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Windows 下 10 款开源或免费使用的高频好用软件</title>
+        <title>SQL 查询优化：为什么“先聚合再 JOIN”更高效？</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Windows 下 10 款开源或免费使用的高频好用软件</h2>
-        <p>8/15/2026, 12:11:00 AM</p>
+        <h2>SQL 查询优化：为什么“先聚合再 JOIN”更高效？</h2>
+        <p>8/16/2026, 12:00:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文精选 10 款在 Windows 环境下高效实用的开源或免费软件，涵盖文件搜索、截图、跨平台传输、软件卸载、媒体播放、AI 超分、笔记、异地组网、键鼠共享与 AI 编码等场景，帮助用户大幰提升日常生产力。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文通过代码示例与性能对比，系统讲解 SQL 查询中「先聚合再 JOIN」的优化原理、适用场景及进阶实践，帮助开发者将慢查询优化至秒级响应。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章从作者在 Windows 系统下的实际使用需求出发，逐一推荐 10 款开源或免费且高频实用的工具。Everything 以极低资源占用读取 NTFS 主文件表，实现秒级文件搜索；PixPin 提供像素级截图、滚动拼接、本地 OCR 与标注；LocalSend 基于局域网实现跨平台大文件快速传输；Geek Uninstaller 深度清理残留注册表与文件；PotPlayer 兼容几乎所有音视频格式并支持硬件加速；Upscayl 用本地 AI 模型对旧照片进行超分辨率放大；Obsidian 以双向链接构建个人知识库；Tailscale 基于 WireGuard 简化远距离内网穿透；Deskflow 实现多台电脑的键鼠与剪贴板无缝共享；最后指出 VS Code 配合 AI 扩展可轻松完成脚本编写、自动化等任务。所有软件均免费或开源，部分为国产工具，兼顾功能实用性与隐私安全。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章围绕 SQL 性能优化的核心原则「先聚合再 JOIN」展开，从概念解释、代码对比、执行计划分析到真实电商场景案例，层层递进。作者先定义聚合与 JOIN 的计算逻辑，说明 JOIN 复杂度与数据量乘积相关，而聚合可将行数大幅压缩；随后通过小表示例对比两种写法的执行过程，并用模拟 EXPLAIN 结果展示差异；接着扩展到百万级用户与千万级订单的真实场景，给出从 30 秒降至 2 秒的性能数据；最后覆盖索引优化、分区表、缓存、CTE 写法、分布式场景及多层聚合等进阶技巧，并澄清常见误区。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Everything 以 NTFS 主文件表为索引，实现秒级文件搜索。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 它只索引文件名和路径，占用内存极小，启动快，适合查找海量文件中的安装包、文档或素材。</span>
+                        <strong style="color: #1a365d">先聚合再 JOIN 的核心是尽早压缩数据量，避免在大表上做 JOIN。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> JOIN 的计算复杂度与两表行数乘积相关，聚合可将 N 行压缩为 M 行（M &lt;&lt; N），大幅降低后续 JOIN 的内存、I/O 和 CPU 消耗。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">PixPin 支持滚动截图、本地 OCR 与像素级标注。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 国产工具口碑不错，免费版已满足大多数需求，文字识别全程本地完成，保障隐私。</span>
+                        <strong style="color: #1a365d">EXPLAIN 执行计划可直观验证两种写法的性能差异。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 先聚合再 JOIN 的子查询中聚合完成后仅少量行参与 JOIN；先 JOIN 再聚合则先生成宽表中间结果，外层再 GROUP BY，产生临时表和文件排序。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">LocalSend 与 Deskflow 提供局域网文件传输与键鼠共享。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 两者均为开源方案，无需公网中转，传输快且隐私安全，支持跨平台使用。</span>
+                        <strong style="color: #1a365d">真实电商场景下，该优化可将查询从 30 秒降至 2 秒。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 100 万用户 JOIN 1000 万订单的场景中，先聚合将中间结果从 1000 万行压缩至 100 万行，内存占用从 2GB 降至 200MB，CPU 从 80% 降至 20%。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI 工具（Upscayl、VS Code）实现本地化超分与自动化。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Upscayl 用 AI 模型提升旧照片清晰度，VS Code 配合 AI 插件可自然语言驱动脚本编写，降低自动化门槛。</span>
+                        <strong style="color: #1a365d">索引、分区表与缓存可进一步放大优化效果。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为 GROUP BY 和 JOIN 字段建索引可加速聚合与关联；按时间分区减少扫描量；对不频繁更新的聚合结果使用 Redis 或物化视图缓存，避免重复计算。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">并非所有场景都适合先聚合，需根据业务需求判断。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 需要展示明细数据、聚合依赖多表字段、或需先过滤关联表字段后再聚合时，先 JOIN 再聚合反而更高效。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Everything 直接读取 NTFS 主文件表来建索引，输入几个关键字几乎瞬间就能列出结果，哪怕硬盘里有几百万个文件也不卡。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">LocalSend 原理是局域网直连，不经过公网服务器，所以传大文件又快又稳，还不用消耗流量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Upscayl 把模糊的老照片、低分辨率截图或素材丢进去，用本地 AI 模型进行超分辨率处理，能明显提升清晰度。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">先聚合把「10 亿行 JOIN」变成「100 万行 JOIN」，性能以数量级提升。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">「先聚合再 JOIN」不是复杂理论，就是让数据「先瘦身再联动」。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">数据库优化器不一定能重写「先 JOIN 再聚合」为「先聚合再 JOIN」，写法选择直接影响执行效率。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -64,30 +67,30 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">78</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHubStore</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHubStore</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">dbaplus社群</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">8 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1788</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">27 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6683</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Windows 实用工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源软件</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">免费软件</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">文件搜索</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">截图工具</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">SQL 优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">查询性能</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">聚合</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">JOIN</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/ca2a4f0ef2?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/db05085259?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/ca2a4f0ef2?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/db05085259?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
