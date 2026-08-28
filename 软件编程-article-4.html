@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>scanopy: 自动化网络拓扑图生成，保持实时更新</title>
+        <title>定位失败不用手动改了：一个会"自愈"的 Playwright 测试 Agent</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,76 @@
         </style>
     </head>
     <body>
-        <h2>scanopy: 自动化网络拓扑图生成，保持实时更新</h2>
-        <p>8/26/2026, 1:36:36 PM</p>
+        <h2>定位失败不用手动改了：一个会"自愈"的 Playwright 测试 Agent</h2>
+        <p>8/27/2026, 11:58:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">scanopy 是一个后台服务，用于自动扫描网络并生成实时更新的拓扑图，避免了手动绘制图表时因设备变更而导致的过时问题。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了一个基于 Playwright 的自愈测试 Agent，它能自动监听定位失败、分析错误、生成候选定位器、验证并回写测试文件，从而将手动修复定位的过程自动化。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">scanopy 通过定期扫描网络来自动识别设备和连接，生成四张详细的拓扑图：物理连接、子网划分、虚拟机/容器，以及应用依赖。该工具消除了手动维护图表的需要，并确保了文档始终反映当前的网络状态。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章首先分析了定位失败的常见原因和手动修复的局限性，然后详细介绍了自愈 Agent 的整体架构和六个核心模块：listener、analyzer、ai_engine、fix_executor、knowledge_base 和 report_generator。通过一个具体的流程演示，展示了 Agent 如何将一条失败的用例从挂起到自愈。最后，作者分享了三个实际踩坑经验，并讨论了该技术的适用场景。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">自愈 Agent 自动化了定位失败的修复流程，将手动改代码的过程变成了一个可执行的流水线。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 当测试用例因为定位器失效而挂掉时，Agent 会自动捕获异常、提取相关信息、调用 AI 生成新的候选定位器、在沙箱中验证这些候选，并最终更新测试文件。这一系列步骤完全自动化，无需人工干预。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">AI 引擎是自愈系统的核心，它基于历史数据和当前上下文生成可靠的定位器候选。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> ai_engine 模块使用 DeepSeek 模型，并遵循特定的提示词逻辑（优先使用语义化定位器）来生成候选方案。为了确保质量，系统还加入了限流、缓存和失败降级等保护机制。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">验证是自愈过程中的关键步骤，确保新生成的定位器确实有效。</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> fix_executor 模块会在一个隔离的沙箱环境中运行 AI 生成的候选定位器。只有当定位器成功找到元素并通过超时检查后，才会将其回写到原始的测试文件中，从而避免引入新的错误。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">烦的地方在于——它不会一次性全挂，而是今天挂一条、明天挂一条。每次挂都要你：翻日志、开 DevTools、改代码、再跑一遍确认。这套动作纯机械、可重复、还高频。凡是"机械、可重复、高频"的活，都是最该交给 AI 的活。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHubDaily(@GitHub_Daily)</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHubDaily</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Playwright实战教程</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Playwright实战教程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">2 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">328</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">15 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3647</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">网络拓扑</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自动化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">设备识别</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">实时更新</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Docker</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Playwright</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">测试自动化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自愈系统</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">定位器</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2092607142587244775?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/8370a0a06b?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2092607142587244775?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/8370a0a06b?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
