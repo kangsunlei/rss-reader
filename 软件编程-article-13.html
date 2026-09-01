@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>试用 K7：基于 ffmpeg 的自托管媒体服务器</title>
+        <title>「速通 Shell」Shell 编程性能优化</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>试用 K7：基于 ffmpeg 的自托管媒体服务器</h2>
-        <p>8/29/2026, 1:43:00 AM</p>
+        <h2>「速通 Shell」Shell 编程性能优化</h2>
+        <p>8/29/2026, 8:59:53 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">该推文介绍了 K7，一个用于小圈子分享的自托管媒体服务器，它利用 ffmpeg 进行视频转码，能够管理电影、剧集和音乐，并确保在各种设备和网络条件下流畅播放。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文系统讲解 Shell 编程中的性能优化策略，重点分析了避免不必要的 fork、利用 Bash 内置命令、合理使用 Awk 和 Sed、以及并行化处理等方法，旨在帮助开发者将脚本从“能跑”提升到“高效”。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">K7 是一款面向家庭和朋友的自托管媒体服务器，其名称灵感来源于法语中的'磁带'（cassette），代表着对实体收藏的怀念。该软件使用 ffmpeg 和 HLS 技术来转码和播放媒体，确保在不同网络条件下的兼容性。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">Shell 脚本的性能问题根源在于频繁的 fork 操作，每次调用外部命令都会产生显著的开销。本文通过具体案例，展示了如何通过以下方式优化性能：1. 避免使用 cat 管道，直接让命令读取文件；2. 使用 Bash 内置的字符串和数组操作代替外部命令；3. 对于大规模数据处理，优先选择 Awk 而非 Bash 循环；4. 通过并行化（如 xargs -P 或 GNU parallel）充分利用多核 CPU。最终，通过这些优化，一个处理 1000 个日志文件的脚本从 50 秒缩短至 6.25 秒，实现了 8 倍的提速。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,47 +36,58 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">小圈子共享</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> K7 专门设计用于在家庭或小群体中共享媒体内容，提供了一种私密的替代方案，不同于公共流媒体服务。</span>
+                        <strong style="color: #1a365d">避免不必要的 fork</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 每次调用外部命令（如 cat、grep）都会创建一个新的子进程，产生几毫秒的开销。通过使用 Bash 内置命令或直接让命令读取文件，可以显著减少这些开销。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">统一管理</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该服务器能够集中管理多种类型的媒体文件（电影、剧集、音乐），而不需要多个独立的应用程序。</span>
+                        <strong style="color: #1a365d">利用 Bash 内置功能</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Bash 提供了许多内置命令（如 [[ ]]、${#arr[@]}），这些命令比外部命令（如 test、wc）快得多，因为它们不需要 fork 进程。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">高性能播放</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过使用 ffmpeg 进行转码并支持 HLS，K7 能够确保即使在低速网络或旧设备上也能顺利播放高清内容。</span>
+                        <strong style="color: #1a365d">合理使用 Awk 和 Sed</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于处理大量数据或复杂的文本匹配，Awk 和 Sed 比 Bash 循环更高效，因为它们是专门为此设计的，并且是用 C 语言编写的。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">并行化处理</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过将独立任务分配给多个进程，可以充分利用多核 CPU，从而大幅度减少总执行时间。xargs -P 和 GNU parallel 是实现这一点的常用工具。</span>
                     </li>
             </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">把“慢 shell 脚本”重写成“快 shell 脚本”，往往只是几个习惯的改变。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">shell 性能的第一法则：避免不必要的 fork。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">能用命令直接读文件，就不要 cat。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">对大量数据用 awk，对少量数据用 read。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">86</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Geek(@geekbb)</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Geek</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">掘金本周最热</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">柒号华仔</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">189</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">17 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4194</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">自托管</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">媒体服务器</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ffmpeg</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">HLS</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Shell编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Bash</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Awk</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">并行化</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2093514723136295354?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/384d80306b?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2093514723136295354?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAAqpSURBVO3BQQ4bybIgQfcC739ln17GKoECk5LenzCz/7DWuuJhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd8+FLKn9SxaQyVUwqU8WkMlW8ofJGxYnKVHGTyknFpDJVTCpTxRsqU8Wk8idVfONhrXXNw1rrmoe11jUfLqu4SeWk4qTiGypTxVQxqfySylQxqUwVU8WkMqmcqEwVk8pUMalMFW9U3KRy08Na65qHtdY1D2utaz78mMobFW+ovFFxojJVTCpTxU0Vk8pUMalMFd+oeENlqviTVN6o+KWHtdY1D2utax7WWtd8+B9XMam8UTGpTCpTxaQyVUwqJypTxVQxqUwVk8pUMamcqJxU3KQyVfwve1hrXfOw1rrmYa11zYf/YyomlUnljYpJZaq4SeUNlROVNypOVE5U/n/2sNa65mGtdc3DWuuaDz9W8UsqU8UbFScqf1LFGyonFZPKicpU8Y2KX6r4lzysta55WGtd87DWuubDZSr/sopJZao4qZhUpoqbVKaKk4pJZaqYVKaKSWWqmFSmikllqphUpooTlX/Zw1rrmoe11jUPa61rPnyp4m+q+KWKSWWqmFRuqnhDZar4pYpJZar4RsX/koe11jUPa61rHtZa13z4kspUMalMFW+onFScVEwqv1QxqUwqJyrfqPgllZOKE5VvqEwVJypTxaQyVXzjYa11zcNa65qHtdY1H75UcVLxhspU8UsVJyonKlPFVDGpTBUnKicVk8pUMancVDGpTBUnFd9QmSqmiknllx7WWtc8rLWueVhrXfPhMpWp4hsqU8WkMlVMKicqJxVvqJxUTConFScqU8VJxS9VnFT8TRWTyk0Pa61rHtZa1zysta758GMqb1S8UXFTxYnKGxWTylQxqZyoTBUnKicVk8pJxYnKVHGiMlW8UfGNipse1lrXPKy1rnlYa13z4UsqJxXfUDmpmFS+oXJSMalMFZPKVDGpTBWTyjcqJpWbVN5QmSpOVKaKSeWkYlKZKm56WGtd87DWuuZhrXXNhy9VnKicVEwqU8WJyknFicpJxaQyVUwq31CZKiaVE5WTim+o3KRyUjGpTBUn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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/384d80306b?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
