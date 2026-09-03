@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Redis 已正式接入 AI</title>
+        <title>四年、十次告警、数十个技术决策：一个海外电商平台的高并发治理实录</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>Redis 已正式接入 AI</h2>
-        <p>8/31/2026, 7:51:17 AM</p>
+        <h2>四年、十次告警、数十个技术决策：一个海外电商平台的高并发治理实录</h2>
+        <p>9/2/2026, 12:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">Redis 正在从缓存中间件进化为 AI 应用的实时数据基础设施，通过集成向量搜索、语义缓存、Agent 记忆等能力，为 AI 工作流提供亚毫秒级的上下文支持。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文复盘了一个海外电商平台近四年来的高并发性能治理实践，系统总结了扩容演进、Redis 配置四轮迭代、热 key 三阶段根治以及黄牛防控的真实排查链路与方法论。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 Redis 在 AI 领域的战略布局，包括其核心能力——向量检索、Vector Sets、语义缓存和 Redis Iris 上下文引擎。通过分析技术原理、性能数据和实际应用场景，展示了 Redis 如何帮助 AI 应用实现高效、低延迟的数据访问，并为开发者提供了一站式的 AI 数据基础设施解决方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细记录了一个海外电商平台在历经大促、板球赛日等高并发场景中的十年告警与架构演进过程。主要内容分为四个核心维度：第一，扩容方向从早期的手忙脚乱向预案驱动与流量隔离演进；第二，Redis 历经连接池调优、删除后台 scan 命令、Session Redis 物理隔离及 Pipeline 连接池超时的四轮配置迭代；第三，通过将单 Hash 800+ 字段的大 key 改造为独立 String key 并引入本地缓存，实现了热 key 的三阶段根治；第四，通过从 WAF 封禁和黑名单升级到接口前置校验，实现了对黄牛刷单的釜底抽薪。最后，作者沉淀出了分层应对、先止血再根治、回溯深层根因等五条高并发治理方法论。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Redis 提供了完整的 AI 数据基础设施能力。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从向量搜索、Vector Sets、语义缓存到 Redis Iris 上下文引擎，Redis 覆盖了 AI 应用所需的全部数据层需求，包括相似度检索、记忆管理和实时数据集成。</span>
+                        <strong style="color: #1a365d">扩容与压测演进</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从最初的扩容部署失败、监控盲区和静态资源压力，演进到完备的活动流量报备、CDN 配置及多台机器扛下 QPS 16500 的压测能力。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">性能是 Redis 的核心优势。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Redis 基于内存的架构使其在向量插入（66，000 次/秒）和检索（十亿级数据 200ms）方面表现出色，为 AI 应用提供了亚毫秒级的响应速度，显著优于传统数据库。</span>
+                        <strong style="color: #1a365d">Redis 配置四轮迭代</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过调大连接池 maxTotal、屏蔽后台高频 scan、实现 Session Redis 与业务 Redis 物理隔离，以及优化 Pipeline 超时参数，解决了多类隐蔽性能瓶颈。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">语义缓存显著降低了 AI 运行成本。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过存储和复用 LLM 响应，Redis 的语义缓存可以节省高达 70% 的 Token 消耗，并使响应速度提升 15 倍，有效降低了 AI 应用的运营成本。</span>
+                        <strong style="color: #1a365d">热 key 的三阶段根治</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对单个 Hash 包含 800 多个字段导致 Redis 节点 CPU 触顶的问题，通过数据结构改造（拆分为独立 String key）、商详页按需精简及 L1 本地缓存实现了彻底根治。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Redis Iris 是 AI Agent 的关键组件。</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Redis Iris 提供了 Agent 记忆、上下文检索和数据集成等功能，帮助 AI Agent 跨会话、跨系统地访问数据，解决了 Agent 在复杂工作流中容易迷失方向的问题。</span>
+                        <strong style="color: #1a365d">黄牛防控与接口加固</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 面对黄牛绕过前端、单账号上亿请求打垮系统的攻击，从单纯的 WAF 与 IP 封禁升级为在下单接口入口处增加下架及无库存前置校验，使 submit 请求量下降 5 倍。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AI 应用如果没有上下文引擎，注定会失败。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">Agent 的问题不是智能不够，而是上下文不够。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">{"point":"每一次告警背后，都隐藏着一个更深的架构问题。"}</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">{"point":"降级开关是双刃剑，用了就要去找根因。"}</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,32 +63,32 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">91</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">掘金本周最热</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">苏三说技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">16 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">3821</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6964</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Redis</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">向量数据库</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">语义缓存</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">上下文引擎</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">后端开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/837c1a6308?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/c9111f5dd0?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/837c1a6308?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/c9111f5dd0?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
