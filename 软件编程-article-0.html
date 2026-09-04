@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>四年、十次告警、数十个技术决策：一个海外电商平台的高并发治理实录</title>
+        <title>科技爱好者周刊（第 411 期）：OpenClaw 2.0 是一个缩影</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>四年、十次告警、数十个技术决策：一个海外电商平台的高并发治理实录</h2>
-        <p>9/2/2026, 12:00:00 PM</p>
+        <h2>科技爱好者周刊（第 411 期）：OpenClaw 2.0 是一个缩影</h2>
+        <p>9/3/2026, 11:59:05 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文复盘了一个海外电商平台近四年来的高并发性能治理实践，系统总结了扩容演进、Redis 配置四轮迭代、热 key 三阶段根治以及黄牛防控的真实排查链路与方法论。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本期周刊深入探讨了 OpenClaw 2.0 的开发模式，揭示了 AI 时代软件生态的快速迭代与潜在风险，并分析了技术堆栈迁移的趋势。同时，分享了地月激光通信、韩国免费 AI 服务等科技动态，以及多个开源工具和资源。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细记录了一个海外电商平台在历经大促、板球赛日等高并发场景中的十年告警与架构演进过程。主要内容分为四个核心维度：第一，扩容方向从早期的手忙脚乱向预案驱动与流量隔离演进；第二，Redis 历经连接池调优、删除后台 scan 命令、Session Redis 物理隔离及 Pipeline 连接池超时的四轮配置迭代；第三，通过将单 Hash 800+ 字段的大 key 改造为独立 String key 并引入本地缓存，实现了热 key 的三阶段根治；第四，通过从 WAF 封禁和黑名单升级到接口前置校验，实现了对黄牛刷单的釜底抽薪。最后，作者沉淀出了分层应对、先止血再根治、回溯深层根因等五条高并发治理方法论。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本期周刊以 OpenClaw 2.0 的发布为切入点，分析了 AI 驱动的软件开发模式。文章指出，尽管 OpenClaw 实现了快速迭代，但大量未审查的 PR 可能引入隐患，建议用户在隔离环境中运行。同时，探讨了技术堆栈迁移的现象，认为 AI 正在推动行业向主流解决方案靠拢，可能牺牲多样性。在科技动态方面，介绍了中国在太空通信的突破、韩国的 AI 普及政策，以及多个实用工具和资源。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">扩容与压测演进</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 从最初的扩容部署失败、监控盲区和静态资源压力，演进到完备的活动流量报备、CDN 配置及多台机器扛下 QPS 16500 的压测能力。</span>
+                        <strong style="color: #1a365d">OpenClaw 2.0 的开发模式与风险</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> OpenClaw 2.0 的发布展示了 AI 辅助开发的效率，但同时也暴露了风险。该版本合并了大量未经过严格审查的 PR，这可能导致软件稳定性问题。文章建议用户在隔离环境中运行，以防潜在的安全隐患。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">Redis 配置四轮迭代</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过调大连接池 maxTotal、屏蔽后台高频 scan、实现 Session Redis 与业务 Redis 物理隔离，以及优化 Pipeline 超时参数，解决了多类隐蔽性能瓶颈。</span>
+                        <strong style="color: #1a365d">技术堆栈迁移的趋势</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 文章分析了近期多个项目从小众技术栈迁移到主流框架（如 React 和 Next.js）的现象。这种趋势是由 AI 的普及驱动的，因为 AI 模型通常基于主流数据进行训练，导致小众技术缺乏支持。这种单一化可能抑制未来的创新。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">热 key 的三阶段根治</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对单个 Hash 包含 800 多个字段导致 Redis 节点 CPU 触顶的问题，通过数据结构改造（拆分为独立 String key）、商详页按需精简及 L1 本地缓存实现了彻底根治。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">黄牛防控与接口加固</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 面对黄牛绕过前端、单账号上亿请求打垮系统的攻击，从单纯的 WAF 与 IP 封禁升级为在下单接口入口处增加下架及无库存前置校验，使 submit 请求量下降 5 倍。</span>
+                        <strong style="color: #1a365d">科技动态与资源分享</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 本期周刊还涵盖了多项重要科技进展，包括中国在地月激光通信的突破、韩国向公民提供免费 AI 服务的计划，以及多个开源工具（如 OpenCode Mobile 和 Git Agent）的介绍，为读者提供了丰富的行业信息。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">{"point":"每一次告警背后，都隐藏着一个更深的架构问题。"}</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">{"point":"降级开关是双刃剑，用了就要去找根因。"}</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;"></li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;"></li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;"></li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,32 +60,32 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">92</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">91</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阮一峰的网络日志</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阮一峰</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">28 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">6964</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">19 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4682</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">后端开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">OpenClaw</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">技术堆栈迁移</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">太空通信</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源工具</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/c9111f5dd0?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/8339d66991?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/c9111f5dd0?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/8339d66991?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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mSomlX+pYlK5SeWNikllqphUpopJZao4qXijYlKZKiaVk4oTlaliUpkqvnhYa13zsNa65mGtdc0PH6mcVEwqb6h8UXGiclLxRcWkclIxqbxR8YbKVDGp3KRyovKGylTxLz2sta55WGtd87DWuuaHf0zlpOILlaliqphU3qiYVE4qJpVJ5QuVNyomlaniROWk4o2KSWWqOFGZKiaV3/Sw1rrmYa11zcNa65ofPqqYVN6omFQmlS8qJpWp4g2VqeINlaniROVEZaqYVKaKSeVEZaq4qWJSOVGZKv5LHtZa1zysta55WGtd88NHKicqJypTxRcqv6nipOJfUpkqJpWpYlKZKm6q+E0V/9LDWuuah7XWNQ9rrWvsD/4hlaliUjmpOFGZKr5QmSomlZsqJpWp4iaVqeINlaniROWNihOVqeJEZar44mGtdc3DWuuah7XWNT9cpnJTxaRyojJVnKicVEwVk8r/EpWp4g2Vk4oTlaliUvlNKlPFTQ9rrWse1lrXPKy1rrE/+EBlqjhROamYVN6oeENlqjhRmSomlaniROWmijdUflPFpPI3VZyoTBVfPKy1rnlYa13zsNa65oePKt6oeKPiRGVSmSreUDmpmFSmiknljYo3VCaVqWJSmSomlaliUpkqJpUvKt5Q+S95WGtd87DWuuZhrXXNDx+p/E0VJxWTylTxhcobFScqJypTxRcVv6nipGJSOVGZKt5QmSp+08Na65qHtdY1D2uta364rOImlZOKN1ROKiaVqWJSOVH5ouILlaliUnmjYlI5qZhU3qj4omJSmSpuelhrXfOw1rrmYa11zQ+/TOWNiv+SijdUpopJ5UTlpoovVKaKk4qTikllUvmi4l96WGtd87DWuuZhrXXND//HqJxUTCqTylQxqUwVb1RMKicVb6jcVDGpTBU3VUwqU8WkMqm8oTJVfPGw1rrmYa11zcNa65of/sepnFRMKlPFicpUMalMFScqJxUnKl+ofFExqZxU/E0Vb6jc9LDWuuZhrXXNw1rrGvuDD1SmiptUpooTlZOKSeWk4kTljYpJ5Y2KSWWqeEPlpopJZaqYVE4qJpWp4r/kYa11zcNa65qHtdY1P1ym8jepTBUnKlPFicpU8UbFGxVfqEwVb1ScqPymipOKm1Smii8e1lrXPKy1rnlYa11jf7DWuuJhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd8/8AoKal9PD/MZwAAAAASUVORK5CYII=" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
