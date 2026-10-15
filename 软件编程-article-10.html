@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>像改文字一样改语音：火山引擎全新语音内容编辑模型</title>
+        <title>SSR-Merge：把 LoRA 合并从'参数算术'变成'信号路由'  | ICML 2026</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>像改文字一样改语音：火山引擎全新语音内容编辑模型</h2>
-        <p>10/13/2026, 11:00:00 AM</p>
+        <h2>SSR-Merge：把 LoRA 合并从'参数算术'变成'信号路由'  | ICML 2026</h2>
+        <p>10/14/2026, 12:00:00 PM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">火山引擎推出全新的语音内容编辑模型，支持通过自然语言指令直接修改音频中的具体词汇，在实现局部内容纠错的同时，最大程度保留原说话人的音色、韵律与上下文衔接。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">SSR-Merge 通过在信号空间进行路由，而非在参数空间进行算术，解决了多 LoRA 合并时的干扰问题，实现了高保真度的任务组合。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了火山引擎多媒体实验室研发的指令驱动语音内容编辑模型。该模型旨在将语音编辑从传统的「波形剪辑/重录」转向「AI 内容编辑」，允许用户通过自然语言指令（如「把 A 改成 B」）低成本地修正口播错误或修订广告词。技术上，模型采用音频 Tokenizer 将声音离散化，结合 CoT 式语义规划（先生成语义表达，再生成音频 Token），并利用原音频的声学特征确保音色一致性。该能力补齐了音质增强与声线迁移之外的「内容可编辑」环节，适用于口播纠错、广告改词及存量素材再编辑等场景。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文介绍了 SSR-Merge，一种基于子空间信号路由的 LoRA 合并方法，该方法通过统计估计直接解出路由器，实现了无训练、无调参的合并，并保持了高保真度和稳定性。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">从「后期工程」转向「AI 内容编辑」</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 传统的音频修改依赖于重录或简单的剪切拼接，而新模型允许用户通过自然语言指令直接修改语音内容，将编辑对象从波形片段提升到可理解的语义层面。</span>
+                        <strong style="color: #1a365d">传统合并方法的局限</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 现有的 LoRA 合并方法，如任务算术和稀疏化，都是在参数空间进行操作，导致不同任务之间的信号相互干扰，造成画风串味和角色崩坏。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">核心技术路径：统一表示与 CoT 语义规划</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 模型将原音频转换为离散 Token 并与指令共同输入，采用「先语义、后语音」的生成顺序，在解码阶段引入原音频声学特征，以保证修改片段与原说话人的音色和韵律自然衔接。</span>
+                        <strong style="color: #1a365d">SSR-Merge 的核心思想</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> SSR-Merge 不在参数空间做算术，而是在信号空间做路由。它通过统计通道内信号的相关结构，反向拆解混合信号，并使用方向引导矩阵将信号路由到正确的出口，从而避免了干扰。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">补齐语音生产链路中的「内容可编辑」环</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在现有 AI 工具能实现音质增强（如 Adobe Podcast）和声线迁移（如 ElevenLabs）的基础上，该模型解决了精准修改语音具体信息这一关键痛点。</span>
+                        <strong style="color: #1a365d">理论与实践优势</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> SSR-Merge 的路由器 R 是由数据二阶统计量直接解出的唯一解析解，等价于最小二乘估计。这种方法不需要训练或调参，且可以重参数化为标准 LoRA，实现零额外推理开销。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">实际应用场景广泛</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 主要面向口播纠错（如将「败血症」改为「坏血病」）、广告素材快速修订（如「极速款」改为「极速版」）以及大规模存量视频的再编辑。</span>
+                        <strong style="color: #1a365d">实验结果</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实验表明，SSR-Merge 在单任务保真度、多任务组合生成以及人像精修等方面，均显著优于现有基线方法，展现出高稳定性和高保真度。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">让用户用自然语言指令表达"要改什么"，把"怎么自然地改进原声音"交给模型</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">音质可以被增强，声线可以被迁移，而语音里的具体内容也应该可以被精准编辑</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">先把声音转成可建模的音频 Token，再结合自然语言指令完成语义规划，最后生成修改后的语音结果。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">不在参数空间做算术，而在信号空间做路由。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">路由器 R = QG⁻¹ 由数据的二阶统计量直接解出，等价于最小二乘的唯一解析解，无需训练、无需调参。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">SSR 证明了一种新的可能性：合并可以是无训练、有理论保证、零推理开销的标准操作。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +63,32 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">87</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">字节跳动技术团队</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">字节跳动技术团队</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">90</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vivo互联网技术</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2356</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">19 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">4527</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 与智能应用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 语音</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">多模态 AI</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">火山引擎</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 与智能应用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型训练与推理</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">图像生成</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">扩散模型</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">ICML</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/ee79acaeae?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/fff4064e32?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/ee79acaeae?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/fff4064e32?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
