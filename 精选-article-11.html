@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>yetone 的 Magpie 自动化维护工作流深度拆解</title>
+        <title>苹果 LensVLM：长上下文压缩成图片，模型边看边「放大」</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>yetone 的 Magpie 自动化维护工作流深度拆解</h2>
-        <p>10/13/2026, 7:04:57 PM</p>
+        <h2>苹果 LensVLM：长上下文压缩成图片，模型边看边「放大」</h2>
+        <p>10/14/2026, 8:01:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细拆解了开发者 yetone 如何利用 Claude Code 和 Opus 5.5 模型，通过三个并行 /loop 循环任务实现 Magpie 项目的自动化 issue 修复、PR 合并、用户反馈收集与代码清理。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">LensVLM 是一种基于视觉语言模型的长上下文理解方案，它将文本压缩为图像进行快速浏览，并允许模型按需展开特定页面以获取高精度信息，从而在保持高准确率的同时显著降低输入成本。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">yetone 公开了他维护开源项目 Magpie 的自动化工作流。他使用 Claude Code 和 Opus 5.5 模型，同时运行 3 个 /loop 循环：第一个负责 GitHub issue 和 Discord 反馈，自动修 bug、发版并回复用户；第二个监控 X/Twitter 上的反馈，并使用廉价的 Jev 决策模型过滤无关信息以节省成本；第三个负责清理代码并总结经验教训。他本人只需在每晚花点时间处理 UI/UX 问题。作者补充了运行环境搭建、偏好记忆沉淀等 5 点核心建议，指出该流程的核心在于验证环境、边界提示词和自我迭代机制。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">在长上下文任务中，直接输入大量文本会消耗大量计算资源并增加延迟。LensVLM 提出了一种混合方法：首先将文本压缩为低分辨率图像，让模型快速浏览全局；然后，模型可以根据需要选择性地展开特定页面，读取高分辨率的原始文本或图像。这种方法通过分离粗略浏览和详细阅读，实现了在保持高准确率（接近完整文本参照）的同时，显著降低输入 token 数量和计算成本。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,14 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">三循环流水线实现全流程自动化维护</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> yetone 将项目维护拆分为三个并行 /loop 任务：管 GitHub/Discord、管 Twitter 反馈、管代码库清理与总结，实现 7x24 小时自动响应与处理。</span>
+                        <strong style="color: #1a365d">分离浏览与读取</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> LensVLM 将长文档理解分为两个阶段：先用压缩图像进行快速、低成本的全局浏览，再用高分辨率展开进行详细、高精度的局部读取。这种分离允许模型在有限的计算预算内，既能把握全局又能获取细节。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">引入廉价决策模型进行低成本前置过滤</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对 Twitter 关键词匹配噪声多的问题，使用类似 Jev 的专用决策模型先筛选相关性，仅将高价值请求分流给昂贵的主模型，大幅降低 Token 消耗。</span>
+                        <strong style="color: #1a365d">可执行的视觉-语言模型</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 该模型不仅理解图像，还具备执行能力。它可以分析压缩图中的内容，并主动调用 'read_page' 工具来展开感兴趣的区域，从而将视觉信息转换为可操作的文本数据。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">AI 决策一致性依赖记忆系统与设计文档</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过在项目早期与 AI 充分讨论设计与审美偏好，并将其沉淀为记忆文件，使 AI 在后续无人值守时能做出符合作者预期的决策。</span>
+                        <strong style="color: #1a365d">显著的效率提升</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 实验表明，使用 LensVLM 可以将端到端延迟降低约 30%，同时将峰值 KV 缓存减少到原来的十四分之一。在饱和并发测试中，吞吐量提高了 3.7 倍，每千次请求的 GPU 服务成本降低了约 73%。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">灵活的展开策略</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对于不同类型的文档，LensVLM 可以选择不同的展开方式。对于纯文本页面，它可以展开为原始文本；对于包含图表的 PDF，它可以展开为高清图像，确保所有必要的信息（包括视觉元素）都被捕获。</span>
                     </li>
             </ol>
         </div>
@@ -52,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">没有任何的魔法，甚至还特别简陋</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">我怕有的人提的 PR，是无脑用 Coding Agent 乱写的，自己都没测过。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">让模型在阅读压缩内容时，仍能按需查阅原文</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">压缩页面能够覆盖全文，但清晰度成了新的瓶颈</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">那如果给模型一个 '放大镜' 呢？</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;"></li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -62,30 +65,30 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
                 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">90</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">精选文章：</span><span style="color: #334155; font-weight: 500">是</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">宝玉(@dotey)</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">宝玉</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">机器之心</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">机器之心</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">10 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2315</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">11 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2502</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 与智能应用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 工作流</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">提示工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Agent编排</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 与智能应用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">长上下文</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">视觉语言模型</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">模型训练与推理</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">用户体验设计</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2110084393255514268?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读推文
+        <a href="https://www.bestblogs.dev/article/c5ef9aef0d?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2110084393255514268?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/c5ef9aef0d?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=0">返回目录</a>
     </body>
     <script>
