@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>NBA 专场分享 76 人 vs 骑士</title>
+        <title>系统设计 Day 21：短链接服务架构解析</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>NBA 专场分享 76 人 vs 骑士</h2>
-        <p>10/16/2026, 10:59:27 PM</p>
+        <h2>系统设计 Day 21：短链接服务架构解析</h2>
+        <p>10/18/2026, 2:02:41 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">一篇 NBA 赛事预测稿，作者结合两队战绩、主客场表现与外界让分数据，认为外界维持主队让 1.5 分存在诱导嫌疑，看好骑士客场受让取胜。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">深入解析短链接服务的分布式 ID 生成、Base62 编码原理、读写分离策略及面试官常考的技术权衡点。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章围绕费城 76 人对阵克里夫兰骑士的常规赛展开赛前分析。基本面方面，76 人本赛季 22 胜 17 负列东部第 5，但近 6 场仅 3 胜 3 负，主场 10 胜 10 负、场均失分 117 分，且上一场刚以 26 分分差惨败给骑士；骑士 23 胜 19 负列东部第 7，场均得分 120.1 分、客场 121.6 分，进攻火力更强，但客场战绩同为 9 胜 9 负、防守失分超 119 分。作者据此认为，外界初始仅给出主队让 1.5 分，与排名差距、近期交手战绩和上一场分差形成反差，疑似利用 76 人的主场与排名优势诱导资金流向主队，实际并不看好其防守反弹。最终给出「骑士 +2.5」的数据观点，并注明截止时间与免责声明。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作为「60 天学系统设计」系列的第 21 部分，本文详细拆解了短链接服务（如 TinyURL）的系统设计。核心内容包括：1. API 定义（生成与重定向）；2. 唯一 ID 生成与 Base62 转换逻辑，解释为何 7 位 Base62 足以支撑海量数据；3. 技术选型对比：哈希冲突处理 vs Base62 唯一性、301 vs 302 重定向的利弊、读多写少场景下的缓存策略；4. 存储估算与安全漏洞（ID 枚举攻击）。最后提出了关于自定义短码冲突的思考题。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,58 +36,47 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">76 人排名占优但主场与防守数据并不支撑其让分</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 76 人 22 胜 17 负列东部第 5，但主场仅 10 胜 10 负、场均失分 117 分，近 6 场 3 胜 3 负，且上一场刚以 26 分惨败给骑士，心理与防守层面均处劣势。</span>
+                        <strong style="color: #1a365d">Base62 编码在短链生成中的应用</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 利用 Base62 将分布式 ID 转换为短码，相比哈希方法避免了碰撞问题，且能保持短码长度随 ID 增长的自然规律。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">骑士进攻火力更强，但客场防守同样不稳</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 骑士场均得分 120.1 分、客场场均 121.6 分，进攻端优于主队；但客场战绩 9 胜 9 负，场均失分超过 119 分，防守并不稳固。</span>
+                        <strong style="color: #1a365d">高并发读写场景的优化策略</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 针对读远多于写的特征，采用缓存热点短链、数据库回源的架构，并讨论了 301/302 状态码对业务统计的影响。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">外界让分数据与基本面存在错位，疑似诱导</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在骑士刚大胜 26 分、近 10 次交锋 76 人仅 4 胜的背景下，外界仍维持主队让 1.5 分，作者认为这是利用 76 人主场排名优势吸引资金，实际对主队防守反弹并不看好。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">最终观点为看好骑士客场受让取胜</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 作者给出「骑士 +2.5」的数据观点，理由是骑士进攻端强势有望延续，而 76 人主场胜率仅五成、防守漏洞明显，难以限制对手火力。</span>
+                        <strong style="color: #1a365d">安全与扩展性考量</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 指出了连续 ID 带来的枚举安全风险，并提出了加盐或随机化解决方案，同时探讨了自定义短码的冲突处理机制。</span>
                     </li>
             </ol>
-        </div>
-<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
-            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
-                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
-            </h3>
-            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">外界数据维持主让的格局，很有可能是利用费城的主场排名优势进行诱导，实际上对于费城的防守反弹并不看好。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">费城 76 人虽然占据主场之利且排名略高，但球队近况一般且刚刚经历了一场惨败，心理层面处于劣势。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">骑士在进攻端的强势表现有望在客场持续，加上双方近期交手分差较大的走势，此役骑士完全有能力在客场保持竞争力甚至再次取胜。</li>
-            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">62</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">nowscore.com</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">nowscore.com</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">体育运动</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">山景城小路(@Zen_with_AI)</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">山景城小路</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1450</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">4 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">979</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">体育与运动</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">篮球</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">体育数据分析</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">球员与表现</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">NBA</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程与工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">分布式系统</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">后端开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">API设计</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/8fd4e1e6e2?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
-            阅读完整文章
+        <a href="https://www.bestblogs.dev/status/2111639070338400309?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+            阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/8fd4e1e6e2?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/status/2111639070338400309?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=3">返回目录</a>
     </body>
     <script>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>NewMax 自动化安装引导</title>
+        <title>读见站点性能优化实践：从 N+1 查询到机房链路调整</title>
         <style>
             body {
                 padding: 12px;
@@ -15,51 +15,76 @@
         </style>
     </head>
     <body>
-        <h2>NewMax 自动化安装引导</h2>
-        <p>10/16/2026, 11:08:38 AM</p>
+        <h2>读见站点性能优化实践：从 N+1 查询到机房链路调整</h2>
+        <p>10/17/2026, 11:46:12 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">作者引导用户将相关需求直接交给 NewMax，由其完成自动化安装，并提供了仓库地址。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">作者分享了为读见（BestBlogs 3.0 中文版）优化页面卡顿的完整链路排查过程，涵盖数据库查询优化、机房部署调整及缓存并行化处理。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">此推文是前续内容的补充，指引用户通过 NewMax 实现自动安装相关工具，并附带了项目的 GitHub 仓库链接。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">针对读见站点内测中出现的页面卡顿问题，作者进行了一次全链路性能梳理。通过分析请求链路（Next.js -&gt; Nginx -&gt; API -&gt; Redis/MongoDB），识别并解决了三个核心问题：将导致数百次往返的 N+1 查询改为批量读取；将 43% 的跨机房流量迁移至同机房以降低延迟；对身份验证等重复读操作引入缓存并由串行改为并行。最终实现服务端取数中位耗时下降约 81%，并完善了基于阿里云 ARMS 的全链路观测体系。</p>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💡</span> 主要观点
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #334155">
+                <li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">消除数据库 N+1 查询问题</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 专栏列表请求原触发 240-470 次 MongoDB 查询，通过改为批量读取并优化索引，将数据库往返次数降至个位数。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">优化跨机房网络延迟</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 发现同机房延迟 &lt;1ms 而跨机房约 72ms，通过调整路由将主要入口迁至数据节点同机房，消除不必要的网络开销。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">减少冗余等待与串行阻塞</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 对身份验证等高频读操作增加缓存，并将可独立的请求由串行改为并行执行，提高资源利用率。</span>
+                    </li>
+            </ol>
+        </div>
+<div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
+            <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
+                <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一个列表请求，会触发 240～470 次 MongoDB 查询。列表里逐项补充数据，形成了典型的 N+1 查询。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">把主要入口迁到与数据节点同机房的位置，让在线 API 尽量靠近数据库，慢节点保留为备用。</li>
+            </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">74</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">Yangyi(@Yangyixxxx)</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">Yangyi</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">ginobefun(@hongming731)</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">ginobefun</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">47</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">7 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1583</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程与工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开发者工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">个人效率</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">推文串</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程与工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统设计</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">后端开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/status/2111051689860149678?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/status/2111423528151253477?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读推文
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/status/2111051689860149678?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/status/2111423528151253477?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAYAAADk3g0YAAAAAklEQVR4AewaftIAAApSSURBVO3BQY4gx7LgQDJR978yp5e+CiAno1rS+25mf7DWuuJhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd87DWuuZhrXXNw1rrmoe11jUPa61rHtZa1zysta55WGtd88NHKn9TxYnKScWk8kbFGyq/qWJSeaNiUnmj4guVqWJS+ZsqvnhYa13zsNa65mGtdc0Pl1XcpPJFxRsVk8qkMlVMKlPFTSqTyknFpDKpnFRMKl+oTBVvVNykctPDWuuah7XWNQ9rrWt++GUqb1S8ofJFxRcqU8Wk8kbFTSpTxYnKf4nKGxW/6WGtdc3DWuuah7XWNT/8j6mYVKaKSeU3VZyoTCpTxRcVJypvVEwqJxUnKlPFf9nDWuuah7XWNQ9rrWt++B9X8UbFpPKGyk0qb1ScqEwVk8obFZPKpPJ/ycNa65qHtdY1D2uta374ZRV/k8pNFb9JZap4Q2VSmSqmiknlROWNir+p4t/kYa11zcNa65qHtdY1P1ym8k+qmFSmiknlRGWqmFSmikllqnhDZao4qZhUpoqTikllqphUTlSmikllqjhR+Td7WGtd87DWuuZhrXWN/cF/mMobFScqJxUnKlPFicpU8YbKScWkclKx/v89rLWueVhrXfOw1rrmh49UpopJ5aaKqeJE5URlqphUvlCZKk5UblKZKk5UTireUJkqJpWpYlK5qeI3Pay1rnlYa13zsNa6xv7gA5UvKiaVqeINlaliUjmpuEnlpGJSuaniRGWqOFGZKt5QOal4Q2WqmFTeqPjiYa11zcNa65qHtdY1P3xU8YbKpDJVTConFVPFScWkcqIyVUwqU8W/icpUcaJyUjGpTBWTyknFpPJGxaQyVUwqU8VND2utax7WWtc8rLWusT/4QOWmii9U3qj4QuWLijdUTiomlaniRGWq+EJlqvibVKaK3/Sw1rrmYa11zcNa6xr7gw9UpopJZaqYVN6oOFGZKk5UpoovVN6ouEnli4pJ5aRiUpkqJpWpYlI5qbhJZar44mGtdc3DWuuah7XWNT/8wyomlaniRGWqeKNiUpkqvqg4UZkqTlRuqphUpopJZVKZKk4qTip+k8pUcdPDWuuah7XWNQ9rrWvsD36RyknFpHJSMan8m1ScqEwVJypfVJyovFHxhspUMalMFZPKFxWTyknFFw9rrWse1lrXPKy1rvnhMpWTikllqvii4g2VqWJSmSomlUnlN1VMKlPFpDJVTBUnKicqU8WJylTxRsWJyqTyNz2sta55WGtd87DWuuaHj1TeUDlR+U0qJypTxRsVJyqTylQxVZxUnFScqJxUTCpTxU0qU8VNFZPKTQ9rrWse1lrXPKy1rvnhX65iUnlDZao4UTlRmSomld+k8kbFFypTxaQyVUwVk8qkMlXcVDGpTBU3Pay1rnlYa13zsNa65oePKiaVk4pJZaqYVKaKSeWkYlK5SWWqOFGZKiaVNyomlTcqJpWp4qTii4pJZaqYVN5QmSp+08Na65qHtdY1D2uta374SGWqOFGZKk4qflPFpPKFyhsqJxUnKlPFpDJVfKEyVZyofKEyVZyonKhMFTc9rLWueVhrXfOw1rrG/uAilaniROWmii9U3qiYVE4qJpWbKiaVqWJS+aLiDZV/s4ovHtZa1zysta55WGtd88NHKlPFpPJGxRsqJypTxU0qN1W8oTKpTBW/SeWkYqqYVKaKN1T+TR7WWtc8rLWueVhrXfPDRxWTyk0qU8UXKl9UTCpTxaQyqbyhMlXcVDGpfFFxovKGylRxUjGpnFTc9LDWuuZhrXXNw1rrmh9+WcWk8kbFTRWTylQxqfyTKt6oOFF5o2JSmSreqJhUTireUPknPay1rnlYa13zsNa65ofLKr5QualiUnmjYlL5TSpfqJxUnKhMKl+ovKFyU8Wk8pse1lrXPKy1rnlYa13zw0cqU8Wk8kbFP0nlpGJS+ZsqvlCZKn5TxYnKVPGGyhsVk8pU8cXDWuuah7XWNQ9rrWt++KhiUpkqJpWpYlL5TRWTylQxqUwqU8WkclIxqUwVk8oXKlPFpPJGxaQyVUwqJxWTyhsVk8qJylRx08Na65qHtdY1D2uta374SOWNikllqjhRmSomlaliUpkq/iaVqeINlZsqJpWpYlKZKt6oOKl4Q2WqmFT+poe11jUPa61rHtZa1/zwUcWk8kbFicobFV+oTBVfVJyoTBVTxYnKScUbFZPKVPFGxRcqU8WJyknFb3pYa13zsNa65mGtdc0PH6m8oTJVnFS8oTJVnKjcVDGpTBVTxRsqX6hMFZPKVDGpTBX/pIpJ5URlqrjpYa11zcNa65qHtdY19gcfqLxRcaJyUvGFyknFpHJS8YXKb6qYVH5TxYnKScWJylQxqUwVk8pJxRcPa61rHtZa1zysta754aOKSWWqOFE5qZhUpooTlaliUplUpopJZVKZKiaVqeKk4g2VqWJSmSpOVE4qJpVJ5aRiUjlRuaniNz2sta55WGtd87DWusb+4AOVk4pJ5d+sYlKZKt5QOak4UTmpmFROKt5QOan4QmWq+ELli4ovHtZa1zysta55WGtd88NlFW9UTCpTxaTyRcUbFScqb1S8UfFFxYnKGxWTyhcVk8pJxaRyUjGpTBU3Pay1rnlYa13zsNa6xv7gH6QyVUwqU8VNKl9UnKj8kyomlZOKE5WTijdUpopJ5aTiROWk4qaHtdY1D2utax7WWtfYH1yk8kXFGypTxaTyRsWkMlVMKl9UTConFZPKVDGpTBUnKlPFFypfVEwqJxUnKlPFTQ9rrWse1lrXPKy1rrE/+EBlqjhROamYVE4qTlSmijdUpooTlX9SxRcqb1RMKlPFicq/ScUXD2utax7WWtc8rLWusT/4D1OZKk5UpoovVKaKE5WTijdU3qiYVKaKSWWqmFRuqnhD5aaKLx7WWtc8rLWueVhrXfPDRyp/U8VUMancpPKFylQxqZyoTBVvVEwqJyonKicVJypvqEwVJxWTyknFTQ9rrWse1lrXPKy1rvnhsoqbVE5UpopJ5Q2VqWJSmSp+U8UXKl9UTCpTxW+qeEPlpOI3Pay1rnlYa13zsNa65odfpvJGxRcqU8WkMqmcqEwVk8obKicqX1RMKlPFicqk8oXKGyo3VUwqU8VND2utax7WWtc8rLWu+eF/nMpJxaQyVUwqU8WkclJxk8qkMlVMKicVk8obKlPFpHJSMalMFW+oTBWTylTxxcNa65qHtdY1D2uta374H1MxqUwVb6i8UXGiclJxojJVnKicVEwqJxWTyonKVPFvUnHTw1rrmoe11jUPa61rfvhlFb+p4g2Vk4oTlb9J5UTljYovVKaKN1TeqDhR+Td5WGtd87DWuuZhrXXND5ep/E0qb1ScqHyhMlWcVLxRcZPKScWkMqm8UXGicqJyUjGpTCpTxU0Pa61rHtZa1zysta6xP1hrXfGw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWueVhrXfOw1rrmYa11zcNa65qHtdY1D2utax7WWtc8rLWu+X+uv18gacDRbAAAAABJRU5ErkJggg==" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
