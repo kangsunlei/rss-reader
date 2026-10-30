@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>为数不多的几次频繁重置了，抓紧蹬吧</title>
+        <title>PHP Swoole 协程模型详解：协程与线程/进程、调度、常驻内存及与 Go goroutine 的异同</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>为数不多的几次频繁重置了，抓紧蹬吧</h2>
-        <p>10/28/2026, 3:20:00 AM</p>
+        <h2>PHP Swoole 协程模型详解：协程与线程/进程、调度、常驻内存及与 Go goroutine 的异同</h2>
+        <p>10/29/2026, 1:33:04 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHubStore 宣布将于 2026 年 10 月 28 日下午 2 至 3 点进行系统重置，建议用户在此之前完成必要的操作。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度解析了 Swoole 协程模型，对比了其与线程、进程及 Go goroutine 的区别，并介绍了协作式调度、常驻内存的陷阱及解决方案。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">GitHubStore 发布通知，表示即将进行一次系统重置，预计时间为 2026 年 10 月 28 日下午 2 点到 3 点。用户被建议在这一时间段之前抓紧完成任何正在进行的工作或操作。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细分析了 PHP 传统 FPM 模型的局限性，并介绍了 Swoole 如何通过协程（Coroutine）解决并发问题。通过对比进程、线程与协程在调度方式、切换成本和内存隔离上的差异，阐述了“协作式调度”的本质。作者特别强调了在常驻内存模式下的常见坑，如全局/静态变量导致的请求污染、内存泄漏、数据库连接失效等，并提供了使用 Co::getContext() 协程上下文、连接池以及 WaitGroup 机制等详细的实战代码示例和建议。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,11 +36,17 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">系统重置时间</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> GitHubStore 计划在 2026 年 10 月 28 日下午 2 点到 3 点之间进行系统重置。这一时间段内，服务可能会暂时不可用或功能受限。</span>
+                        <strong style="color: #1a365d">PHP 传统 FPM 模型的瓶颈</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> FPM 每一个请求对应一个进程，并发能力受限于进程数，且每个请求结束都会释放内存和连接，无法实现连接的高效复用。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">用户建议</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 为了避免数据丢失或操作中断，用户被建议在重置时间到来之前，抓紧完成任何正在进行的任务或保存重要数据。</span>
+                        <strong style="color: #1a365d">协程的协作式调度的本质</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Swoole 协程是用户态的轻量级执行流，由程序自己调度，只有在遇到 IO 或显式 yield 时才会让出控制权，避免了内核态切换的开销。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">常驻内存模式下的核心陷阱</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Swoole 环境中，进程不结束，使用 static 或全局变量存储请求数据会导致不同请求间的数据污染；未清理的全局数组或引用会导致内存泄漏并引发 OOM。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">针对协程问题的工程化解决方案</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Co::getContext() 使用协程上下文实现请求级隔离；利用连接池维护数据库连接状态；并使用 WaitGroup 管理子协程生命周期。</span>
                     </li>
             </ol>
         </div>
@@ -49,7 +55,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">预计下午 2 到 3 点左右~</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">进程是资源分配的最小单位，线程是 CPU 调度的最小单位；协程不是操作系统概念，而是用户态轻量级执行流。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">协程上下文是替代「全局变量存请求数据」的正确姿势。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Swoole 环境中，进程不结束，使用 static 或全局变量存储请求数据会导致不同请求间的数据污染。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">协作式调度的前提。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -57,31 +63,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">75</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">GitHubStore</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">GitHubStore</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">媒体资讯</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">掘金本周最热</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vipxieliang</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">1 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">16</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">29 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7101</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">资讯与媒体</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">系统维护</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">重置通知</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">GitHubStore</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">操作提醒</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程与工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程语言</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Go</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Swoole</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/cf82fec40f?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/128556394e?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/cf82fec40f?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/128556394e?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
