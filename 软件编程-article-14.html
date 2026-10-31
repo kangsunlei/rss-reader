@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PHP Swoole 协程模型详解：协程与线程/进程、调度、常驻内存及与 Go goroutine 的异同</title>
+        <title>Agent 数据飞轮平台的选型和实践</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>PHP Swoole 协程模型详解：协程与线程/进程、调度、常驻内存及与 Go goroutine 的异同</h2>
-        <p>10/29/2026, 1:33:04 AM</p>
+        <h2>Agent 数据飞轮平台的选型和实践</h2>
+        <p>10/30/2026, 12:32:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文深度解析了 Swoole 协程模型，对比了其与线程、进程及 Go goroutine 的区别，并介绍了协作式调度、常驻内存的陷阱及解决方案。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文详细介绍了 1688 电商在构建宙斯 AI 组织大脑时，如何通过接入 AgentLoop 数据飞轮平台，解决 Agent 执行过程中的可观测性、质量评估和版本回归问题，从而实现从 '盲人摸象' 到 '闭环优化' 的转变。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">文章详细分析了 PHP 传统 FPM 模型的局限性，并介绍了 Swoole 如何通过协程（Coroutine）解决并发问题。通过对比进程、线程与协程在调度方式、切换成本和内存隔离上的差异，阐述了“协作式调度”的本质。作者特别强调了在常驻内存模式下的常见坑，如全局/静态变量导致的请求污染、内存泄漏、数据库连接失效等，并提供了使用 Co::getContext() 协程上下文、连接池以及 WaitGroup 机制等详细的实战代码示例和建议。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章首先分析了在 Agent 开发和测试中，由于缺乏统一的执行观测和质量评估标准，导致偏差根因难以定位、优化效果无法量化、历史问题无法沉淀的痛点。随后，介绍了选择 AgentLoop 平台的理由，并详细阐述了其在执行链路观测、任务评估和失败样本回归方面的功能。接着，通过具体的接入流程和实际案例，展示了如何利用该平台进行线上巡检、实验验证和发布回归，最终实现了显著的效率提升和质量改善。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,20 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">PHP 传统 FPM 模型的瓶颈</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> FPM 每一个请求对应一个进程，并发能力受限于进程数，且每个请求结束都会释放内存和连接，无法实现连接的高效复用。</span>
+                        <strong style="color: #1a365d">接入前的痛点分析</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在没有统一观测平台的情况下，团队难以对应偏差根因、量化优化效果，并缺乏稳定的回归机制，导致问题反复出现。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">协程的协作式调度的本质</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> Swoole 协程是用户态的轻量级执行流，由程序自己调度，只有在遇到 IO 或显式 yield 时才会让出控制权，避免了内核态切换的开销。</span>
+                        <strong style="color: #1a365d">AgentLoop 的核心功能</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> AgentLoop 提供了无侵入的执行链路观测、基于真实数据的质量评估，以及失败样本的自动化回归验证，实现了观测、评估和优化的闭环。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">常驻内存模式下的核心陷阱</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 Swoole 环境中，进程不结束，使用 static 或全局变量存储请求数据会导致不同请求间的数据污染；未清理的全局数组或引用会导致内存泄漏并引发 OOM。</span>
+                        <strong style="color: #1a365d">实际应用场景</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 平台被用于线上巡检、实验验证和发布回归，帮助团队快速定位问题、验证优化假设，并确保版本上线前的质量稳定性。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">针对协程问题的工程化解决方案</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过 Co::getContext() 使用协程上下文实现请求级隔离；利用连接池维护数据库连接状态；并使用 WaitGroup 管理子协程生命周期。</span>
+                        <strong style="color: #1a365d">典型案例分析</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通过具体案例，文章展示了如何识别 Agent 在文档读取和子任务回传中的失败模式，并将其转化为可执行的测试用例进行修复。</span>
+                    </li><li style="margin: 12px 0; line-height: 1.8;">
+                        <strong style="color: #1a365d">接入建议与未来展望</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 建议从最小闭环开始逐步扩展，并展望了未来通过业务评估器、经验库和记忆库进一步提升 Agent 智能化的可能性。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +58,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">进程是资源分配的最小单位，线程是 CPU 调度的最小单位；协程不是操作系统概念，而是用户态轻量级执行流。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">协程上下文是替代「全局变量存请求数据」的正确姿势。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">在 Swoole 环境中，进程不结束，使用 static 或全局变量存储请求数据会导致不同请求间的数据污染。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">协作式调度的前提。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">用户向 Agent 提交任务，首要诉求是获得正确结果。但对研发和测试团队来说，仅凭一次输出是否正确，还不足以判断 Agent 的真实质量。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">AgentLoop 使用 Session、Trace 和 Span 组织调用日志记录：Session 对应一段多轮会话，Trace 对应其中一轮请求，Span 记录该轮请求中的模型调用、工具调用等具体操作。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">评估承接上一节的可观测数据：平台将用户输入、模型推理、工具调用和最终输出加工成数据集，再按准确性、任务完成度等标准给出分数和原因，快速定位低分样本。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;"></li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +66,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">88</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">掘金本周最热</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">vipxieliang</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">阿里巴巴中间件</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">阿里巴巴中间件</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">人工智能</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">29 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7101</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">32 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">7792</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程与工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">性能优化</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程语言</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Go</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Swoole</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 与智能应用</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI Agent</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">可观测性</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">电商</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">阿里云</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/128556394e?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/c591ab2715?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/128556394e?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/c591ab2715?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
