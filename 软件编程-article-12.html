@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>攻击者爆破微软 SQL 服务器，猜解密码植入挖矿远控程序</title>
+        <title>是不是引入某一个工具集，就算 SDD？（arch.md 开源）</title>
         <style>
             body {
                 padding: 12px;
@@ -15,20 +15,20 @@
         </style>
     </head>
     <body>
-        <h2>攻击者爆破微软 SQL 服务器，猜解密码植入挖矿远控程序</h2>
-        <p>11/14/2026, 10:00:00 AM</p>
+        <h2>是不是引入某一个工具集，就算 SDD？（arch.md 开源）</h2>
+        <p>11/15/2026, 4:38:00 AM</p>
         <p><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 100%; margin: 0px auto; color: rgb(30, 41, 59); padding: 20px 0px;">
         <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📌</span> 一句话摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">攻击者通过暴力破解公网暴露的微软 SQL Server 弱口令，利用 xp_cmdshell 权限植入门罗币挖矿程序与 Gh0st RAT 远控木马。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">本文探讨了企业级规范驱动开发（SDD）的本质，指出虽然工具集可以辅助落地，但关键在于建立公司特定的 spec 基线和优化人与 AI 的协作流程，而非仅仅依赖通用工具。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
                 <span style="color: #d97706; margin-right: 8px">📝</span> 详细摘要
             </h3>
-            <p style="margin: 0; line-height: 1.8; color: #334155">本文分析了一起针对公网微软 SQL Server 的高危攻击活动。攻击者首先利用 Go 语言编写的扫描器定位开放 1433 端口的主机，随后使用包含 2700 多个密码的字典进行高并发爆破。一旦入侵成功，攻击者通过 T-SQL 开启 xp_cmdshell 执行系统命令，植入伪装成系统进程的下载器，最终部署门罗币挖矿程序以窃取算力，以及 Gh0st RAT 变种木马以实现远程控制和数据窃取。文章详细拆解了从扫描、爆破到持久化植入的完整感染链，并提供了防御建议与 IoC 指标。</p>
+            <p style="margin: 0; line-height: 1.8; color: #334155">文章通过分析四类典型留言，澄清了关于 SDD 和 TDD 的误区，强调这些软件工程理念在 AI 时代依然重要，并指出企业级 SDD 的核心是定制化的 spec 基线建设和团队协作流程的升级，而非简单引入通用工具集。</p>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
             <h3 style="font-family: Georgia, 'Noto Serif SC', 'Songti SC', serif; color: rgb(26, 54, 93); margin: 0px 0px 12px 0px; font-size: 1.2em; display: flex; align-items: center;">
@@ -36,17 +36,14 @@
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #334155">
                 <li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">利用高并发字典爆破实现初始入侵</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 攻击者使用内置 Naabu 扫描器的 dllhost.exe 定位 1433 端口，并利用 dwm.exe 启动多达 500 个线程，尝试 2700 组常见用户名和密码进行暴力破解。</span>
+                        <strong style="color: #1a365d">SDD 和 TDD 在 AI 时代依然具有价值</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 尽管 AI 技术发展迅速，但软件工程的基本原则并未过时。相反，AI 的出现使得这些理念更容易落地，例如通过与 AI 结对编程来约束规范和进行测试。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">滥用 T-SQL 扩展功能获取系统权限</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 登录成功后，攻击者执行 2018.sql 脚本开启 xp_cmdshell 功能，使 SQL Server 能够直接执行 Windows 操作系统命令，从而下载并运行恶意载荷。</span>
+                        <strong style="color: #1a365d">企业级 SDD 需要定制化 spec 基线</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 通用工具集可以帮助落地 SDD，但每个公司都需要根据自身业务和技术栈建立特定的 spec 基线，这是企业级 SDD 的核心，而非通用工具可以替代的。</span>
                     </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">部署双重恶意载荷实现算力窃取与远程控制</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 植入的载荷包括一个经过加壳保护的门罗币挖矿程序（伪装成 Edge 更新）和 Gh0st RAT 变种（winlogon.exe），后者支持键盘记录、文件管理及窃取 QQ 数据。</span>
-                    </li><li style="margin: 12px 0; line-height: 1.8;">
-                        <strong style="color: #1a365d">通过多种手段实现持久化与规避检测</strong>
-                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 攻击者通过创建伪装成微软更新的计划任务、修改注册表启动项、注册系统服务以及检测 78 种安全产品进程名来确保木马的长期运行并规避杀软。</span>
+                        <strong style="color: #1a365d">人的价值在于审美、判断和兜底</strong>
+                        <span style="color: #64748b; display: block; margin-top: 6px; padding-left: 20px; border-left: 2px solid #e2e8f0"> 在 AI 辅助的开发流程中，人的角色不会消失，而是从单纯的交付者转变为负责审美判断、技术决策和质量兜底的专家。</span>
                     </li>
             </ol>
         </div>
@@ -55,7 +52,7 @@
                 <span style="color: #d97706; margin-right: 8px">💬</span> 文章金句
             </h3>
             <ul style="margin: 0; padding-left: 20px; list-style-type: none; color: #334155">
-                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">攻击者使用包含超过 2700 个密码的字典尝试登录，成功后在被控机器上安装加密货币挖矿程序和远程访问木马（RAT）。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">一旦登录成功，工具就会在服务器上执行名为 2018.sql 的文件。文件中的命令会开启 xp_cmdshell 功能，允许 SQL Server 直接执行 Windows 系统命令。</li><li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">其中一个载荷名为 MicrosoftEdgeUpdate.exe，本质上并非 Edge 更新程序，而是经过 Themida 和自定义 LZSS 两层加壳保护的门罗币挖矿程序。</li>
+                <li style="margin: 12px 0; padding-left: 20px; border-left: 2px solid #e2e8f0; font-style: italic; line-height: 1.8;">SDD 和 TDD 是软件工程中的概念，AI 发展迅猛，但软件工程并没有过时。相反，在 AI 之前，规范驱动，测试驱动，结对编程... 等很多很好的软件工程理念，落地反而是比较难的，毕竟成本较高。相反，现在咱们和 AI 结对编程，通过 spec 规范的约束，SDD 和 TDD 才更好的落地。</li>
             </ul>
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d;">
@@ -63,31 +60,31 @@
                 <span style="color: #d97706; margin-right: 8px">📊</span> 文章信息
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; background-color: rgb(255, 255, 255);">
-                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">81</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">FreeBuf</span></div>
+                <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">AI 初评：</span><span style="color: #334155; font-weight: 500">85</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">来源：</span><span style="color: #334155; font-weight: 500">架构师之路</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">作者：</span><span style="color: #334155; font-weight: 500">架构师之路</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">分类：</span><span style="color: #334155; font-weight: 500">软件编程</span></div>
 <div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">语言：</span><span style="color: #334155; font-weight: 500">中文</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">9 分钟</span></div>
-<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">2166</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">阅读时间：</span><span style="color: #334155; font-weight: 500">6 分钟</span></div>
+<div style="padding: 10px; background: rgb(254, 253, 251); border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); background-color: rgb(255, 255, 255);"><span style="color: #64748b; font-size: 14px; margin-right: 8px">字数：</span><span style="color: #334155; font-weight: 500">1260</span></div>
             </div>
             
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; background-color: rgb(255, 255, 255);">
                     <span style="color: #64748b; font-size: 14px;">标签：</span>
                     <span style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
-                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程与工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">安全</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">数据库</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">渗透测试与安全工具</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Windows 与微软生态</span>
+                        <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">编程与工程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">测试驱动开发</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">AI 编程</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">Spec Coding</span>, <span style="background-color: #d97706; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 12px;">开源项目</span>
                     </span>
                 </div>
             
         </div>
 <div style="margin: 30px 0px; padding: 20px; background-color: rgb(255, 255, 255); border-radius: 8px; border-left: 4px solid #1a365d; text-align: center;">
-        <a href="https://www.bestblogs.dev/article/07207dbbee?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.bestblogs.dev/article/93cab3c6d2?utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=resources&amp;entry=rss_article_item" style="display: inline-block; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500; transition: background-color 0.2s;" target="_blank" rel="noopener noreferrer">
             阅读完整文章
         </a>
     </div>
     </div></p>
-        <a href="https://www.bestblogs.dev/article/07207dbbee?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
-        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
+        <a href="https://www.bestblogs.dev/article/93cab3c6d2?utm_source=rss&utm_medium=feed&utm_campaign=resources&entry=rss_article_item">阅读原文</a>
+        <img width="400px" style="margin-left: -40px; display: block" src="data:image/png;base64,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" alt="QR Code" />
         <a href="index.html#?category=1">返回目录</a>
     </body>
     <script>
